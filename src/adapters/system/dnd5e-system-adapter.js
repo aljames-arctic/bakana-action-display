@@ -26,6 +26,9 @@ export class Dnd5eSystemAdapter extends BaseSystemAdapter {
             // 1. Filter by allowed item types
             if (!allowedTypes.includes(item.type)) continue;
 
+            // Filter out cached helper items (e.g. spells cached for activities on feats/equipment)
+            if (item.getFlag('dnd5e', 'cachedFor')) continue;
+
             // 2. Filter out unequipped items for weapons, equipment, consumables, and tools
             const isEquipped = item.system.equipped !== false;
             if (['weapon', 'equipment', 'consumable', 'tool'].includes(item.type) && !isEquipped) {
@@ -35,7 +38,7 @@ export class Dnd5eSystemAdapter extends BaseSystemAdapter {
             // 3. Filter out unprepared spells (unless they are innate, at-will, or pact magic)
             if (item.type === 'spell') {
                 const prepMode = item.system.method;
-                const isPrepared = item.system.prepared !== false;
+                const isPrepared = !!item.system.prepared;
                 if (!['innate', 'atwill', 'pact'].includes(prepMode) && !isPrepared) {
                     continue;
                 }
@@ -78,9 +81,17 @@ export class Dnd5eSystemAdapter extends BaseSystemAdapter {
                 activityAction.tabs = uniqueTabs; // Store the array of tabs!
 
                 // Assign to hierarchical item types: [parentType, subType] (for left-side tabs)
+                // - Equipment with limited uses goes to Item Charges.
+                // - Feats (features) with limited uses ONLY go to Item Charges if they grant/cast spells (have a 'cast' activity).
+                const hasCastActivity = activeActivities.some(a => a.type === 'cast');
+                const isItemCharges = (item.type === 'equipment' && this._hasLimitedUses(item, actor))
+                    || (item.type === 'feat' && this._hasLimitedUses(item, actor) && hasCastActivity);
+
                 if (item.type === 'spell') {
                     const level = item.system.level ?? 0;
                     activityAction.itemTypes = ['spell', level.toString()];
+                } else if (isItemCharges) {
+                    activityAction.itemTypes = ['spell', 'itemCharges'];
                 } else {
                     activityAction.itemTypes = [item.type];
                 }
@@ -106,7 +117,12 @@ export class Dnd5eSystemAdapter extends BaseSystemAdapter {
                     activityAction.uses = activityAction.subActions[0].uses;
                 } else {
                     // For multiple activities, use item-level uses (e.g. wand charges)
-                    activityAction.uses = this._calculateUses(item, actor);
+                    // Spells fall back to spell slots
+                    if (item.type === 'spell') {
+                        activityAction.uses = this._calculateSpellSlots(item, actor);
+                    } else {
+                        activityAction.uses = this._calculateUses(item, actor);
+                    }
                 }
 
                 modified.push(activityAction);
@@ -297,6 +313,36 @@ export class Dnd5eSystemAdapter extends BaseSystemAdapter {
         }
 
         return { available: null, max: null };
+    }
+
+    /**
+     * Check if an item has limited uses (either at the item level or activity level).
+     * @param {Item} item The item to check
+     * @param {Actor} actor The actor
+     * @returns {boolean} True if the item has limited uses
+     * @private
+     */
+    _hasLimitedUses(item, actor) {
+        const system = item.system;
+        
+        // 1. Check item-level uses
+        if (system.uses && system.uses.max && system.uses.max !== "0") {
+            const max = parseInt(system.uses.max, 10) || 0;
+            if (max > 0) return true;
+        }
+        
+        // 2. Check activity-level uses
+        const activities = system.activities;
+        if (activities) {
+            for (const activity of activities.values()) {
+                if (activity.uses && activity.uses.max && activity.uses.max !== "0") {
+                    const max = parseInt(activity.uses.max, 10) || 0;
+                    if (max > 0) return true;
+                }
+            }
+        }
+        
+        return false;
     }
 
     /**
@@ -534,6 +580,9 @@ export class Dnd5eSystemAdapter extends BaseSystemAdapter {
     }
 
     getSpellLevelLabel(level) {
+        if (level === 'itemCharges') {
+            return localize('BAD.dnd5e.itemCharges', 'Item Charges');
+        }
         if (level === '0') {
             return localize('DND5E.SpellCantrip', 'Cantrip');
         }

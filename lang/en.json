@@ -32,7 +32,8 @@
             "unhideAction": "Unhide Action"
         },
         "dnd5e": {
-            "upcast": "Upcast"
+            "upcast": "Upcast",
+            "itemCharges": "Item Charges"
         }
     }
 }

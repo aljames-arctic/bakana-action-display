@@ -176,7 +176,14 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         // Sort spell sub-tabs (levels 0 to 9) and add 'All Spells'
         const spellParent = leftGroups['spell'];
         if (spellParent && spellParent.subTabs.length > 0) {
-            spellParent.subTabs.sort((a, b) => parseInt(a.id, 10) - parseInt(b.id, 10));
+            spellParent.subTabs.sort((a, b) => {
+                const valA = parseInt(a.id, 10);
+                const valB = parseInt(b.id, 10);
+                if (isNaN(valA) && isNaN(valB)) return a.id.localeCompare(b.id);
+                if (isNaN(valA)) return 1;
+                if (isNaN(valB)) return -1;
+                return valA - valB;
+            });
             spellParent.subTabs.unshift({
                 id: 'all',
                 label: 'All Spells',
