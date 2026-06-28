@@ -71,6 +71,8 @@ export class Pf2eSystemAdapter extends BaseSystemAdapter {
         // Strikes are dynamically calculated on the actor and are not standard inventory items
         const strikes = actor.system.actions ?? [];
         for (const strike of strikes) {
+            const uses = this._calculateStrikeAmmo(strike, actor);
+
             modified.push({
                 id: `strike-${strike.slug ?? strike.name}`,
                 name: strike.label ?? strike.name,
@@ -80,7 +82,7 @@ export class Pf2eSystemAdapter extends BaseSystemAdapter {
                 tabs: ['action'],
                 itemTypes: ['weapon'],
                 hidden: false,
-                uses: { available: null, max: null },
+                uses: uses, // Display remaining ammunition
                 roll: (event) => {
                     if (strike.variants?.[0]?.roll) {
                         strike.variants[0].roll({ event });
