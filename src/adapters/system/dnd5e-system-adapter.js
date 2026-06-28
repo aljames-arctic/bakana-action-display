@@ -254,20 +254,22 @@ export class Dnd5eSystemAdapter extends BaseSystemAdapter {
         }
 
         // 2. Limited Uses (standard item charges/uses)
-        if (system.uses && (system.uses.max || system.uses.value)) {
-            let available = system.uses.value ?? 0;
-            let max = system.uses.max ?? 0;
+        if (system.uses && system.uses.max && system.uses.max !== "0") {
+            let max = system.uses.max;
             if (typeof max === 'string') {
                 max = parseInt(max, 10) || 0;
             }
 
-            // Scale by quantity for consumables
-            const quantity = system.quantity ?? 1;
-            if (quantity > 1 && item.type === 'consumable') {
-                available = available + (quantity - 1) * max;
-                max = max * quantity;
+            if (max > 0) {
+                let available = system.uses.value ?? 0;
+                // Scale by quantity for consumables
+                const quantity = system.quantity ?? 1;
+                if (quantity > 1 && item.type === 'consumable') {
+                    available = available + (quantity - 1) * max;
+                    max = max * quantity;
+                }
+                return { available, max };
             }
-            return { available, max };
         }
 
         // 3. Feat Recharge
@@ -361,16 +363,15 @@ export class Dnd5eSystemAdapter extends BaseSystemAdapter {
     _calculateActivityUses(activity, item, actor) {
         const targets = activity.consumption?.targets || [];
         
-        // In newer dnd5e versions, the activity might have its own resolved uses
-        
         // 1. If the activity has its own explicit limited uses
-        if (activity.uses && (activity.uses.max || activity.uses.value !== null)) {
-            let value = activity.uses.value ?? 0;
-            let max = activity.uses.max ?? 0;
+        if (activity.uses && activity.uses.max && activity.uses.max !== "0") {
+            let max = activity.uses.max;
             if (typeof max === 'string') {
                 max = parseInt(max, 10) || 0;
             }
-            return { available: value, max: max };
+            if (max > 0) {
+                return { available: activity.uses.value ?? 0, max: max };
+            }
         }
         
         // 2. Resolve based on consumption targets
@@ -378,11 +379,17 @@ export class Dnd5eSystemAdapter extends BaseSystemAdapter {
             if (target.type === 'activityUses') {
                 // Consumes another activity's uses (or self if target is empty)
                 const targetActivity = target.target ? item.system.activities.get(target.target) : activity;
-                if (targetActivity && targetActivity.uses) {
-                    return {
-                        available: targetActivity.uses.value ?? 0,
-                        max: targetActivity.uses.max ?? 0
-                    };
+                if (targetActivity && targetActivity.uses && targetActivity.uses.max && targetActivity.uses.max !== "0") {
+                    let max = targetActivity.uses.max;
+                    if (typeof max === 'string') {
+                        max = parseInt(max, 10) || 0;
+                    }
+                    if (max > 0) {
+                        return {
+                            available: targetActivity.uses.value ?? 0,
+                            max: max
+                        };
+                    }
                 }
             } else if (target.type === 'itemUses') {
                 // Consumes the parent item's uses
