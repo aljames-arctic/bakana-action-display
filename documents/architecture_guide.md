@@ -48,13 +48,14 @@ The module is built using a clean **pipes-and-filters / adapter** architecture, 
 *   **Responsibilities**:
     *   Maps raw items into system-specific categories (e.g., separating weapons, spells, and features in D&D 5e).
     *   Extracts and calculates resource uses (e.g., spell slots, item charges, or D&D 5e v4+ Activity uses).
+    *   Populates a generic **`subActions`** array on actions that have multiple options (like D&D 5e activities), converting them into a system-agnostic format.
     *   Filters out depleted actions if the "Filter Depleted Actions" setting is enabled, using system-specific rules (e.g., checking D&D 5e activities).
     *   Provides system-specific localization labels and icons for the left-side and right-side tabs (falling back to hardcoded English in the base class if no specific adapter exists).
 
 ### 3. Module Adapter Layer (`BaseModuleAdapter`)
 *   **Role**: Handles third-party module integrations (like `midi-qol`) without cluttering the core or system layers.
 *   **Responsibilities**:
-    *   Inspects active module flags on actions and modifies them (e.g., hiding Midi-QOL "automation-only" activities from the player-facing HUD).
+    *   Inspects active module flags on actions and modifies them (e.g., filtering out Midi-QOL "automation-only" sub-actions from the player-facing HUD).
 
 ### 4. UI Layer (`ActionDisplayApp`)
 *   **Role**: The rendering engine, built on Foundry VTT's modern `ApplicationV2` (`HandlebarsApplication`) framework.
@@ -62,6 +63,7 @@ The module is built using a clean **pipes-and-filters / adapter** architecture, 
     *   Listens to Foundry hooks (like token selection) to position and render the HUD.
     *   Coordinates attachment/detachment states and tracks position coordinates.
     *   In `_prepareContext()`, it requests the processed actions from the Coordinator, queries the active system adapter for the tab layouts, filters the actions to match the active tabs, and renders the Handlebars template (`templates/action-display.html`).
+    *   In `_onRollAction()`, it checks if an action has multiple `subActions` and dynamically renders a left-click dropdown menu if needed, remaining completely system-agnostic.
 
 ---
 
@@ -169,7 +171,7 @@ sequenceDiagram
     
     Note over Core: 3. Module Adapter Layer
     Core->>Mod: modifyActions(systemActions, actor)
-    Note over Mod: Filters out Midi-QOL<br/>"automation-only" activities
+    Note over Mod: Filters out Midi-QOL<br/>"automation-only" sub-actions
     Mod-->>Core: returns moduleActions[]
     
     Note over Core: 4. Core Post-Processing

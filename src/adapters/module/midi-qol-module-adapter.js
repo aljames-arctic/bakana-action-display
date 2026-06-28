@@ -25,31 +25,31 @@ export class MidiQolModuleAdapter extends BaseModuleAdapter {
                 continue;
             }
 
-            // 1. Check if the action has consolidated activities
-            const activities = action.systemData?.activities;
-            if (activities && activities.length > 0) {
-                // Filter out activities that are marked as automationOnly
-                const filteredActivities = activities.filter(entry => {
-                    const isAutomationOnly = entry.activity.midiProperties?.automationOnly === true;
+            // 1. Check if the action has consolidated subActions
+            const subActions = action.subActions;
+            if (subActions && subActions.length > 0) {
+                // Filter out sub-actions that are marked as automationOnly
+                const filteredSubs = subActions.filter(sub => {
+                    const isAutomationOnly = sub.originalActivity?.midiProperties?.automationOnly === true;
                     return !isAutomationOnly;
                 });
 
-                // If all activities are automation-only, hide the entire item!
-                if (filteredActivities.length === 0) {
+                // If all sub-actions are automation-only, hide the entire item!
+                if (filteredSubs.length === 0) {
                     continue; // Skip this action entirely (filters it out of the HUD)
                 }
 
-                // If some activities were filtered out, update the action's activities and tabs
-                if (filteredActivities.length < activities.length) {
-                    action.systemData.activities = filteredActivities;
+                // If some sub-actions were filtered out, update the action's subActions and tabs
+                if (filteredSubs.length < subActions.length) {
+                    action.subActions = filteredSubs;
 
-                    // Recalculate unique tabs based on the remaining activities
+                    // Recalculate unique tabs based on the remaining sub-actions
                     const uniqueTabs = [];
                     const seenTabKeys = new Set();
 
-                    for (const entry of filteredActivities) {
-                        const parentTab = entry.parentTab;
-                        const subTab = entry.subTab;
+                    for (const sub of filteredSubs) {
+                        const parentTab = sub.tabs[0];
+                        const subTab = sub.tabs[1];
                         const key = subTab ? `${parentTab}/${subTab}` : parentTab;
                         if (!seenTabKeys.has(key)) {
                             seenTabKeys.add(key);

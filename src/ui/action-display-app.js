@@ -441,38 +441,38 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         const action = actions.find(a => a.id === actionId);
         
         if (action) {
-            const wrappedActivities = action.systemData?.activities;
-            if (wrappedActivities && wrappedActivities.length > 0) {
-                // Filter activities to only those that match the currently active right-side tab
+            const subActions = action.subActions;
+            if (subActions && subActions.length > 0) {
+                // Filter sub-actions to only those that match the currently active right-side tab
                 const activeParent = this.activeParentType;
                 const activeSub = this.activeSubType;
                 const filterNoResources = game.settings.get('bakanas-action-display', 'filterNoResources');
 
-                const qualifyingActivities = wrappedActivities.filter(entry => {
-                    const matchesParent = activeParent === 'all' || entry.parentTab === activeParent;
+                const qualifyingSubActions = subActions.filter(sub => {
+                    const matchesParent = activeParent === 'all' || sub.tabs[0] === activeParent;
                     let matchesSub = true;
                     if (activeParent !== 'all' && activeSub && activeSub !== 'all') {
-                        matchesSub = entry.subTab === activeSub;
+                        matchesSub = sub.tabs[1] === activeSub;
                     }
                     
-                    // Filter out depleted activities if Hide Depleted is enabled
-                    if (filterNoResources && entry.uses && entry.uses.available !== null && entry.uses.available <= 0) {
+                    // Filter out depleted sub-actions if Hide Depleted is enabled
+                    if (filterNoResources && sub.uses && sub.uses.available !== null && sub.uses.available <= 0) {
                         return false;
                     }
                     
                     return matchesParent && matchesSub;
                 });
 
-                log.debug(`_onRollAction | activeParent: ${activeParent}, activeSub: ${activeSub}, qualifying: ${qualifyingActivities.length}`, qualifyingActivities);
+                log.debug(`_onRollAction | activeParent: ${activeParent}, activeSub: ${activeSub}, qualifying: ${qualifyingSubActions.length}`, qualifyingSubActions);
 
-                if (qualifyingActivities.length > 1) {
-                    // Multiple qualifying activities! Show a left-click dropdown menu.
-                    const menuItems = qualifyingActivities.map(entry => {
-                        const uses = entry.uses;
-                        const name = entry.activity.name || entry.activity.type.toUpperCase();
+                if (qualifyingSubActions.length > 1) {
+                    // Multiple qualifying sub-actions! Show a left-click dropdown menu.
+                    const menuItems = qualifyingSubActions.map(sub => {
+                        const uses = sub.uses;
+                        const name = sub.name;
                         
-                        const iconHtml = entry.activity.img 
-                            ? `<img src="${entry.activity.img}" style="width: 16px; height: 16px; border: none; vertical-align: middle; margin-right: 8px; border-radius: 4px;" />` 
+                        const iconHtml = sub.img 
+                            ? `<img src="${sub.img}" style="width: 16px; height: 16px; border: none; vertical-align: middle; margin-right: 8px; border-radius: 4px;" />` 
                             : '<i class="fas fa-play" style="margin-right: 8px;"></i>';
                         
                         let usesHtml = "";
@@ -489,8 +489,8 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                             name: "",
                             icon: `${iconHtml}<span class="bad-menu-name">${name}</span>${usesHtml}`,
                             callback: () => {
-                                log.debug(`Rolling activity: ${entry.activity.name} via dropdown`);
-                                entry.activity.use({ event });
+                                log.debug(`Rolling sub-action: ${sub.name} via dropdown`);
+                                sub.roll(event);
                             }
                         };
                     });
@@ -514,15 +514,15 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                     this._activeMenuTarget = target; // Set target directly to ensure toggle-off tracking works even if onOpen callback doesn't fire
                     this._activeLeftClickMenu = menu; // Store the menu instance directly
                     menu.render(target);
-                } else if (qualifyingActivities.length === 1) {
-                    // Only one qualifying activity: roll directly!
-                    qualifyingActivities[0].activity.use({ event });
+                } else if (qualifyingSubActions.length === 1) {
+                    // Only one qualifying sub-action: roll directly!
+                    qualifyingSubActions[0].roll(event);
                 } else {
-                    // Fallback: roll the first activity
-                    wrappedActivities[0].activity.use({ event });
+                    // Fallback: roll the first sub-action
+                    subActions[0].roll(event);
                 }
             } else {
-                // Legacy/no activities: roll directly
+                // No sub-actions: roll directly
                 action.roll(event);
             }
         }

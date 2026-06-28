@@ -86,16 +86,21 @@ export class Dnd5eSystemAdapter extends BaseSystemAdapter {
                     activityAction.itemTypes = [item.type];
                 }
 
-                // Store all active activities wrapped with their resolved tabs for context-aware rolling
-                activityAction.systemData = {
-                    recharge: item.system.recharge,
-                    activities: activeActivities.map(activity => ({
-                        activity,
-                        parentTab: this._getParentTab(activity.activation.type),
-                        subTab: this._getSubTab(activity.activation.type),
-                        uses: this._calculateActivityUses(activity, item, actor)
-                    }))
-                };
+                // Store all active activities as generic subActions
+                activityAction.subActions = activeActivities.map(activity => {
+                    const activationType = activity.activation.type;
+                    const parentTab = this._getParentTab(activationType);
+                    const subTab = this._getSubTab(activationType);
+                    return {
+                        id: activity.id,
+                        name: activity.name || activity.type.toUpperCase(),
+                        img: activity.img || item.img,
+                        uses: this._calculateActivityUses(activity, item, actor),
+                        tabs: subTab ? [parentTab, subTab] : [parentTab],
+                        roll: async (event) => activity.use({ event }),
+                        originalActivity: activity // Store for module adapters (like midi-qol)
+                    };
+                });
 
                 modified.push(activityAction);
             } else {
