@@ -383,9 +383,11 @@ export class Dnd5eSystemAdapter extends BaseSystemAdapter {
                 }
             } else if (target.type === 'item') {
                 // Consumes quantity of another item (e.g. ammunition) or charges of another item
-                // Robust resolution: Check if the target is a UUID or a plain ID
+                // Robust resolution: Check if the target is a UUID or a plain ID, resolving relative to item/actor
                 const targetItem = target.target?.includes('.')
-                    ? (foundry.utils.fromUuidSync(target.target) || actor.items.get(target.target))
+                    ? (foundry.utils.fromUuidSync(target.target, { relative: item })
+                       || foundry.utils.fromUuidSync(target.target, { relative: actor })
+                       || actor.items.get(target.target))
                     : actor.items.get(target.target);
 
                 if (targetItem) {
@@ -408,7 +410,9 @@ export class Dnd5eSystemAdapter extends BaseSystemAdapter {
             } else if (target.type === 'material') {
                 // Consumes quantity of another item (specifically spell components)
                 const targetItem = target.target?.includes('.')
-                    ? (foundry.utils.fromUuidSync(target.target) || actor.items.get(target.target))
+                    ? (foundry.utils.fromUuidSync(target.target, { relative: item })
+                       || foundry.utils.fromUuidSync(target.target, { relative: actor })
+                       || actor.items.get(target.target))
                     : actor.items.get(target.target);
 
                 if (targetItem) {
@@ -425,6 +429,11 @@ export class Dnd5eSystemAdapter extends BaseSystemAdapter {
         // Fallback for standard spells if no explicit spellSlots consumption target was resolved
         if (item.type === 'spell') {
             return this._calculateSpellSlots(item, actor);
+        }
+
+        // Fallback for weapons requiring ammunition if no explicit consumption target was resolved
+        if (item.type === 'weapon' && item.system.ammunition?.type) {
+            return this._calculateWeaponAmmunition(item, actor);
         }
 
         return { available: null, max: null };
@@ -481,6 +490,30 @@ export class Dnd5eSystemAdapter extends BaseSystemAdapter {
             }
         }
         return { available: null, max: null };
+    }
+
+    /**
+     * Fallback method to calculate ammunition quantity for ranged weapons.
+     * Used when the Attack activity doesn't have a working item consumption target.
+     * @private
+     */
+    _calculateWeaponAmmunition(item, actor) {
+        const ammoType = item.system.ammunition.type;
+        let quantity = 0;
+        if (actor) {
+            const ammoItems = actor.items.filter(i => 
+                i.type === 'consumable' && 
+                i.system.type?.value === 'ammo' && 
+                i.system.type?.subtype === ammoType
+            );
+            for (const ammoItem of ammoItems) {
+                quantity += ammoItem.system.quantity ?? 0;
+            }
+        }
+        return {
+            available: quantity,
+            max: null
+        };
     }
 
     getItemTypeLabel(parentId) {
