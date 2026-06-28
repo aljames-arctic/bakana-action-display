@@ -518,6 +518,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                     }));
 
                     const options = {
+                        jQuery: false, // Opt-out of jQuery for callbacks
                         onOpen: () => {
                             this.element.querySelector('.bakanas-action-display-container')?.classList.add('has-context-menu');
                         },
@@ -526,8 +527,8 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                         }
                     };
 
-                    // Create and render a temporary ContextMenu at the clicked element
-                    const menu = new ContextMenu($(this.element), null, menuItems, options);
+                    // Create and render a temporary ContextMenu at the clicked element (passing raw HTMLElement)
+                    const menu = new foundry.applications.ux.ContextMenu.implementation(this.element, null, menuItems, options);
                     menu.render(target);
                 } else if (qualifyingActivities.length === 1) {
                     // Only one qualifying activity: roll directly!
@@ -680,40 +681,37 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             {
                 name: "BAD.hud.hideAction",
                 icon: '<i class="fas fa-eye-slash"></i>',
-                condition: li => {
-                    const el = li[0] || li;
+                condition: el => {
+                    // Since jQuery: false is passed, el is the raw HTMLElement directly!
                     const actionId = el.dataset.actionId;
                     const actions = actionDisplay.getActions(this.actor);
                     const action = actions.find(a => a.id === actionId);
                     return action && !action.isHidden;
                 },
-                callback: li => {
-                    const el = li[0] || li;
+                callback: el => {
                     this._toggleActionHidden(el.dataset.actionId, true);
                 }
             },
             {
                 name: "BAD.hud.unhideAction",
                 icon: '<i class="fas fa-eye"></i>',
-                condition: li => {
-                    const el = li[0] || li;
+                condition: el => {
                     const actionId = el.dataset.actionId;
                     const actions = actionDisplay.getActions(this.actor);
                     const action = actions.find(a => a.id === actionId);
                     return action && action.isHidden;
                 },
-                callback: li => {
-                    const el = li[0] || li;
+                callback: el => {
                     this._toggleActionHidden(el.dataset.actionId, false);
                 }
             }
         ];
 
         const options = {
+            jQuery: false, // Opt-out of jQuery for callbacks, receiving raw HTMLElements
             onOpen: (target) => {
-                const rawTarget = target[0] || target;
-                log.debug("Context menu opened on target:", rawTarget);
-                this._activeMenuTarget = rawTarget; // Store the raw HTMLElement of the open menu target
+                log.debug("Context menu opened on target:", target);
+                this._activeMenuTarget = target; // Store the raw HTMLElement directly
                 this.element.querySelector('.bakanas-action-display-container')?.classList.add('has-context-menu');
             },
             onClose: () => {
@@ -723,7 +721,8 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             }
         };
 
-        return new ContextMenu($(this.element), ".bad-action-item", menuItems, options);
+        // Create the ContextMenu using the raw HTMLElement (this.element) instead of jQuery
+        return new foundry.applications.ux.ContextMenu.implementation(this.element, ".bad-action-item", menuItems, options);
     }
 
     /**
