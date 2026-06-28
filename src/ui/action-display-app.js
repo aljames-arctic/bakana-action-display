@@ -530,16 +530,22 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                     // Multiple qualifying activities! Show a left-click dropdown menu.
                     const menuItems = qualifyingActivities.map(entry => {
                         const uses = entry.uses;
-                        let name = entry.activity.name || entry.activity.type.toUpperCase();
+                        const name = entry.activity.name || entry.activity.type.toUpperCase();
+                        
+                        // Wrap name in a span
+                        let nameHtml = `<span class="bad-menu-name">${name}</span>`;
+                        
                         if (uses && uses.available !== null) {
-                            if (uses.max) {
-                                name += ` (${uses.available}/${uses.max})`;
-                            } else {
-                                name += ` (${uses.available})`;
-                            }
+                            const isDepleted = uses.available <= 0;
+                            const depletedClass = isDepleted ? ' depleted' : '';
+                            const usesText = uses.max ? `${uses.available}/${uses.max}` : `${uses.available}`;
+                            
+                            // Append right-aligned uses span
+                            nameHtml += `<span class="bad-menu-uses${depletedClass}">${usesText}</span>`;
                         }
+                        
                         return {
-                            name: name,
+                            name: nameHtml,
                             icon: entry.activity.img ? `<img src="${entry.activity.img}" style="width: 16px; height: 16px; border: none; vertical-align: middle; margin-right: 8px; border-radius: 4px;" />` : '<i class="fas fa-play" style="margin-right: 8px;"></i>',
                             callback: () => {
                                 log.debug(`Rolling activity: ${entry.activity.name} via dropdown`);

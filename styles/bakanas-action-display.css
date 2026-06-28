@@ -598,3 +598,26 @@
 .bakanas-action-display-container.has-context-menu .bad-action-item.context {
     pointer-events: all !important;
 }
+
+/* Style the context menu items for flex layout to support right-aligned uses */
+#context-menu .context-item, .context-menu .context-item {
+    display: flex !important;
+    align-items: center !important;
+    width: 100% !important;
+}
+
+/* Push the uses span to the far right */
+#context-menu .bad-menu-uses, .context-menu .bad-menu-uses {
+    margin-left: auto !important;
+    padding-left: 15px; /* Add spacing from the name */
+    font-size: 0.85em;
+    opacity: 0.7;
+    font-weight: normal;
+}
+
+/* Depleted uses styling (red) */
+#context-menu .bad-menu-uses.depleted, .context-menu .bad-menu-uses.depleted {
+    color: var(--color-shadow-highlight, #ff3333) !important;
+    font-weight: bold;
+    opacity: 1;
+}
