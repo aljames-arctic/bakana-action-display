@@ -532,21 +532,23 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                         const uses = entry.uses;
                         const name = entry.activity.name || entry.activity.type.toUpperCase();
                         
-                        // Wrap name in a span
-                        let nameHtml = `<span class="bad-menu-name">${name}</span>`;
+                        const iconHtml = entry.activity.img 
+                            ? `<img src="${entry.activity.img}" style="width: 16px; height: 16px; border: none; vertical-align: middle; margin-right: 8px; border-radius: 4px;" />` 
+                            : '<i class="fas fa-play" style="margin-right: 8px;"></i>';
                         
+                        let usesHtml = "";
                         if (uses && uses.available !== null) {
                             const isDepleted = uses.available <= 0;
                             const depletedClass = isDepleted ? ' depleted' : '';
                             const usesText = uses.max ? `${uses.available}/${uses.max}` : `${uses.available}`;
-                            
-                            // Append right-aligned uses span
-                            nameHtml += `<span class="bad-menu-uses${depletedClass}">${usesText}</span>`;
+                            usesHtml = `<span class="bad-menu-uses${depletedClass}">${usesText}</span>`;
                         }
                         
+                        // Workaround: Foundry escapes 'name' but renders 'icon' as unescaped HTML.
+                        // We pack the entire HTML (icon + name + uses) into 'icon' and leave 'name' empty!
                         return {
-                            name: nameHtml,
-                            icon: entry.activity.img ? `<img src="${entry.activity.img}" style="width: 16px; height: 16px; border: none; vertical-align: middle; margin-right: 8px; border-radius: 4px;" />` : '<i class="fas fa-play" style="margin-right: 8px;"></i>',
+                            name: "",
+                            icon: `${iconHtml}<span class="bad-menu-name">${name}</span>${usesHtml}`,
                             callback: () => {
                                 log.debug(`Rolling activity: ${entry.activity.name} via dropdown`);
                                 entry.activity.use({ event });
