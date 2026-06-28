@@ -76,7 +76,8 @@ class ActionDisplay {
             this.activeSystemAdapter = adapter;
             log.info(`Activated system adapter: ${currentSystemId}`);
         } else {
-            log.warn(`No compatible system adapter found for system: ${currentSystemId}`);
+            log.warn(`No compatible system adapter found for system: ${currentSystemId}. Falling back to default adapter.`);
+            this.activeSystemAdapter = new BaseSystemAdapter(currentSystemId);
         }
     }
 

@@ -96,6 +96,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
     async _prepareContext(options) {
         const context = await super._prepareContext(options);
         const rawActions = actionDisplay.getActions(this.actor);
+        const adapter = actionDisplay.activeSystemAdapter;
 
         // 1. Extract unique Item Types (for Left-side Tabs)
         const existingItemCombinations = new Set();
@@ -115,43 +116,15 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             existingItemCombinations.add('hidden');
         }
 
-        const itemParentLabels = {
-            'all': 'All Items',
-            'weapon': localize('DND5E.ItemTypeWeapon', 'Weapon'),
-            'equipment': localize('DND5E.ItemTypeEquipment', 'Equipment'),
-            'consumable': localize('DND5E.ItemTypeConsumable', 'Consumable'),
-            'tool': localize('DND5E.ItemTypeTool', 'Tool'),
-            'backpack': localize('DND5E.ItemTypeContainer', 'Container'),
-            'loot': localize('DND5E.ItemTypeLoot', 'Loot'),
-            'feat': localize('DND5E.ItemTypeFeat', 'Feature'),
-            'spell': localize('DND5E.ItemTypeSpell', 'Spell'),
-            'other': localize('DND5E.Other', 'Other'),
-            'hidden': localize('BAD.hud.hidden', 'Hidden')
-        };
-
-        const itemParentIcons = {
-            'all': 'fas fa-border-all',
-            'weapon': 'fas fa-sword',
-            'spell': 'fas fa-wand-magic-sparkles',
-            'feat': 'fas fa-award',
-            'equipment': 'fas fa-shield',
-            'consumable': 'fas fa-flask',
-            'tool': 'fas fa-hammer',
-            'backpack': 'fas fa-sack',
-            'loot': 'fas fa-gem',
-            'other': 'fas fa-ellipsis',
-            'hidden': 'fas fa-eye-slash'
-        };
-
-        // Build the left-side hierarchy
+        // Build the left-side hierarchy dynamically using the adapter
         const leftGroups = {};
         
         // Always ensure 'all' parent is present if we have actions
         if (rawActions.length > 0) {
             leftGroups['all'] = {
                 id: 'all',
-                label: itemParentLabels['all'],
-                icon: itemParentIcons['all'],
+                label: adapter.getItemTypeLabel('all'),
+                icon: adapter.getItemTypeIcon('all'),
                 active: this.activeLeftParentType === 'all',
                 expanded: this.activeLeftParentType === 'all',
                 activeParent: false,
@@ -167,8 +140,8 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             if (!leftGroups[parentId]) {
                 leftGroups[parentId] = {
                     id: parentId,
-                    label: itemParentLabels[parentId] ?? parentId.toUpperCase(),
-                    icon: itemParentIcons[parentId] ?? 'fas fa-question',
+                    label: adapter.getItemTypeLabel(parentId),
+                    icon: adapter.getItemTypeIcon(parentId),
                     active: parentId === this.activeLeftParentType,
                     expanded: parentId === this.activeLeftParentType,
                     activeParent: parentId === this.activeLeftParentType && this.activeLeftSubType && this.activeLeftSubType !== 'all',
@@ -177,13 +150,9 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             }
 
             if (parentId === 'spell' && subId) {
-                const levelLabel = subId === '0' 
-                    ? (game.i18n.localize('DND5E.SpellCantrip') || 'Cantrip')
-                    : (game.i18n.localize(`DND5E.SpellLevel${subId}`) || `${subId} Level`);
-                
                 leftGroups[parentId].subTabs.push({
                     id: subId,
-                    label: levelLabel,
+                    label: adapter.getSpellLevelLabel(subId),
                     active: this.activeLeftParentType === 'spell' && subId === this.activeLeftSubType
                 });
             }
@@ -235,48 +204,15 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             }
         }
 
-        const parentLabels = {
-            'all': localize('BAD.actions.all', 'All Actions'),
-            'standard': localize('BAD.actions.standard', 'Standard'),
-            'time': localize('BAD.actions.time', 'Time'),
-            'monster': localize('BAD.actions.monster', 'Monster'),
-            'vehicle': localize('BAD.actions.vehicle', 'Vehicle'),
-            'special': localize('BAD.actions.special', 'Special'),
-            'none': localize('BAD.actions.none', 'None')
-        };
-
-        const parentIcons = {
-            'all': 'fas fa-border-all',
-            'standard': 'fas fa-hand-fist',
-            'time': 'fas fa-clock',
-            'monster': 'fas fa-dragon',
-            'vehicle': 'fas fa-ship',
-            'special': 'fas fa-star',
-            'none': 'fas fa-ban'
-        };
-
-        const subLabels = {
-            'action': localize('DND5E.Action', 'Action'),
-            'bonus': localize('DND5E.BonusAction', 'Bonus Action'),
-            'reaction': localize('DND5E.Reaction', 'Reaction'),
-            'minute': localize('DND5E.TimeMinute', 'Minute'),
-            'hour': localize('DND5E.TimeHour', 'Hour'),
-            'day': localize('DND5E.TimeDay', 'Day'),
-            'legendary': localize('DND5E.LegendaryAction', 'Legendary'),
-            'mythic': localize('DND5E.MythicAction', 'Mythic'),
-            'lair': localize('DND5E.LairAction', 'Lair'),
-            'crew': localize('DND5E.CrewAction', 'Crew')
-        };
-
-        // Build the right-side hierarchy dynamically
+        // Build the right-side hierarchy dynamically using the adapter
         const parentGroups = {};
         
         // Always ensure 'all' parent is present if we have actions
         if (rawActions.length > 0) {
             parentGroups['all'] = {
                 id: 'all',
-                label: parentLabels['all'],
-                icon: parentIcons['all'],
+                label: adapter.getActionTypeLabel('all'),
+                icon: adapter.getActionTypeIcon('all'),
                 active: this.activeParentType === 'all',
                 expanded: this.activeParentType === 'all',
                 activeParent: false,
@@ -292,8 +228,8 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             if (!parentGroups[parentId]) {
                 parentGroups[parentId] = {
                     id: parentId,
-                    label: parentLabels[parentId] ?? parentId.toUpperCase(),
-                    icon: parentIcons[parentId] ?? 'fas fa-question',
+                    label: adapter.getActionTypeLabel(parentId),
+                    icon: adapter.getActionTypeIcon(parentId),
                     active: parentId === this.activeParentType,
                     expanded: parentId === this.activeParentType,
                     activeParent: parentId === this.activeParentType && this.activeSubType && this.activeSubType !== 'all',
@@ -304,7 +240,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             if (subId) {
                 parentGroups[parentId].subTabs.push({
                     id: subId,
-                    label: subLabels[subId] ?? subId.toUpperCase(),
+                    label: adapter.getActionSubTabLabel(subId),
                     active: parentId === this.activeParentType && subId === this.activeSubType
                 });
             }

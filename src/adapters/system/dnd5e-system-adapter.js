@@ -1,4 +1,4 @@
-import { BaseSystemAdapter } from './base-system-adapter.js';
+import { BaseSystemAdapter, localize } from './base-system-adapter.js';
 
 /**
  * System adapter for the DnD5e system.
@@ -423,5 +423,46 @@ export class Dnd5eSystemAdapter extends BaseSystemAdapter {
         }
         
         return { available: null, max: null };
+    }
+
+    getItemTypeLabel(parentId) {
+        const labels = {
+            'all': 'All Items',
+            'weapon': localize('DND5E.ItemTypeWeapon', 'Weapon'),
+            'equipment': localize('DND5E.ItemTypeEquipment', 'Equipment'),
+            'consumable': localize('DND5E.ItemTypeConsumable', 'Consumable'),
+            'tool': localize('DND5E.ItemTypeTool', 'Tool'),
+            'backpack': localize('DND5E.ItemTypeContainer', 'Container'),
+            'loot': localize('DND5E.ItemTypeLoot', 'Loot'),
+            'feat': localize('DND5E.ItemTypeFeat', 'Feature'),
+            'spell': localize('DND5E.ItemTypeSpell', 'Spell'),
+            'other': localize('DND5E.Other', 'Other'),
+            'hidden': localize('BAD.hud.hidden', 'Hidden')
+        };
+        return labels[parentId] ?? super.getItemTypeLabel(parentId);
+    }
+
+    getSpellLevelLabel(level) {
+        if (level === '0') {
+            return localize('DND5E.SpellCantrip', 'Cantrip');
+        }
+        const key = `DND5E.SpellLevel${level}`;
+        return (game.i18n && game.i18n.has(key)) ? game.i18n.localize(key) : super.getSpellLevelLabel(level);
+    }
+
+    getActionSubTabLabel(subId) {
+        const labels = {
+            'action': localize('DND5E.Action', 'Action'),
+            'bonus': localize('DND5E.BonusAction', 'Bonus Action'),
+            'reaction': localize('DND5E.Reaction', 'Reaction'),
+            'minute': localize('DND5E.TimeMinute', 'Minute'),
+            'hour': localize('DND5E.TimeHour', 'Hour'),
+            'day': localize('DND5E.TimeDay', 'Day'),
+            'legendary': localize('DND5E.LegendaryAction', 'Legendary'),
+            'mythic': localize('DND5E.MythicAction', 'Mythic'),
+            'lair': localize('DND5E.LairAction', 'Lair'),
+            'crew': localize('DND5E.CrewAction', 'Crew')
+        };
+        return labels[subId] ?? super.getActionSubTabLabel(subId);
     }
 }
