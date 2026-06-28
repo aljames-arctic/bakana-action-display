@@ -101,13 +101,6 @@ class ActionDisplay {
             } catch (error) {
                 log.error(`Error in system adapter "${this.activeSystemAdapter.systemId}":`, error);
             }
-        } else {
-            // Default system-agnostic fallback:
-            // Put all items in an 'all' tab so the HUD still works
-            actions = actions.map(a => {
-                a.tabs = ['all'];
-                return a;
-            });
         }
 
         // 3. Module Adapters: Run through active module adapters
@@ -121,28 +114,7 @@ class ActionDisplay {
             }
         }
 
-        // 4. Resource Filtering: Filter out actions with depleted resources if enabled
-        const filterNoResources = game.settings.get('bakanas-action-display', 'filterNoResources');
-        if (filterNoResources) {
-            actions = actions.filter(action => {
-                // 1. If it has item-level uses, check if they are depleted
-                const itemDepleted = action.uses && action.uses.available !== null && action.uses.available <= 0;
-                if (itemDepleted) return false;
-                
-                // 2. If it has activities, check if ALL activities are depleted
-                const activities = action.systemData?.activities;
-                if (activities && activities.length > 0) {
-                    const allActivitiesDepleted = activities.every(entry => {
-                        return entry.uses && entry.uses.available !== null && entry.uses.available <= 0;
-                    });
-                    if (allActivitiesDepleted) return false;
-                }
-                
-                return true;
-            });
-        }
-
-        // 5. User-Hidden Items: Override itemTypes to ['hidden'] if the item is flagged as hidden by the user
+        // 4. User-Hidden Items: Override itemTypes to ['hidden'] if the item is flagged as hidden by the user
         const hiddenIds = actor.getFlag('bakanas-action-display', 'hiddenItems') || [];
         if (hiddenIds.length > 0) {
             actions = actions.map(action => {

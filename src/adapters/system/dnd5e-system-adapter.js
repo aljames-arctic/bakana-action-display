@@ -131,8 +131,30 @@ export class Dnd5eSystemAdapter extends BaseSystemAdapter {
             }
         }
 
+        // Resource Filtering: Filter out actions with depleted resources if enabled
+        let filtered = modified;
+        const filterNoResources = game.settings.get('bakanas-action-display', 'filterNoResources');
+        if (filterNoResources) {
+            filtered = modified.filter(action => {
+                // 1. If it has item-level uses, check if they are depleted
+                const itemDepleted = action.uses && action.uses.available !== null && action.uses.available <= 0;
+                if (itemDepleted) return false;
+                
+                // 2. If it has activities, check if ALL activities are depleted
+                const activities = action.systemData?.activities;
+                if (activities && activities.length > 0) {
+                    const allActivitiesDepleted = activities.every(entry => {
+                        return entry.uses && entry.uses.available !== null && entry.uses.available <= 0;
+                    });
+                    if (allActivitiesDepleted) return false;
+                }
+                
+                return true;
+            });
+        }
+
         // Sort actions: parent activation type first, then sub-activation, then item type, then name
-        return modified.sort((a, b) => {
+        return filtered.sort((a, b) => {
             const aParent = a.tabs[0];
             const bParent = b.tabs[0];
             const parentSort = this._getParentSort(aParent) - this._getParentSort(bParent);

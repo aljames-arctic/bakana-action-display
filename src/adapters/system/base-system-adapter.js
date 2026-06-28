@@ -31,6 +31,13 @@ export class BaseSystemAdapter {
      * @returns {Object[]} The modified/filtered/sorted actions list
      */
     modifyActions(actions, actor) {
+        // Default system-agnostic resource filtering
+        const filterNoResources = game.settings.get('bakanas-action-display', 'filterNoResources');
+        if (filterNoResources) {
+            return actions.filter(action => {
+                return !(action.uses && action.uses.available !== null && action.uses.available <= 0);
+            });
+        }
         return actions;
     }
 
