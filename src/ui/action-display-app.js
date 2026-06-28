@@ -578,13 +578,20 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         }
     }
 
-    /**
-     * Clear all active menu states and close any open menus.
-     * @private
-     */
     _clearMenuState() {
         log.debug("_clearMenuState | Clearing menu state and closing open menus");
-        this._contextMenu?.close();
+        
+        // Only close the context menu if it is actually open (active target is set)
+        if (this._activeMenuTarget && this._contextMenu) {
+            try {
+                this._contextMenu.close()?.catch?.(err => {
+                    log.debug("ContextMenu.close promise rejected (expected during re-render):", err);
+                });
+            } catch (err) {
+                log.debug("ContextMenu.close threw synchronously:", err);
+            }
+        }
+
         this._activeLeftClickMenu?.close();
         this._activeLeftClickMenu = null;
         this._activeMenuTarget = null;
