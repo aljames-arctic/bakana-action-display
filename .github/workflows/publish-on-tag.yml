@@ -104,10 +104,11 @@ jobs:
           zip                                    \
             --recurse-paths                      \
              ./module.zip                        \
+            lang/                                \
             packs/                               \
             src/                                 \
             styles/                              \
-            lang/                                \
+            templates/                           \
             LICENSE                              \
             module.json
 
