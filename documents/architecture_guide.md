@@ -47,7 +47,7 @@ The module is built using a clean **pipes-and-filters / adapter** architecture, 
 *   **Role**: Handles system-specific rules, resource calculations, and terminology.
 *   **Responsibilities**:
     *   Maps raw items into system-specific categories (e.g., separating weapons, spells, and features in D&D 5e).
-    *   Extracts and calculates resource uses (e.g., spell slots, item charges, or D&D 5e v4+ Activity uses).
+    *   Extracts and calculates resource uses (e.g., spell slots, item charges, ammunition, or D&D 5e v4+ Activity uses).
     *   Populates a generic **`subActions`** array on actions that have multiple options (like D&D 5e activities), converting them into a system-agnostic format.
     *   Filters out depleted actions if the "Filter Depleted Actions" setting is enabled, using system-specific rules (e.g., checking D&D 5e activities).
     *   Provides system-specific localization labels and icons for the left-side and right-side tabs (falling back to hardcoded English in the base class if no specific adapter exists).
@@ -101,8 +101,12 @@ classDiagram
         +getItemTypeLabel(parentId)
         +getSpellLevelLabel(level)
         +getActionSubTabLabel(subId)
-        -_calculateUses(item)
-        -_calculateActivityUses(activity, actor)
+        -_calculateUses(item, actor)
+        -_hasLimitedUses(item, actor)
+        -_calculateActivityUses(activity, item, actor)
+        -_calculateSpellSlots(item, actor)
+        -_calculateWeaponAmmunition(item, actor)
+        -_hasAvailableUpcastSlots(actor, level)
     }
 
     class BaseModuleAdapter {
@@ -124,6 +128,12 @@ classDiagram
         #_onRender(context, options)
         +setPosition(positionMode, options)
         -_onRollAction(event)
+        -_onPointerDownCapture(event)
+        -_onContextMenuCapture(event)
+        -_clearMenuState()
+        -_createContextMenu()
+        -_createTabContextMenu()
+        -_toggleActionHidden(actionId, shouldHide)
     }
 
     ActionDisplayApp --> ActionDisplay : queries actions
