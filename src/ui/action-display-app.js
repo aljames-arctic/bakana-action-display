@@ -602,7 +602,6 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
 
         // Prevent clicks inside the HUD from bubbling up to the document
         this.element.addEventListener('click', this._boundStopPropagation);
-        this.element.addEventListener('contextmenu', this._boundStopPropagation);
 
         // Intercept right-click pointerdown and contextmenu events in the capture phase to support toggling the menu off
         this.element.addEventListener('pointerdown', this._boundOnPointerDownCapture, { capture: true });
