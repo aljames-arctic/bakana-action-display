@@ -75,7 +75,7 @@ export class Pf2eSystemAdapter extends BaseSystemAdapter {
                 id: `strike-${strike.slug ?? strike.name}`,
                 name: strike.label ?? strike.name,
                 type: 'weapon',
-                img: strike.img ?? strike.imageUrl ?? 'systems/pf2e/icons/default-icons/melee.svg',
+                img: strike.item?.img ?? strike.img ?? strike.imageUrl ?? 'systems/pf2e/icons/default-icons/melee.svg',
                 activationType: 'action', // Strikes cost 1 action
                 tabs: ['action'],
                 itemTypes: ['weapon'],
