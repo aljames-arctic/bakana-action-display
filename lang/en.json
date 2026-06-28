@@ -1,34 +1,6 @@
 {
     "BAD": {
         "title": "Bakana's Action Display",
-        "itemTypes": {
-            "all": "All Items",
-            "weapon": "Weapon",
-            "equipment": "Equipment",
-            "consumable": "Consumable",
-            "tool": "Tool",
-            "backpack": "Container",
-            "loot": "Loot",
-            "feat": "Feature",
-            "spell": "Spell",
-            "other": "Other"
-        },
-        "spellLevels": {
-            "cantrip": "Cantrip",
-            "levelN": "{level} Level"
-        },
-        "actionSubGroups": {
-            "action": "Action",
-            "bonus": "Bonus Action",
-            "reaction": "Reaction",
-            "minute": "Minute",
-            "hour": "Hour",
-            "day": "Day",
-            "legendary": "Legendary",
-            "mythic": "Mythic",
-            "lair": "Lair",
-            "crew": "Crew"
-        },
         "settings": {
             "hudOpacity": {
                 "name": "HUD Opacity",

@@ -41,16 +41,16 @@ export class BaseSystemAdapter {
      */
     getItemTypeLabel(parentId) {
         const labels = {
-            'all': localize('BAD.itemTypes.all', 'All Items'),
-            'weapon': localize('BAD.itemTypes.weapon', 'Weapon'),
-            'equipment': localize('BAD.itemTypes.equipment', 'Equipment'),
-            'consumable': localize('BAD.itemTypes.consumable', 'Consumable'),
-            'tool': localize('BAD.itemTypes.tool', 'Tool'),
-            'backpack': localize('BAD.itemTypes.backpack', 'Container'),
-            'loot': localize('BAD.itemTypes.loot', 'Loot'),
-            'feat': localize('BAD.itemTypes.feat', 'Feature'),
-            'spell': localize('BAD.itemTypes.spell', 'Spell'),
-            'other': localize('BAD.itemTypes.other', 'Other'),
+            'all': 'All Items',
+            'weapon': 'Weapon',
+            'equipment': 'Equipment',
+            'consumable': 'Consumable',
+            'tool': 'Tool',
+            'backpack': 'Container',
+            'loot': 'Loot',
+            'feat': 'Feature',
+            'spell': 'Spell',
+            'other': 'Other',
             'hidden': localize('BAD.hud.hidden', 'Hidden')
         };
         return labels[parentId] || parentId.toUpperCase();
@@ -85,11 +85,9 @@ export class BaseSystemAdapter {
      */
     getSpellLevelLabel(level) {
         if (level === '0') {
-            return localize('BAD.spellLevels.cantrip', 'Cantrip');
+            return 'Cantrip';
         }
-        return (game.i18n && game.i18n.has('BAD.spellLevels.levelN'))
-            ? game.i18n.format('BAD.spellLevels.levelN', { level })
-            : `${level} Level`;
+        return `${level} Level`;
     }
 
     /**
@@ -99,13 +97,13 @@ export class BaseSystemAdapter {
      */
     getActionTypeLabel(parentId) {
         const labels = {
-            'all': localize('BAD.actions.all', 'All Actions'),
-            'standard': localize('BAD.actions.standard', 'Standard'),
-            'time': localize('BAD.actions.time', 'Time'),
-            'monster': localize('BAD.actions.monster', 'Monster'),
-            'vehicle': localize('BAD.actions.vehicle', 'Vehicle'),
-            'special': localize('BAD.actions.special', 'Special'),
-            'none': localize('BAD.actions.none', 'None')
+            'all': 'All Actions',
+            'standard': 'Standard',
+            'time': 'Time',
+            'monster': 'Monster',
+            'vehicle': 'Vehicle',
+            'special': 'Special',
+            'none': 'None'
         };
         return labels[parentId] || parentId.toUpperCase();
     }
@@ -135,16 +133,16 @@ export class BaseSystemAdapter {
      */
     getActionSubTabLabel(subId) {
         const labels = {
-            'action': localize('BAD.actionSubGroups.action', 'Action'),
-            'bonus': localize('BAD.actionSubGroups.bonus', 'Bonus Action'),
-            'reaction': localize('BAD.actionSubGroups.reaction', 'Reaction'),
-            'minute': localize('BAD.actionSubGroups.minute', 'Minute'),
-            'hour': localize('BAD.actionSubGroups.hour', 'Hour'),
-            'day': localize('BAD.actionSubGroups.day', 'Day'),
-            'legendary': localize('BAD.actionSubGroups.legendary', 'Legendary'),
-            'mythic': localize('BAD.actionSubGroups.mythic', 'Mythic'),
-            'lair': localize('BAD.actionSubGroups.lair', 'Lair'),
-            'crew': localize('BAD.actionSubGroups.crew', 'Crew')
+            'action': 'Action',
+            'bonus': 'Bonus Action',
+            'reaction': 'Reaction',
+            'minute': 'Minute',
+            'hour': 'Hour',
+            'day': 'Day',
+            'legendary': 'Legendary',
+            'mythic': 'Mythic',
+            'lair': 'Lair',
+            'crew': 'Crew'
         };
         return labels[subId] || subId.toUpperCase();
     }
