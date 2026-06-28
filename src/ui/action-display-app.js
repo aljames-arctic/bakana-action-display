@@ -719,8 +719,9 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             log.debug("Preventing context menu from reopening (toggled off)");
             this._preventReopen = false;
             
-            this._contextMenu?.close();
-            this._tabContextMenu?.close();
+            // Safe close in capture phase (catch promise rejections)
+            this._contextMenu?.close()?.catch?.(err => {});
+            this._tabContextMenu?.close()?.catch?.(err => {});
             
             event.preventDefault();
             event.stopPropagation();
@@ -740,8 +741,18 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
 
         if (targetItem && activeItem === targetItem) {
             log.debug("Right-clicked the same item, toggling context menu off (fallback)");
-            this._contextMenu?.close();
-            this._tabContextMenu?.close();
+            
+            // Only close the menu that is actually open and catch any promise rejections in Foundry V12
+            const isOpenTabMenu = activeItem.classList.contains('bad-left-tab') || activeItem.classList.contains('bad-left-sub-tab');
+            if (isOpenTabMenu) {
+                this._tabContextMenu?.close()?.catch?.(err => {
+                    log.debug("TabContextMenu.close promise rejected in fallback:", err);
+                });
+            } else {
+                this._contextMenu?.close()?.catch?.(err => {
+                    log.debug("ContextMenu.close promise rejected in fallback:", err);
+                });
+            }
             
             event.preventDefault();
             event.stopPropagation();

@@ -3,6 +3,7 @@
     position: fixed;
     pointer-events: all;
     opacity: var(--bad-hud-opacity, 0.88); /* Configurable opacity */
+    z-index: 2000; /* Render on top of the native Token HUD (which is usually at 1000, but can be higher) */
 }
 
 .bakanas-action-display-window.window-app {
@@ -149,10 +150,10 @@
     cursor: pointer;
     background: rgba(255, 255, 255, 0.02);
     border: 1px solid rgba(255, 255, 255, 0.04);
-    transition: all 0.15s ease;
+    transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-.bad-action-item:hover {
+.bakanas-action-display-container:not(.has-context-menu) .bad-action-item:hover {
     background: rgba(167, 139, 250, 0.12);
     border-color: rgba(167, 139, 250, 0.2);
     transform: translateX(3px);
@@ -197,7 +198,7 @@
     text-overflow: ellipsis;
 }
 
-.bad-action-item:hover .bad-action-name {
+.bakanas-action-display-container:not(.has-context-menu) .bad-action-item:hover .bad-action-name {
     color: #ffffff;
 }
 
@@ -253,12 +254,12 @@
 .bad-left-tabs {
     position: absolute;
     right: 100%; /* Anchor to the left edge of the main container */
-    top: 50%;
-    transform: translateY(-50%);
+    top: 40px; /* Align to the top, below the control bar, to prevent vertical jumping and remove transform stacking context */
     display: flex;
     flex-direction: column;
     gap: 8px;
-    z-index: -1; /* Placed behind the container so the seam is hidden */
+    /* Removed z-index: -1 to prevent child context menus from rendering behind the container.
+       DOM order naturally keeps the tabs behind the container content. */
 }
 
 /* Tab Group (Parent + Sub-tabs) */
@@ -397,12 +398,12 @@
 .bad-right-tabs {
     position: absolute;
     left: 100%; /* Anchor to the right edge of the main container */
-    top: 50%;
-    transform: translateY(-50%);
+    top: 40px; /* Align to the top, below the control bar, to prevent vertical jumping and remove transform stacking context */
     display: flex;
     flex-direction: column;
     gap: 8px;
-    z-index: -1; /* Placed behind the container so the seam is hidden */
+    /* Removed z-index: -1 to prevent child context menus from rendering behind the container.
+       DOM order naturally keeps the tabs behind the container content. */
 }
 
 /* Tab Group (Parent + Sub-tabs) */
@@ -609,17 +610,10 @@
 #context-menu, .context-menu {
     z-index: 999999 !important;
     pointer-events: all !important;
+    transform: translateZ(0); /* Promote to composited layer to prevent 1-frame transition flickers */
 }
 
-/* Disable hover and mouse events on HUD items when a context menu is active to prevent flickering */
-.bakanas-action-display-container.has-context-menu .bad-action-item {
-    pointer-events: none !important;
-}
-
-/* Re-enable pointer events on the active item (which has the context menu open) so it can be toggled off */
-.bakanas-action-display-container.has-context-menu .bad-action-item.context {
-    pointer-events: all !important;
-}
+/* Hover effects are disabled via :not(.has-context-menu) on the hover rulesets above */
 
 /* Style the context menu items for flex layout to support right-aligned uses */
 #context-menu .context-item, .context-menu .context-item {
