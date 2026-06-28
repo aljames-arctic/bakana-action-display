@@ -796,6 +796,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                 name: "BAD.dnd5e.prepareSpell",
                 icon: '<i class="fas fa-book"></i>',
                 condition: el => {
+                    if (game.system.id !== "dnd5e") return false;
                     const actionId = el.dataset.actionId;
                     const actions = actionDisplay.getActions(this.actor);
                     const action = actions.find(a => a.id === actionId);
@@ -822,6 +823,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                 name: "BAD.dnd5e.unprepareSpell",
                 icon: '<i class="fas fa-book-dead"></i>',
                 condition: el => {
+                    if (game.system.id !== "dnd5e") return false;
                     const actionId = el.dataset.actionId;
                     const actions = actionDisplay.getActions(this.actor);
                     const action = actions.find(a => a.id === actionId);
@@ -872,6 +874,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                 name: "BAD.dnd5e.togglePrepared",
                 icon: '<i class="fas fa-book-open"></i>',
                 condition: el => {
+                    if (game.system.id !== "dnd5e") return false;
                     // Only show on the "All Spells" subtab (type 'all' under 'spell' parent)
                     if (el.dataset.type !== 'all') return false;
                     const isSpellParent = el.closest('.bad-left-tab-group')?.querySelector('.bad-left-tab')?.dataset.type === 'spell';
