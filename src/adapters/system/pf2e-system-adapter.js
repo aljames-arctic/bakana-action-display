@@ -213,4 +213,35 @@ export class Pf2eSystemAdapter extends BaseSystemAdapter {
         };
         return icons[parentId] || super.getActionTypeIcon(parentId);
     }
+
+    /**
+     * Calculate remaining ammunition for a PF2e Strike.
+     * @private
+     */
+    _calculateStrikeAmmo(strike, actor) {
+        const weapon = strike.item;
+        if (!weapon || weapon.type !== 'weapon') return { available: null, max: null };
+
+        const ammoConfig = weapon.system.ammo;
+        if (ammoConfig && ammoConfig.baseType) {
+            // This ranged weapon requires ammunition!
+            const baseType = ammoConfig.baseType;
+
+            // Find all ammunition items in the actor's inventory matching this baseType
+            const ammoItems = actor.items.filter(i => i.type === 'ammo' && i.system.baseItem === baseType);
+
+            // Sum their quantities
+            let totalQuantity = 0;
+            for (const ammoItem of ammoItems) {
+                totalQuantity += ammoItem.system.quantity ?? 0;
+            }
+
+            return {
+                available: totalQuantity,
+                max: null
+            };
+        }
+
+        return { available: null, max: null };
+    }
 }
