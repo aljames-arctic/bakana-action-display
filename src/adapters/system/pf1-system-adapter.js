@@ -416,6 +416,27 @@ export class Pf1SystemAdapter extends BaseSystemAdapter {
     }
 
     /**
+     * Get the localized label for a left-side item type (parent tab) in PF1e.
+     */
+    getItemTypeLabel(parentId) {
+        const labels = {
+            'feat': 'Feats',
+            'buff': 'Buffs'
+        };
+        return labels[parentId] || super.getItemTypeLabel(parentId);
+    }
+
+    /**
+     * Get the CSS icon class for a left-side item type (parent tab) in PF1e.
+     */
+    getItemTypeIcon(parentId) {
+        const icons = {
+            'buff': 'fas fa-sparkles'
+        };
+        return icons[parentId] || super.getItemTypeIcon(parentId);
+    }
+
+    /**
      * Sort order for PF1e action types.
      */
     _getActivationSort(type) {
