@@ -92,7 +92,8 @@ export class Dnd5eSystemAdapter extends BaseSystemAdapter {
                     activities: activeActivities.map(activity => ({
                         activity,
                         parentTab: this._getParentTab(activity.activation.type),
-                        subTab: this._getSubTab(activity.activation.type)
+                        subTab: this._getSubTab(activity.activation.type),
+                        uses: this._calculateActivityUses(activity, item, actor)
                     }))
                 };
 
@@ -347,5 +348,73 @@ export class Dnd5eSystemAdapter extends BaseSystemAdapter {
         }
 
         return { available, max };
+    }
+
+    /**
+     * Calculate available and maximum uses for a D&D 5e Activity.
+     * @param {Activity} activity The activity instance
+     * @param {Item} item The parent item
+     * @param {Actor} actor The actor
+     * @returns {{available: number|null, max: number|null}} The uses count
+     * @private
+     */
+    _calculateActivityUses(activity, item, actor) {
+        const targets = activity.consumption?.targets || [];
+        
+        // In newer dnd5e versions, the activity might have its own resolved uses
+        
+        // 1. If the activity has its own explicit limited uses
+        if (activity.uses && (activity.uses.max || activity.uses.value !== null)) {
+            let value = activity.uses.value ?? 0;
+            let max = activity.uses.max ?? 0;
+            if (typeof max === 'string') {
+                max = parseInt(max, 10) || 0;
+            }
+            return { available: value, max: max };
+        }
+        
+        // 2. Resolve based on consumption targets
+        for (const target of targets) {
+            if (target.type === 'activityUses') {
+                // Consumes another activity's uses (or self if target is empty)
+                const targetActivity = target.target ? item.system.activities.get(target.target) : activity;
+                if (targetActivity && targetActivity.uses) {
+                    return {
+                        available: targetActivity.uses.value ?? 0,
+                        max: targetActivity.uses.max ?? 0
+                    };
+                }
+            } else if (target.type === 'itemUses') {
+                // Consumes the parent item's uses
+                return this._calculateUses(item, actor);
+            } else if (target.type === 'spellSlots') {
+                // Consumes actor spell slots
+                const actorSpells = actor.system.spells;
+                const level = target.target;
+                if (level === 'pact') {
+                    return {
+                        available: actorSpells?.pact?.value ?? 0,
+                        max: actorSpells?.pact?.max ?? 0
+                    };
+                } else {
+                    const spellSlot = actorSpells?.[`spell${level}`];
+                    return {
+                        available: spellSlot?.value ?? 0,
+                        max: spellSlot?.max ?? 0
+                    };
+                }
+            } else if (target.type === 'material') {
+                // Consumes quantity of another item
+                const targetItem = actor.items.get(target.target);
+                const qty = targetItem?.system?.quantity ?? 0;
+                const consumed = target.value || 1;
+                return {
+                    available: Math.floor(qty / consumed),
+                    max: null
+                };
+            }
+        }
+        
+        return { available: null, max: null };
     }
 }

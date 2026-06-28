@@ -507,6 +507,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                 // Filter activities to only those that match the currently active right-side tab
                 const activeParent = this.activeParentType;
                 const activeSub = this.activeSubType;
+                const filterNoResources = game.settings.get('bakanas-action-display', 'filterNoResources');
 
                 const qualifyingActivities = wrappedActivities.filter(entry => {
                     const matchesParent = activeParent === 'all' || entry.parentTab === activeParent;
@@ -514,6 +515,12 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                     if (activeParent !== 'all' && activeSub && activeSub !== 'all') {
                         matchesSub = entry.subTab === activeSub;
                     }
+                    
+                    // Filter out depleted activities if Hide Depleted is enabled
+                    if (filterNoResources && entry.uses && entry.uses.available !== null && entry.uses.available <= 0) {
+                        return false;
+                    }
+                    
                     return matchesParent && matchesSub;
                 });
 
@@ -521,14 +528,25 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
 
                 if (qualifyingActivities.length > 1) {
                     // Multiple qualifying activities! Show a left-click dropdown menu.
-                    const menuItems = qualifyingActivities.map(entry => ({
-                        name: entry.activity.name || entry.activity.type.toUpperCase(),
-                        icon: entry.activity.img ? `<img src="${entry.activity.img}" style="width: 16px; height: 16px; border: none; vertical-align: middle; margin-right: 8px; border-radius: 4px;" />` : '<i class="fas fa-play" style="margin-right: 8px;"></i>',
-                        callback: () => {
-                            log.debug(`Rolling activity: ${entry.activity.name} via dropdown`);
-                            entry.activity.use({ event });
+                    const menuItems = qualifyingActivities.map(entry => {
+                        const uses = entry.uses;
+                        let name = entry.activity.name || entry.activity.type.toUpperCase();
+                        if (uses && uses.available !== null) {
+                            if (uses.max) {
+                                name += ` (${uses.available}/${uses.max})`;
+                            } else {
+                                name += ` (${uses.available})`;
+                            }
                         }
-                    }));
+                        return {
+                            name: name,
+                            icon: entry.activity.img ? `<img src="${entry.activity.img}" style="width: 16px; height: 16px; border: none; vertical-align: middle; margin-right: 8px; border-radius: 4px;" />` : '<i class="fas fa-play" style="margin-right: 8px;"></i>',
+                            callback: () => {
+                                log.debug(`Rolling activity: ${entry.activity.name} via dropdown`);
+                                entry.activity.use({ event });
+                            }
+                        };
+                    });
 
                     const options = {
                         jQuery: false, // Opt-out of jQuery for callbacks

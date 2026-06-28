@@ -124,8 +124,20 @@ class ActionDisplay {
         const filterNoResources = game.settings.get('bakanas-action-display', 'filterNoResources');
         if (filterNoResources) {
             actions = actions.filter(action => {
-                // Only filter out if it has a resource tracker (available !== null) and it is depleted (<= 0)
-                return !(action.uses && action.uses.available !== null && action.uses.available <= 0);
+                // 1. If it has item-level uses, check if they are depleted
+                const itemDepleted = action.uses && action.uses.available !== null && action.uses.available <= 0;
+                if (itemDepleted) return false;
+                
+                // 2. If it has activities, check if ALL activities are depleted
+                const activities = action.systemData?.activities;
+                if (activities && activities.length > 0) {
+                    const allActivitiesDepleted = activities.every(entry => {
+                        return entry.uses && entry.uses.available !== null && entry.uses.available <= 0;
+                    });
+                    if (allActivitiesDepleted) return false;
+                }
+                
+                return true;
             });
         }
 
