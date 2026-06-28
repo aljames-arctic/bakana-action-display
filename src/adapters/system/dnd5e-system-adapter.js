@@ -383,7 +383,11 @@ export class Dnd5eSystemAdapter extends BaseSystemAdapter {
                 }
             } else if (target.type === 'item') {
                 // Consumes quantity of another item (e.g. ammunition) or charges of another item
-                const targetItem = actor.items.get(target.target);
+                // Robust resolution: Check if the target is a UUID or a plain ID
+                const targetItem = target.target?.includes('.')
+                    ? (foundry.utils.fromUuidSync(target.target) || actor.items.get(target.target))
+                    : actor.items.get(target.target);
+
                 if (targetItem) {
                     const consumed = target.value || 1;
                     // If the target item has its own limited uses (like a wand), use those
@@ -403,16 +407,79 @@ export class Dnd5eSystemAdapter extends BaseSystemAdapter {
                 }
             } else if (target.type === 'material') {
                 // Consumes quantity of another item (specifically spell components)
-                const targetItem = actor.items.get(target.target);
-                const qty = targetItem?.system?.quantity ?? 0;
-                const consumed = target.value || 1;
-                return {
-                    available: Math.floor(qty / consumed),
-                    max: null
-                };
+                const targetItem = target.target?.includes('.')
+                    ? (foundry.utils.fromUuidSync(target.target) || actor.items.get(target.target))
+                    : actor.items.get(target.target);
+
+                if (targetItem) {
+                    const qty = targetItem.system.quantity ?? 0;
+                    const consumed = target.value || 1;
+                    return {
+                        available: Math.floor(qty / consumed),
+                        max: null
+                    };
+                }
             }
         }
         
+        // Fallback for standard spells if no explicit spellSlots consumption target was resolved
+        if (item.type === 'spell') {
+            return this._calculateSpellSlots(item, actor);
+        }
+
+        return { available: null, max: null };
+    }
+
+    /**
+     * Fallback method to calculate spell slots for standard slot-based spells.
+     * Used when the Cast activity doesn't have an explicit spellSlots consumption target.
+     * @private
+     */
+    _calculateSpellSlots(item, actor) {
+        const system = item.system;
+        const prepMode = system.method;
+        const actorSpells = actor.system.spells;
+        const level = system.level ?? 0;
+        
+        if (prepMode === 'pact') {
+            const pact = actorSpells?.pact;
+            const available = pact?.value ?? 0;
+            const max = pact?.max ?? 0;
+            
+            if (available > 0) {
+                return { available, max };
+            }
+            
+            if (this._hasAvailableUpcastSlots(actor, pact?.level ?? 0)) {
+                return {
+                    available: localize('BAD.dnd5e.upcast', 'Upcast'),
+                    max: null,
+                    isUpcast: true
+                };
+            }
+            
+            return { available: 0, max };
+        } else if (!['innate', 'atwill'].includes(prepMode)) {
+            if (level > 0) {
+                const spellSlot = actorSpells?.[`spell${level}`];
+                const available = spellSlot?.value ?? 0;
+                const max = spellSlot?.max ?? 0;
+                
+                if (available > 0) {
+                    return { available, max };
+                }
+                
+                if (this._hasAvailableUpcastSlots(actor, level)) {
+                    return {
+                        available: localize('BAD.dnd5e.upcast', 'Upcast'),
+                        max: null,
+                        isUpcast: true
+                    };
+                }
+                
+                return { available: 0, max };
+            }
+        }
         return { available: null, max: null };
     }
 
