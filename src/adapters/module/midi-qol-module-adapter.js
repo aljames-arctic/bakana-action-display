@@ -16,21 +16,60 @@ export class MidiQolModuleAdapter extends BaseModuleAdapter {
      * @returns {Object[]} The modified actions
      */
     modifyActions(actions, actor) {
-        return actions.map(action => {
+        const modified = [];
+
+        for (const action of actions) {
             const item = action.originalItem;
-            if (!item) return action;
+            if (!item) {
+                modified.push(action);
+                continue;
+            }
 
-            // Midi-QOL stores its settings under flags['midi-qol']
+            // 1. Check if the action has consolidated activities
+            const activities = action.systemData?.activities;
+            if (activities && activities.length > 0) {
+                // Filter out activities that are marked as automationOnly
+                const filteredActivities = activities.filter(entry => {
+                    const isAutomationOnly = entry.activity.midiProperties?.automationOnly === true;
+                    return !isAutomationOnly;
+                });
+
+                // If all activities are automation-only, hide the entire item!
+                if (filteredActivities.length === 0) {
+                    continue; // Skip this action entirely (filters it out of the HUD)
+                }
+
+                // If some activities were filtered out, update the action's activities and tabs
+                if (filteredActivities.length < activities.length) {
+                    action.systemData.activities = filteredActivities;
+
+                    // Recalculate unique tabs based on the remaining activities
+                    const uniqueTabs = [];
+                    const seenTabKeys = new Set();
+
+                    for (const entry of filteredActivities) {
+                        const parentTab = entry.parentTab;
+                        const subTab = entry.subTab;
+                        const key = subTab ? `${parentTab}/${subTab}` : parentTab;
+                        if (!seenTabKeys.has(key)) {
+                            seenTabKeys.add(key);
+                            uniqueTabs.push(subTab ? [parentTab, subTab] : [parentTab]);
+                        }
+                    }
+                    action.tabs = uniqueTabs;
+                }
+            }
+
+            // 2. Keep the existing midiAutomated flag logic for the item
             const midiFlags = item.flags?.['midi-qol'];
-
             action.extra = action.extra ?? {};
-
-            // If the item has Midi-QOL automation flags, mark it as automated
             if (midiFlags) {
                 action.extra.midiAutomated = true;
             }
 
-            return action;
-        });
+            modified.push(action);
+        }
+
+        return modified;
     }
 }
