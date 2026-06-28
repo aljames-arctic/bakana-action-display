@@ -18,6 +18,28 @@ export class Pf1SystemAdapter extends BaseSystemAdapter {
     modifyActions(actions, actor) {
         const modified = [];
 
+        // 1. Build a map of weapon children to their parent weapons
+        const attackToWeaponMap = new Map();
+        const weaponLinkedAttacks = new Map();
+        
+        const weapons = actor.items.filter(i => i.type === 'weapon');
+        for (const weapon of weapons) {
+            const children = weapon.system.links?.children ?? [];
+            const linked = [];
+            for (const child of children) {
+                const parts = child.uuid.split('.');
+                const childId = parts[parts.length - 1];
+                const childItem = actor.items.get(childId);
+                if (childItem && childItem.type === 'attack') {
+                    attackToWeaponMap.set(childId, weapon);
+                    linked.push(childItem);
+                }
+            }
+            if (linked.length > 0) {
+                weaponLinkedAttacks.set(weapon.id, linked);
+            }
+        }
+
         for (const action of actions) {
             const item = action.originalItem;
 
@@ -47,20 +69,16 @@ export class Pf1SystemAdapter extends BaseSystemAdapter {
                 };
 
                 modified.push(action);
-            } else if (['attack', 'weapon', 'consumable', 'feat'].includes(item.type)) {
-                // 2. Items with actions (Attacks, Weapons, Consumables, Feats)
-                const itemActions = item.system.actions ?? [];
-                if (itemActions.length === 0) continue; // Skip passive items/feats
+            } else if (item.type === 'attack') {
+                // 2. Standalone Attacks (only if NOT linked to a weapon, e.g. Touch/Claws)
+                if (attackToWeaponMap.has(item.id)) continue; // Skip, merged into parent weapon
 
-                // Resolve uses/charges
+                const itemActions = item.system.actions ?? [];
+                if (itemActions.length === 0) continue;
+
                 const uses = this._calculateUses(item, actor);
 
-                // Map actions to sub-actions
-                // In PF1e, if an item has multiple actions, we map them all
-                // If it has only 1, we still map it to subActions for consistency, 
-                // but the UI will roll it directly if there's only 1.
                 action.subActions = itemActions.map(act => {
-                    // Determine activation type for this sub-action
                     const actType = act.activation?.type;
                     const activationType = this._parseActivationType(actType);
                     
@@ -70,7 +88,7 @@ export class Pf1SystemAdapter extends BaseSystemAdapter {
                         img: item.img,
                         activationType: activationType,
                         tabs: [activationType],
-                        uses: uses, // Sub-actions share the parent item's uses
+                        uses: uses,
                         roll: (event) => {
                             if (typeof item.use === 'function') {
                                 item.use({ actionId: act._id, event });
@@ -81,43 +99,136 @@ export class Pf1SystemAdapter extends BaseSystemAdapter {
                     };
                 });
 
-                // Filter out sub-actions that don't have a valid activation type (passive/non-actions)
-                // If all sub-actions are passive/invalid, we skip the item.
                 action.subActions = action.subActions.filter(sub => sub.activationType !== null);
                 if (action.subActions.length === 0) continue;
 
-                // Set parent properties based on the first sub-action
                 const firstSub = action.subActions[0];
                 action.activationType = firstSub.activationType;
                 action.tabs = [firstSub.activationType];
-                
-                // Determine item type category for left tab
-                if (item.type === 'feat') {
-                    action.itemTypes = ['feat'];
-                } else if (item.type === 'consumable') {
-                    action.itemTypes = ['consumable'];
-                } else {
-                    action.itemTypes = ['weapon']; // attack or weapon
-                }
-                
+                action.itemTypes = ['weapon']; // Group under weapons/attacks
                 action.uses = uses;
                 modified.push(action);
+
+            } else if (item.type === 'weapon') {
+                // 3. Weapons (with ammo resolution and linked attacks merging)
+                const uses = this._calculateUses(item, actor);
+                const linkedAttacks = weaponLinkedAttacks.get(item.id) ?? [];
+
+                let subActions = [];
+
+                if (linkedAttacks.length > 0) {
+                    // Merge actions from all linked attack items
+                    for (const attackItem of linkedAttacks) {
+                        const attackActions = attackItem.system.actions ?? [];
+                        for (const act of attackActions) {
+                            const actType = act.activation?.type;
+                            const activationType = this._parseActivationType(actType);
+                            if (!activationType) continue;
+
+                            subActions.push({
+                                id: act._id,
+                                // If multiple attacks are linked, prefix with attack name for clarity
+                                name: linkedAttacks.length > 1 ? `${attackItem.name}: ${act.name || 'Attack'}` : (act.name || attackItem.name),
+                                img: attackItem.img || item.img,
+                                activationType: activationType,
+                                tabs: [activationType],
+                                uses: uses, // Shares weapon's ammunition/charges
+                                roll: (event) => {
+                                    if (typeof attackItem.use === 'function') {
+                                        attackItem.use({ actionId: act._id, event });
+                                    } else if (typeof attackItem.roll === 'function') {
+                                        attackItem.roll({ actionId: act._id, event });
+                                    }
+                                }
+                            });
+                        }
+                    }
+                } else {
+                    // Fallback to the weapon's own actions if no attacks are linked
+                    const itemActions = item.system.actions ?? [];
+                    for (const act of itemActions) {
+                        const actType = act.activation?.type;
+                        const activationType = this._parseActivationType(actType);
+                        if (!activationType) continue;
+
+                        subActions.push({
+                            id: act._id,
+                            name: act.name || item.name,
+                            img: item.img,
+                            activationType: activationType,
+                            tabs: [activationType],
+                            uses: uses,
+                            roll: (event) => {
+                                if (typeof item.use === 'function') {
+                                    item.use({ actionId: act._id, event });
+                                } else if (typeof item.roll === 'function') {
+                                    item.roll({ actionId: act._id, event });
+                                }
+                            }
+                        });
+                    }
+                }
+
+                if (subActions.length === 0) continue; // Skip if no active actions
+
+                action.subActions = subActions;
+                const firstSub = subActions[0];
+                action.activationType = firstSub.activationType;
+                action.tabs = [firstSub.activationType];
+                action.itemTypes = ['weapon'];
+                action.uses = uses;
+                modified.push(action);
+
+            } else if (['consumable', 'feat'].includes(item.type)) {
+                // 4. Consumables and Feats
+                const itemActions = item.system.actions ?? [];
+                if (itemActions.length === 0) continue;
+
+                const uses = this._calculateUses(item, actor);
+
+                action.subActions = itemActions.map(act => {
+                    const actType = act.activation?.type;
+                    const activationType = this._parseActivationType(actType);
+                    
+                    return {
+                        id: act._id,
+                        name: act.name || item.name,
+                        img: item.img,
+                        activationType: activationType,
+                        tabs: [activationType],
+                        uses: uses,
+                        roll: (event) => {
+                            if (typeof item.use === 'function') {
+                                item.use({ actionId: act._id, event });
+                            } else if (typeof item.roll === 'function') {
+                                item.roll({ actionId: act._id, event });
+                            }
+                        }
+                    };
+                });
+
+                action.subActions = action.subActions.filter(sub => sub.activationType !== null);
+                if (action.subActions.length === 0) continue;
+
+                const firstSub = action.subActions[0];
+                action.activationType = firstSub.activationType;
+                action.tabs = [firstSub.activationType];
+                action.itemTypes = [item.type];
+                action.uses = uses;
+                modified.push(action);
+
             } else if (item.type === 'buff') {
-                // 3. Buffs in PF1e: toggleable passive/active effects
+                // 5. Buffs
                 action.tabs = ['other'];
                 action.activationType = 'other';
                 action.itemTypes = ['buff'];
                 
-                // Clicking toggles the buff active state
                 action.roll = async (event) => {
                     const active = item.system.active;
                     await item.update({ "system.active": !active });
                 };
                 
-                // Set active state for UI styling
                 action.isActive = item.system.active;
-                
-                // Buffs don't use charges, so leave uses null
                 action.uses = { available: null, max: null };
 
                 modified.push(action);
