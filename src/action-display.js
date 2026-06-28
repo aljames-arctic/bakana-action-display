@@ -3,7 +3,7 @@ import { BaseModuleAdapter } from './adapters/module/base-module-adapter.js';
 import { log } from './lib/logger.js';
 
 // Lists of systems and modules that have adapter implementations
-const SUPPORTED_SYSTEMS = ['dnd5e', 'pf2e'];
+const SUPPORTED_SYSTEMS = ['dnd5e', 'pf2e', 'pf1'];
 const SUPPORTED_MODULES = ['midi-qol'];
 
 /**
