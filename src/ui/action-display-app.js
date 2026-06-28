@@ -495,10 +495,11 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                         
                         let usesHtml = "";
                         if (uses && uses.available !== null) {
-                            const isDepleted = uses.available <= 0;
+                            const isDepleted = uses.available <= 0 && !uses.isUpcast;
                             const depletedClass = isDepleted ? ' depleted' : '';
+                            const upcastClass = uses.isUpcast ? ' upcast' : '';
                             const usesText = uses.max ? `${uses.available}/${uses.max}` : `${uses.available}`;
-                            usesHtml = `<span class="bad-menu-uses${depletedClass}">${usesText}</span>`;
+                            usesHtml = `<span class="bad-menu-uses${depletedClass}${upcastClass}">${usesText}</span>`;
                         }
                         
                         // Workaround: Foundry escapes 'name' but renders 'icon' as unescaped HTML.

@@ -141,8 +141,8 @@ export class Dnd5eSystemAdapter extends BaseSystemAdapter {
         const filterNoResources = game.settings.get('bakanas-action-display', 'filterNoResources');
         if (filterNoResources) {
             filtered = modified.filter(action => {
-                // 1. If it has item-level uses, check if they are depleted
-                const itemDepleted = action.uses && action.uses.available !== null && action.uses.available <= 0;
+                // 1. If it has item-level uses, check if they are depleted (exempt upcastable spells)
+                const itemDepleted = action.uses && action.uses.available !== null && action.uses.available <= 0 && !action.uses.isUpcast;
                 if (itemDepleted) return false;
                 
                 // 2. If it has activities, check if ALL activities are depleted
@@ -339,19 +339,47 @@ export class Dnd5eSystemAdapter extends BaseSystemAdapter {
         if (item.type === 'spell') {
             const prepMode = system.method;
             const actorSpells = actor.system.spells;
+            const level = system.level ?? 0;
+            
             if (prepMode === 'pact') {
-                return {
-                    available: actorSpells?.pact?.value ?? 0,
-                    max: actorSpells?.pact?.max ?? 0
-                };
+                const pact = actorSpells?.pact;
+                const available = pact?.value ?? 0;
+                const max = pact?.max ?? 0;
+                
+                if (available > 0) {
+                    return { available, max };
+                }
+                
+                // Out of Pact slots, check if we can upcast using higher-level standard slots
+                if (this._hasAvailableUpcastSlots(actor, pact?.level ?? 0)) {
+                    return {
+                        available: "Upcast",
+                        max: null,
+                        isUpcast: true
+                    };
+                }
+                
+                return { available: 0, max };
             } else if (!['innate', 'atwill'].includes(prepMode)) {
-                const level = system.level ?? 0;
                 if (level > 0) {
                     const spellSlot = actorSpells?.[`spell${level}`];
-                    return {
-                        available: spellSlot?.value ?? 0,
-                        max: spellSlot?.max ?? 0
-                    };
+                    const available = spellSlot?.value ?? 0;
+                    const max = spellSlot?.max ?? 0;
+                    
+                    if (available > 0) {
+                        return { available, max };
+                    }
+                    
+                    // Out of base level slots, check if we can upcast using higher-level slots (standard or pact)
+                    if (this._hasAvailableUpcastSlots(actor, level)) {
+                        return {
+                            available: "Upcast",
+                            max: null,
+                            isUpcast: true
+                        };
+                    }
+                    
+                    return { available: 0, max };
                 }
             }
         }
@@ -511,5 +539,31 @@ export class Dnd5eSystemAdapter extends BaseSystemAdapter {
             'crew': localize('DND5E.CrewAction', 'Crew')
         };
         return labels[subId] ?? super.getActionSubTabLabel(subId);
+    }
+
+    /**
+     * Check if the actor has any available spell slots (standard or pact) of a given level or higher.
+     * @private
+     */
+    _hasAvailableUpcastSlots(actor, level) {
+        if (!actor) return false;
+        const actorSpells = actor.system.spells;
+        if (!actorSpells) return false;
+
+        // 1. Check standard spell slots of equal or higher level (up to 9)
+        for (let i = level; i <= 9; i++) {
+            const slot = actorSpells[`spell${i}`];
+            if (slot && slot.value > 0) {
+                return true;
+            }
+        }
+
+        // 2. Check Pact Magic slots
+        const pact = actorSpells.pact;
+        if (pact && pact.value > 0 && (pact.level ?? 0) >= level) {
+            return true;
+        }
+
+        return false;
     }
 }

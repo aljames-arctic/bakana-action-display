@@ -220,6 +220,12 @@
     color: #f87171;
 }
 
+.bad-action-uses.upcast {
+    background: rgba(249, 115, 22, 0.1);
+    border-color: rgba(249, 115, 22, 0.3);
+    color: #fb923c;
+}
+
 /* Empty state message */
 .bad-no-actions {
     text-align: center;
@@ -634,6 +640,13 @@
 /* Depleted uses styling (red) */
 #context-menu .bad-menu-uses.depleted, .context-menu .bad-menu-uses.depleted {
     color: var(--color-shadow-highlight, #ff3333) !important;
+    font-weight: bold;
+    opacity: 1;
+}
+
+/* Upcast uses styling (orange) */
+#context-menu .bad-menu-uses.upcast, .context-menu .bad-menu-uses.upcast {
+    color: #ff9800 !important;
     font-weight: bold;
     opacity: 1;
 }

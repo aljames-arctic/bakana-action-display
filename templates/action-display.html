@@ -55,7 +55,7 @@
                     <span class="bad-action-name">{{this.name}}</span>
                     
                     {{#unless (eq this.uses.available null)}}
-                    <span class="bad-action-uses {{#if (eq this.uses.available 0)}}depleted{{/if}}">
+                    <span class="bad-action-uses {{#if (eq this.uses.available 0)}}depleted{{/if}} {{#if this.uses.isUpcast}}upcast{{/if}}">
                         {{this.uses.available}}{{#if this.uses.max}} / {{this.uses.max}}{{/if}}
                     </span>
                     {{/unless}}
