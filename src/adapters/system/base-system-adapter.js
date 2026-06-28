@@ -35,6 +35,9 @@ export class BaseSystemAdapter {
         const filterNoResources = game.settings.get('bakanas-action-display', 'filterNoResources');
         if (filterNoResources) {
             return actions.filter(action => {
+                // Never hide weapons, even if they are out of ammo or charges
+                if (action.originalItem?.type === 'weapon') return true;
+
                 return !(action.uses && action.uses.available !== null && action.uses.available <= 0);
             });
         }

@@ -53,7 +53,7 @@ export class Pf1SystemAdapter extends BaseSystemAdapter {
                 if (itemActions.length === 0) continue; // Skip passive items/feats
 
                 // Resolve uses/charges
-                const uses = this._calculateUses(item);
+                const uses = this._calculateUses(item, actor);
 
                 // Map actions to sub-actions
                 // In PF1e, if an item has multiple actions, we map them all
@@ -158,7 +158,22 @@ export class Pf1SystemAdapter extends BaseSystemAdapter {
     /**
      * Calculate remaining charges/uses for PF1e items.
      */
-    _calculateUses(item) {
+    _calculateUses(item, actor) {
+        // 1. Ranged weapon ammunition tracking
+        if (item.type === 'weapon' && item.system.weaponSubtype === 'ranged') {
+            const ammoId = item.system.ammo?.default;
+            if (ammoId && actor) {
+                const ammoItem = actor.items.get(ammoId);
+                if (ammoItem) {
+                    return {
+                        available: ammoItem.system.quantity ?? 0,
+                        max: null // No max limit, just show quantity
+                    };
+                }
+            }
+        }
+
+        // 2. Standard charges/uses
         const uses = item.system.uses;
         
         // Check if it has actual charges/uses (max > 0 or value > 0)
