@@ -1,4 +1,4 @@
-import { BaseSystemAdapter } from './base-system-adapter.js';
+import { BaseSystemAdapter, localize } from './base-system-adapter.js';
 import { log } from '../../lib/logger.js';
 
 /**
@@ -429,8 +429,8 @@ export class Pf1SystemAdapter extends BaseSystemAdapter {
      */
     getItemTypeLabel(parentId) {
         const labels = {
-            'feat': 'Feats',
-            'buff': 'Buffs'
+            'feat': localize('BAD.pf1.feats', 'Feats'),
+            'buff': localize('BAD.pf1.buffs', 'Buffs')
         };
         return labels[parentId] || super.getItemTypeLabel(parentId);
     }

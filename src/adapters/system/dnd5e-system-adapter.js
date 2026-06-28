@@ -353,7 +353,7 @@ export class Dnd5eSystemAdapter extends BaseSystemAdapter {
                 // Out of Pact slots, check if we can upcast using higher-level standard slots
                 if (this._hasAvailableUpcastSlots(actor, pact?.level ?? 0)) {
                     return {
-                        available: "Upcast",
+                        available: localize('BAD.dnd5e.upcast', 'Upcast'),
                         max: null,
                         isUpcast: true
                     };
@@ -373,7 +373,7 @@ export class Dnd5eSystemAdapter extends BaseSystemAdapter {
                     // Out of base level slots, check if we can upcast using higher-level slots (standard or pact)
                     if (this._hasAvailableUpcastSlots(actor, level)) {
                         return {
-                            available: "Upcast",
+                            available: localize('BAD.dnd5e.upcast', 'Upcast'),
                             max: null,
                             isUpcast: true
                         };

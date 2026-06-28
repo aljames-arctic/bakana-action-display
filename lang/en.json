@@ -30,6 +30,13 @@
             "hidden": "Hidden",
             "hideAction": "Hide Action",
             "unhideAction": "Unhide Action"
+        },
+        "dnd5e": {
+            "upcast": "Upcast"
+        },
+        "pf1": {
+            "feats": "Feats",
+            "buffs": "Buffs"
         }
     }
 }
