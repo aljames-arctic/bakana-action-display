@@ -93,8 +93,11 @@ export class Pf2eSystemAdapter extends BaseSystemAdapter {
             });
         }
 
+        // 3. Apply default resource filtering (e.g. hiding depleted actions)
+        const filtered = super.modifyActions(modified, actor);
+
         // Sort actions: activation type first, then item type, then name
-        return modified.sort((a, b) => {
+        return filtered.sort((a, b) => {
             const actSort = this._getActivationSort(a.activationType ?? a.tabs[0]) - this._getActivationSort(b.activationType ?? b.tabs[0]);
             if (actSort !== 0) return actSort;
 
