@@ -310,15 +310,23 @@ export class Pf1SystemAdapter extends BaseSystemAdapter {
     _calculateUses(item, actor) {
         // 1. Ranged weapon ammunition tracking
         if (item.type === 'weapon' && item.system.weaponSubtype === 'ranged') {
-            const ammoId = item.system.ammo?.default;
-            if (ammoId && actor) {
-                const ammoItem = actor.items.get(ammoId);
-                if (ammoItem) {
-                    return {
-                        available: ammoItem.system.quantity ?? 0,
-                        max: null // No max limit, just show quantity
-                    };
+            const ammoType = item.system.ammo?.type;
+            if (ammoType) {
+                // This weapon requires ammunition!
+                const ammoId = item.system.ammo?.default;
+                let quantity = 0;
+                
+                if (ammoId && actor) {
+                    const ammoItem = actor.items.get(ammoId);
+                    if (ammoItem) {
+                        quantity = ammoItem.system.quantity ?? 0;
+                    }
                 }
+                
+                return {
+                    available: quantity,
+                    max: null
+                };
             }
         }
 
