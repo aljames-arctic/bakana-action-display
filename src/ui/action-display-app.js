@@ -100,6 +100,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
     async _prepareContext(options) {
         const context = await super._prepareContext(options);
         const rawActions = actionDisplay.getActions(this.actor);
+        this.actions = rawActions; // Cache the processed actions for high-performance UI lookups
         const adapter = actionDisplay.activeSystemAdapter;
 
         // 1. Extract unique Item Types (for Left-side Tabs)
@@ -476,7 +477,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         this._activeLeftClickMenu = null;
 
         const actionId = target.dataset.actionId;
-        const actions = actionDisplay.getActions(this.actor);
+        const actions = this.actions || [];
         const action = actions.find(a => a.id === actionId);
         
         if (action) {
@@ -771,7 +772,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                 icon: '<i class="fas fa-eye-slash"></i>',
                 condition: el => {
                     const actionId = el.dataset.actionId;
-                    const actions = actionDisplay.getActions(this.actor);
+                    const actions = this.actions || [];
                     const action = actions.find(a => a.id === actionId);
                     return action && !action.isHidden;
                 },
@@ -784,7 +785,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                 icon: '<i class="fas fa-eye"></i>',
                 condition: el => {
                     const actionId = el.dataset.actionId;
-                    const actions = actionDisplay.getActions(this.actor);
+                    const actions = this.actions || [];
                     const action = actions.find(a => a.id === actionId);
                     return action && action.isHidden;
                 },
@@ -798,7 +799,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                 condition: el => {
                     if (game.system.id !== "dnd5e") return false;
                     const actionId = el.dataset.actionId;
-                    const actions = actionDisplay.getActions(this.actor);
+                    const actions = this.actions || [];
                     const action = actions.find(a => a.id === actionId);
                     if (!action) return false;
                     const item = action.originalItem;
@@ -810,7 +811,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                 },
                 callback: async el => {
                     const actionId = el.dataset.actionId;
-                    const actions = actionDisplay.getActions(this.actor);
+                    const actions = this.actions || [];
                     const action = actions.find(a => a.id === actionId);
                     const item = action?.originalItem;
                     if (item) {
@@ -825,7 +826,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                 condition: el => {
                     if (game.system.id !== "dnd5e") return false;
                     const actionId = el.dataset.actionId;
-                    const actions = actionDisplay.getActions(this.actor);
+                    const actions = this.actions || [];
                     const action = actions.find(a => a.id === actionId);
                     if (!action) return false;
                     const item = action.originalItem;
@@ -836,7 +837,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                 },
                 callback: async el => {
                     const actionId = el.dataset.actionId;
-                    const actions = actionDisplay.getActions(this.actor);
+                    const actions = this.actions || [];
                     const action = actions.find(a => a.id === actionId);
                     const item = action?.originalItem;
                     if (item) {
@@ -916,7 +917,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
     async _toggleActionHidden(actionId, shouldHide) {
         if (!actionId || !this.actor) return;
 
-        const actions = actionDisplay.getActions(this.actor);
+        const actions = this.actions || [];
         const action = actions.find(a => a.id === actionId);
         if (!action) return;
 
