@@ -37,24 +37,13 @@ export class Pf1SystemAdapter extends BaseSystemAdapter {
                 if (!child.uuid) continue;
                 
                 let childItem = null;
-                // Try official Foundry UUID resolution first
                 try {
                     childItem = foundry.utils.fromUuidSync(child.uuid, { relative: weapon });
                     if (childItem) {
                         log.debug(`Pf1SystemAdapter.modifyActions | Resolved child via fromUuidSync: "${childItem.name}" (${childItem.id})`);
                     }
                 } catch (e) {
-                    log.debug(`Pf1SystemAdapter.modifyActions | fromUuidSync failed for ${child.uuid}, trying fallback`);
-                }
-
-                // Fallback to manual ID extraction
-                if (!childItem) {
-                    const parts = child.uuid.split('.');
-                    const childId = parts[parts.length - 1];
-                    childItem = actor.items.get(childId);
-                    if (childItem) {
-                        log.debug(`Pf1SystemAdapter.modifyActions | Resolved child via manual fallback: "${childItem.name}" (${childItem.id})`);
-                    }
+                    log.error(`Pf1SystemAdapter.modifyActions | Failed to resolve child UUID ${child.uuid}:`, e);
                 }
 
                 if (childItem && childItem.type === 'attack') {

@@ -53,7 +53,6 @@ export class Dnd5eSystemAdapter extends BaseSystemAdapter {
                     ...action,
                     name: item.name, // Keep the clean item name
                     img: item.img, // Use the parent item's icon
-                    uses: this._calculateUses(item, actor), // Use item-level uses
                     roll: async (event) => {
                         // Default roll behavior (rolls the first activity directly)
                         return activeActivities[0].use({ event });
@@ -102,37 +101,24 @@ export class Dnd5eSystemAdapter extends BaseSystemAdapter {
                     };
                 });
 
-                modified.push(activityAction);
-            } else {
-                // 5. Fallback/Legacy: Process as a single action (for items without activities, or passive containers/loot)
-                let activationType = item.system?.activation?.type;
-                
-                const isPassive = !activationType || activationType === 'none';
-                if (isPassive && !['backpack', 'loot'].includes(item.type)) {
-                    continue;
-                }
-
-                // Calculate resource uses
-                action.uses = this._calculateUses(item, actor);
-
-                // Assign to hierarchical action tabs: [parentTab, subTab]
-                const parentTab = this._getParentTab(activationType);
-                const subTab = this._getSubTab(activationType);
-                action.tabs = subTab ? [parentTab, subTab] : [parentTab];
-
-                // Assign to hierarchical item types: [parentType, subType]
-                if (item.type === 'spell') {
-                    const level = item.system.level ?? 0;
-                    action.itemTypes = ['spell', level.toString()];
+                // If there is only one active activity, roll up its uses to the main action
+                if (activeActivities.length === 1) {
+                    activityAction.uses = activityAction.subActions[0].uses;
                 } else {
-                    action.itemTypes = [item.type];
+                    // For multiple activities, use item-level uses (e.g. wand charges)
+                    activityAction.uses = this._calculateUses(item, actor);
                 }
 
-                action.systemData = {
-                    recharge: item.system.recharge
+                modified.push(activityAction);
+            } else if (['backpack', 'loot'].includes(item.type)) {
+                // Passive containers and loot (no activities) are shown in the inventory
+                const passiveAction = {
+                    ...action,
+                    tabs: ['none'],
+                    itemTypes: [item.type],
+                    uses: { available: null, max: null }
                 };
-
-                modified.push(action);
+                modified.push(passiveAction);
             }
         }
 
@@ -275,32 +261,7 @@ export class Dnd5eSystemAdapter extends BaseSystemAdapter {
     _calculateUses(item, actor) {
         const system = item.system;
 
-        // 1. Ranged weapon ammunition tracking (DnD5e v3+)
-        if (item.type === 'weapon' && system.ammunition?.type) {
-            const ammoType = system.ammunition.type;
-            let quantity = 0;
-            if (actor) {
-                const ammoItems = actor.items.filter(i => 
-                    i.type === 'consumable' && 
-                    i.system.type?.value === 'ammo' && 
-                    i.system.type?.subtype === ammoType
-                );
-                for (const ammoItem of ammoItems) {
-                    quantity += ammoItem.system.quantity ?? 0;
-                }
-            }
-            return {
-                available: quantity,
-                max: null
-            };
-        }
-
-        // 2. Consume Target (e.g. ammunition, attributes, charges)
-        if (system.consume?.target) {
-            return this._calculateConsumeUses(actor, system.consume);
-        }
-
-        // 2. Limited Uses (standard item charges/uses)
+        // 1. Limited Uses (standard item charges/uses)
         if (system.uses && system.uses.max && system.uses.max !== "0") {
             let max = system.uses.max;
             if (typeof max === 'string') {
@@ -319,15 +280,7 @@ export class Dnd5eSystemAdapter extends BaseSystemAdapter {
             }
         }
 
-        // 3. Feat Recharge
-        if (item.type === 'feat' && system.recharge?.value) {
-            return {
-                available: system.recharge.charged ? 1 : 0,
-                max: 1
-            };
-        }
-
-        // 4. Consumable Quantity (if no explicit charges, quantity is the uses)
+        // 2. Consumable Quantity (if no explicit charges, quantity is the uses)
         if (item.type === 'consumable') {
             return {
                 available: system.quantity ?? 0,
@@ -335,56 +288,7 @@ export class Dnd5eSystemAdapter extends BaseSystemAdapter {
             };
         }
 
-        // 5. Spells (slot-based spells)
-        if (item.type === 'spell') {
-            const prepMode = system.method;
-            const actorSpells = actor.system.spells;
-            const level = system.level ?? 0;
-            
-            if (prepMode === 'pact') {
-                const pact = actorSpells?.pact;
-                const available = pact?.value ?? 0;
-                const max = pact?.max ?? 0;
-                
-                if (available > 0) {
-                    return { available, max };
-                }
-                
-                // Out of Pact slots, check if we can upcast using higher-level standard slots
-                if (this._hasAvailableUpcastSlots(actor, pact?.level ?? 0)) {
-                    return {
-                        available: localize('BAD.dnd5e.upcast', 'Upcast'),
-                        max: null,
-                        isUpcast: true
-                    };
-                }
-                
-                return { available: 0, max };
-            } else if (!['innate', 'atwill'].includes(prepMode)) {
-                if (level > 0) {
-                    const spellSlot = actorSpells?.[`spell${level}`];
-                    const available = spellSlot?.value ?? 0;
-                    const max = spellSlot?.max ?? 0;
-                    
-                    if (available > 0) {
-                        return { available, max };
-                    }
-                    
-                    // Out of base level slots, check if we can upcast using higher-level slots (standard or pact)
-                    if (this._hasAvailableUpcastSlots(actor, level)) {
-                        return {
-                            available: localize('BAD.dnd5e.upcast', 'Upcast'),
-                            max: null,
-                            isUpcast: true
-                        };
-                    }
-                    
-                    return { available: 0, max };
-                }
-            }
-        }
-
-        // 6. Thrown Weapons (quantity is the uses)
+        // 3. Thrown Weapons (quantity is the uses)
         if (item.type === 'weapon' && foundry.utils.getProperty(system.properties, 'thr') && !foundry.utils.getProperty(system.properties, 'ret')) {
             return {
                 available: system.quantity ?? 0,
@@ -393,38 +297,6 @@ export class Dnd5eSystemAdapter extends BaseSystemAdapter {
         }
 
         return { available: null, max: null };
-    }
-
-    /**
-     * Calculate uses that consume other resources (ammo, attributes, or charges of another item).
-     */
-    _calculateConsumeUses(actor, consume) {
-        let available = 0;
-        let max = null;
-
-        if (consume.type === 'attribute') {
-            const val = foundry.utils.getProperty(actor.system, consume.target);
-            available = typeof val === 'number' ? val : 0;
-        } else if (consume.type === 'ammo' || consume.type === 'material') {
-            const targetItem = actor.items.get(consume.target);
-            available = targetItem?.system?.quantity ?? 0;
-        } else if (consume.type === 'charges') {
-            const targetItem = actor.items.get(consume.target);
-            if (targetItem) {
-                const uses = this._calculateUses(targetItem, actor);
-                available = uses.available ?? 0;
-                max = uses.max;
-            }
-        }
-
-        if (consume.amount && consume.amount > 1) {
-            available = Math.floor(available / consume.amount);
-            if (max !== null) {
-                max = Math.floor(max / consume.amount);
-            }
-        }
-
-        return { available, max };
     }
 
     /**
@@ -474,16 +346,40 @@ export class Dnd5eSystemAdapter extends BaseSystemAdapter {
                 const actorSpells = actor.system.spells;
                 const level = target.target;
                 if (level === 'pact') {
-                    return {
-                        available: actorSpells?.pact?.value ?? 0,
-                        max: actorSpells?.pact?.max ?? 0
-                    };
+                    const pact = actorSpells?.pact;
+                    const available = pact?.value ?? 0;
+                    const max = pact?.max ?? 0;
+                    
+                    if (available > 0) {
+                        return { available, max };
+                    }
+                    
+                    if (this._hasAvailableUpcastSlots(actor, pact?.level ?? 0)) {
+                        return {
+                            available: localize('BAD.dnd5e.upcast', 'Upcast'),
+                            max: null,
+                            isUpcast: true
+                        };
+                    }
+                    return { available: 0, max };
                 } else {
-                    const spellSlot = actorSpells?.[`spell${level}`];
-                    return {
-                        available: spellSlot?.value ?? 0,
-                        max: spellSlot?.max ?? 0
-                    };
+                    const lvl = parseInt(level, 10) || 0;
+                    const spellSlot = actorSpells?.[`spell${lvl}`];
+                    const available = spellSlot?.value ?? 0;
+                    const max = spellSlot?.max ?? 0;
+                    
+                    if (available > 0) {
+                        return { available, max };
+                    }
+                    
+                    if (this._hasAvailableUpcastSlots(actor, lvl)) {
+                        return {
+                            available: localize('BAD.dnd5e.upcast', 'Upcast'),
+                            max: null,
+                            isUpcast: true
+                        };
+                    }
+                    return { available: 0, max };
                 }
             } else if (target.type === 'material') {
                 // Consumes quantity of another item

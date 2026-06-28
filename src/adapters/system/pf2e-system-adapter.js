@@ -49,7 +49,7 @@ export class Pf2eSystemAdapter extends BaseSystemAdapter {
                 const entry = actor.spellcasting?.find(e => e.spells?.has(item.id));
                 if (!entry) continue;
 
-                const spellLevel = item.rank ?? item.level ?? 0;
+                const spellLevel = item.rank ?? 0;
                 action.tabs = ['action']; // Spells are active actions
                 action.activationType = 'action';
                 action.itemTypes = ['spell', spellLevel.toString()];
@@ -176,7 +176,7 @@ export class Pf2eSystemAdapter extends BaseSystemAdapter {
             };
         }
 
-        const level = spell.rank ?? spell.level;
+        const level = spell.rank ?? 0;
         if (entry.isSpontaneous && level > 0) {
             const slot = entry.system.slots?.[`slot${level}`];
             return {
