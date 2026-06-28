@@ -33,10 +33,6 @@
         },
         "dnd5e": {
             "upcast": "Upcast"
-        },
-        "pf1": {
-            "feats": "Feats",
-            "buffs": "Buffs"
         }
     }
 }

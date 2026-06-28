@@ -429,8 +429,8 @@ export class Pf1SystemAdapter extends BaseSystemAdapter {
      */
     getItemTypeLabel(parentId) {
         const labels = {
-            'feat': localize('BAD.pf1.feats', 'Feats'),
-            'buff': localize('BAD.pf1.buffs', 'Buffs')
+            'feat': localize('PF1.Feats', 'Feats'),
+            'buff': localize('PF1.Buffs', 'Buffs')
         };
         return labels[parentId] || super.getItemTypeLabel(parentId);
     }
