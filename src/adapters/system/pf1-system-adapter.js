@@ -268,6 +268,7 @@ export class Pf1SystemAdapter extends BaseSystemAdapter {
                 
                 action.isActive = item.system.active;
                 action.uses = { available: null, max: null };
+                action.excludeFromAll = true; // Exclude buffs from the 'All Items' tab in PF1e
 
                 modified.push(action);
             }

@@ -307,7 +307,9 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             if (itemParentId === 'hidden' && this.activeLeftParentType !== 'hidden') return false;
             if (itemParentId !== 'hidden' && this.activeLeftParentType === 'hidden') return false;
 
-            const matchesLeftParent = this.activeLeftParentType === 'all' || itemParentId === this.activeLeftParentType;
+            const matchesLeftParent = this.activeLeftParentType === 'all'
+                ? !action.excludeFromAll
+                : itemParentId === this.activeLeftParentType;
             
             let matchesLeftSub = true;
             if (this.activeLeftParentType === 'spell' && this.activeLeftSubType && this.activeLeftSubType !== 'all') {
