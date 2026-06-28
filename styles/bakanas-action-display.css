@@ -185,38 +185,8 @@
     text-overflow: ellipsis;
 }
 
-.bad-action-name {
-    position: relative; /* Ensure absolute children are positioned relative to this */
-}
-
 .bad-action-item:hover .bad-action-name {
-    color: transparent; /* Make original text transparent to preserve its space in the layout */
-    overflow: visible;  /* Allow the floating ::after card to extend beyond the hidden boundaries */
-}
-
-/* Floating expansion tooltip for long names on hover */
-.bad-action-item:hover .bad-action-name::after {
-    content: attr(data-name);
-    position: absolute;
-    left: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    background: rgba(22, 22, 29, 0.98);
-    border: 1px solid rgba(167, 139, 250, 0.4);
-    border-radius: 4px;
-    padding: 4px 8px;
     color: #ffffff;
-    white-space: nowrap;
-    width: max-content;
-    z-index: 1000;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-    pointer-events: none; /* Prevent mouse flickering */
-    animation: bad-fade-in 0.15s ease-out;
-}
-
-@keyframes bad-fade-in {
-    from { opacity: 0; transform: translateY(-50%) scale(0.95); }
-    to { opacity: 1; transform: translateY(-50%) scale(1); }
 }
 
 /* Remaining Uses Badge */

@@ -45,14 +45,18 @@
         <div class="bad-tab-content">
             {{#if items.length}}
                 {{#each items}}
-                <div class="bad-action-item {{#if this.isHidden}}bad-item-hidden{{/if}}" data-action="rollAction" data-action-id="{{this.id}}">
+                <div class="bad-action-item {{#if this.isHidden}}bad-item-hidden{{/if}}" 
+                     data-action="rollAction" 
+                     data-action-id="{{this.id}}"
+                     data-tooltip="{{this.name}}"
+                     data-tooltip-direction="UP">
                     {{#if this.img}}
                     <img class="bad-action-icon" src="{{this.img}}" alt="{{this.name}}" />
                     {{else}}
                     <div class="bad-action-icon-placeholder"><i class="fas fa-dice-d20"></i></div>
                     {{/if}}
                     
-                    <span class="bad-action-name" data-name="{{this.name}}">{{this.name}}</span>
+                    <span class="bad-action-name">{{this.name}}</span>
                     
                     {{#unless (eq this.uses.available null)}}
                     <span class="bad-action-uses {{#if (eq this.uses.available 0)}}depleted{{/if}}">
