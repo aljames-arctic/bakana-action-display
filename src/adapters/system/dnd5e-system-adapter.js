@@ -275,7 +275,27 @@ export class Dnd5eSystemAdapter extends BaseSystemAdapter {
     _calculateUses(item, actor) {
         const system = item.system;
 
-        // 1. Consume Target (e.g. ammunition, attributes, charges)
+        // 1. Ranged weapon ammunition tracking (DnD5e v3+)
+        if (item.type === 'weapon' && system.ammunition?.type) {
+            const ammoType = system.ammunition.type;
+            let quantity = 0;
+            if (actor) {
+                const ammoItems = actor.items.filter(i => 
+                    i.type === 'consumable' && 
+                    i.system.type?.value === 'ammo' && 
+                    i.system.type?.subtype === ammoType
+                );
+                for (const ammoItem of ammoItems) {
+                    quantity += ammoItem.system.quantity ?? 0;
+                }
+            }
+            return {
+                available: quantity,
+                max: null
+            };
+        }
+
+        // 2. Consume Target (e.g. ammunition, attributes, charges)
         if (system.consume?.target) {
             return this._calculateConsumeUses(actor, system.consume);
         }
