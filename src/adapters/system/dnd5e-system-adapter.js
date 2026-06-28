@@ -90,10 +90,10 @@ export class Dnd5eSystemAdapter extends BaseSystemAdapter {
 
                 // Assign to hierarchical item types: [parentType, subType] (for left-side tabs)
                 // - Equipment with limited uses goes to Item Charges.
-                // - Feats (features) with limited uses ONLY go to Item Charges if they grant/cast spells (have a 'cast' activity).
+                // - Other item types (feats, weapons, consumables, tools) with limited uses ONLY go to Item Charges if they cast spells.
                 const hasCastActivity = activeActivities.some(a => a.type === 'cast');
                 const isItemCharges = (item.type === 'equipment' && this._hasLimitedUses(item, actor))
-                    || (item.type === 'feat' && this._hasLimitedUses(item, actor) && hasCastActivity);
+                    || (['feat', 'weapon', 'consumable', 'tool'].includes(item.type) && this._hasLimitedUses(item, actor) && hasCastActivity);
 
                 if (item.type === 'spell') {
                     const level = item.system.level ?? 0;
