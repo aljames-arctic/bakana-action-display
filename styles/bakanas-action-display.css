@@ -650,3 +650,18 @@
     font-weight: bold;
     opacity: 1;
 }
+
+/* ==========================================================================
+   UNPREPARED ITEMS STYLING (Orange)
+   ========================================================================== */
+.bad-action-item.unprepared .bad-action-name,
+.bad-action-item.unprepared:hover .bad-action-name {
+    color: #fb923c !important; /* Orange text for unprepared spells */
+}
+
+.bad-action-item.unprepared .bad-action-uses {
+    color: #fb923c !important;
+    border-color: rgba(251, 146, 60, 0.3) !important;
+    background: rgba(251, 146, 60, 0.1) !important;
+}
+

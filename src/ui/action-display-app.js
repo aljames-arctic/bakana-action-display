@@ -612,19 +612,35 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         if (!this._contextMenu) {
             this._contextMenu = this._createContextMenu();
         }
+
+        // Initialize the context menu for tabs if not already done
+        if (!this._tabContextMenu) {
+            this._tabContextMenu = this._createTabContextMenu();
+        }
     }
 
     _clearMenuState() {
         log.debug("_clearMenuState | Clearing menu state and closing open menus");
         
-        // Only close the context menu if it is actually open (active target is set)
-        if (this._activeMenuTarget && this._contextMenu) {
-            try {
-                this._contextMenu.close()?.catch?.(err => {
-                    log.debug("ContextMenu.close promise rejected (expected during re-render):", err);
-                });
-            } catch (err) {
-                log.debug("ContextMenu.close threw synchronously:", err);
+        // Close any open context menus if we have an active target
+        if (this._activeMenuTarget) {
+            if (this._contextMenu) {
+                try {
+                    this._contextMenu.close()?.catch?.(err => {
+                        log.debug("ContextMenu.close promise rejected (expected during re-render):", err);
+                    });
+                } catch (err) {
+                    log.debug("ContextMenu.close threw synchronously:", err);
+                }
+            }
+            if (this._tabContextMenu) {
+                try {
+                    this._tabContextMenu.close()?.catch?.(err => {
+                        log.debug("TabContextMenu.close promise rejected (expected during re-render):", err);
+                    });
+                } catch (err) {
+                    log.debug("TabContextMenu.close threw synchronously:", err);
+                }
             }
         }
 
@@ -675,8 +691,13 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
     _onPointerDownCapture(event) {
         if (event.button !== 2 && event.button !== 0) return; // Only care about right-clicks (2) or left-clicks (0)
         
-        const targetItem = event.target.closest('.bad-action-item');
-        const activeItem = this._activeMenuTarget?.closest('.bad-action-item') || this._activeMenuTarget;
+        const targetItem = event.target.closest('.bad-action-item') 
+            || event.target.closest('.bad-left-sub-tab') 
+            || event.target.closest('.bad-left-tab');
+        const activeItem = this._activeMenuTarget?.closest('.bad-action-item') 
+            || this._activeMenuTarget?.closest('.bad-left-sub-tab') 
+            || this._activeMenuTarget?.closest('.bad-left-tab') 
+            || this._activeMenuTarget;
         
         log.debug(`_onPointerDownCapture | button: ${event.button}, targetItem:`, targetItem, `activeItem:`, activeItem);
         
@@ -698,7 +719,8 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             log.debug("Preventing context menu from reopening (toggled off)");
             this._preventReopen = false;
             
-            this._contextMenu?.close(); // Explicitly close the menu since clicks inside the HUD don't close it automatically
+            this._contextMenu?.close();
+            this._tabContextMenu?.close();
             
             event.preventDefault();
             event.stopPropagation();
@@ -706,14 +728,20 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             return;
         }
 
-        const targetItem = event.target.closest('.bad-action-item');
-        const activeItem = this._activeMenuTarget?.closest('.bad-action-item') || this._activeMenuTarget;
+        const targetItem = event.target.closest('.bad-action-item') 
+            || event.target.closest('.bad-left-sub-tab') 
+            || event.target.closest('.bad-left-tab');
+        const activeItem = this._activeMenuTarget?.closest('.bad-action-item') 
+            || this._activeMenuTarget?.closest('.bad-left-sub-tab') 
+            || this._activeMenuTarget?.closest('.bad-left-tab') 
+            || this._activeMenuTarget;
         
         log.debug(`_onContextMenuCapture | targetItem:`, targetItem, `activeItem:`, activeItem);
 
         if (targetItem && activeItem === targetItem) {
             log.debug("Right-clicked the same item, toggling context menu off (fallback)");
             this._contextMenu?.close();
+            this._tabContextMenu?.close();
             
             event.preventDefault();
             event.stopPropagation();
@@ -732,7 +760,6 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                 name: "BAD.hud.hideAction",
                 icon: '<i class="fas fa-eye-slash"></i>',
                 condition: el => {
-                    // Since jQuery: false is passed, el is the raw HTMLElement directly!
                     const actionId = el.dataset.actionId;
                     const actions = actionDisplay.getActions(this.actor);
                     const action = actions.find(a => a.id === actionId);
@@ -754,25 +781,116 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                 callback: el => {
                     this._toggleActionHidden(el.dataset.actionId, false);
                 }
+            },
+            {
+                name: "BAD.dnd5e.prepareSpell",
+                icon: '<i class="fas fa-book"></i>',
+                condition: el => {
+                    const actionId = el.dataset.actionId;
+                    const actions = actionDisplay.getActions(this.actor);
+                    const action = actions.find(a => a.id === actionId);
+                    if (!action) return false;
+                    const item = action.originalItem;
+                    if (item?.type !== 'spell') return false;
+                    
+                    const prepMode = item.system.method;
+                    const isPrepared = !!item.system.prepared;
+                    return !['innate', 'atwill', 'pact'].includes(prepMode) && !isPrepared;
+                },
+                callback: async el => {
+                    const actionId = el.dataset.actionId;
+                    const actions = actionDisplay.getActions(this.actor);
+                    const action = actions.find(a => a.id === actionId);
+                    const item = action?.originalItem;
+                    if (item) {
+                        log.debug(`Preparing spell: ${item.name}`);
+                        await item.update({ "system.prepared": 1 });
+                    }
+                }
+            },
+            {
+                name: "BAD.dnd5e.unprepareSpell",
+                icon: '<i class="fas fa-book-dead"></i>',
+                condition: el => {
+                    const actionId = el.dataset.actionId;
+                    const actions = actionDisplay.getActions(this.actor);
+                    const action = actions.find(a => a.id === actionId);
+                    if (!action) return false;
+                    const item = action.originalItem;
+                    if (item?.type !== 'spell') return false;
+                    
+                    return item.system.prepared === 1;
+                },
+                callback: async el => {
+                    const actionId = el.dataset.actionId;
+                    const actions = actionDisplay.getActions(this.actor);
+                    const action = actions.find(a => a.id === actionId);
+                    const item = action?.originalItem;
+                    if (item) {
+                        log.debug(`Unpreparing spell: ${item.name}`);
+                        await item.update({ "system.prepared": 0 });
+                    }
+                }
             }
         ];
 
         const options = {
-            jQuery: false, // Opt-out of jQuery for callbacks, receiving raw HTMLElements
+            jQuery: false,
             onOpen: (target) => {
                 log.debug("Context menu opened on target:", target);
-                this._activeMenuTarget = target; // Store the raw HTMLElement directly
+                this._activeMenuTarget = target;
                 this.element.querySelector('.bakanas-action-display-container')?.classList.add('has-context-menu');
             },
             onClose: () => {
                 log.debug("Context menu closed");
-                this._activeMenuTarget = null; // Clear the target
+                this._activeMenuTarget = null;
                 this.element.querySelector('.bakanas-action-display-container')?.classList.remove('has-context-menu');
             }
         };
 
-        // Create the ContextMenu using the raw HTMLElement (this.element) instead of jQuery
         return new foundry.applications.ux.ContextMenu.implementation(this.element, ".bad-action-item", menuItems, options);
+    }
+
+    /**
+     * Create and bind the ContextMenu for the left-side tabs (specifically Spells).
+     * @returns {ContextMenu} The created ContextMenu instance
+     * @private
+     */
+    _createTabContextMenu() {
+        const menuItems = [
+            {
+                name: "BAD.dnd5e.togglePrepared",
+                icon: '<i class="fas fa-book-open"></i>',
+                condition: el => {
+                    // Only show on the "All Spells" subtab (type 'all' under 'spell' parent)
+                    if (el.dataset.type !== 'all') return false;
+                    const isSpellParent = el.closest('.bad-left-tab-group')?.querySelector('.bad-left-tab')?.dataset.type === 'spell';
+                    return isSpellParent;
+                },
+                callback: async el => {
+                    const showUnprepared = this.actor.getFlag('bakanas-action-display', 'showUnprepared') ?? false;
+                    await this.actor.setFlag('bakanas-action-display', 'showUnprepared', !showUnprepared);
+                    log.debug(`Toggled showUnprepared to: ${!showUnprepared}`);
+                }
+            }
+        ];
+
+        const options = {
+            jQuery: false,
+            onOpen: (target) => {
+                log.debug("Tab context menu opened on target:", target);
+                this._activeMenuTarget = target;
+                this.element.querySelector('.bakanas-action-display-container')?.classList.add('has-context-menu');
+            },
+            onClose: () => {
+                log.debug("Tab context menu closed");
+                this._activeMenuTarget = null;
+                this.element.querySelector('.bakanas-action-display-container')?.classList.remove('has-context-menu');
+            }
+        };
+
+        // Bind only to sub-tabs on the left side (specifically 'All Spells')
+        return new foundry.applications.ux.ContextMenu.implementation(this.element, ".bad-left-sub-tab", menuItems, options);
     }
 
     /**

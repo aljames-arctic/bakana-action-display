@@ -35,11 +35,18 @@ export class Dnd5eSystemAdapter extends BaseSystemAdapter {
                 continue;
             }
 
-            // 3. Filter out unprepared spells (unless they are innate, at-will, or pact magic)
+            // 3. Filter out unprepared spells (unless they are innate, at-will, or pact magic, or showUnprepared is enabled)
+            let isSpellUnprepared = false;
             if (item.type === 'spell') {
                 const prepMode = item.system.method;
                 const isPrepared = !!item.system.prepared;
+                const showUnprepared = actor.getFlag('bakanas-action-display', 'showUnprepared');
+                
                 if (!['innate', 'atwill', 'pact'].includes(prepMode) && !isPrepared) {
+                    isSpellUnprepared = true;
+                }
+                
+                if (!showUnprepared && isSpellUnprepared) {
                     continue;
                 }
             }
@@ -56,6 +63,7 @@ export class Dnd5eSystemAdapter extends BaseSystemAdapter {
                     ...action,
                     name: item.name, // Keep the clean item name
                     img: item.img, // Use the parent item's icon
+                    unprepared: isSpellUnprepared,
                     roll: async (event) => {
                         // Default roll behavior (rolls the first activity directly)
                         return activeActivities[0].use({ event });
