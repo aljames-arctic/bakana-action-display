@@ -940,14 +940,17 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             el.style.height = 'auto';
 
             // Apply top/bottom manually to anchor the window stably
+            const tokenHudEl = document.getElementById("token-hud");
+            const tokenHudWidth = tokenHudEl?.offsetWidth || 0;
+
             if (side === 'above') {
                 const bottomOffset = window.innerHeight - tokenTop + 10;
-                log.debug(`setPosition (Attached/Above) | token: ${this.token.name}, left: ${left}px, bottomOffset: ${bottomOffset}px (tokenTop: ${tokenTop}px, windowHeight: ${window.innerHeight}px)`);
+                log.debug(`setPosition (Attached/Above) | token: ${this.token.name}, left: ${left}px, bottomOffset: ${bottomOffset}px, tokenHudWidth: ${tokenHudWidth}px (tokenTop: ${tokenTop}px, windowHeight: ${window.innerHeight}px)`);
                 el.style.bottom = `${bottomOffset}px`;
                 el.style.top = '';
             } else {
                 const topOffset = tokenTop + tokenHeight + 10;
-                log.debug(`setPosition (Attached/Below) | token: ${this.token.name}, left: ${left}px, topOffset: ${topOffset}px (tokenTop: ${tokenTop}px, tokenHeight: ${tokenHeight}px)`);
+                log.debug(`setPosition (Attached/Below) | token: ${this.token.name}, left: ${left}px, topOffset: ${topOffset}px, tokenHudWidth: ${tokenHudWidth}px (tokenTop: ${tokenTop}px, tokenHeight: ${tokenHeight}px)`);
                 el.style.top = `${topOffset}px`;
                 el.style.bottom = '';
             }
