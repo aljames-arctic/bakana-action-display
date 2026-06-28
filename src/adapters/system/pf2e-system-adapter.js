@@ -23,14 +23,15 @@ export class Pf2eSystemAdapter extends BaseSystemAdapter {
             const item = action.originalItem;
 
             if (['action', 'feat'].includes(item.type)) {
-                const actionCost = item.system.actionCost;
-                const activationType = this._parseActivationType(actionCost);
+                const actions = item.system.actions;
+                const activationType = this._parseActivationType(actions);
 
                 // Skip passive feats/actions that don't have an active cost
                 if (!activationType) continue;
 
                 action.activationType = activationType; // Keep for sorting
                 action.tabs = [activationType];
+                action.itemTypes = [item.type === 'action' ? 'feat' : item.type];
                 action.uses = this._calculateUses(item);
 
                 // Override roll to post the action's chat card (standard PF2e behavior)
@@ -48,8 +49,10 @@ export class Pf2eSystemAdapter extends BaseSystemAdapter {
                 const entry = actor.spellcasting?.find(e => e.spells?.has(item.id));
                 if (!entry) continue;
 
+                const spellLevel = item.rank ?? item.level ?? 0;
                 action.tabs = ['action']; // Spells are active actions
                 action.activationType = 'action';
+                action.itemTypes = ['spell', spellLevel.toString()];
                 action.roll = (event) => {
                     if (typeof entry.cast === 'function') {
                         entry.cast(item, { event });
@@ -75,6 +78,7 @@ export class Pf2eSystemAdapter extends BaseSystemAdapter {
                 img: strike.img ?? strike.imageUrl ?? 'systems/pf2e/icons/default-icons/melee.svg',
                 activationType: 'action', // Strikes cost 1 action
                 tabs: ['action'],
+                itemTypes: ['weapon'],
                 hidden: false,
                 uses: { available: null, max: null },
                 roll: (event) => {
@@ -104,13 +108,13 @@ export class Pf2eSystemAdapter extends BaseSystemAdapter {
     /**
      * Translate PF2e action cost structures into our core activation types.
      */
-    _parseActivationType(actionCost) {
-        if (!actionCost) return null;
-        const type = actionCost.type;
+    _parseActivationType(actions) {
+        if (!actions) return null;
+        const value = actions.value;
 
-        if (type === 'reaction') return 'reaction';
-        if (type === 'free') return 'other'; // Map free actions to 'other'
-        if (type === 'action') return 'action'; // Group 1, 2, or 3 actions under 'action'
+        if (value === 'reaction') return 'reaction';
+        if (value === 'free') return 'other'; // Map free actions to 'other'
+        if ([1, 2, 3, '1', '2', '3'].includes(value)) return 'action'; // Group 1, 2, or 3 actions under 'action'
         
         return null;
     }
@@ -167,7 +171,7 @@ export class Pf2eSystemAdapter extends BaseSystemAdapter {
             };
         }
 
-        const level = spell.level;
+        const level = spell.rank ?? spell.level;
         if (entry.isSpontaneous && level > 0) {
             const slot = entry.system.slots?.[`slot${level}`];
             return {

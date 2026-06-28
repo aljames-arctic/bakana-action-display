@@ -151,6 +151,7 @@ class ActionDisplay {
                 type: item.type,
                 img: item.img,
                 tabs: ['all'], // Default tab
+                itemTypes: [item.type], // Default item type category
                 hidden: false,
                 uses: { available: null, max: null },
                 roll: (event) => {
