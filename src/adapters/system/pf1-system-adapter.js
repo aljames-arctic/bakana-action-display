@@ -114,11 +114,11 @@ export class Pf1SystemAdapter extends BaseSystemAdapter {
                     await item.update({ "system.active": !active });
                 };
                 
-                // Represent active state in the uses badge: 1/1 if active, 0/1 if inactive
-                action.uses = {
-                    available: item.system.active ? 1 : 0,
-                    max: 1
-                };
+                // Set active state for UI styling
+                action.isActive = item.system.active;
+                
+                // Buffs don't use charges, so leave uses null
+                action.uses = { available: null, max: null };
 
                 modified.push(action);
             }
@@ -160,7 +160,12 @@ export class Pf1SystemAdapter extends BaseSystemAdapter {
      */
     _calculateUses(item) {
         const uses = item.system.uses;
-        if (uses && (uses.value !== null || uses.max !== null)) {
+        
+        // Check if it has actual charges/uses (max > 0 or value > 0)
+        const hasMax = uses && uses.max !== null && uses.max > 0;
+        const hasValue = uses && uses.value !== null && uses.value > 0;
+        
+        if (uses && (hasMax || hasValue)) {
             // If value is null but max is defined, it means the item is fully charged (available = max)
             const max = uses.max ?? 0;
             return {
@@ -173,7 +178,7 @@ export class Pf1SystemAdapter extends BaseSystemAdapter {
         if (item.type === 'consumable' && item.system.quantity !== undefined) {
             return {
                 available: item.system.quantity ?? 0,
-                max: null // No max limit, just quantity
+                max: null
             };
         }
 

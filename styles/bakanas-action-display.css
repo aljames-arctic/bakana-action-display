@@ -158,6 +158,18 @@
     transform: translateX(3px);
 }
 
+/* Glowing active state for toggleable buffs or active items */
+.bad-action-item.bad-item-active {
+    border-color: rgba(167, 139, 250, 0.55) !important; /* Brighter violet border */
+    background: rgba(124, 58, 237, 0.16) !important;   /* Translucent violet background */
+    box-shadow: 0 0 8px rgba(167, 139, 250, 0.25);       /* Subtle violet glow */
+}
+
+.bad-action-item.bad-item-active:hover {
+    background: rgba(124, 58, 237, 0.26) !important;
+    box-shadow: 0 0 12px rgba(167, 139, 250, 0.45);
+}
+
 /* Action Icon */
 .bad-action-icon, .bad-action-icon-placeholder {
     width: 24px;
