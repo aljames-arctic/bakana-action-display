@@ -191,6 +191,7 @@
 
 .bad-action-item:hover .bad-action-name {
     color: transparent; /* Make original text transparent to preserve its space in the layout */
+    overflow: visible;  /* Allow the floating ::after card to extend beyond the hidden boundaries */
 }
 
 /* Floating expansion tooltip for long names on hover */
