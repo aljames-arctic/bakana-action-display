@@ -81,11 +81,14 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
     /**
      * Define the templates (parts) that make up this application.
      */
-    static PARTS = {
-        hud: {
-            template: 'modules/bakanas-action-display/templates/action-display.html'
-        }
-    };
+    static get PARTS() {
+        const path = game.modules.get('bakanas-action-display')?.path ?? 'modules/bakanas-action-display';
+        return {
+            hud: {
+                template: `${path}/templates/action-display.html`
+            }
+        };
+    }
 
     /**
      * Prepare the rendering context (equivalent to getData in AppV1).
