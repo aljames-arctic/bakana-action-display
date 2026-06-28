@@ -343,6 +343,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
      */
     static async _onChangeLeftItemType(event, target) {
         event.preventDefault();
+        this._clearMenuState();
         const parentId = target.dataset.type;
         const hasSubTabs = target.dataset.hasSubTabs === 'true';
         
@@ -359,6 +360,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
      */
     static async _onChangeLeftSubItemType(event, target) {
         event.preventDefault();
+        this._clearMenuState();
         this.activeLeftSubType = target.dataset.type;
         log.debug(`Changed item sub filter to: ${this.activeLeftSubType}`);
         this.render();
@@ -370,6 +372,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
      */
     static async _onChangeActionType(event, target) {
         event.preventDefault();
+        this._clearMenuState();
         const parentId = target.dataset.type;
         const hasSubTabs = target.dataset.hasSubTabs === 'true';
         
@@ -386,6 +389,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
      */
     static async _onChangeSubActionType(event, target) {
         event.preventDefault();
+        this._clearMenuState();
         this.activeSubType = target.dataset.type;
         log.debug(`Changed action sub filter to: ${this.activeSubType}`);
         this.render();
@@ -553,15 +557,20 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         this._setupDragListeners();
         this._adjustMinHeight();
 
+        // Initialize bound listeners once to prevent accumulation across re-renders
+        if (!this._boundStopPropagation) {
+            this._boundStopPropagation = (event) => event.stopPropagation();
+            this._boundOnPointerDownCapture = this._onPointerDownCapture.bind(this);
+            this._boundOnContextMenuCapture = this._onContextMenuCapture.bind(this);
+        }
+
         // Prevent clicks inside the HUD from bubbling up to the document
-        this.element.addEventListener('click', event => event.stopPropagation());
-        
-        // Prevent right-clicks inside the HUD from bubbling up to the document
-        this.element.addEventListener('contextmenu', event => event.stopPropagation());
+        this.element.addEventListener('click', this._boundStopPropagation);
+        this.element.addEventListener('contextmenu', this._boundStopPropagation);
 
         // Intercept right-click pointerdown and contextmenu events in the capture phase to support toggling the menu off
-        this.element.addEventListener('pointerdown', this._onPointerDownCapture.bind(this), { capture: true });
-        this.element.addEventListener('contextmenu', this._onContextMenuCapture.bind(this), { capture: true });
+        this.element.addEventListener('pointerdown', this._boundOnPointerDownCapture, { capture: true });
+        this.element.addEventListener('contextmenu', this._boundOnContextMenuCapture, { capture: true });
 
         // Initialize the context menu for action items if not already done
         if (!this._contextMenu) {
@@ -570,7 +579,21 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
     }
 
     /**
+     * Clear all active menu states and close any open menus.
+     * @private
+     */
+    _clearMenuState() {
+        log.debug("_clearMenuState | Clearing menu state and closing open menus");
+        this._contextMenu?.close();
+        this._activeLeftClickMenu?.close();
+        this._activeLeftClickMenu = null;
+        this._activeMenuTarget = null;
+        this._preventReopen = false;
+    }
+
+    /**
      * Adjust the min-height of the main container to ensure it is at least
+    
      * as tall as the tallest tab column, keeping them visually connected.
      */
     _adjustMinHeight() {
