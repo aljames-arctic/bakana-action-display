@@ -26,11 +26,20 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         // Active filter states - Left Side (Item Types)
         const cached = activeTabCache.get(this.actor?.uuid);
         this.activeLeftParentType = cached?.leftParent ?? 'all';
-        this.activeLeftSubType = cached?.leftSub ?? null;
+        
+        // Migrate from single string to Set for multi-select support
+        let initialLeftSubs = [];
+        if (cached?.leftSubTypes) initialLeftSubs = cached.leftSubTypes;
+        else if (cached?.leftSub) initialLeftSubs = [cached.leftSub];
+        this.activeLeftSubTypes = new Set(initialLeftSubs);
 
         // Active filter states - Right Side (Action Types)
         this.activeParentType = cached?.rightParent ?? 'all';
-        this.activeSubType = cached?.rightSub ?? null;
+        
+        let initialRightSubs = [];
+        if (cached?.subTypes) initialRightSubs = cached.subTypes;
+        else if (cached?.rightSub) initialRightSubs = [cached.rightSub];
+        this.activeSubTypes = new Set(initialRightSubs);
 
         // HUD Attachment/Position Mode (persisted client-side)
         this.positionMode = game.settings.get('bakanas-action-display', 'hudPositionMode') || 'attached';
@@ -156,7 +165,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                     icon: adapter.getItemTypeIcon(parentId),
                     active: parentId === this.activeLeftParentType,
                     expanded: parentId === this.activeLeftParentType,
-                    activeParent: parentId === this.activeLeftParentType && this.activeLeftSubType && this.activeLeftSubType !== 'all',
+                    activeParent: parentId === this.activeLeftParentType && this.activeLeftSubTypes.size > 0,
                     subTabs: []
                 };
             }
@@ -165,7 +174,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                 leftGroups[parentId].subTabs.push({
                     id: subId,
                     label: adapter.getSpellLevelLabel(subId),
-                    active: this.activeLeftParentType === 'spell' && subId === this.activeLeftSubType
+                    active: this.activeLeftParentType === 'spell' && this.activeLeftSubTypes.has(subId)
                 });
             }
         }
@@ -195,7 +204,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             spellParent.subTabs.unshift({
                 id: 'all',
                 label: 'All Spells',
-                active: this.activeLeftParentType === 'spell' && this.activeLeftSubType === 'all'
+                active: this.activeLeftParentType === 'spell' && this.activeLeftSubTypes.size === 0
             });
         }
 
@@ -209,7 +218,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                 allTab.active = true;
                 allTab.expanded = true;
             }
-            this.activeLeftSubType = null;
+            this.activeLeftSubTypes.clear();
         }
 
         // 2. Extract unique Action Types (for Right-side Tabs)
@@ -257,7 +266,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                     icon: adapter.getActionTypeIcon(parentId),
                     active: parentId === this.activeParentType,
                     expanded: parentId === this.activeParentType,
-                    activeParent: parentId === this.activeParentType && this.activeSubType && this.activeSubType !== 'all',
+                    activeParent: parentId === this.activeParentType && this.activeSubTypes.size > 0,
                     subTabs: []
                 };
             }
@@ -266,7 +275,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                 parentGroups[parentId].subTabs.push({
                     id: subId,
                     label: adapter.getActionSubTabLabel(subId),
-                    active: parentId === this.activeParentType && subId === this.activeSubType
+                    active: parentId === this.activeParentType && this.activeSubTypes.has(subId)
                 });
             }
         }
@@ -295,7 +304,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                 parent.subTabs.unshift({
                     id: 'all',
                     label: 'All',
-                    active: parent.id === this.activeParentType && this.activeSubType === 'all'
+                    active: parent.id === this.activeParentType && this.activeSubTypes.size === 0
                 });
                 
                 const order = subOrder[parent.id] ?? [];
@@ -308,10 +317,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             this.activeParentType = actionTypes[0].id;
             actionTypes[0].active = true;
             actionTypes[0].expanded = true;
-            this.activeSubType = actionTypes[0].subTabs.length > 0 ? 'all' : null;
-            if (actionTypes[0].subTabs.length > 0) {
-                actionTypes[0].subTabs[0].active = true;
-            }
+            this.activeSubTypes.clear();
         }
 
         // 3. Filter actions by both active Left-side (Item Type/Spell Level) and active Right-side (Action/Sub-action)
@@ -331,8 +337,8 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                 : itemParentId === this.activeLeftParentType;
             
             let matchesLeftSub = true;
-            if (this.activeLeftParentType === 'spell' && this.activeLeftSubType && this.activeLeftSubType !== 'all') {
-                matchesLeftSub = itemSubId === this.activeLeftSubType;
+            if (this.activeLeftParentType === 'spell' && this.activeLeftSubTypes.size > 0) {
+                matchesLeftSub = this.activeLeftSubTypes.has(itemSubId);
             }
 
             // Filter by Right Side (Action Type)
@@ -345,8 +351,8 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
 
                 const matchesParent = this.activeParentType === 'all' || actionParentId === this.activeParentType;
                 let matchesSub = true;
-                if (this.activeParentType !== 'all' && this.activeSubType && this.activeSubType !== 'all') {
-                    matchesSub = actionSubId === this.activeSubType;
+                if (this.activeParentType !== 'all' && this.activeSubTypes.size > 0) {
+                    matchesSub = this.activeSubTypes.has(actionSubId);
                 }
                 return matchesParent && matchesSub;
             });
@@ -367,9 +373,9 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         if (this.actor?.uuid) {
             activeTabCache.set(this.actor.uuid, {
                 leftParent: this.activeLeftParentType,
-                leftSub: this.activeLeftSubType,
+                leftSubTypes: Array.from(this.activeLeftSubTypes),
                 rightParent: this.activeParentType,
-                rightSub: this.activeSubType
+                subTypes: Array.from(this.activeSubTypes)
             });
         }
 
@@ -391,21 +397,48 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         const hasSubTabs = target.dataset.hasSubTabs === 'true';
         
         this.activeLeftParentType = parentId;
-        this.activeLeftSubType = hasSubTabs ? 'all' : null;
+        this.activeLeftSubTypes.clear();
         
-        log.debug(`Changed item parent filter to: ${this.activeLeftParentType}, sub: ${this.activeLeftSubType}`);
+        log.debug(`Changed item parent filter to: ${this.activeLeftParentType}`);
         this.render();
     }
 
     /**
-     * Handle left-side sub-item type (spell level) selection clicks.
+     * Handle left-side sub-item type (spell level) selection clicks (left-click).
      * 'this' refers to the application instance.
      */
     static async _onChangeLeftSubItemType(event, target) {
         event.preventDefault();
         this._clearMenuState();
-        this.activeLeftSubType = target.dataset.type;
-        log.debug(`Changed item sub filter to: ${this.activeLeftSubType}`);
+        const type = target.dataset.type;
+        
+        if (type === 'all') {
+            this.activeLeftSubTypes.clear();
+        } else if (this.activeLeftSubTypes.has(type) && this.activeLeftSubTypes.size === 1) {
+            this.activeLeftSubTypes.clear();
+        } else {
+            this.activeLeftSubTypes.clear();
+            this.activeLeftSubTypes.add(type);
+        }
+        
+        log.debug(`Changed item sub filter to:`, Array.from(this.activeLeftSubTypes));
+        this.render();
+    }
+
+    /**
+     * Toggle a left-side sub-tab (spell level) in the active set (for right-click multi-select).
+     */
+    _onToggleLeftSub(type) {
+        if (type === 'all') {
+            this.activeLeftSubTypes.clear();
+        } else {
+            if (this.activeLeftSubTypes.has(type)) {
+                this.activeLeftSubTypes.delete(type);
+            } else {
+                this.activeLeftSubTypes.add(type);
+            }
+        }
+        log.debug(`Toggled left sub filter:`, Array.from(this.activeLeftSubTypes));
         this.render();
     }
 
@@ -417,24 +450,50 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         event.preventDefault();
         this._clearMenuState();
         const parentId = target.dataset.type;
-        const hasSubTabs = target.dataset.hasSubTabs === 'true';
         
         this.activeParentType = parentId;
-        this.activeSubType = hasSubTabs ? 'all' : null;
+        this.activeSubTypes.clear();
         
-        log.debug(`Changed action parent filter to: ${this.activeParentType}, sub: ${this.activeSubType}`);
+        log.debug(`Changed action parent filter to: ${this.activeParentType}`);
         this.render();
     }
 
     /**
-     * Handle sub-action type selection clicks.
+     * Handle sub-action type selection clicks (left-click).
      * 'this' refers to the application instance.
      */
     static async _onChangeSubActionType(event, target) {
         event.preventDefault();
         this._clearMenuState();
-        this.activeSubType = target.dataset.type;
-        log.debug(`Changed action sub filter to: ${this.activeSubType}`);
+        const type = target.dataset.type;
+        
+        if (type === 'all') {
+            this.activeSubTypes.clear();
+        } else if (this.activeSubTypes.has(type) && this.activeSubTypes.size === 1) {
+            this.activeSubTypes.clear();
+        } else {
+            this.activeSubTypes.clear();
+            this.activeSubTypes.add(type);
+        }
+        
+        log.debug(`Changed action sub filter to:`, Array.from(this.activeSubTypes));
+        this.render();
+    }
+
+    /**
+     * Toggle a right-side sub-tab in the active set (for right-click multi-select).
+     */
+    _onToggleRightSub(type) {
+        if (type === 'all') {
+            this.activeSubTypes.clear();
+        } else {
+            if (this.activeSubTypes.has(type)) {
+                this.activeSubTypes.delete(type);
+            } else {
+                this.activeSubTypes.add(type);
+            }
+        }
+        log.debug(`Toggled right sub filter:`, Array.from(this.activeSubTypes));
         this.render();
     }
 
@@ -492,14 +551,14 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             if (subActions && subActions.length > 0) {
                 // Filter sub-actions to only those that match the currently active right-side tab
                 const activeParent = this.activeParentType;
-                const activeSub = this.activeSubType;
+                const activeSubs = this.activeSubTypes;
                 const filterNoResources = game.settings.get('bakanas-action-display', 'filterNoResources');
 
                 const qualifyingSubActions = subActions.filter(sub => {
                     const matchesParent = activeParent === 'all' || sub.tabs[0] === activeParent;
                     let matchesSub = true;
-                    if (activeParent !== 'all' && activeSub && activeSub !== 'all') {
-                        matchesSub = sub.tabs[1] === activeSub;
+                    if (activeParent !== 'all' && activeSubs.size > 0) {
+                        matchesSub = activeSubs.has(sub.tabs[1]);
                     }
                     
                     // Filter out depleted sub-actions if Hide Depleted is enabled
@@ -733,6 +792,25 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             event.preventDefault();
             event.stopPropagation();
             event.stopImmediatePropagation();
+            return;
+        }
+
+        // Intercept right-clicks on sub-tabs for multi-select toggle (excluding 'all' which has a context menu)
+        const leftSubTarget = event.target.closest(".bad-left-sub-tab");
+        if (leftSubTarget && leftSubTarget.dataset.type !== 'all') {
+            event.preventDefault();
+            event.stopPropagation();
+            event.stopImmediatePropagation();
+            this._onToggleLeftSub(leftSubTarget.dataset.type);
+            return;
+        }
+
+        const rightSubTarget = event.target.closest(".bad-right-sub-tab");
+        if (rightSubTarget && rightSubTarget.dataset.type !== 'all') {
+            event.preventDefault();
+            event.stopPropagation();
+            event.stopImmediatePropagation();
+            this._onToggleRightSub(rightSubTarget.dataset.type);
             return;
         }
 
