@@ -208,6 +208,21 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             });
         }
 
+        // Prune active left sub-tabs that are no longer available for this actor (prevents stuck empty filters)
+        if (this.activeLeftParentType === 'spell') {
+            const spellParent = leftGroups['spell'];
+            if (spellParent && spellParent.subTabs.length > 0) {
+                const availableLeftSubs = new Set(spellParent.subTabs.map(t => t.id));
+                for (const activeSub of this.activeLeftSubTypes) {
+                    if (activeSub !== 'all' && !availableLeftSubs.has(activeSub)) {
+                        this.activeLeftSubTypes.delete(activeSub);
+                    }
+                }
+            } else {
+                this.activeLeftSubTypes.clear();
+            }
+        }
+
         log.debug(`_prepareContext | activeLeftParentType: ${this.activeLeftParentType}, available tabs: ${itemTypes.map(t => t.id).join(', ')}`);
 
         // If active left parent type is no longer available, default to 'all'
@@ -310,6 +325,19 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                 const order = subOrder[parent.id] ?? [];
                 parent.subTabs.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
             }
+        }
+
+        // Prune active right sub-tabs that are no longer available for this actor (prevents stuck empty filters)
+        const activeParentGroup = parentGroups[this.activeParentType];
+        if (activeParentGroup && activeParentGroup.subTabs.length > 0) {
+            const availableSubs = new Set(activeParentGroup.subTabs.map(t => t.id));
+            for (const activeSub of this.activeSubTypes) {
+                if (activeSub !== 'all' && !availableSubs.has(activeSub)) {
+                    this.activeSubTypes.delete(activeSub);
+                }
+            }
+        } else {
+            this.activeSubTypes.clear();
         }
 
         // If the active parent type is no longer available, default to the first available
