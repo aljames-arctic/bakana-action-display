@@ -569,7 +569,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                     return matchesParent && matchesSub;
                 });
 
-                log.debug(`_onRollAction | activeParent: ${activeParent}, activeSub: ${activeSub}, qualifying: ${qualifyingSubActions.length}`, qualifyingSubActions);
+                log.debug(`_onRollAction | activeParent: ${activeParent}, activeSubs: ${Array.from(activeSubs).join(', ')}, qualifying: ${qualifyingSubActions.length}`, qualifyingSubActions);
 
                 if (qualifyingSubActions.length > 1) {
                     // Multiple qualifying sub-actions! Show a left-click dropdown menu.
