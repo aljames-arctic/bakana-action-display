@@ -588,7 +588,8 @@
     height: 1.2em !important;
     margin: 0 !important;
     position: relative !important;
-    top: 0 !important;
+    top: -4.5px !important; /* Shift up a couple pixels for perfect vertical alignment */
+    left: -6px !important; /* Shift left a couple pixels */
     flex-shrink: 0 !important;
 }
 
