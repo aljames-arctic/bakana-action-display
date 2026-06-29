@@ -6,6 +6,10 @@
                 "name": "HUD Opacity",
                 "hint": "Controls the transparency of the Action Display HUD overlay."
             },
+            "hudScale": {
+                "name": "HUD Scale",
+                "hint": "Controls the proportional size of the Action Display HUD (icons, text, tabs, etc.)."
+            },
             "logVerbosity": {
                 "name": "Log Verbosity Level",
                 "hint": "Controls the level of detail printed to the browser console.",

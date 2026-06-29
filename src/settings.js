@@ -54,6 +54,25 @@ Hooks.once('init', () => {
         }
     });
 
+    // Register HUD Scale Setting (Slider)
+    game.settings.register(MODULE_ID, 'hudScale', {
+        name: game.i18n.localize('BAD.settings.hudScale.name'),
+        hint: game.i18n.localize('BAD.settings.hudScale.hint'),
+        scope: 'client',
+        config: true,
+        type: Number,
+        range: {
+            min: 0.5,
+            max: 1.5,
+            step: 0.05
+        },
+        default: 1.0,
+        // Reactively update the CSS variable instantly when changed
+        onChange: value => {
+            document.documentElement.style.setProperty('--bad-hud-scale', value);
+        }
+    });
+
     // Register HUD Position Mode (attached/detached)
     game.settings.register(MODULE_ID, 'hudPositionMode', {
         scope: 'client',
@@ -70,7 +89,10 @@ Hooks.once('init', () => {
         default: null
     });
 
-    // Apply the initial opacity value to the document root
+    // Apply the initial opacity and scale values to the document root
     const initialOpacity = game.settings.get(MODULE_ID, 'hudOpacity');
     document.documentElement.style.setProperty('--bad-hud-opacity', initialOpacity);
+
+    const initialScale = game.settings.get(MODULE_ID, 'hudScale');
+    document.documentElement.style.setProperty('--bad-hud-scale', initialScale);
 });

@@ -74,7 +74,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             title: "Bakana's Action Display"
         },
         position: {
-            width: 320,
+            width: 'auto',
             height: 'auto'
         },
         // Declarative Actions API - maps data-action attributes in HTML to static handlers
@@ -1056,30 +1056,33 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         const el = this.element;
         if (!el) return super.setPosition(position);
 
+        const scale = game.settings.get('bakanas-action-display', 'hudScale') ?? 1.0;
+
         if (this.isAttached && this.token) {
             // --- ATTACHED MODE (Tracks Token) ---
             const tokenTransform = this.token.worldTransform;
-            const scale = game.canvas.stage?.scale?.x ?? 1;
-            const tokenWidth = this.token.w * scale;
-            const tokenHeight = this.token.h * scale;
+            const canvasScale = game.canvas.stage?.scale?.x ?? 1;
+            const tokenWidth = this.token.w * canvasScale;
+            const tokenHeight = this.token.h * canvasScale;
 
             const tokenLeft = tokenTransform.tx;
             const tokenTop = tokenTransform.ty;
             
-            const appWidth = this.options.position.width || 320;
+            // Read the actual scaled width from the DOM, or fallback to the calculated default
+            const appWidth = el.offsetWidth || (320 * scale);
 
             const spaceAbove = tokenTop;
             const spaceBelow = window.innerHeight - (tokenTop + tokenHeight);
             const side = spaceAbove > spaceBelow ? 'above' : 'below';
 
-            // Leave 150px safety margin on both sides for slide-out tabs
-            const tabExtension = 150;
+            // Leave safety margin on both sides for slide-out tabs, scaled proportionally
+            const tabExtension = 150 * scale;
             let left = tokenLeft + (tokenWidth / 2) - (appWidth / 2);
             left = Math.max(tabExtension, Math.min(window.innerWidth - appWidth - tabExtension, left));
 
             const targetPosition = foundry.utils.mergeObject(position, {
                 left,
-                width: appWidth,
+                width: 'auto', // Let CSS control the width via ems
                 height: 'auto'
             });
 
@@ -1089,18 +1092,14 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             // allowing it to grow upwards (when bottom-anchored) or downwards (when top-anchored).
             el.style.height = 'auto';
 
-            // Apply top/bottom manually to anchor the window stably
-            const tokenHudEl = document.getElementById("token-hud");
-            const tokenHudWidth = tokenHudEl?.offsetWidth || 0;
-
             if (side === 'above') {
                 const bottomOffset = window.innerHeight - tokenTop + 10;
-                log.debug(`setPosition (Attached/Above) | token: ${this.token.name}, left: ${left}px, bottomOffset: ${bottomOffset}px, tokenHudWidth: ${tokenHudWidth}px (tokenTop: ${tokenTop}px, windowHeight: ${window.innerHeight}px)`);
+                log.debug(`setPosition (Attached/Above) | token: ${this.token.name}, left: ${left}px, bottomOffset: ${bottomOffset}px (tokenTop: ${tokenTop}px, windowHeight: ${window.innerHeight}px)`);
                 el.style.bottom = `${bottomOffset}px`;
                 el.style.top = '';
             } else {
                 const topOffset = tokenTop + tokenHeight + 10;
-                log.debug(`setPosition (Attached/Below) | token: ${this.token.name}, left: ${left}px, topOffset: ${topOffset}px, tokenHudWidth: ${tokenHudWidth}px (tokenTop: ${tokenTop}px, tokenHeight: ${tokenHeight}px)`);
+                log.debug(`setPosition (Attached/Below) | token: ${this.token.name}, left: ${left}px, topOffset: ${topOffset}px (tokenTop: ${tokenTop}px, tokenHeight: ${tokenHeight}px)`);
                 el.style.top = `${topOffset}px`;
                 el.style.bottom = '';
             }
@@ -1109,21 +1108,24 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         } else {
             // --- DETACHED MODE (Floating / Fixed Position) ---
             const savedPos = game.settings.get('bakanas-action-display', 'hudDetachedPosition');
-            const appWidth = this.options.position.width || 320;
+            
+            // Read the actual scaled width/height from the DOM, or fallback to the calculated default
+            const appWidth = el.offsetWidth || (320 * scale);
+            const appHeight = (el.offsetHeight || 200) * (el.offsetHeight ? 1 : scale);
             
             let left = savedPos?.left ?? 100;
             let top = savedPos?.top ?? 100;
             
-            log.debug(`setPosition (Detached) | left: ${left}px, top: ${top}px, appWidth: ${appWidth}px`);
+            log.debug(`setPosition (Detached) | left: ${left}px, top: ${top}px, appWidth: ${appWidth}px, appHeight: ${appHeight}px`);
 
             // Clamp to screen bounds to ensure it's always visible (handles resolution changes)
             left = Math.max(10, Math.min(window.innerWidth - appWidth - 10, left));
-            top = Math.max(10, Math.min(window.innerHeight - (el.offsetHeight || 200) - 10, top));
+            top = Math.max(10, Math.min(window.innerHeight - appHeight - 10, top));
 
             const targetPosition = foundry.utils.mergeObject(position, {
                 left,
                 top,
-                width: appWidth,
+                width: 'auto', // Let CSS control the width via ems
                 height: 'auto'
             });
 
