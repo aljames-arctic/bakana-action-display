@@ -116,6 +116,7 @@
     flex-direction: column;
     gap: 0.43em; /* 6px -> 0.43em */
     overflow-y: auto; /* Scrollable list */
+    overflow-x: hidden; /* Prevent horizontal scrollbar on hover translation */
     flex-grow: 1;
     min-height: 0;    /* Ensures flexbox scrolling works correctly */
     padding-right: 0.28em; /* 4px -> 0.28em */
