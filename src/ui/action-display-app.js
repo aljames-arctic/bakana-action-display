@@ -630,25 +630,46 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                         };
                     });
 
+                    let menu; // Declare menu here so it can be captured in the onClose closure
+                    const targetRow = target; // Capture the target in a local variable to prevent race conditions
+                    log.debug(`_onRollAction | Creating menu for: ${targetRow.dataset.actionId}`, targetRow);
                     const options = {
                         jQuery: false, // Opt-out of jQuery for callbacks
-                        onOpen: (target) => {
-                            log.debug("Left-click dropdown opened on target (callback):", target);
-                            this.element.querySelector('.bakanas-action-display-container')?.classList.add('has-context-menu');
-                        },
                         onClose: () => {
-                            log.debug("Left-click dropdown closed");
-                            this._activeMenuTarget = null; // Clear target
-                            this._activeLeftClickMenu = null; // Clear menu instance
-                            this.element.querySelector('.bakanas-action-display-container')?.classList.remove('has-context-menu');
+                            log.debug(`onClose | Target: ${targetRow.dataset.actionId}`, targetRow);
+                            targetRow.classList.remove('bad-menu-active'); // Safely remove class from the correct row
+                            log.debug(`onClose | Removed class from target: ${targetRow.dataset.actionId}. Classes now:`, targetRow.className);
+                            
+                            // Only clear global references and classes if this specific menu is still the active one
+                            if (this._activeLeftClickMenu === menu) {
+                                log.debug(`onClose | Clearing global active menu reference`);
+                                this._activeLeftClickMenu = null;
+                                this.element.querySelector('.bakanas-action-display-container')?.classList.remove('has-context-menu');
+                            }
+                            if (this._activeMenuTarget === targetRow) {
+                                log.debug(`onClose | Clearing global active target reference`);
+                                this._activeMenuTarget = null;
+                            }
                         }
                     };
 
                     // Create and render a temporary ContextMenu at the clicked element (passing raw HTMLElement)
-                    const menu = new foundry.applications.ux.ContextMenu.implementation(this.element, null, menuItems, options);
-                    this._activeMenuTarget = target; // Set target directly to ensure toggle-off tracking works even if onOpen callback doesn't fire
+                    const container = this.element.querySelector('.bakanas-action-display-container') || this.element;
+                    menu = new foundry.applications.ux.ContextMenu.implementation(container, null, menuItems, options);
+                    this._activeMenuTarget = target; // Set target directly to ensure toggle-off tracking works
                     this._activeLeftClickMenu = menu; // Store the menu instance directly
+                    log.debug(`_onRollAction | Rendering menu for: ${targetRow.dataset.actionId}`);
                     menu.render(target);
+
+                    // Add classes synchronously since V12 ContextMenu.render() doesn't trigger onOpen programmatically
+                    targetRow.classList.add('bad-menu-active');
+                    this.element.querySelectorAll('.bad-action-item').forEach(el => {
+                        if (el !== targetRow) {
+                            el.classList.remove('bad-menu-active');
+                        }
+                    });
+                    this.element.querySelector('.bakanas-action-display-container')?.classList.add('has-context-menu');
+                    log.debug(`_onRollAction | Synchronously applied bad-menu-active to: ${targetRow.dataset.actionId}`);
                 } else if (qualifyingSubActions.length === 1) {
                     // Only one qualifying sub-action: roll directly!
                     qualifyingSubActions[0].roll(event);
@@ -969,17 +990,26 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             jQuery: false,
             onOpen: (target) => {
                 log.debug("Context menu opened on target:", target);
-                this._activeMenuTarget = target;
+                this._activeContextMenuTarget = target; // Use separate property to prevent race conditions
+                // Fail-safe: Ensure no other item has the active menu class
+                this.element.querySelectorAll('.bad-action-item').forEach(el => {
+                    if (el !== target) el.classList.remove('bad-menu-active');
+                });
+                target.classList.add('bad-menu-active'); // Add active class to lift z-index
                 this.element.querySelector('.bakanas-action-display-container')?.classList.add('has-context-menu');
             },
             onClose: () => {
                 log.debug("Context menu closed");
-                this._activeMenuTarget = null;
+                if (this._activeContextMenuTarget) {
+                    this._activeContextMenuTarget.classList.remove('bad-menu-active'); // Remove active class
+                }
+                this._activeContextMenuTarget = null;
                 this.element.querySelector('.bakanas-action-display-container')?.classList.remove('has-context-menu');
             }
         };
 
-        return new foundry.applications.ux.ContextMenu.implementation(this.element, ".bad-action-item", menuItems, options);
+        const container = this.element.querySelector('.bakanas-action-display-container') || this.element;
+        return new foundry.applications.ux.ContextMenu.implementation(container, ".bad-action-item", menuItems, options);
     }
 
     /**
@@ -1023,7 +1053,8 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         };
 
         // Bind only to sub-tabs on the left side (specifically 'All Spells')
-        return new foundry.applications.ux.ContextMenu.implementation(this.element, ".bad-left-sub-tab", menuItems, options);
+        const container = this.element.querySelector('.bakanas-action-display-container') || this.element;
+        return new foundry.applications.ux.ContextMenu.implementation(container, ".bad-left-sub-tab", menuItems, options);
     }
 
     /**

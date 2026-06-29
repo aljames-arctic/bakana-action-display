@@ -175,6 +175,12 @@
     box-shadow: 0 0 12px rgba(167, 139, 250, 0.45);
 }
 
+/* Ensure the item with an active menu renders on top of its siblings to prevent the dropdown from clipping behind them */
+.bad-action-item.bad-menu-active {
+    position: relative !important;
+    z-index: 100 !important;
+}
+
 /* Action Icon */
 .bad-action-icon, .bad-action-icon-placeholder {
     width: 1.7em; /* 24px -> 1.7em */
