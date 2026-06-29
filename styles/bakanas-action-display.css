@@ -371,8 +371,10 @@
 
 /* Sub-tab Button */
 .bad-left-sub-tab {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: rgba(22, 22, 29, 0.88);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(167, 139, 250, 0.2);
     border-right: none;
     border-radius: 0.43em 0 0 0.43em; /* 6px -> 0.43em */
     color: #cbd5e1;
@@ -511,8 +513,10 @@
 
 /* Sub-tab Button */
 .bad-right-sub-tab {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: rgba(22, 22, 29, 0.88);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(167, 139, 250, 0.2);
     border-left: none;
     border-radius: 0 0.43em 0.43em 0; /* 6px -> 0.43em */
     color: #cbd5e1;
