@@ -575,6 +575,7 @@
     cursor: pointer;
     transition: color 0.2s ease;
     user-select: none;
+    line-height: 1 !important;
 }
 
 .bad-filter-label:hover {
@@ -582,15 +583,17 @@
 }
 
 .bad-filter-checkbox {
+    -webkit-appearance: none;
+    appearance: none;
     cursor: pointer;
-    accent-color: #7c3aed; /* Violet accent to match theme */
-    width: 1.2em !important;
-    height: 1.2em !important;
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 0.25em !important;
+    width: 1.3em !important;
     margin: 0 !important;
-    position: relative !important;
-    top: -4.5px !important; /* Shift up a couple pixels for perfect vertical alignment */
-    left: -6px !important; /* Shift left a couple pixels */
     flex-shrink: 0 !important;
+    display: grid !important;
+    place-content: center !important;
+    transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 /* ==========================================================================
