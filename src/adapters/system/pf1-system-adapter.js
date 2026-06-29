@@ -38,7 +38,7 @@ export class Pf1SystemAdapter extends BaseSystemAdapter {
                 
                 let childItem = null;
                 try {
-                    childItem = foundry.utils.fromUuidSync(child.uuid, { relative: weapon });
+                    childItem = foundry.utils.fromUuidSync(child.uuid, { relative: actor });
                     if (childItem) {
                         log.debug(`Pf1SystemAdapter.modifyActions | Resolved child via fromUuidSync: "${childItem.name}" (${childItem.id})`);
                     }
