@@ -718,12 +718,14 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             // Left-click is exclusive within its own parent tab
             if (parentId) {
                 const group = this.parentGroups?.[parentId];
+                log.debug(`_onChangeSubActionType | parentId: ${parentId}, group found: ${!!group}`, group);
                 if (group) {
                     const validSubIds = new Set(group.subTabs.map(t => t.id));
                     const activeSubsForParent = Array.from(this.activeSubTypes).filter(id => validSubIds.has(id));
+                    log.debug(`_onChangeSubActionType | type: ${type}, validSubIds:`, Array.from(validSubIds), `activeSubsForParent:`, activeSubsForParent);
                     
                     if (activeSubsForParent.length > 1) {
-                        // Multiple selected: make the clicked one the SOLE selection (do not toggle off)
+                        log.debug(`_onChangeSubActionType | Multiple selected, isolating: ${type}`);
                         for (const subId of activeSubsForParent) {
                             if (subId !== type) {
                                 this.activeSubTypes.delete(subId);
@@ -731,10 +733,10 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                         }
                         this.activeSubTypes.add(type); // Ensure it is selected
                     } else if (activeSubsForParent.length === 1 && activeSubsForParent[0] === type) {
-                        // Only this one selected: toggle it off (revert to All)
+                        log.debug(`_onChangeSubActionType | Sole selected, toggling off: ${type}`);
                         this.activeSubTypes.delete(type);
                     } else {
-                        // None or a different one selected: make this one the sole selection
+                        log.debug(`_onChangeSubActionType | None or different selected, making sole: ${type}`);
                         for (const subId of activeSubsForParent) {
                             this.activeSubTypes.delete(subId);
                         }
