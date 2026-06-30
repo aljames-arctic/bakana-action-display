@@ -582,7 +582,7 @@ export class Dnd5eSystemAdapter extends BaseSystemAdapter {
             'loot': localize('DND5E.ItemTypeLoot', 'Loot'),
             'feat': localize('DND5E.ItemTypeFeat', 'Feature'),
             'spell': localize('DND5E.ItemTypeSpell', 'Spell'),
-            'other': localize('DND5E.Other', 'Other'),
+            'other': localize('DND5E.ActionOther', 'Other'),
             'hidden': localize('BAD.hud.hidden', 'Hidden')
         };
         return labels[parentId] ?? super.getItemTypeLabel(parentId);
@@ -627,11 +627,12 @@ export class Dnd5eSystemAdapter extends BaseSystemAdapter {
      */
     getActionTypeLabel(parentId) {
         const labels = {
-            'standard': localize('BAD.dnd5e.actionStandard', 'Standard'),
-            'time': localize('BAD.dnd5e.actionTime', 'Time'),
-            'special': localize('BAD.dnd5e.actionSpecial', 'Special'),
+            'standard': localize('DND5E.ACTIVATION.Category.Standard', 'Standard'),
+            'time': localize('DND5E.ACTIVATION.Category.Time', 'Time'),
+            'special': localize('DND5E.Special', 'Special'),
             'monster': localize('DND5E.ActionMonster', 'Monster'),
-            'vehicle': localize('DND5E.ActionVehicle', 'Vehicle')
+            'vehicle': localize('DND5E.ActionVehicle', 'Vehicle'),
+            'none': localize('DND5E.None', 'None')
         };
         return labels[parentId] ?? super.getActionTypeLabel(parentId);
     }
