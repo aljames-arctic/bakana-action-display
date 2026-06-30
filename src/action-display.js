@@ -4,8 +4,7 @@ import { log } from './lib/logger.js';
 
 import { MODULE_ID } from './constants.js';
 
-// Lists of systems and modules that have adapter implementations
-const SUPPORTED_SYSTEMS = ['dnd5e', 'pf2e', 'pf1'];
+// Lists of  modules that have adapter implementations
 const SUPPORTED_MODULES = ['midi-qol'];
 
 /**
@@ -14,7 +13,6 @@ const SUPPORTED_MODULES = ['midi-qol'];
  */
 class ActionDisplay {
     constructor() {
-        this.systemAdapters = new Map();
         this.moduleAdapters = new Map();
         this.activeSystemAdapter = null;
     }
@@ -28,32 +26,27 @@ class ActionDisplay {
     }
 
     /**
-     * Check if a game system is supported by an adapter.
-     * @param {string} systemId 
-     * @returns {boolean}
-     */
-    isSystemSupported(systemId) {
-        return SUPPORTED_SYSTEMS.includes(systemId);
-    }
-
-    /**
      * Initialize the coordinator by detecting the active system and registering adapters.
      */
     init() {
         log.info("Initializing ActionDisplay core");
-        this._detectSystemAdapter();
+        if (!this.activeSystemAdapter) {
+            const currentSystemId = game.system.id;
+            log.warn(`No system adapter registered for system: ${currentSystemId}. Falling back to default adapter.`);
+            this.activeSystemAdapter = new BaseSystemAdapter(currentSystemId);
+        }
     }
 
     /**
-     * Register a system adapter.
+     * Register and activate the system adapter.
      * @param {BaseSystemAdapter} adapter 
      */
     registerSystemAdapter(adapter) {
         if (!(adapter instanceof BaseSystemAdapter)) {
             throw new Error("System adapter must be an instance of BaseSystemAdapter");
         }
-        this.systemAdapters.set(adapter.systemId, adapter);
-        log.info(`Registered system adapter for: ${adapter.systemId}`);
+        this.activeSystemAdapter = adapter;
+        log.info(`Activated system adapter for: ${adapter.systemId}`);
     }
 
     /**
@@ -66,21 +59,6 @@ class ActionDisplay {
         }
         this.moduleAdapters.set(adapter.moduleId, adapter);
         log.info(`Registered module adapter for: ${adapter.moduleId}`);
-    }
-
-    /**
-     * Automatically detect and activate the system adapter for the current game system.
-     */
-    _detectSystemAdapter() {
-        const currentSystemId = game.system.id;
-        const adapter = this.systemAdapters.get(currentSystemId);
-        if (adapter && adapter.isCompatible()) {
-            this.activeSystemAdapter = adapter;
-            log.info(`Activated system adapter: ${currentSystemId}`);
-        } else {
-            log.warn(`No compatible system adapter found for system: ${currentSystemId}. Falling back to default adapter.`);
-            this.activeSystemAdapter = new BaseSystemAdapter(currentSystemId);
-        }
     }
 
     /**

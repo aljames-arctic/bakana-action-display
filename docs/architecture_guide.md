@@ -74,7 +74,6 @@ The following diagram shows how the classes are structured and how they referenc
 ```mermaid
 classDiagram
     class ActionDisplay {
-        +Map systemAdapters
         +Map moduleAdapters
         +BaseSystemAdapter activeSystemAdapter
         +init()

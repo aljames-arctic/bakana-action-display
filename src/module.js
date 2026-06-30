@@ -22,23 +22,21 @@ function toPascalCase(str) {
 async function registerAdapters() {
     const systemId = game.system.id;
 
-    if (actionDisplay.isSystemSupported(systemId)) {
-        const systemPath = `./adapters/system/${systemId}-system-adapter.js`;
-        const systemClassName = `${toPascalCase(systemId)}SystemAdapter`;
+    const systemPath = `./adapters/system/${systemId}-system-adapter.js`;
+    const systemClassName = `${toPascalCase(systemId)}SystemAdapter`;
 
-        try {
-            const systemModule = await import(systemPath);
-            const AdapterClass = systemModule[systemClassName];
-            if (AdapterClass) {
-                actionDisplay.registerSystemAdapter(new AdapterClass());
-            } else {
-                log.error(`Class ${systemClassName} not found in ${systemPath}`);
-            }
-        } catch (error) {
-            log.error(`Failed to load system adapter for ${systemId} at ${systemPath}`, error);
+    try {
+        const systemModule = await import(systemPath);
+        const AdapterClass = systemModule[systemClassName];
+        if (AdapterClass) {
+            actionDisplay.registerSystemAdapter(new AdapterClass());
+        } else {
+            log.error(`Class ${systemClassName} not found in ${systemPath}`);
         }
-    } else {
-        log.warn(`No system adapter configured for system: ${systemId}`);
+    } catch (error) {
+        // If the file doesn't exist (or fails to load), the coordinator will naturally fall back to BaseSystemAdapter
+        log.warn(`No system adapter found for ${systemId} at ${systemPath}. Falling back to default adapter.`);
+        log.debug("System adapter load error:", error);
     }
 
     const activeModules = actionDisplay.getSupportedModules();
