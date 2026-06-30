@@ -110,8 +110,6 @@ export class BaseSystemAdapter {
             'all': 'All Actions',
             'standard': 'Standard',
             'time': 'Time',
-            'monster': 'Monster',
-            'vehicle': 'Vehicle',
             'special': 'Special',
             'none': 'None'
         };
@@ -128,8 +126,6 @@ export class BaseSystemAdapter {
             'all': 'fas fa-border-all',
             'standard': 'fas fa-hand-fist',
             'time': 'fas fa-clock',
-            'monster': 'fas fa-dragon',
-            'vehicle': 'fas fa-ship',
             'special': 'fas fa-star',
             'none': 'fas fa-ban'
         };
@@ -144,15 +140,10 @@ export class BaseSystemAdapter {
     getActionSubTabLabel(subId) {
         const labels = {
             'action': 'Action',
-            'bonus': 'Bonus Action',
             'reaction': 'Reaction',
             'minute': 'Minute',
             'hour': 'Hour',
-            'day': 'Day',
-            'legendary': 'Legendary',
-            'mythic': 'Mythic',
-            'lair': 'Lair',
-            'crew': 'Crew'
+            'day': 'Day'
         };
         return labels[subId] || subId.toUpperCase();
     }

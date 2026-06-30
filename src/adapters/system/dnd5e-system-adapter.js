@@ -599,6 +599,28 @@ export class Dnd5eSystemAdapter extends BaseSystemAdapter {
         return (game.i18n && game.i18n.has(key)) ? game.i18n.localize(key) : super.getSpellLevelLabel(level);
     }
 
+    /**
+     * Get the localized label for a right-side action type (parent tab) for DnD5e.
+     */
+    getActionTypeLabel(parentId) {
+        const labels = {
+            'monster': localize('DND5E.ActionMonster', 'Monster'),
+            'vehicle': localize('DND5E.ActionVehicle', 'Vehicle')
+        };
+        return labels[parentId] ?? super.getActionTypeLabel(parentId);
+    }
+
+    /**
+     * Get the CSS icon class for a right-side action type (parent tab) for DnD5e.
+     */
+    getActionTypeIcon(parentId) {
+        const icons = {
+            'monster': 'fas fa-dragon',
+            'vehicle': 'fas fa-ship'
+        };
+        return icons[parentId] ?? super.getActionTypeIcon(parentId);
+    }
+
     getActionSubTabLabel(subId) {
         const labels = {
             'action': localize('DND5E.Action', 'Action'),
