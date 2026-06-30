@@ -1,4 +1,4 @@
-import { BaseSystemAdapter, localize } from '../base-system-adapter.js';
+import { BaseSystemAdapter } from '../base-system-adapter.js';
 
 /**
  * Intermediate adapter for fantasy-based systems (D&D 5e, PF1e, PF2e).
