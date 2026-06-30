@@ -189,25 +189,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             return sortA - sortB;
         });
 
-        // Sort spell sub-tabs (levels 0 to 9) and add 'All Spells'
-        const spellParent = leftGroups['spell'];
-        if (spellParent && spellParent.subTabs.length > 0) {
-            spellParent.subTabs.sort((a, b) => {
-                const valA = parseInt(a.id, 10);
-                const valB = parseInt(b.id, 10);
-                if (isNaN(valA) && isNaN(valB)) return a.id.localeCompare(b.id);
-                if (isNaN(valA)) return 1;
-                if (isNaN(valB)) return -1;
-                return valA - valB;
-            });
-            const showUnprepared = this.actor.getFlag('bakanas-action-display', 'showUnprepared') ?? false;
-            spellParent.subTabs.unshift({
-                id: 'all',
-                label: 'All Spells',
-                active: this.activeLeftParentType === 'spell' && this.activeLeftSubTypes.size === 0,
-                showUnprepared: showUnprepared
-            });
-        }
+        // System-specific sorting and tab injection is now delegated to the system adapter in modifyContext
 
         // Prune active left sub-tabs that are no longer available for this actor (prevents stuck empty filters)
         if (this.activeLeftParentType === 'spell') {
@@ -407,6 +389,9 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                 subTypes: Array.from(this.activeSubTypes)
             });
         }
+
+        // Delegate to system adapter to allow system-specific context modifications
+        adapter?.modifyContext?.(context, this);
 
         return context;
     }
@@ -840,16 +825,13 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             event.stopPropagation();
             event.stopImmediatePropagation();
             
-            if (leftSubTarget.dataset.type === 'all') {
-                // 'All Spells' tab: toggle showUnprepared if it's the spell category
-                const parentGroup = leftSubTarget.closest('.bad-left-tab-group');
-                const parentTab = parentGroup?.querySelector('.bad-left-tab');
-                if (parentTab?.dataset.type === 'spell' && game.system.id === 'dnd5e' && this.actor?.isOwner) {
-                    this._toggleShowUnprepared();
+            // Delegate to system adapter for custom right-click behavior (e.g. toggling unprepared spells in dnd5e)
+            const handled = actionDisplay.activeSystemAdapter?.onTabRightClick?.(this, leftSubTarget, event) ?? false;
+            if (!handled) {
+                if (leftSubTarget.dataset.type !== 'all') {
+                    // Default fallback: multi-select toggle for other sub-tabs
+                    this._onToggleLeftSub(leftSubTarget.dataset.type);
                 }
-            } else {
-                // Other sub-tabs: multi-select toggle
-                this._onToggleLeftSub(leftSubTarget.dataset.type);
             }
             return;
         }
@@ -887,15 +869,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         }
     }
 
-    /**
-     * Toggle the showUnprepared flag on the actor.
-     * @private
-     */
-    async _toggleShowUnprepared() {
-        const showUnprepared = this.actor.getFlag('bakanas-action-display', 'showUnprepared') ?? false;
-        await this.actor.setFlag('bakanas-action-display', 'showUnprepared', !showUnprepared);
-        log.debug(`Toggled showUnprepared directly to: ${!showUnprepared}`);
-    }
+
 
     /**
      * Create and bind the Foundry ContextMenu for action items.
@@ -932,62 +906,13 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                     this._toggleActionHidden(el.dataset.actionId, false);
                 }
             },
-            {
-                name: "BAD.dnd5e.prepareSpell",
-                icon: '<i class="fas fa-book"></i>',
-                condition: el => {
-                    if (game.system.id !== "dnd5e") return false;
-                    if (!this.actor?.isOwner) return false;
-                    const actionId = el.dataset.actionId;
-                    const actions = this.actions || [];
-                    const action = actions.find(a => a.id === actionId);
-                    if (!action) return false;
-                    const item = action.originalItem;
-                    if (item?.type !== 'spell') return false;
-                    
-                    const prepMode = item.system.method;
-                    const isPrepared = !!item.system.prepared;
-                    return !['innate', 'atwill', 'pact'].includes(prepMode) && !isPrepared;
-                },
-                callback: async el => {
-                    const actionId = el.dataset.actionId;
-                    const actions = this.actions || [];
-                    const action = actions.find(a => a.id === actionId);
-                    const item = action?.originalItem;
-                    if (item) {
-                        log.debug(`Preparing spell: ${item.name}`);
-                        await item.update({ "system.prepared": 1 });
-                    }
-                }
-            },
-            {
-                name: "BAD.dnd5e.unprepareSpell",
-                icon: '<i class="fas fa-book-dead"></i>',
-                condition: el => {
-                    if (game.system.id !== "dnd5e") return false;
-                    if (!this.actor?.isOwner) return false;
-                    const actionId = el.dataset.actionId;
-                    const actions = this.actions || [];
-                    const action = actions.find(a => a.id === actionId);
-                    if (!action) return false;
-                    const item = action.originalItem;
-                    if (item?.type !== 'spell') return false;
-                    
-                    const prepMode = item.system.method;
-                    return !['innate', 'atwill', 'pact'].includes(prepMode) && item.system.prepared === 1;
-                },
-                callback: async el => {
-                    const actionId = el.dataset.actionId;
-                    const actions = this.actions || [];
-                    const action = actions.find(a => a.id === actionId);
-                    const item = action?.originalItem;
-                    if (item) {
-                        log.debug(`Unpreparing spell: ${item.name}`);
-                        await item.update({ "system.prepared": 0 });
-                    }
-                }
-            }
         ];
+
+        // Delegate to system adapter to add system-specific context menu items
+        if (actionDisplay.activeSystemAdapter?.getContextMenuItems) {
+            const systemItems = actionDisplay.activeSystemAdapter.getContextMenuItems(this);
+            menuItems.push(...systemItems);
+        }
 
         const options = {
             jQuery: false,

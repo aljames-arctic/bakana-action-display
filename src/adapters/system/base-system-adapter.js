@@ -156,4 +156,33 @@ export class BaseSystemAdapter {
         };
         return labels[subId] || subId.toUpperCase();
     }
+
+    /**
+     * Get system-specific context menu items for action items.
+     * @param {ApplicationV2} app The ActionDisplayApp instance
+     * @returns {Object[]} An array of context menu item configurations
+     */
+    getContextMenuItems(app) {
+        return [];
+    }
+
+    /**
+     * Modify the template context before rendering.
+     * @param {Object} context The template context
+     * @param {ApplicationV2} app The ActionDisplayApp instance
+     */
+    modifyContext(context, app) {
+        // Default implementation does nothing
+    }
+
+    /**
+     * Handle right-click on a tab.
+     * @param {ApplicationV2} app The ActionDisplayApp instance
+     * @param {HTMLElement} el The tab element that was right-clicked
+     * @param {Event} event The event
+     * @returns {boolean} True if the event was handled and default behavior should be prevented
+     */
+    onTabRightClick(app, el, event) {
+        return false;
+    }
 }

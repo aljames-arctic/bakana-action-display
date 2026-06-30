@@ -1,4 +1,5 @@
 import { BaseSystemAdapter, localize } from './base-system-adapter.js';
+import { log } from '../../lib/logger.js';
 
 /**
  * System adapter for the DnD5e system.
@@ -637,6 +638,125 @@ export class Dnd5eSystemAdapter extends BaseSystemAdapter {
             return true;
         }
 
+        return false;
+    }
+
+    /**
+     * Get D&D 5e-specific context menu items for spells (Prepare/Unprepare).
+     * @param {ApplicationV2} app The ActionDisplayApp instance
+     * @returns {Object[]} An array of context menu item configurations
+     */
+    getContextMenuItems(app) {
+        return [
+            {
+                name: "BAD.dnd5e.prepareSpell",
+                icon: '<i class="fas fa-book"></i>',
+                condition: el => {
+                    if (!app.actor?.isOwner) return false;
+                    const actionId = el.dataset.actionId;
+                    const actions = app.actions || [];
+                    const action = actions.find(a => a.id === actionId);
+                    if (!action) return false;
+                    const item = action.originalItem;
+                    if (item?.type !== 'spell') return false;
+                    
+                    const prepMode = item.system.method;
+                    const isPrepared = !!item.system.prepared;
+                    return !['innate', 'atwill', 'pact'].includes(prepMode) && !isPrepared;
+                },
+                callback: async el => {
+                    const actionId = el.dataset.actionId;
+                    const actions = app.actions || [];
+                    const action = actions.find(a => a.id === actionId);
+                    const item = action?.originalItem;
+                    if (item) {
+                        log.debug(`Preparing spell: ${item.name}`);
+                        await item.update({ "system.prepared": 1 });
+                    }
+                }
+            },
+            {
+                name: "BAD.dnd5e.unprepareSpell",
+                icon: '<i class="fas fa-book-dead"></i>',
+                condition: el => {
+                    if (!app.actor?.isOwner) return false;
+                    const actionId = el.dataset.actionId;
+                    const actions = app.actions || [];
+                    const action = actions.find(a => a.id === actionId);
+                    if (!action) return false;
+                    const item = action.originalItem;
+                    if (item?.type !== 'spell') return false;
+                    
+                    const prepMode = item.system.method;
+                    return !['innate', 'atwill', 'pact'].includes(prepMode) && item.system.prepared === 1;
+                },
+                callback: async el => {
+                    const actionId = el.dataset.actionId;
+                    const actions = app.actions || [];
+                    const action = actions.find(a => a.id === actionId);
+                    const item = action?.originalItem;
+                    if (item) {
+                        log.debug(`Unpreparing spell: ${item.name}`);
+                        await item.update({ "system.prepared": 0 });
+                    }
+                }
+            }
+        ];
+    }
+
+    /**
+     * Sort spell sub-tabs and inject the virtual "All Spells" tab.
+     * @param {Object} context The template context
+     * @param {ApplicationV2} app The ActionDisplayApp instance
+     */
+    modifyContext(context, app) {
+        const spellParent = context.itemTypes.find(t => t.id === 'spell');
+        if (spellParent && spellParent.subTabs.length > 0) {
+            // Sort spell sub-tabs (levels 0 to 9)
+            spellParent.subTabs.sort((a, b) => {
+                const valA = parseInt(a.id, 10);
+                const valB = parseInt(b.id, 10);
+                if (isNaN(valA) && isNaN(valB)) return a.id.localeCompare(b.id);
+                if (isNaN(valA)) return 1;
+                if (isNaN(valB)) return -1;
+                return valA - valB;
+            });
+
+            // Inject "All Spells" at the beginning
+            const showUnprepared = app.actor.getFlag('bakanas-action-display', 'showUnprepared') ?? false;
+            spellParent.subTabs.unshift({
+                id: 'all',
+                label: 'All Spells',
+                active: app.activeLeftParentType === 'spell' && app.activeLeftSubTypes.size === 0,
+                showUnprepared: showUnprepared
+            });
+        }
+    }
+
+    /**
+     * Handle right-click on the "All Spells" tab to toggle unprepared spells.
+     * @param {ApplicationV2} app The ActionDisplayApp instance
+     * @param {HTMLElement} el The tab element that was right-clicked
+     * @param {Event} event The event
+     * @returns {boolean} True if handled
+     */
+    onTabRightClick(app, el, event) {
+        if (el.dataset.type === 'all') {
+            const parentGroup = el.closest('.bad-left-tab-group');
+            const parentTab = parentGroup?.querySelector('.bad-left-tab');
+            if (parentTab?.dataset.type === 'spell' && app.actor?.isOwner) {
+                const showUnprepared = app.actor.getFlag('bakanas-action-display', 'showUnprepared') ?? false;
+                
+                log.group("BAD | Right-Click 'All Spells' Tab (Adapter)", "debug");
+                log.debug("Current showUnprepared state:", showUnprepared);
+                
+                app.actor.setFlag('bakanas-action-display', 'showUnprepared', !showUnprepared);
+                
+                log.debug("New showUnprepared state set to:", !showUnprepared);
+                log.groupEnd();
+                return true; // Handled!
+            }
+        }
         return false;
     }
 }
