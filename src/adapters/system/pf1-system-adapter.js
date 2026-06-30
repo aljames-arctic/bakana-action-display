@@ -1,11 +1,12 @@
-import { BaseSystemAdapter, localize } from './base-system-adapter.js';
+import { FantasySystemAdapter } from './genre/fantasy-system-adapter.js';
+import { localize } from './base-system-adapter.js';
 import { log } from '../../lib/logger.js';
 
 /**
  * System adapter for Pathfinder 1st Edition (PF1e).
  * Handles PF1e's multi-action items, prepared/spontaneous spellcasting, and toggleable buffs.
  */
-export class Pf1SystemAdapter extends BaseSystemAdapter {
+export class Pf1SystemAdapter extends FantasySystemAdapter {
     constructor() {
         super('pf1');
     }
@@ -431,11 +432,7 @@ export class Pf1SystemAdapter extends BaseSystemAdapter {
      */
     getItemTypeIcon(parentId) {
         const icons = {
-            'weapon': 'fas fa-sword',
-            'spell': 'fas fa-wand-magic-sparkles',
-            'feat': 'fas fa-award',
-            'buff': 'fas fa-sparkles',
-            'consumable': 'fas fa-flask'
+            'buff': 'fas fa-sparkles'
         };
         return icons[parentId] || super.getItemTypeIcon(parentId);
     }
@@ -468,21 +465,4 @@ export class Pf1SystemAdapter extends BaseSystemAdapter {
         return order[type] ?? 99;
     }
 
-    /**
-     * Modify the template context before rendering.
-     * Sorts spell sub-tabs numerically.
-     */
-    modifyContext(context, app) {
-        const spellParent = context.itemTypes.find(t => t.id === 'spell');
-        if (spellParent && spellParent.subTabs.length > 0) {
-            spellParent.subTabs.sort((a, b) => {
-                const valA = parseInt(a.id, 10);
-                const valB = parseInt(b.id, 10);
-                if (isNaN(valA) && isNaN(valB)) return a.id.localeCompare(b.id);
-                if (isNaN(valA)) return 1;
-                if (isNaN(valB)) return -1;
-                return valA - valB;
-            });
-        }
-    }
 }

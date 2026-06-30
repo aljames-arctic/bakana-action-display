@@ -1,10 +1,11 @@
-import { BaseSystemAdapter, localize } from './base-system-adapter.js';
+import { FantasySystemAdapter } from './genre/fantasy-system-adapter.js';
+import { localize } from './base-system-adapter.js';
 
 /**
  * System adapter for Pathfinder 2nd Edition (PF2e).
  * Modifies the base actions list by mapping feats and spells, and injecting Strikes (attacks).
  */
-export class Pf2eSystemAdapter extends BaseSystemAdapter {
+export class Pf2eSystemAdapter extends FantasySystemAdapter {
     constructor() {
         super('pf2e');
     }
@@ -200,17 +201,6 @@ export class Pf2eSystemAdapter extends BaseSystemAdapter {
         return labels[parentId] || super.getItemTypeLabel(parentId);
     }
 
-    /**
-     * Get the CSS icon class for a left-side item type (parent tab) in PF2e.
-     */
-    getItemTypeIcon(parentId) {
-        const icons = {
-            'feat': 'fas fa-award',
-            'spell': 'fas fa-wand-magic-sparkles',
-            'weapon': 'fas fa-sword'
-        };
-        return icons[parentId] || super.getItemTypeIcon(parentId);
-    }
 
     /**
      * Get the localized label for a right-side action type (parent tab) in PF2e.
@@ -268,21 +258,5 @@ export class Pf2eSystemAdapter extends BaseSystemAdapter {
         return { available: null, max: null };
     }
 
-    /**
-     * Modify the template context before rendering.
-     * Sorts spell sub-tabs numerically.
-     */
-    modifyContext(context, app) {
-        const spellParent = context.itemTypes.find(t => t.id === 'spell');
-        if (spellParent && spellParent.subTabs.length > 0) {
-            spellParent.subTabs.sort((a, b) => {
-                const valA = parseInt(a.id, 10);
-                const valB = parseInt(b.id, 10);
-                if (isNaN(valA) && isNaN(valB)) return a.id.localeCompare(b.id);
-                if (isNaN(valA)) return 1;
-                if (isNaN(valB)) return -1;
-                return valA - valB;
-            });
-        }
-    }
+
 }

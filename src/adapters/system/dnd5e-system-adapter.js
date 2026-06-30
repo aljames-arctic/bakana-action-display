@@ -1,12 +1,13 @@
-import { BaseSystemAdapter, localize } from './base-system-adapter.js';
+import { FantasySystemAdapter } from './genre/fantasy-system-adapter.js';
+import { localize } from './base-system-adapter.js';
 import { log } from '../../lib/logger.js';
 
 /**
- * System adapter for the DnD5e system.
- * Modifies the base actions list by filtering, calculating resource uses,
- * and sorting them into hierarchical action tabs (right) and item types (left).
+ * System adapter for D&D 5th Edition.
+ * Handles D&D 5e's specific item types, action categories, spell slot calculations,
+ * and spell preparation toggles.
  */
-export class Dnd5eSystemAdapter extends BaseSystemAdapter {
+export class Dnd5eSystemAdapter extends FantasySystemAdapter {
     constructor() {
         super('dnd5e');
     }
@@ -588,16 +589,9 @@ export class Dnd5eSystemAdapter extends BaseSystemAdapter {
         return labels[parentId] ?? super.getItemTypeLabel(parentId);
     }
 
-    /**
-     * Get the CSS icon class for a left-side item type (parent tab) for DnD5e.
-     */
     getItemTypeIcon(parentId) {
         const icons = {
-            'weapon': 'fas fa-sword',
-            'spell': 'fas fa-wand-magic-sparkles',
-            'feat': 'fas fa-award',
             'equipment': 'fas fa-shield',
-            'consumable': 'fas fa-flask',
             'tool': 'fas fa-hammer',
             'backpack': 'fas fa-sack',
             'loot': 'fas fa-gem'
@@ -756,24 +750,10 @@ export class Dnd5eSystemAdapter extends BaseSystemAdapter {
         ];
     }
 
-    /**
-     * Sort spell sub-tabs and inject the virtual "All Spells" tab.
-     * @param {Object} context The template context
-     * @param {ApplicationV2} app The ActionDisplayApp instance
-     */
     modifyContext(context, app) {
+        super.modifyContext(context, app); // Automatically sorts spell sub-tabs!
         const spellParent = context.itemTypes.find(t => t.id === 'spell');
         if (spellParent && spellParent.subTabs.length > 0) {
-            // Sort spell sub-tabs (levels 0 to 9)
-            spellParent.subTabs.sort((a, b) => {
-                const valA = parseInt(a.id, 10);
-                const valB = parseInt(b.id, 10);
-                if (isNaN(valA) && isNaN(valB)) return a.id.localeCompare(b.id);
-                if (isNaN(valA)) return 1;
-                if (isNaN(valB)) return -1;
-                return valA - valB;
-            });
-
             // Inject "All Spells" at the beginning
             const showUnprepared = app.actor.getFlag('bakanas-action-display', 'showUnprepared') ?? false;
             spellParent.subTabs.unshift({
