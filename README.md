@@ -70,8 +70,7 @@ You can choose whether to show or hide unprepared spells in the HUD. A quick **r
 #### Spell Properties Filter
 A dedicated, collapsible **Spell Components** section appears at the bottom of the right-side tabs (exclusive to the D&D 5e system). Unlike other filters, it operates as a **negative/exclusion filter** to help you quickly identify what you can cast under constraints (such as being silenced, bound, or stripped of materials):
 *   **Grey (Default)**: Allowed. The component is permitted, and spells requiring it are shown.
-*   **Red Outline + Diagonal (Banned)**: Banned. Toggling a component (Verbal, Somatic, Material, or None) bans it. Any spells requiring that component will be instantly hidden from the HUD.
-*   **"None" Option**: Located at the bottom, this allows you to ban or isolate spells that have no casting components at all.
+*   **Red Outline + Diagonal (Banned)**: Banned. Toggling a component (Verbal, Somatic, or Material) bans it. Any spells requiring that component will be instantly hidden from the HUD.
 *   **Persistent Expansion**: While any component is banned, the *Spell Components* tab will remain expanded on your screen even if you left-click to focus the *Action Economy* tab, allowing you to combine filters.
 
 #### Midi-QOL Integration (Module)
