@@ -621,15 +621,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         return super.getItemSubTabLabel(parentId, subId);
     }
 
-    /**
-     * Get the default active sub-tabs for this system.
-     * @returns {string[]}
-     */
-    getDefaultActiveSubTypes() {
-        return [
-            'action', 'bonus', 'reaction', 'none', 'special', 'legendary', 'mythic', 'crew', 'lair', 'minute', 'hour', 'day'
-        ];
-    }
+
 
     /**
      * Get the localized label for a right-side action type (parent tab) for DnD5e.
@@ -655,6 +647,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
 
     getActionSubTabLabel(subId) {
         const labels = {
+            'all': localize('BAD.dnd5e.allActions', 'All Actions'),
             'action': localize('DND5E.Action', 'Action'),
             'bonus': localize('DND5E.BonusAction', 'Bonus Action'),
             'reaction': localize('DND5E.Reaction', 'Reaction'),

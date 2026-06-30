@@ -324,7 +324,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
 
         // Sort sub-tabs within each parent and add 'All'
         const subOrder = {
-            'economy': ['action', 'bonus', 'reaction', 'special', 'legendary', 'mythic', 'crew', 'lair', 'minute', 'hour', 'day', 'none'],
+            'economy': ['all', 'action', 'bonus', 'reaction', 'special', 'legendary', 'mythic', 'crew', 'lair', 'minute', 'hour', 'day', 'none'],
             'components': ['vocal', 'somatic', 'material'],
             'standard': ['all', 'action', 'bonus', 'reaction'],
             'time': ['all', 'minute', 'hour', 'day'],
@@ -333,13 +333,13 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         };
 
         for (const parent of actionTypes) {
-            const skipAll = ['components', 'economy'].includes(parent.id);
+            const skipAll = ['components'].includes(parent.id);
             
             if (parent.subTabs.length > 0 && !skipAll) {
                 const isActive = this.activeParentTypes.has(parent.id);
                 parent.subTabs.unshift({
                     id: 'all',
-                    label: 'All',
+                    label: adapter.getActionSubTabLabel('all') ?? 'All',
                     active: isActive && this.activeSubTypes.size === 0
                 });
                 
@@ -663,7 +663,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
      * Toggle a right-side parent tab in the active set (for right-click multi-select).
      */
     _onToggleRightParent(parentId) {
-        // Right-click on a parent tab: reset its sub-tabs to their default states!
+        // Right-click on a parent tab: clear all its sub-tab filters (resets both to their defaults!)
         if (parentId === 'all') {
             this.activeSubTypes.clear();
             this.focusedParentType = 'all';
@@ -671,13 +671,8 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             const parentGroup = this.parentGroups?.[parentId];
             if (parentGroup) {
                 const validSubIds = new Set(parentGroup.subTabs.map(t => t.id));
-                const systemDefaults = new Set(actionDisplay.activeSystemAdapter?.getDefaultActiveSubTypes() ?? []);
-                
-                // Reset each sub-tab of this parent to its default state
-                for (const subId of validSubIds) {
-                    if (systemDefaults.has(subId)) {
-                        this.activeSubTypes.add(subId);
-                    } else {
+                for (const subId of this.activeSubTypes) {
+                    if (validSubIds.has(subId)) {
                         this.activeSubTypes.delete(subId);
                     }
                 }
