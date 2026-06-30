@@ -303,7 +303,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         }
 
         // Convert to array and sort by a predefined order
-        const parentOrder = ['all', 'standard', 'action', 'bonus', 'reaction', 'free', 'time', 'monster', 'vehicle', 'special', 'none'];
+        const parentOrder = ['all', 'economy', 'standard', 'action', 'bonus', 'reaction', 'free', 'time', 'monster', 'vehicle', 'special', 'none'];
         const actionTypes = Object.values(parentGroups);
         actionTypes.sort((a, b) => {
             const idxA = parentOrder.indexOf(a.id);
@@ -315,6 +315,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
 
         // Sort sub-tabs within each parent and add 'All'
         const subOrder = {
+            'economy': ['all', 'action', 'bonus', 'reaction', 'none', 'special', 'legendary', 'mythic', 'crew', 'lair'],
             'standard': ['all', 'action', 'bonus', 'reaction'],
             'time': ['all', 'minute', 'hour', 'day'],
             'monster': ['all', 'legendary', 'mythic', 'lair'],

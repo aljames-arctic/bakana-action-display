@@ -197,40 +197,19 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
      * Determine the parent action tab based on DnD5e activation type.
      */
     _getParentTab(type) {
-        if (!type || type === 'none') return 'none';
-        
-        switch (type) {
-            case 'action':
-            case 'bonus':
-            case 'reaction':
-                return 'standard';
-            
-            case 'minute':
-            case 'hour':
-            case 'day':
-                return 'time';
-                
-            case 'legendary':
-            case 'mythic':
-            case 'lair':
-                return 'monster';
-                
-            case 'crew':
-                return 'vehicle';
-                
-            case 'special':
-                return 'special';
-                
-            default:
-                return 'none';
+        if (type === 'minute' || type === 'hour' || type === 'day') {
+            return 'time';
         }
+        // Everything else (action, bonus, reaction, legendary, mythic, lair, crew, special, none/empty)
+        // goes under 'economy' (Action Economy)
+        return 'economy';
     }
 
     /**
      * Determine the sub-action tab based on DnD5e activation type.
      */
     _getSubTab(type) {
-        if (!type || type === 'none') return null;
+        if (!type || type === 'none') return 'none'; // 'none' activation becomes 'none' sub-tab
         
         switch (type) {
             case 'action': return 'action';
@@ -243,28 +222,37 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
             case 'mythic': return 'mythic';
             case 'lair': return 'lair';
             case 'crew': return 'crew';
-            default: return null;
+            case 'special': return 'special';
+            default: return 'none'; // Default to 'none' sub-tab for any unhandled
         }
     }
 
     _getParentSort(type) {
         const order = {
-            'standard': 1,
-            'time': 2,
-            'monster': 3,
-            'vehicle': 4,
-            'special': 5,
-            'none': 6
+            'economy': 1,
+            'time': 2
         };
         return order[type] ?? 99;
     }
 
     _getSubSort(parent, sub) {
         const orders = {
-            'standard': { 'action': 1, 'bonus': 2, 'reaction': 3 },
-            'time': { 'minute': 1, 'hour': 2, 'day': 3 },
-            'monster': { 'legendary': 1, 'mythic': 2, 'lair': 3 },
-            'vehicle': { 'crew': 1 }
+            'economy': {
+                'action': 1,
+                'bonus': 2,
+                'reaction': 3,
+                'none': 4,
+                'special': 5,
+                'legendary': 6,
+                'mythic': 7,
+                'crew': 8,
+                'lair': 9
+            },
+            'time': {
+                'minute': 1,
+                'hour': 2,
+                'day': 3
+            }
         };
         return orders[parent]?.[sub] ?? 99;
     }
@@ -623,12 +611,8 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
      */
     getActionTypeLabel(parentId) {
         const labels = {
-            'standard': localize('DND5E.ACTIVATION.Category.Standard', 'Standard'),
-            'time': localize('DND5E.ACTIVATION.Category.Time', 'Time'),
-            'special': localize('DND5E.Special', 'Special'),
-            'monster': localize('DND5E.ActionMonster', 'Monster'),
-            'vehicle': localize('DND5E.ActionVehicle', 'Vehicle'),
-            'none': localize('DND5E.None', 'None')
+            'economy': localize('BAD.dnd5e.actionEconomy', 'Action Economy'),
+            'time': localize('DND5E.ACTIVATION.Category.Time', 'Time')
         };
         return labels[parentId] ?? super.getActionTypeLabel(parentId);
     }
@@ -638,11 +622,8 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
      */
     getActionTypeIcon(parentId) {
         const icons = {
-            'standard': 'fas fa-hand-fist',
-            'time': 'fas fa-clock',
-            'special': 'fas fa-star',
-            'monster': 'fas fa-dragon',
-            'vehicle': 'fas fa-ship'
+            'economy': 'fas fa-stopwatch',
+            'time': 'fas fa-clock'
         };
         return icons[parentId] ?? super.getActionTypeIcon(parentId);
     }
@@ -658,7 +639,9 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
             'legendary': localize('DND5E.LegendaryAction', 'Legendary'),
             'mythic': localize('DND5E.MythicAction', 'Mythic'),
             'lair': localize('DND5E.LairAction', 'Lair'),
-            'crew': localize('DND5E.CrewAction', 'Crew')
+            'crew': localize('DND5E.CrewAction', 'Crew'),
+            'special': localize('DND5E.Special', 'Special'),
+            'none': localize('DND5E.None', 'None')
         };
         return labels[subId] ?? super.getActionSubTabLabel(subId);
     }
