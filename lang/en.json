@@ -38,7 +38,6 @@
         "dnd5e": {
             "upcast": "Upcast",
             "itemCharges": "Item Charges",
-            "togglePrepared": "Toggle Prepared Spells",
             "prepareSpell": "Prepare Spell",
             "unprepareSpell": "Unprepare Spell"
         }

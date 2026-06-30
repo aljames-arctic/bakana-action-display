@@ -63,7 +63,6 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         // Clean up menu states and close any open dropdowns/context menus to prevent visual leaks
         this._clearMenuState();
         this._contextMenu = null;
-        this._tabContextMenu = null;
         this.actions = null; // Clear actions cache to release memory
         
         const result = await super.close(options);
