@@ -360,11 +360,10 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         // Cache parentGroups on the instance
         this.parentGroups = parentGroups;
 
-        // Prune active right sub-tabs that are no longer available in any active parent
+        // Prune active right sub-tabs that are no longer available in any parent group
         const allAvailableRightSubs = new Set();
-        for (const parentId of this.activeParentTypes) {
-            const group = parentGroups[parentId];
-            if (group && group.subTabs.length > 0) {
+        for (const group of Object.values(parentGroups)) {
+            if (group.subTabs.length > 0) {
                 for (const sub of group.subTabs) {
                     allAvailableRightSubs.add(sub.id);
                 }
