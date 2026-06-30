@@ -97,6 +97,23 @@
             {{/if}}
         </div>
         {{/each}}
+        
+        {{#if isDnd5e}}
+        <div class="bad-properties-section" data-tooltip="Spell Components">
+            <!-- Icon shown when collapsed -->
+            <div class="bad-properties-icon"><i class="fas fa-magic"></i></div>
+            
+            <!-- Content shown when expanded -->
+            <div class="bad-properties-content">
+                <div class="bad-properties-header">Components</div>
+                <div class="bad-properties-grid">
+                    <button class="bad-property-btn {{#if activeProperties.vocal}}active{{/if}}" data-action="toggleProperty" data-property="vocal" title="Verbal (V)">V</button>
+                    <button class="bad-property-btn {{#if activeProperties.somatic}}active{{/if}}" data-action="toggleProperty" data-property="somatic" title="Somatic (S)">S</button>
+                    <button class="bad-property-btn {{#if activeProperties.material}}active{{/if}}" data-action="toggleProperty" data-property="material" title="Material (M)">M</button>
+                </div>
+            </div>
+        </div>
+        {{/if}}
     </div>
 
     <!-- Footer / Filter Bar -->

@@ -43,6 +43,9 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         else if (cached?.rightSub) initialRightSubs = [cached.rightSub];
         this.activeSubTypes = new Set(initialRightSubs);
 
+        // D&D 5e Spell Properties filter states
+        this.activeProperties = new Set(cached?.activeProperties ?? []);
+
         // HUD Attachment/Position Mode (persisted client-side)
         this.positionMode = game.settings.get(MODULE_ID, 'hudPositionMode') || 'attached';
         this.isAttached = this.positionMode === 'attached';
@@ -95,7 +98,8 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             changeSubActionType: ActionDisplayApp._onChangeSubActionType,
             toggleAnchor: ActionDisplayApp._onToggleAnchor,
             rollAction: ActionDisplayApp._onRollAction,
-            toggleFilterResources: ActionDisplayApp._onToggleFilterResources
+            toggleFilterResources: ActionDisplayApp._onToggleFilterResources,
+            toggleProperty: ActionDisplayApp._onToggleProperty
         }
     };
 
@@ -383,6 +387,20 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             if (itemParentId === 'hidden' && !isHiddenActive) return false;
             if (itemParentId !== 'hidden' && isHiddenActive) return false;
 
+            // VSM Properties Filter (D&D 5e exclusive, only filters spells)
+            if (action.originalItem?.type === 'spell' && this.activeProperties.size > 0) {
+                const itemProps = action.originalItem.system.properties;
+                if (Array.isArray(itemProps)) {
+                    const matchesProperties = Array.from(this.activeProperties).every(prop => itemProps.includes(prop));
+                    if (!matchesProperties) return false;
+                } else if (itemProps && typeof itemProps === 'object') {
+                    const matchesProperties = Array.from(this.activeProperties).every(prop => itemProps[prop] === true);
+                    if (!matchesProperties) return false;
+                } else {
+                    return false;
+                }
+            }
+
             let matchesLeft = false;
             
             // 1. Direct parent match
@@ -466,13 +484,22 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         context.isAttached = this.isAttached;
         context.filterNoResources = game.settings.get(MODULE_ID, 'filterNoResources');
 
+        // D&D 5e Spell Properties context
+        context.isDnd5e = game.system.id === 'dnd5e';
+        context.activeProperties = {
+            vocal: this.activeProperties.has('vocal'),
+            somatic: this.activeProperties.has('somatic'),
+            material: this.activeProperties.has('material')
+        };
+
         // Persist the validated tab states for this actor
         if (this.actor?.uuid) {
             activeTabCache.set(this.actor.uuid, {
                 leftParents: Array.from(this.activeLeftParentTypes),
                 leftSubTypes: Array.from(this.activeLeftSubTypes),
                 rightParents: Array.from(this.activeParentTypes),
-                subTypes: Array.from(this.activeSubTypes)
+                subTypes: Array.from(this.activeSubTypes),
+                activeProperties: Array.from(this.activeProperties)
             });
         }
 
@@ -868,6 +895,22 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         const checked = target.checked;
         await game.settings.set(MODULE_ID, 'filterNoResources', checked);
         log.debug(`Toggled filterNoResources to: ${checked}`);
+        this.render();
+    }
+
+    /**
+     * Toggle a D&D 5e spell property filter.
+     * 'this' refers to the application instance.
+     */
+    static async _onToggleProperty(event, target) {
+        event.preventDefault();
+        const prop = target.dataset.property;
+        if (this.activeProperties.has(prop)) {
+            this.activeProperties.delete(prop);
+        } else {
+            this.activeProperties.add(prop);
+        }
+        log.debug(`Toggled property filter: ${prop}, active:`, Array.from(this.activeProperties));
         this.render();
     }
 
