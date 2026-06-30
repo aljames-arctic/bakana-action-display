@@ -57,8 +57,8 @@ The module is built on a modular adapter pattern, allowing it to hook deeply int
 
 ### D&D 5e Exclusives
 
-#### V12 Activity System
-Full support for D&D 5e's V12 Activity architecture. Items with multiple activities (e.g. a spell with an attack and a saving throw, or a sword with a cleave and a slash) are presented as a single card. Left-clicking the card expands it into a dropdown showing all its active activities, allowing you to choose which one to roll.
+#### 4.0 Activity System
+Full support for D&D 5e's 4.0 Activity architecture. Items with multiple activities (e.g. a spell with an attack and a saving throw, or a sword with a cleave and a slash) are presented as a single card. Left-clicking the card expands it into a dropdown showing all its active activities, allowing you to choose which one to roll.
 ![D&D 5e Activity Dropdown](docs/readme-assets/blind_defened.png)
 
 #### Prepared Spells Toggle
