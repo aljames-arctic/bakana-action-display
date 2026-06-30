@@ -43,7 +43,13 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         else if (cached?.rightSub) initialRightSubs = [cached.rightSub];
         this.activeSubTypes = new Set(initialRightSubs);
 
-
+        // Default active sub-types from system adapter (e.g. VSM active by default in D&D)
+        if (!cached) {
+            const defaults = actionDisplay.activeSystemAdapter?.getDefaultActiveSubTypes() ?? [];
+            for (const sub of defaults) {
+                this.activeSubTypes.add(sub);
+            }
+        }
 
         // HUD Attachment/Position Mode (persisted client-side)
         this.positionMode = game.settings.get(MODULE_ID, 'hudPositionMode') || 'attached';
@@ -314,7 +320,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         // Sort sub-tabs within each parent and add 'All'
         const subOrder = {
             'economy': ['all', 'action', 'bonus', 'reaction', 'none', 'special', 'legendary', 'mythic', 'crew', 'lair', 'minute', 'hour', 'day'],
-            'components': ['all', 'vocal', 'somatic', 'material'],
+            'components': ['vocal', 'somatic', 'material'],
             'standard': ['all', 'action', 'bonus', 'reaction'],
             'time': ['all', 'minute', 'hour', 'day'],
             'monster': ['all', 'legendary', 'mythic', 'lair'],
@@ -322,7 +328,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         };
 
         for (const parent of actionTypes) {
-            if (parent.subTabs.length > 0) {
+            if (parent.subTabs.length > 0 && parent.id !== 'components') {
                 const isActive = this.activeParentTypes.has(parent.id);
                 parent.subTabs.unshift({
                     id: 'all',
@@ -330,6 +336,9 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                     active: isActive && this.activeSubTypes.size === 0
                 });
                 
+                const order = subOrder[parent.id] ?? [];
+                parent.subTabs.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
+            } else if (parent.id === 'components') {
                 const order = subOrder[parent.id] ?? [];
                 parent.subTabs.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
             }
@@ -431,16 +440,13 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                     const validSubIds = parentGroup ? new Set(parentGroup.subTabs.map(t => t.id)) : new Set();
                     const activeCompSubs = Array.from(this.activeSubTypes).filter(id => validSubIds.has(id));
                     
-                    if (activeCompSubs.length > 0) {
-                        // The spell must have ALL active component sub-tabs!
-                        const spellCompSubs = new Set(
-                            tabsList
-                                .filter(tab => tab[0] === 'components')
-                                .map(tab => tab[1])
-                        );
-                        const matchesAllComponents = activeCompSubs.every(sub => spellCompSubs.has(sub));
-                        if (!matchesAllComponents) return false;
-                    }
+                    const spellCompSubs = new Set(
+                        tabsList
+                            .filter(tab => tab[0] === 'components')
+                            .map(tab => tab[1])
+                    );
+                    const matchesAllComponents = Array.from(spellCompSubs).every(comp => activeCompSubs.includes(comp));
+                    if (!matchesAllComponents) return false;
                 }
             }
 

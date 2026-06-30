@@ -133,6 +133,14 @@ export class BaseSystemAdapter {
     }
 
     /**
+     * Get the default active sub-tabs for this system.
+     * @returns {string[]}
+     */
+    getDefaultActiveSubTypes() {
+        return [];
+    }
+
+    /**
      * Handle right-click on a tab.
      * @param {ApplicationV2} app The ActionDisplayApp instance
      * @param {HTMLElement} el The tab element that was right-clicked

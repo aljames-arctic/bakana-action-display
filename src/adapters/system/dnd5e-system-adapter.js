@@ -621,6 +621,14 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
     }
 
     /**
+     * Get the default active sub-tabs for this system.
+     * @returns {string[]}
+     */
+    getDefaultActiveSubTypes() {
+        return ['vocal', 'somatic', 'material'];
+    }
+
+    /**
      * Get the localized label for a right-side action type (parent tab) for DnD5e.
      */
     getActionTypeLabel(parentId) {
