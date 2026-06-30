@@ -390,11 +390,10 @@ export class Pf1SystemAdapter extends BaseSystemAdapter {
      */
     getActionTypeLabel(parentId) {
         const labels = {
-            'all': 'All Actions',
-            'action': 'Actions',
-            'bonus': 'Swift',
-            'reaction': 'Immediate',
-            'other': 'Free/Other'
+            'action': localize('PF1.Activation.action.Plural', 'Actions'),
+            'bonus': localize('PF1.Activation.swift.Single', 'Swift'),
+            'reaction': localize('PF1.Activation.immediate.Single', 'Immediate'),
+            'other': localize('PF1.Activation.free.Single', 'Free')
         };
         return labels[parentId] || super.getActionTypeLabel(parentId);
     }
@@ -418,8 +417,11 @@ export class Pf1SystemAdapter extends BaseSystemAdapter {
      */
     getItemTypeLabel(parentId) {
         const labels = {
+            'weapon': localize('PF1.InventoryWeapons', 'Weapons'),
+            'spell': localize('PF1.Spells', 'Spells'),
             'feat': localize('PF1.Feats', 'Feats'),
-            'buff': localize('PF1.Buffs', 'Buffs')
+            'buff': localize('PF1.Buffs', 'Buffs'),
+            'consumable': localize('PF1.InventoryConsumables', 'Consumables')
         };
         return labels[parentId] || super.getItemTypeLabel(parentId);
     }
@@ -429,7 +431,11 @@ export class Pf1SystemAdapter extends BaseSystemAdapter {
      */
     getItemTypeIcon(parentId) {
         const icons = {
-            'buff': 'fas fa-sparkles'
+            'weapon': 'fas fa-sword',
+            'spell': 'fas fa-wand-magic-sparkles',
+            'feat': 'fas fa-award',
+            'buff': 'fas fa-sparkles',
+            'consumable': 'fas fa-flask'
         };
         return icons[parentId] || super.getItemTypeIcon(parentId);
     }
@@ -460,5 +466,23 @@ export class Pf1SystemAdapter extends BaseSystemAdapter {
             'consumable': 5
         };
         return order[type] ?? 99;
+    }
+
+    /**
+     * Modify the template context before rendering.
+     * Sorts spell sub-tabs numerically.
+     */
+    modifyContext(context, app) {
+        const spellParent = context.itemTypes.find(t => t.id === 'spell');
+        if (spellParent && spellParent.subTabs.length > 0) {
+            spellParent.subTabs.sort((a, b) => {
+                const valA = parseInt(a.id, 10);
+                const valB = parseInt(b.id, 10);
+                if (isNaN(valA) && isNaN(valB)) return a.id.localeCompare(b.id);
+                if (isNaN(valA)) return 1;
+                if (isNaN(valB)) return -1;
+                return valA - valB;
+            });
+        }
     }
 }
