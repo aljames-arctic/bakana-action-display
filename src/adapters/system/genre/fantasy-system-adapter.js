@@ -11,19 +11,6 @@ export class FantasySystemAdapter extends BaseSystemAdapter {
     }
 
     /**
-     * Get the default label for a left-side item type (parent tab) in fantasy systems.
-     */
-    getItemTypeLabel(parentId) {
-        const labels = {
-            'weapon': 'Weapons',
-            'spell': 'Spells',
-            'feat': 'Feats',
-            'consumable': 'Consumables'
-        };
-        return labels[parentId] || super.getItemTypeLabel(parentId);
-    }
-
-    /**
      * Get the default CSS icon class for a left-side item type (parent tab) in fantasy systems.
      */
     getItemTypeIcon(parentId) {
