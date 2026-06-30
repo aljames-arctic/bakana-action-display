@@ -19,12 +19,6 @@ export class MidiQolModuleAdapter extends BaseModuleAdapter {
         const modified = [];
 
         for (const action of actions) {
-            const item = action.originalItem;
-            if (!item) {
-                modified.push(action);
-                continue;
-            }
-
             // 1. Check if the action has consolidated subActions
             const subActions = action.subActions;
             if (subActions && subActions.length > 0) {
