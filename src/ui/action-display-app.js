@@ -337,10 +337,13 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             
             if (parent.subTabs.length > 0 && !skipAll) {
                 const isActive = this.activeParentTypes.has(parent.id);
+                const validSubIds = new Set(parent.subTabs.map(t => t.id));
+                const activeSubsForParent = Array.from(this.activeSubTypes).filter(id => validSubIds.has(id));
+
                 parent.subTabs.unshift({
                     id: 'all',
                     label: adapter.getActionSubTabLabel('all') ?? 'All',
-                    active: isActive && this.activeSubTypes.size === 0
+                    active: isActive && activeSubsForParent.length === 0
                 });
                 
                 const order = subOrder[parent.id] ?? [];
