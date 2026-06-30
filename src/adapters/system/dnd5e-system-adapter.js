@@ -27,6 +27,21 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         for (const action of actions) {
             const item = action.originalItem;
             
+            // Extract spell components if it's a spell (for the Spell Components tab)
+            const props = item.system?.properties;
+            const spellComponents = [];
+            if (item.type === 'spell') {
+                if (Array.isArray(props)) {
+                    if (props.includes('vocal')) spellComponents.push(['components', 'vocal']);
+                    if (props.includes('somatic')) spellComponents.push(['components', 'somatic']);
+                    if (props.includes('material')) spellComponents.push(['components', 'material']);
+                } else if (props && typeof props === 'object') {
+                    if (props.vocal) spellComponents.push(['components', 'vocal']);
+                    if (props.somatic) spellComponents.push(['components', 'somatic']);
+                    if (props.material) spellComponents.push(['components', 'material']);
+                }
+            }
+
             // 1. Filter by allowed item types
             if (!allowedTypes.includes(item.type)) continue;
 
@@ -88,6 +103,11 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                         seenTabKeys.add(key);
                         uniqueTabs.push(subTab ? [parentTab, subTab] : [parentTab]);
                     }
+                }
+
+                // Add spell components to the action's tabs
+                for (const comp of spellComponents) {
+                    uniqueTabs.push(comp);
                 }
 
                 activityAction.tabs = uniqueTabs; // Store the array of tabs!
@@ -605,7 +625,8 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
      */
     getActionTypeLabel(parentId) {
         const labels = {
-            'economy': localize('BAD.dnd5e.actionEconomy', 'Action Economy')
+            'economy': localize('BAD.dnd5e.actionEconomy', 'Action Economy'),
+            'components': localize('BAD.dnd5e.spellComponents', 'Spell Components')
         };
         return labels[parentId] ?? super.getActionTypeLabel(parentId);
     }
@@ -615,7 +636,8 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
      */
     getActionTypeIcon(parentId) {
         const icons = {
-            'economy': 'fas fa-stopwatch'
+            'economy': 'fas fa-stopwatch',
+            'components': 'fas fa-magic'
         };
         return icons[parentId] ?? super.getActionTypeIcon(parentId);
     }
@@ -633,7 +655,10 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
             'lair': localize('DND5E.LairAction', 'Lair'),
             'crew': localize('DND5E.CrewAction', 'Crew'),
             'special': localize('DND5E.Special', 'Special'),
-            'none': localize('DND5E.None', 'None')
+            'none': localize('DND5E.None', 'None'),
+            'vocal': localize('DND5E.ComponentVerbal', 'Verbal'),
+            'somatic': localize('DND5E.ComponentSomatic', 'Somatic'),
+            'material': localize('DND5E.ComponentMaterial', 'Material')
         };
         return labels[subId] ?? super.getActionSubTabLabel(subId);
     }

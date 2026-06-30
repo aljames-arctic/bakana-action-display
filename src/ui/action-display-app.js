@@ -43,8 +43,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         else if (cached?.rightSub) initialRightSubs = [cached.rightSub];
         this.activeSubTypes = new Set(initialRightSubs);
 
-        // D&D 5e Spell Properties filter states
-        this.activeProperties = new Set(cached?.activeProperties ?? []);
+
 
         // HUD Attachment/Position Mode (persisted client-side)
         this.positionMode = game.settings.get(MODULE_ID, 'hudPositionMode') || 'attached';
@@ -98,8 +97,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             changeSubActionType: ActionDisplayApp._onChangeSubActionType,
             toggleAnchor: ActionDisplayApp._onToggleAnchor,
             rollAction: ActionDisplayApp._onRollAction,
-            toggleFilterResources: ActionDisplayApp._onToggleFilterResources,
-            changeProperty: ActionDisplayApp._onChangeProperty
+            toggleFilterResources: ActionDisplayApp._onToggleFilterResources
         }
     };
 
@@ -303,7 +301,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         }
 
         // Convert to array and sort by a predefined order
-        const parentOrder = ['all', 'economy', 'standard', 'action', 'bonus', 'reaction', 'free', 'time', 'monster', 'vehicle', 'special', 'none'];
+        const parentOrder = ['all', 'economy', 'components', 'standard', 'action', 'bonus', 'reaction', 'free', 'time', 'monster', 'vehicle', 'special', 'none'];
         const actionTypes = Object.values(parentGroups);
         actionTypes.sort((a, b) => {
             const idxA = parentOrder.indexOf(a.id);
@@ -316,6 +314,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         // Sort sub-tabs within each parent and add 'All'
         const subOrder = {
             'economy': ['all', 'action', 'bonus', 'reaction', 'none', 'special', 'legendary', 'mythic', 'crew', 'lair', 'minute', 'hour', 'day'],
+            'components': ['all', 'vocal', 'somatic', 'material'],
             'standard': ['all', 'action', 'bonus', 'reaction'],
             'time': ['all', 'minute', 'hour', 'day'],
             'monster': ['all', 'legendary', 'mythic', 'lair'],
@@ -388,20 +387,6 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             if (itemParentId === 'hidden' && !isHiddenActive) return false;
             if (itemParentId !== 'hidden' && isHiddenActive) return false;
 
-            // VSM Properties Filter (D&D 5e exclusive, only filters spells)
-            if (action.originalItem?.type === 'spell' && this.activeProperties.size > 0) {
-                const itemProps = action.originalItem.system.properties;
-                if (Array.isArray(itemProps)) {
-                    const matchesProperties = Array.from(this.activeProperties).every(prop => itemProps.includes(prop));
-                    if (!matchesProperties) return false;
-                } else if (itemProps && typeof itemProps === 'object') {
-                    const matchesProperties = Array.from(this.activeProperties).every(prop => itemProps[prop] === true);
-                    if (!matchesProperties) return false;
-                } else {
-                    return false;
-                }
-            }
-
             let matchesLeft = false;
             
             // 1. Direct parent match
@@ -438,42 +423,72 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             if (!action.tabs || !Array.isArray(action.tabs)) return false;
             const tabsList = Array.isArray(action.tabs[0]) ? action.tabs : [action.tabs];
 
-            const matchesRight = tabsList.some(tab => {
-                const actionParentId = tab[0];
-                const actionSubId = tab[1];
-
-                let matchesParent = false;
-                
-                // 1. Direct parent match
-                if (this.activeParentTypes.has(actionParentId)) {
-                    const parentGroup = parentGroups[actionParentId];
+            // Spell Components Filter (restrictive AND-filter, only for spells)
+            if (action.originalItem?.type === 'spell') {
+                const isComponentsActive = this.activeParentTypes.has('components');
+                if (isComponentsActive) {
+                    const parentGroup = parentGroups['components'];
                     const validSubIds = parentGroup ? new Set(parentGroup.subTabs.map(t => t.id)) : new Set();
-                    const activeSubsForParent = Array.from(this.activeSubTypes).filter(id => validSubIds.has(id));
+                    const activeCompSubs = Array.from(this.activeSubTypes).filter(id => validSubIds.has(id));
                     
-                    if (activeSubsForParent.length === 0) {
-                        matchesParent = true;
-                    } else {
-                        matchesParent = this.activeSubTypes.has(actionSubId);
+                    if (activeCompSubs.length > 0) {
+                        // The spell must have ALL active component sub-tabs!
+                        const spellCompSubs = new Set(
+                            tabsList
+                                .filter(tab => tab[0] === 'components')
+                                .map(tab => tab[1])
+                        );
+                        const matchesAllComponents = activeCompSubs.every(sub => spellCompSubs.has(sub));
+                        if (!matchesAllComponents) return false;
                     }
                 }
-                
-                // 2. 'all' parent match
-                if (!matchesParent && this.activeParentTypes.has('all')) {
-                    const isParentActive = this.activeParentTypes.has(actionParentId);
-                    if (!isParentActive) {
-                        matchesParent = true;
-                    } else {
+            }
+
+            // Check if we have any active economy/time parents
+            const activeEconomyParents = Array.from(this.activeParentTypes).filter(p => p !== 'components' && p !== 'all');
+            
+            let matchesRight = true;
+            if (activeEconomyParents.length > 0 || this.activeParentTypes.has('all')) {
+                matchesRight = tabsList.some(tab => {
+                    const actionParentId = tab[0];
+                    const actionSubId = tab[1];
+
+                    // Ignore components parent in the OR-filter
+                    if (actionParentId === 'components') return false;
+
+                    let matchesParent = false;
+                    
+                    // 1. Direct parent match
+                    if (this.activeParentTypes.has(actionParentId)) {
                         const parentGroup = parentGroups[actionParentId];
                         const validSubIds = parentGroup ? new Set(parentGroup.subTabs.map(t => t.id)) : new Set();
                         const activeSubsForParent = Array.from(this.activeSubTypes).filter(id => validSubIds.has(id));
+                        
                         if (activeSubsForParent.length === 0) {
                             matchesParent = true;
+                        } else {
+                            matchesParent = this.activeSubTypes.has(actionSubId);
                         }
                     }
-                }
-                
-                return matchesParent;
-            });
+                    
+                    // 2. 'all' parent match
+                    if (!matchesParent && this.activeParentTypes.has('all')) {
+                        const isParentActive = this.activeParentTypes.has(actionParentId);
+                        if (!isParentActive) {
+                            matchesParent = true;
+                        } else {
+                            const parentGroup = parentGroups[actionParentId];
+                            const validSubIds = parentGroup ? new Set(parentGroup.subTabs.map(t => t.id)) : new Set();
+                            const activeSubsForParent = Array.from(this.activeSubTypes).filter(id => validSubIds.has(id));
+                            if (activeSubsForParent.length === 0) {
+                                matchesParent = true;
+                            }
+                        }
+                    }
+                    
+                    return matchesParent;
+                });
+            }
             
             return matchesRight;
         });
@@ -485,22 +500,13 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         context.isAttached = this.isAttached;
         context.filterNoResources = game.settings.get(MODULE_ID, 'filterNoResources');
 
-        // D&D 5e Spell Properties context
-        context.isDnd5e = game.system.id === 'dnd5e';
-        context.activeProperties = {
-            vocal: this.activeProperties.has('vocal'),
-            somatic: this.activeProperties.has('somatic'),
-            material: this.activeProperties.has('material')
-        };
-
         // Persist the validated tab states for this actor
         if (this.actor?.uuid) {
             activeTabCache.set(this.actor.uuid, {
                 leftParents: Array.from(this.activeLeftParentTypes),
                 leftSubTypes: Array.from(this.activeLeftSubTypes),
-                rightParents: Array.from(this.activeParentTypes),
-                subTypes: Array.from(this.activeSubTypes),
-                activeProperties: Array.from(this.activeProperties)
+                parents: Array.from(this.activeParentTypes),
+                subTypes: Array.from(this.activeSubTypes)
             });
         }
 
@@ -757,9 +763,17 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                 const activeSubs = this.activeSubTypes;
                 const filterNoResources = game.settings.get(MODULE_ID, 'filterNoResources');
 
+                const activeEconomyParents = Array.from(activeParents).filter(p => p !== 'components' && p !== 'all');
+
                 const qualifyingSubActions = subActions.filter(sub => {
                     const actionParentId = sub.tabs[0];
                     const actionSubId = sub.tabs[1];
+
+                    if (actionParentId === 'components') return false;
+
+                    if (activeEconomyParents.length === 0 && !activeParents.has('all')) {
+                        return true; // Bypass economy filter if only components is active
+                    }
                     
                     let matchesParent = false;
                     
@@ -899,39 +913,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         this.render();
     }
 
-    /**
-     * Handle left-click on a D&D 5e spell property filter (exclusive select).
-     * 'this' refers to the application instance.
-     */
-    static async _onChangeProperty(event, target) {
-        event.preventDefault();
-        const prop = target.dataset.property;
-        
-        // If it's already the only active property, toggle it off (clear all)
-        if (this.activeProperties.has(prop) && this.activeProperties.size === 1) {
-            this.activeProperties.clear();
-        } else {
-            this.activeProperties.clear();
-            this.activeProperties.add(prop);
-        }
-        
-        log.debug(`Changed property filter to:`, Array.from(this.activeProperties));
-        this.render();
-    }
 
-    /**
-     * Toggle a D&D 5e spell property filter (additive).
-     * @param {string} prop The property to toggle ('vocal', 'somatic', 'material')
-     */
-    _onToggleProperty(prop) {
-        if (this.activeProperties.has(prop)) {
-            this.activeProperties.delete(prop);
-        } else {
-            this.activeProperties.add(prop);
-        }
-        log.debug(`Toggled property filter: ${prop}, active:`, Array.from(this.activeProperties));
-        this.render();
-    }
 
     /* -------------------------------------------- */
     /*  Positioning & Dragging                      */
@@ -1122,15 +1104,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             return;
         }
 
-        // Intercept right-clicks on spell property buttons (VSM)
-        const propertyTarget = event.target.closest(".bad-property-btn");
-        if (propertyTarget) {
-            event.preventDefault();
-            event.stopPropagation();
-            event.stopImmediatePropagation();
-            this._onToggleProperty(propertyTarget.dataset.property);
-            return;
-        }
+
 
         const targetItem = event.target.closest('.bad-action-item') 
             || event.target.closest('.bad-left-sub-tab') 
