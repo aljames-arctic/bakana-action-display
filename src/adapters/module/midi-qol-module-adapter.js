@@ -37,7 +37,10 @@ export class MidiQolModuleAdapter extends BaseModuleAdapter {
                 if (filteredSubs.length < subActions.length) {
                     action.subActions = filteredSubs;
 
-                    // Recalculate unique tabs based on the remaining sub-actions
+                    // Preserve non-activation tabs (like spell components)
+                    const preservedTabs = action.tabs?.filter(tab => tab[0] === 'components') ?? [];
+
+                    // Recalculate unique activation tabs based on the remaining sub-actions
                     const uniqueTabs = [];
                     const seenTabKeys = new Set();
 
@@ -50,7 +53,7 @@ export class MidiQolModuleAdapter extends BaseModuleAdapter {
                             uniqueTabs.push(subTab ? [parentTab, subTab] : [parentTab]);
                         }
                     }
-                    action.tabs = uniqueTabs;
+                    action.tabs = [...uniqueTabs, ...preservedTabs];
                 }
             }
 
