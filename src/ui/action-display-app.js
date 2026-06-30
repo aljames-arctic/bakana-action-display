@@ -896,8 +896,10 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
 
                 log.debug(`_onRollAction | activeParents: ${Array.from(activeParents).join(', ')}, activeSubs: ${Array.from(activeSubs).join(', ')}, qualifying: ${qualifyingSubActions.length}`, qualifyingSubActions);
 
-                if (qualifyingSubActions.length > 1) {
-                    // Multiple qualifying sub-actions! Show a left-click dropdown menu.
+                const showDropdown = qualifyingSubActions.length > 1 || (subActions.length > 1 && qualifyingSubActions.length === 1);
+
+                if (showDropdown) {
+                    // Show a left-click dropdown menu.
                     const menuItems = qualifyingSubActions.map(sub => {
                         const uses = sub.uses;
                         const name = sub.name;
@@ -968,7 +970,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                     this.element.querySelector('.bakana-action-display-container')?.classList.add('has-context-menu');
                     log.debug(`_onRollAction | Synchronously applied bad-menu-active to: ${targetRow.dataset.actionId}`);
                 } else if (qualifyingSubActions.length === 1) {
-                    // Only one qualifying sub-action: roll directly!
+                    // Natively only 1 option, and it qualifies: roll directly!
                     qualifyingSubActions[0].roll(event);
                 } else {
                     // Fallback: roll the first sub-action
