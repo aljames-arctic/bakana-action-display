@@ -1,6 +1,8 @@
 import { actionDisplay } from '../action-display.js';
 import { log } from '../lib/logger.js';
 
+import { MODULE_ID } from '../constants.js';
+
 // Cache to persist tab states per actor across HUD rebuilds
 const activeTabCache = new Map();
 
@@ -35,7 +37,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         this.activeSubTypes = new Set(initialRightSubs);
 
         // HUD Attachment/Position Mode (persisted client-side)
-        this.positionMode = game.settings.get('bakana-action-display', 'hudPositionMode') || 'attached';
+        this.positionMode = game.settings.get(MODULE_ID, 'hudPositionMode') || 'attached';
         this.isAttached = this.positionMode === 'attached';
         
         // Dragging state
@@ -94,7 +96,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
      * Define the templates (parts) that make up this application.
      */
     static get PARTS() {
-        const path = game.modules.get('bakana-action-display')?.path ?? 'modules/bakana-action-display';
+        const path = game.modules.get(MODULE_ID)?.path ?? `modules/${MODULE_ID}`;
         return {
             hud: {
                 template: `${path}/templates/action-display.html`
@@ -370,7 +372,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         context.actionTypes = actionTypes;
         context.items = filteredActions;
         context.isAttached = this.isAttached;
-        context.filterNoResources = game.settings.get('bakana-action-display', 'filterNoResources');
+        context.filterNoResources = game.settings.get(MODULE_ID, 'filterNoResources');
 
         // Persist the validated tab states for this actor
         if (this.actor?.uuid) {
@@ -518,11 +520,11 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             if (el) {
                 const rect = el.getBoundingClientRect();
                 const pos = { left: rect.left, top: rect.top };
-                await game.settings.set('bakana-action-display', 'hudDetachedPosition', pos);
+                await game.settings.set(MODULE_ID, 'hudDetachedPosition', pos);
             }
         }
         
-        await game.settings.set('bakana-action-display', 'hudPositionMode', this.positionMode);
+        await game.settings.set(MODULE_ID, 'hudPositionMode', this.positionMode);
         log.debug(`Toggled HUD anchor mode to: ${this.positionMode}`);
         
         // Re-render to update the control bar icon and re-position
@@ -558,7 +560,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                 // Filter sub-actions to only those that match the currently active right-side tab
                 const activeParent = this.activeParentType;
                 const activeSubs = this.activeSubTypes;
-                const filterNoResources = game.settings.get('bakana-action-display', 'filterNoResources');
+                const filterNoResources = game.settings.get(MODULE_ID, 'filterNoResources');
 
                 const qualifyingSubActions = subActions.filter(sub => {
                     const matchesParent = activeParent === 'all' || sub.tabs[0] === activeParent;
@@ -668,7 +670,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
      */
     static async _onToggleFilterResources(event, target) {
         const checked = target.checked;
-        await game.settings.set('bakana-action-display', 'filterNoResources', checked);
+        await game.settings.set(MODULE_ID, 'filterNoResources', checked);
         log.debug(`Toggled filterNoResources to: ${checked}`);
         this.render();
     }
@@ -956,7 +958,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         if (!action) return;
 
         const itemId = action.originalItem?.id || action.id;
-        const hiddenItems = this.actor.getFlag('bakana-action-display', 'hiddenItems') || [];
+        const hiddenItems = this.actor.getFlag(MODULE_ID, 'hiddenItems') || [];
         
         let newHiddenItems = [...hiddenItems];
         if (shouldHide) {
@@ -972,7 +974,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             }
         }
 
-        await this.actor.setFlag('bakana-action-display', 'hiddenItems', newHiddenItems);
+        await this.actor.setFlag(MODULE_ID, 'hiddenItems', newHiddenItems);
         this.render();
     }
 
@@ -1057,8 +1059,8 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             const pos = { left: rect.left, top: rect.top };
             
             // Persist the new detached coordinates and mode
-            await game.settings.set('bakana-action-display', 'hudDetachedPosition', pos);
-            await game.settings.set('bakana-action-display', 'hudPositionMode', 'detached');
+            await game.settings.set(MODULE_ID, 'hudDetachedPosition', pos);
+            await game.settings.set(MODULE_ID, 'hudPositionMode', 'detached');
             
             log.debug("Drag ended, saved position:", pos);
         }
@@ -1078,7 +1080,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         const el = this.element;
         if (!el) return super.setPosition(position);
 
-        const scale = game.settings.get('bakana-action-display', 'hudScale') ?? 1.0;
+        const scale = game.settings.get(MODULE_ID, 'hudScale') ?? 1.0;
 
         if (this.isAttached && this.token) {
             // --- ATTACHED MODE (Tracks Token) ---
@@ -1129,7 +1131,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             return result;
         } else {
             // --- DETACHED MODE (Floating / Fixed Position) ---
-            const savedPos = game.settings.get('bakana-action-display', 'hudDetachedPosition');
+            const savedPos = game.settings.get(MODULE_ID, 'hudDetachedPosition');
             
             // Read the actual scaled width/height from the DOM, or fallback to the calculated default
             const appWidth = el.offsetWidth || (320 * scale);

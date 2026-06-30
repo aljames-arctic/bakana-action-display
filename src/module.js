@@ -4,6 +4,8 @@ import { actionDisplay } from './action-display.js';
 import { ActionDisplayApp } from './ui/action-display-app.js';
 import { log } from './lib/logger.js';
 
+import { MODULE_ID } from './constants.js';
+
 let activeApp = null;
 let closeDetachedHUD = false;
 
@@ -70,7 +72,7 @@ Hooks.once('init', async () => {
     TokenClass.prototype._onClickRight = function (event) {
         log.debug("Token.prototype._onClickRight called");
         if (activeApp && activeApp.token === this) {
-            const persist = game.settings.get('bakana-action-display', 'persistDetached');
+            const persist = game.settings.get(MODULE_ID, 'persistDetached');
             if (persist && !activeApp.isAttached) {
                 log.debug("Right-clicked the same token with a detached HUD. Setting closeDetachedHUD flag.");
                 closeDetachedHUD = true;
@@ -120,7 +122,7 @@ Hooks.once('ready', async () => {
         hudClass.prototype.clear = function (...args) {
             log.debug(`${hudClass.name}.prototype.clear called`);
             if (activeApp) {
-                const persist = game.settings.get('bakana-action-display', 'persistDetached');
+                const persist = game.settings.get(MODULE_ID, 'persistDetached');
                 const shouldClose = activeApp.isAttached || !persist || closeDetachedHUD;
                 
                 if (shouldClose) {
@@ -143,7 +145,7 @@ Hooks.once('ready', async () => {
         hudClass.prototype.close = function (...args) {
             log.debug(`${hudClass.name}.prototype.close called`);
             if (activeApp) {
-                const persist = game.settings.get('bakana-action-display', 'persistDetached');
+                const persist = game.settings.get(MODULE_ID, 'persistDetached');
                 const shouldClose = activeApp.isAttached || !persist || closeDetachedHUD;
                 
                 if (shouldClose) {

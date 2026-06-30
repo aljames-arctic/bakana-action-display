@@ -1,5 +1,7 @@
 import { localize } from '../../lib/utils.js';
 
+import { MODULE_ID } from '../../constants.js';
+
 /**
  * Base class for all system-specific adapters.
  * System adapters are responsible for modifying, filtering, and sorting
@@ -27,7 +29,7 @@ export class BaseSystemAdapter {
      */
     modifyActions(actions, actor) {
         // Default system-agnostic resource filtering
-        const filterNoResources = game.settings.get('bakana-action-display', 'filterNoResources');
+        const filterNoResources = game.settings.get(MODULE_ID, 'filterNoResources');
         if (filterNoResources) {
             return actions.filter(action => {
                 // Never hide weapons, even if they are out of ammo or charges

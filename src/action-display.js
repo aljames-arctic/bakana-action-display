@@ -2,6 +2,8 @@ import { BaseSystemAdapter } from './adapters/system/base-system-adapter.js';
 import { BaseModuleAdapter } from './adapters/module/base-module-adapter.js';
 import { log } from './lib/logger.js';
 
+import { MODULE_ID } from './constants.js';
+
 // Lists of systems and modules that have adapter implementations
 const SUPPORTED_SYSTEMS = ['dnd5e', 'pf2e', 'pf1'];
 const SUPPORTED_MODULES = ['midi-qol'];
@@ -115,7 +117,7 @@ class ActionDisplay {
         }
 
         // 4. User-Hidden Items: Override itemTypes to ['hidden'] if the item is flagged as hidden by the user
-        const hiddenIds = actor.getFlag('bakana-action-display', 'hiddenItems') || [];
+        const hiddenIds = actor.getFlag(MODULE_ID, 'hiddenItems') || [];
         if (hiddenIds.length > 0) {
             actions = actions.map(action => {
                 const itemId = action.originalItem?.id || action.id;
