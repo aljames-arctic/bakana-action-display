@@ -115,7 +115,7 @@
 .bad-tab-content {
     display: flex;
     flex-direction: column;
-    gap: 0.43em; /* 6px -> 0.43em */
+    gap: 0.3em; /* Condensed gap */
     overflow-y: auto; /* Scrollable list */
     overflow-x: hidden; /* Prevent horizontal scrollbar on hover translation */
     flex-grow: 1;
@@ -149,9 +149,9 @@
     flex-direction: row !important;
     flex-wrap: nowrap !important;
     align-items: center !important;
-    gap: 0.7em; /* 10px -> 0.7em */
-    padding: 0.43em 0.57em; /* 6px 8px -> 0.43em 0.57em */
-    border-radius: 0.43em; /* 6px -> 0.43em */
+    gap: 0.5em; /* Condensed gap */
+    padding: 0.25em 0.5em; /* Condensed padding */
+    border-radius: 0.35em; /* Slightly tighter corners */
     cursor: pointer;
     background: rgba(255, 255, 255, 0.02);
     border: 1px solid rgba(255, 255, 255, 0.04);
@@ -184,9 +184,9 @@
 
 /* Action Icon */
 .bad-action-icon, .bad-action-icon-placeholder {
-    width: 1.7em; /* 24px -> 1.7em */
-    height: 1.7em;
-    border-radius: 0.28em; /* 4px -> 0.28em */
+    width: 1.2em; /* Smaller icon (aligns with text height) */
+    height: 1.2em;
+    border-radius: 0.2em; /* Proportional corners */
     border: 1px solid rgba(255, 255, 255, 0.15);
     object-fit: cover;
 }
