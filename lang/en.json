@@ -33,7 +33,11 @@
             "filterNoResources": "Hide Depleted",
             "hidden": "Hidden",
             "hideAction": "Hide Action",
-            "unhideAction": "Unhide Action"
+            "unhideAction": "Unhide Action",
+            "allItems": "All Items",
+            "other": "Other",
+            "allActions": "All Actions",
+            "none": "None"
         },
         "dnd5e": {
             "upcast": "Upcast",
