@@ -52,14 +52,6 @@ export class BaseSystemAdapter {
     getItemTypeLabel(parentId) {
         const labels = {
             'all': 'All Items',
-            'weapon': 'Weapon',
-            'equipment': 'Equipment',
-            'consumable': 'Consumable',
-            'tool': 'Tool',
-            'backpack': 'Container',
-            'loot': 'Loot',
-            'feat': 'Feature',
-            'spell': 'Spell',
             'other': 'Other',
             'hidden': localize('BAD.hud.hidden', 'Hidden')
         };
@@ -74,14 +66,6 @@ export class BaseSystemAdapter {
     getItemTypeIcon(parentId) {
         const icons = {
             'all': 'fas fa-border-all',
-            'weapon': 'fas fa-sword',
-            'spell': 'fas fa-wand-magic-sparkles',
-            'feat': 'fas fa-award',
-            'equipment': 'fas fa-shield',
-            'consumable': 'fas fa-flask',
-            'tool': 'fas fa-hammer',
-            'backpack': 'fas fa-sack',
-            'loot': 'fas fa-gem',
             'other': 'fas fa-ellipsis',
             'hidden': 'fas fa-eye-slash'
         };

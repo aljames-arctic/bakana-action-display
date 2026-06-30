@@ -588,6 +588,23 @@ export class Dnd5eSystemAdapter extends BaseSystemAdapter {
         return labels[parentId] ?? super.getItemTypeLabel(parentId);
     }
 
+    /**
+     * Get the CSS icon class for a left-side item type (parent tab) for DnD5e.
+     */
+    getItemTypeIcon(parentId) {
+        const icons = {
+            'weapon': 'fas fa-sword',
+            'spell': 'fas fa-wand-magic-sparkles',
+            'feat': 'fas fa-award',
+            'equipment': 'fas fa-shield',
+            'consumable': 'fas fa-flask',
+            'tool': 'fas fa-hammer',
+            'backpack': 'fas fa-sack',
+            'loot': 'fas fa-gem'
+        };
+        return icons[parentId] ?? super.getItemTypeIcon(parentId);
+    }
+
     getSpellLevelLabel(level) {
         if (level === 'itemCharges') {
             return localize('BAD.dnd5e.itemCharges', 'Item Charges');
