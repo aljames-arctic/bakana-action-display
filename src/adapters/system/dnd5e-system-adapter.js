@@ -627,9 +627,9 @@ export class Dnd5eSystemAdapter extends BaseSystemAdapter {
      */
     getActionTypeLabel(parentId) {
         const labels = {
-            'standard': 'Standard',
-            'time': 'Time',
-            'special': 'Special',
+            'standard': localize('BAD.dnd5e.actionStandard', 'Standard'),
+            'time': localize('BAD.dnd5e.actionTime', 'Time'),
+            'special': localize('BAD.dnd5e.actionSpecial', 'Special'),
             'monster': localize('DND5E.ActionMonster', 'Monster'),
             'vehicle': localize('DND5E.ActionVehicle', 'Vehicle')
         };

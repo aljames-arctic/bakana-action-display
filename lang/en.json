@@ -43,7 +43,10 @@
             "upcast": "Upcast",
             "itemCharges": "Item Charges",
             "prepareSpell": "Prepare Spell",
-            "unprepareSpell": "Unprepare Spell"
+            "unprepareSpell": "Unprepare Spell",
+            "actionStandard": "Standard",
+            "actionTime": "Time",
+            "actionSpecial": "Special"
         }
     }
 }
