@@ -5,6 +5,7 @@ import { ActionDisplayApp } from './ui/action-display-app.js';
 import { log } from './lib/logger.js';
 
 import { MODULE_ID } from './constants.js';
+import { MODULE_ADAPTERS } from './adapters/module/module-adapters.js';
 
 let activeApp = null;
 let closeDetachedHUD = false;
@@ -39,21 +40,14 @@ async function registerAdapters() {
         log.debug("System adapter load error:", error);
     }
 
-    const activeModules = actionDisplay.getSupportedModules();
-    for (const moduleId of activeModules) {
-        const modulePath = `./adapters/module/${moduleId}-module-adapter.js`;
-        const moduleClassName = `${toPascalCase(moduleId)}ModuleAdapter`;
-
-        try {
-            const moduleNamespace = await import(modulePath);
-            const AdapterClass = moduleNamespace[moduleClassName];
-            if (AdapterClass) {
+    // Register active module adapters from the central registry
+    for (const [moduleId, AdapterClass] of Object.entries(MODULE_ADAPTERS)) {
+        if (game.modules.get(moduleId)?.active) {
+            try {
                 actionDisplay.registerModuleAdapter(new AdapterClass());
-            } else {
-                log.error(`Class ${moduleClassName} not found in ${modulePath}`);
+            } catch (error) {
+                log.error(`Failed to register module adapter for ${moduleId}:`, error);
             }
-        } catch (error) {
-            log.error(`Failed to load module adapter for ${moduleId} at ${modulePath}`, error);
         }
     }
 }

@@ -4,9 +4,6 @@ import { log } from './lib/logger.js';
 
 import { MODULE_ID } from './constants.js';
 
-// Lists of  modules that have adapter implementations
-const SUPPORTED_MODULES = ['midi-qol'];
-
 /**
  * Core coordinator class for Bakana's Action Display.
  * Manages the pipeline: Core Extraction -> System Adapter Layer -> Module Adapter Layer -> UI.
@@ -15,14 +12,6 @@ class ActionDisplay {
     constructor() {
         this.moduleAdapters = new Map();
         this.activeSystemAdapter = null;
-    }
-
-    /**
-     * Get the list of supported modules that are currently active in the world.
-     * @returns {string[]} Array of active supported module IDs
-     */
-    getSupportedModules() {
-        return SUPPORTED_MODULES.filter(id => game.modules.get(id)?.active);
     }
 
     /**
@@ -85,12 +74,10 @@ class ActionDisplay {
 
         // 3. Module Adapters: Run through active module adapters
         for (const [moduleId, adapter] of this.moduleAdapters.entries()) {
-            if (adapter.isActive()) {
-                try {
-                    actions = adapter.modifyActions(actions, actor);
-                } catch (error) {
-                    log.error(`Error in module adapter "${moduleId}":`, error);
-                }
+            try {
+                actions = adapter.modifyActions(actions, actor);
+            } catch (error) {
+                log.error(`Error in module adapter "${moduleId}":`, error);
             }
         }
 

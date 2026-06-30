@@ -9,14 +9,6 @@ export class BaseModuleAdapter {
     }
 
     /**
-     * Determine if this adapter is active (i.e., the module is enabled in the world).
-     * @returns {boolean}
-     */
-    isActive() {
-        return game.modules.get(this.moduleId)?.active ?? false;
-    }
-
-    /**
      * Modify the actions list.
      * @param {Object[]} actions The current list of actions
      * @param {Actor} actor The actor these actions belong to
