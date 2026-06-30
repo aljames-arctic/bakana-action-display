@@ -404,6 +404,25 @@
     box-shadow: -2px 2px 8px rgba(124, 58, 237, 0.4);
 }
 
+/* Orange styling for 'All Spells' when unprepared spells are toggled on */
+.bad-left-sub-tab.active.unprepared-active {
+    background: linear-gradient(135deg, #f97316 0%, #c2410c 100%) !important;
+    border-color: #fb923c !important;
+    box-shadow: -2px 2px 8px rgba(249, 115, 22, 0.4);
+}
+
+.bad-left-sub-tab.unprepared-active:not(.active) {
+    border-color: rgba(249, 115, 22, 0.4) !important;
+    color: #ffedd5;
+    background: rgba(249, 115, 22, 0.05);
+}
+
+.bad-left-sub-tab.unprepared-active:not(.active):hover {
+    background: rgba(249, 115, 22, 0.15);
+    border-color: rgba(249, 115, 22, 0.6) !important;
+    color: #ffffff;
+}
+
 
 /* ==========================================================================
    RIGHT-SIDE SLIDE-OUT TABS (Action Types Accordion)

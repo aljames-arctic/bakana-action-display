@@ -201,10 +201,12 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                 if (isNaN(valB)) return -1;
                 return valA - valB;
             });
+            const showUnprepared = this.actor.getFlag('bakanas-action-display', 'showUnprepared') ?? false;
             spellParent.subTabs.unshift({
                 id: 'all',
                 label: 'All Spells',
-                active: this.activeLeftParentType === 'spell' && this.activeLeftSubTypes.size === 0
+                active: this.activeLeftParentType === 'spell' && this.activeLeftSubTypes.size === 0,
+                showUnprepared: showUnprepared
             });
         }
 
@@ -728,10 +730,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             this._contextMenu = this._createContextMenu();
         }
 
-        // Initialize the context menu for tabs if not already done
-        if (!this._tabContextMenu) {
-            this._tabContextMenu = this._createTabContextMenu();
-        }
+
     }
 
     _clearMenuState() {
@@ -748,15 +747,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                     log.debug("ContextMenu.close threw synchronously:", err);
                 }
             }
-            if (this._tabContextMenu) {
-                try {
-                    this._tabContextMenu.close()?.catch?.(err => {
-                        log.debug("TabContextMenu.close promise rejected (expected during re-render):", err);
-                    });
-                } catch (err) {
-                    log.debug("TabContextMenu.close threw synchronously:", err);
-                }
-            }
+
         }
 
         this._activeLeftClickMenu?.close();
@@ -836,7 +827,6 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             
             // Safe close in capture phase (catch promise rejections)
             this._contextMenu?.close()?.catch?.(err => {});
-            this._tabContextMenu?.close()?.catch?.(err => {});
             
             event.preventDefault();
             event.stopPropagation();
@@ -844,16 +834,28 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             return;
         }
 
-        // Intercept right-clicks on sub-tabs for multi-select toggle (excluding 'all' which has a context menu)
+        // Intercept right-clicks on left sub-tabs
         const leftSubTarget = event.target.closest(".bad-left-sub-tab");
-        if (leftSubTarget && leftSubTarget.dataset.type !== 'all') {
+        if (leftSubTarget) {
             event.preventDefault();
             event.stopPropagation();
             event.stopImmediatePropagation();
-            this._onToggleLeftSub(leftSubTarget.dataset.type);
+            
+            if (leftSubTarget.dataset.type === 'all') {
+                // 'All Spells' tab: toggle showUnprepared if it's the spell category
+                const parentGroup = leftSubTarget.closest('.bad-left-tab-group');
+                const parentTab = parentGroup?.querySelector('.bad-left-tab');
+                if (parentTab?.dataset.type === 'spell' && game.system.id === 'dnd5e' && this.actor?.isOwner) {
+                    this._toggleShowUnprepared();
+                }
+            } else {
+                // Other sub-tabs: multi-select toggle
+                this._onToggleLeftSub(leftSubTarget.dataset.type);
+            }
             return;
         }
 
+        // Intercept right-clicks on right sub-tabs
         const rightSubTarget = event.target.closest(".bad-right-sub-tab");
         if (rightSubTarget && rightSubTarget.dataset.type !== 'all') {
             event.preventDefault();
@@ -876,22 +878,24 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         if (targetItem && activeItem === targetItem) {
             log.debug("Right-clicked the same item, toggling context menu off (fallback)");
             
-            // Only close the menu that is actually open and catch any promise rejections in Foundry V12
-            const isOpenTabMenu = activeItem.classList.contains('bad-left-tab') || activeItem.classList.contains('bad-left-sub-tab');
-            if (isOpenTabMenu) {
-                this._tabContextMenu?.close()?.catch?.(err => {
-                    log.debug("TabContextMenu.close promise rejected in fallback:", err);
-                });
-            } else {
-                this._contextMenu?.close()?.catch?.(err => {
-                    log.debug("ContextMenu.close promise rejected in fallback:", err);
-                });
-            }
+            this._contextMenu?.close()?.catch?.(err => {
+                log.debug("ContextMenu.close promise rejected in fallback:", err);
+            });
             
             event.preventDefault();
             event.stopPropagation();
             event.stopImmediatePropagation();
         }
+    }
+
+    /**
+     * Toggle the showUnprepared flag on the actor.
+     * @private
+     */
+    async _toggleShowUnprepared() {
+        const showUnprepared = this.actor.getFlag('bakanas-action-display', 'showUnprepared') ?? false;
+        await this.actor.setFlag('bakanas-action-display', 'showUnprepared', !showUnprepared);
+        log.debug(`Toggled showUnprepared directly to: ${!showUnprepared}`);
     }
 
     /**
@@ -1016,44 +1020,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
      * @returns {ContextMenu} The created ContextMenu instance
      * @private
      */
-    _createTabContextMenu() {
-        const menuItems = [
-            {
-                name: "BAD.dnd5e.togglePrepared",
-                icon: '<i class="fas fa-book-open"></i>',
-                condition: el => {
-                    if (game.system.id !== "dnd5e") return false;
-                    if (!this.actor?.isOwner) return false;
-                    // Only show on the "All Spells" subtab (type 'all' under 'spell' parent)
-                    if (el.dataset.type !== 'all') return false;
-                    const isSpellParent = el.closest('.bad-left-tab-group')?.querySelector('.bad-left-tab')?.dataset.type === 'spell';
-                    return isSpellParent;
-                },
-                callback: async el => {
-                    const showUnprepared = this.actor.getFlag('bakanas-action-display', 'showUnprepared') ?? false;
-                    await this.actor.setFlag('bakanas-action-display', 'showUnprepared', !showUnprepared);
-                    log.debug(`Toggled showUnprepared to: ${!showUnprepared}`);
-                }
-            }
-        ];
 
-        const options = {
-            jQuery: false,
-            onOpen: (target) => {
-                log.debug("Tab context menu opened on target:", target);
-                this._activeMenuTarget = target;
-                this.element.querySelector('.bakanas-action-display-container')?.classList.add('has-context-menu');
-            },
-            onClose: () => {
-                log.debug("Tab context menu closed");
-                this._activeMenuTarget = null;
-                this.element.querySelector('.bakanas-action-display-container')?.classList.remove('has-context-menu');
-            }
-        };
-
-        // Bind only to sub-tabs on the left side (specifically 'All Spells')
-        return new foundry.applications.ux.ContextMenu.implementation(this.element, ".bad-left-sub-tab", menuItems, options);
-    }
 
     /**
      * Toggle the hidden state of an action.

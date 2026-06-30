@@ -27,7 +27,7 @@
             {{#if this.subTabs.length}}
             <div class="bad-left-sub-tabs">
                 {{#each this.subTabs}}
-                <button class="bad-left-sub-tab {{#if this.active}}active{{/if}}" 
+                <button class="bad-left-sub-tab {{#if this.active}}active{{/if}} {{#if this.showUnprepared}}unprepared-active{{/if}}" 
                         data-action="changeLeftSubItemType" 
                         data-type="{{this.id}}">
                     {{this.label}}
