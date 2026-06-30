@@ -761,7 +761,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
             spellParent.subTabs.unshift({
                 id: 'all',
                 label: 'All Spells',
-                active: app.activeLeftParentType === 'spell' && app.activeLeftSubTypes.size === 0,
+                active: app.activeLeftParentTypes.has('spell') && app.activeLeftSubTypes.size === 0,
                 showUnprepared: showUnprepared
             });
         }
