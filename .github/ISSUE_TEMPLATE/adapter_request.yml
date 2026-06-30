@@ -1,0 +1,50 @@
+name: System / Module Adapter Request
+description: Request support for a new game system or third-party module integration.
+title: "[Adapter Request]: <System/Module Name>"
+labels: ["adapter-request"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for requesting an adapter! Supporting new systems and modules is a key goal of this project.
+        
+        To help us build this adapter, please fill out the details below. We will likely need to discuss corner cases with you, so providing a contact method is highly appreciated.
+  
+  - type: input
+    id: system_name
+    attributes:
+      label: System / Module Name
+      description: What game system (e.g., Lancer, Savage Worlds) or module (e.g., Level Up 5e) are you requesting support for?
+      placeholder: e.g., Lancer (system) or Item Piles (module)
+    validations:
+      required: true
+
+  - type: input
+    id: discord_handle
+    attributes:
+      label: Discord Handle
+      description: We will likely need to discuss corner cases, data structures, or test rolls with you. Please provide your Discord handle.
+      placeholder: e.g., username#0000 or username
+    validations:
+      required: true
+
+  - type: textarea
+    id: actor_json
+    attributes:
+      label: Actor / Item JSON Exports
+      description: |
+        Please export one or more actors/items from your system as JSON and paste their contents here, or drag and drop the `.json` files directly into this box to upload them.
+        
+        **Important**: Please describe what has been modified on these actors compared to a standard sheet (e.g., "I have toggled an 'automation-only' checkbox on this activity, or added a custom resource charge").
+      placeholder: Paste JSON content or drag-and-drop .json files here...
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional_features
+    attributes:
+      label: Additional System-Specific Features
+      description: Describe any additional features beyond the core HUD features (Weapons, Spells, Feats, Consumables) that you feel would be useful for this system (e.g., custom resource trackers, special roll modes).
+      placeholder: e.g., "It would be great to track Lancer's Heat resource in the HUD..."
+    validations:
+      required: false
