@@ -1102,16 +1102,12 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
 
     /**
      * Adjust the min-height of the main container to ensure it is at least
-    
      * as tall as the tallest tab column, keeping them visually connected.
      */
     _adjustMinHeight() {
-        const el = this.element;
-        if (!el) return;
-
-        const container = el.querySelector('.bakana-action-display-container');
-        const leftTabs = el.querySelector('.bad-left-tabs');
-        const rightTabs = el.querySelector('.bad-right-tabs');
+        const container = this.element.querySelector('.bakana-action-display-container');
+        const leftTabs = this.element.querySelector('.bad-left-tabs');
+        const rightTabs = this.element.querySelector('.bad-right-tabs');
 
         if (!container) return;
 
@@ -1126,12 +1122,14 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         log.debug(`_adjustMinHeight | leftBottom: ${leftBottom}px, rightBottom: ${rightBottom}px, maxTabBottom: ${maxTabBottom}px`);
 
         if (maxTabBottom > 0) {
-            // Get the container's bottom padding to ensure the tabs don't touch the very edge
-            const containerStyle = window.getComputedStyle(container);
-            const paddingBottom = parseFloat(containerStyle.paddingBottom) || 0;
+            // Lazy-load and cache the container's bottom padding to prevent expensive getComputedStyle calls
+            if (this._containerPaddingBottom === undefined) {
+                const containerStyle = window.getComputedStyle(container);
+                this._containerPaddingBottom = parseFloat(containerStyle.paddingBottom) || 0;
+            }
             
-            const targetMinHeight = maxTabBottom + paddingBottom;
-            log.debug(`_adjustMinHeight | Applying min-height: ${targetMinHeight}px to container (paddingBottom: ${paddingBottom}px)`);
+            const targetMinHeight = maxTabBottom + this._containerPaddingBottom;
+            log.debug(`_adjustMinHeight | Applying min-height: ${targetMinHeight}px to container (paddingBottom: ${this._containerPaddingBottom}px)`);
             container.style.minHeight = `${targetMinHeight}px`;
         }
     }
