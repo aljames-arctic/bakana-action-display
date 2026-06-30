@@ -604,6 +604,9 @@ export class Dnd5eSystemAdapter extends BaseSystemAdapter {
      */
     getActionTypeLabel(parentId) {
         const labels = {
+            'standard': 'Standard',
+            'time': 'Time',
+            'special': 'Special',
             'monster': localize('DND5E.ActionMonster', 'Monster'),
             'vehicle': localize('DND5E.ActionVehicle', 'Vehicle')
         };
@@ -615,6 +618,9 @@ export class Dnd5eSystemAdapter extends BaseSystemAdapter {
      */
     getActionTypeIcon(parentId) {
         const icons = {
+            'standard': 'fas fa-hand-fist',
+            'time': 'fas fa-clock',
+            'special': 'fas fa-star',
             'monster': 'fas fa-dragon',
             'vehicle': 'fas fa-ship'
         };

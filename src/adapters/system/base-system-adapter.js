@@ -108,9 +108,6 @@ export class BaseSystemAdapter {
     getActionTypeLabel(parentId) {
         const labels = {
             'all': 'All Actions',
-            'standard': 'Standard',
-            'time': 'Time',
-            'special': 'Special',
             'none': 'None'
         };
         return labels[parentId] || parentId.toUpperCase();
@@ -124,9 +121,6 @@ export class BaseSystemAdapter {
     getActionTypeIcon(parentId) {
         const icons = {
             'all': 'fas fa-border-all',
-            'standard': 'fas fa-hand-fist',
-            'time': 'fas fa-clock',
-            'special': 'fas fa-star',
             'none': 'fas fa-ban'
         };
         return icons[parentId] || 'fas fa-question';
@@ -138,14 +132,7 @@ export class BaseSystemAdapter {
      * @returns {string}
      */
     getActionSubTabLabel(subId) {
-        const labels = {
-            'action': 'Action',
-            'reaction': 'Reaction',
-            'minute': 'Minute',
-            'hour': 'Hour',
-            'day': 'Day'
-        };
-        return labels[subId] || subId.toUpperCase();
+        return subId.toUpperCase();
     }
 
     /**
