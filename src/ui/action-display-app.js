@@ -605,21 +605,25 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
      * Toggle a left-side parent tab in the active set (for right-click multi-select).
      */
     _onToggleLeftParent(parentId) {
+        // Right-click on a left parent tab: clear all its sub-tab filters (resets to defaults!)
         if (parentId === 'all') {
+            this.activeLeftSubTypes.clear();
             this.activeLeftParentTypes.clear();
             this.activeLeftParentTypes.add('all');
-            this.activeLeftSubTypes.clear();
         } else {
-            if (this.activeLeftParentTypes.has(parentId)) {
-                this.activeLeftParentTypes.delete(parentId);
-                if (this.activeLeftParentTypes.size === 0) {
-                    this.activeLeftParentTypes.add('all');
+            const parentGroup = this.leftGroups?.[parentId];
+            if (parentGroup) {
+                const validSubIds = new Set(parentGroup.subTabs.map(t => t.id));
+                for (const subId of this.activeLeftSubTypes) {
+                    if (validSubIds.has(subId)) {
+                        this.activeLeftSubTypes.delete(subId);
+                    }
                 }
-            } else {
-                this.activeLeftParentTypes.add(parentId);
             }
+            this.activeLeftParentTypes.add(parentId); // Ensure it remains open!
+            this.activeLeftParentTypes.delete('all'); // Remove 'all' if we have a specific one
         }
-        log.debug(`Toggled left parent filter:`, Array.from(this.activeLeftParentTypes));
+        log.debug(`Reset left parent ${parentId} to defaults`);
         this.render();
     }
 
