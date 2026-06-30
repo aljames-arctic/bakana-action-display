@@ -720,18 +720,27 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                 const group = this.parentGroups?.[parentId];
                 if (group) {
                     const validSubIds = new Set(group.subTabs.map(t => t.id));
-                    for (const subId of this.activeSubTypes) {
-                        if (validSubIds.has(subId) && subId !== type) {
+                    const activeSubsForParent = Array.from(this.activeSubTypes).filter(id => validSubIds.has(id));
+                    
+                    if (activeSubsForParent.length > 1) {
+                        // Multiple selected: make the clicked one the SOLE selection (do not toggle off)
+                        for (const subId of activeSubsForParent) {
+                            if (subId !== type) {
+                                this.activeSubTypes.delete(subId);
+                            }
+                        }
+                        this.activeSubTypes.add(type); // Ensure it is selected
+                    } else if (activeSubsForParent.length === 1 && activeSubsForParent[0] === type) {
+                        // Only this one selected: toggle it off (revert to All)
+                        this.activeSubTypes.delete(type);
+                    } else {
+                        // None or a different one selected: make this one the sole selection
+                        for (const subId of activeSubsForParent) {
                             this.activeSubTypes.delete(subId);
                         }
+                        this.activeSubTypes.add(type);
                     }
                 }
-            }
-            // Toggle the clicked one
-            if (this.activeSubTypes.has(type)) {
-                this.activeSubTypes.delete(type);
-            } else {
-                this.activeSubTypes.add(type);
             }
         }
         
