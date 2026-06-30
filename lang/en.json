@@ -27,10 +27,6 @@
             "persistDetached": {
                 "name": "Persist Detached HUD on Click-Off",
                 "hint": "If enabled, a detached HUD will stay open when clicking off the token, and will only close if you right-click the same token again."
-            },
-            "filterNoResources": {
-                "name": "Filter Depleted Actions",
-                "hint": "If enabled, actions with no remaining resources (charges, slots, etc.) will be hidden from the HUD."
             }
         },
         "hud": {
@@ -38,9 +34,6 @@
             "hidden": "Hidden",
             "hideAction": "Hide Action",
             "unhideAction": "Unhide Action",
-            "dragToMove": "Drag to move",
-            "detachHud": "Detach HUD (make floating)",
-            "attachHud": "Attach HUD to token",
             "noActions": "No actions available.",
             "allItems": "All Items",
             "other": "Other",

@@ -1,8 +1,8 @@
 <div class="bakana-action-display-container">
     <!-- Control Bar (Grip + Pin Button) -->
     <div class="bad-control-bar">
-        <div class="bad-drag-handle" title="{{localize "BAD.hud.dragToMove"}}"><i class="fas fa-grip"></i></div>
-        <button class="bad-control-btn bad-pin-btn" data-action="toggleAnchor" title="{{#if isAttached}}{{localize "BAD.hud.detachHud"}}{{else}}{{localize "BAD.hud.attachHud"}}{{/if}}">
+        <div class="bad-drag-handle"><i class="fas fa-grip"></i></div>
+        <button class="bad-control-btn bad-pin-btn" data-action="toggleAnchor">
             <i class="fas {{#if isAttached}}fa-link{{else}}fa-unlink{{/if}}"></i>
         </button>
     </div>
@@ -15,8 +15,7 @@
             <div class="bad-left-tab {{#if this.active}}active{{/if}} {{#if this.activeParent}}active-parent{{/if}}" 
                  data-action="changeLeftItemType" 
                  data-type="{{this.id}}" 
-                 data-has-sub-tabs="{{#if this.subTabs.length}}true{{else}}false{{/if}}"
-                 title="{{this.label}}">
+                 data-has-sub-tabs="{{#if this.subTabs.length}}true{{else}}false{{/if}}">
                 <span class="bad-left-tab-text">{{this.label}}</span>
                 <div class="bad-left-tab-icon">
                     <i class="{{this.icon}}"></i>
@@ -77,8 +76,7 @@
             <div class="bad-right-tab {{#if this.active}}active{{/if}} {{#if this.activeParent}}active-parent{{/if}}" 
                  data-action="changeActionType" 
                  data-type="{{this.id}}" 
-                 data-has-sub-tabs="{{#if this.subTabs.length}}true{{else}}false{{/if}}"
-                 title="{{this.label}}">
+                 data-has-sub-tabs="{{#if this.subTabs.length}}true{{else}}false{{/if}}">
                 <div class="bad-right-tab-icon">
                     <i class="{{this.icon}}"></i>
                 </div>
@@ -103,7 +101,7 @@
 
     <!-- Footer / Filter Bar -->
     <div class="bad-footer">
-        <label class="bad-filter-label" title="{{localize "BAD.settings.filterNoResources.hint"}}">
+        <label class="bad-filter-label">
             <input type="checkbox" class="bad-filter-checkbox" data-action="toggleFilterResources" {{#if filterNoResources}}checked{{/if}} />
             <span class="bad-filter-text">{{localize "BAD.hud.filterNoResources"}}</span>
         </label>
