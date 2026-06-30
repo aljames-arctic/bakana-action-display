@@ -1,5 +1,5 @@
 import { FantasySystemAdapter } from './genre/fantasy-system-adapter.js';
-import { localize } from './base-system-adapter.js';
+import { localize } from '../../lib/utils.js';
 
 /**
  * System adapter for Pathfinder 2nd Edition (PF2e).

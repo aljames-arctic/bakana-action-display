@@ -1,15 +1,9 @@
 import { actionDisplay } from '../action-display.js';
 import { log } from '../lib/logger.js';
+import { localize } from '../lib/utils.js';
 
 // Cache to persist tab states per actor across HUD rebuilds
 const activeTabCache = new Map();
-
-/**
- * Helper to safely localize a key, falling back to a default string if the key is not found.
- */
-function localize(key, fallback) {
-    return (game.i18n && game.i18n.has(key)) ? game.i18n.localize(key) : fallback;
-}
 
 /**
  * Modern ApplicationV2-based HUD overlay for Bakana's Action Display.

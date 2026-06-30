@@ -1,9 +1,4 @@
-/**
- * Helper to safely localize a key, falling back to a default string if the key is not found.
- */
-export function localize(key, fallback) {
-    return (game.i18n && game.i18n.has(key)) ? game.i18n.localize(key) : fallback;
-}
+import { localize } from '../../lib/utils.js';
 
 /**
  * Base class for all system-specific adapters.
