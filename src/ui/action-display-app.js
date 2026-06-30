@@ -99,7 +99,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             toggleAnchor: ActionDisplayApp._onToggleAnchor,
             rollAction: ActionDisplayApp._onRollAction,
             toggleFilterResources: ActionDisplayApp._onToggleFilterResources,
-            toggleProperty: ActionDisplayApp._onToggleProperty
+            changeProperty: ActionDisplayApp._onChangeProperty
         }
     };
 
@@ -899,12 +899,30 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
     }
 
     /**
-     * Toggle a D&D 5e spell property filter.
+     * Handle left-click on a D&D 5e spell property filter (exclusive select).
      * 'this' refers to the application instance.
      */
-    static async _onToggleProperty(event, target) {
+    static async _onChangeProperty(event, target) {
         event.preventDefault();
         const prop = target.dataset.property;
+        
+        // If it's already the only active property, toggle it off (clear all)
+        if (this.activeProperties.has(prop) && this.activeProperties.size === 1) {
+            this.activeProperties.clear();
+        } else {
+            this.activeProperties.clear();
+            this.activeProperties.add(prop);
+        }
+        
+        log.debug(`Changed property filter to:`, Array.from(this.activeProperties));
+        this.render();
+    }
+
+    /**
+     * Toggle a D&D 5e spell property filter (additive).
+     * @param {string} prop The property to toggle ('vocal', 'somatic', 'material')
+     */
+    _onToggleProperty(prop) {
         if (this.activeProperties.has(prop)) {
             this.activeProperties.delete(prop);
         } else {
@@ -1100,6 +1118,16 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             event.stopPropagation();
             event.stopImmediatePropagation();
             this._onToggleRightSub(rightSubTarget, rightSubTarget.dataset.type);
+            return;
+        }
+
+        // Intercept right-clicks on spell property buttons (VSM)
+        const propertyTarget = event.target.closest(".bad-property-btn");
+        if (propertyTarget) {
+            event.preventDefault();
+            event.stopPropagation();
+            event.stopImmediatePropagation();
+            this._onToggleProperty(propertyTarget.dataset.property);
             return;
         }
 
