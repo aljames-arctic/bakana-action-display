@@ -8,7 +8,11 @@
             },
             "hudScale": {
                 "name": "HUD Scale",
-                "hint": "Controls the proportional size of the Action Display HUD (icons, text, tabs, etc.)."
+                "hint": "Controls the overall scale of the HUD window and all its contents proportionally."
+            },
+            "fontSize": {
+                "name": "Font Size (px)",
+                "hint": "Controls the base font size of the text and icons. The HUD window size will remain independent."
             },
             "logVerbosity": {
                 "name": "Log Verbosity Level",

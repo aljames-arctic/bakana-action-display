@@ -73,6 +73,25 @@ Hooks.once('init', () => {
         }
     });
 
+    // Register HUD Font Size Setting (Slider)
+    game.settings.register(MODULE_ID, 'fontSize', {
+        name: game.i18n.localize('BAD.settings.fontSize.name'),
+        hint: game.i18n.localize('BAD.settings.fontSize.hint'),
+        scope: 'client',
+        config: true,
+        type: Number,
+        range: {
+            min: 10,
+            max: 24,
+            step: 1
+        },
+        default: 14,
+        // Reactively update the CSS variable instantly when changed
+        onChange: value => {
+            document.documentElement.style.setProperty('--bad-hud-font-size', `${value}px`);
+        }
+    });
+
     // Register HUD Position Mode (attached/detached)
     game.settings.register(MODULE_ID, 'hudPositionMode', {
         scope: 'client',
@@ -95,4 +114,7 @@ Hooks.once('init', () => {
 
     const initialScale = game.settings.get(MODULE_ID, 'hudScale');
     document.documentElement.style.setProperty('--bad-hud-scale', initialScale);
+
+    const initialFontSize = game.settings.get(MODULE_ID, 'fontSize');
+    document.documentElement.style.setProperty('--bad-hud-font-size', `${initialFontSize}px`);
 });

@@ -5,7 +5,7 @@
     opacity: var(--bad-hud-opacity, 0.88); /* Configurable opacity */
     /* No hardcoded z-index! Let Foundry V12's ApplicationV2 automatically manage the z-index 
        so it behaves like a standard window (renders below focused character sheets, etc.) */
-    font-size: calc(14px * var(--bad-hud-scale, 1.0)); /* Configurable scaling */
+    font-size: calc(var(--bad-hud-font-size, 14px) * var(--bad-hud-scale, 1.0)); /* Combined scaling */
 }
 
 .bakana-action-display-window.window-app {
@@ -32,20 +32,20 @@
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border: 1px solid rgba(167, 139, 250, 0.2); /* Soft violet border */
-    border-radius: 1em; /* 14px -> 1em */
+    border-radius: calc(14px * var(--bad-hud-scale, 1.0)); /* Scaled corner radius */
     box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5);
     color: #f0f0f5;
     font-family: "Signika", sans-serif;
-    padding: 0.85em; /* 12px -> 0.85em */
+    padding: calc(12px * var(--bad-hud-scale, 1.0)); /* Scaled padding */
     display: flex;
     flex-direction: column;
-    gap: 0.57em; /* 8px -> 0.57em */
+    gap: calc(8px * var(--bad-hud-scale, 1.0)); /* Scaled gap */
     user-select: none;
-    max-height: 35.7em; /* 500px -> 35.7em */
-    width: 22.85em; /* 320px -> 22.85em (proportional width) */
+    max-height: calc(500px * var(--bad-hud-scale, 1.0)); /* Scaled max-height (independent of font-size) */
+    width: calc(320px * var(--bad-hud-scale, 1.0)); /* Scaled width (independent of font-size) */
     overflow: visible; /* CRITICAL: Allows left/right-side tabs to stick out */
     position: relative;
-    font-size: calc(14px * var(--bad-hud-scale, 1.0)); /* Scalable base font size */
+    font-size: calc(var(--bad-hud-font-size, 14px) * var(--bad-hud-scale, 1.0)); /* Combined base font size */
 }
 
 /* ==========================================================================
@@ -121,7 +121,7 @@
     flex-grow: 1;
     min-height: 0;    /* Ensures flexbox scrolling works correctly */
     padding-right: 0.28em; /* 4px -> 0.28em */
-    max-height: 28.5em; /* 400px -> 28.5em */
+    /* Removed max-height constraint to let flexbox container handle height dynamically */
 }
 
 /* Custom Scrollbar for Item List */
