@@ -298,10 +298,12 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             if (subId) {
                 const isActive = this.activeParentTypes.has(parentId);
                 const isSubActive = this.activeSubTypes.has(subId);
+                const isComponents = parentId === 'components';
                 parentGroups[parentId].subTabs.push({
                     id: subId,
                     label: adapter.getActionSubTabLabel(subId),
-                    active: isActive && isSubActive
+                    active: !isComponents && isActive && isSubActive,
+                    excluded: isComponents && isActive && isSubActive
                 });
             }
         }
@@ -441,13 +443,15 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                     const validSubIds = parentGroup ? new Set(parentGroup.subTabs.map(t => t.id)) : new Set();
                     const activeCompSubs = Array.from(this.activeSubTypes).filter(id => validSubIds.has(id));
                     
-                    const spellCompSubs = new Set(
-                        tabsList
-                            .filter(tab => tab[0] === 'components')
-                            .map(tab => tab[1])
-                    );
-                    const matchesAllComponents = Array.from(spellCompSubs).every(comp => activeCompSubs.includes(comp));
-                    if (!matchesAllComponents) return false;
+                    if (activeCompSubs.length > 0) {
+                        const spellCompSubs = new Set(
+                            tabsList
+                                .filter(tab => tab[0] === 'components')
+                                .map(tab => tab[1])
+                        );
+                        const hasBannedComponent = Array.from(spellCompSubs).some(comp => activeCompSubs.includes(comp));
+                        if (hasBannedComponent) return false;
+                    }
                 }
             }
 

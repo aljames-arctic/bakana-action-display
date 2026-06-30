@@ -626,8 +626,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
      */
     getDefaultActiveSubTypes() {
         return [
-            'action', 'bonus', 'reaction', 'none', 'special', 'legendary', 'mythic', 'crew', 'lair', 'minute', 'hour', 'day',
-            'vocal', 'somatic', 'material'
+            'action', 'bonus', 'reaction', 'none', 'special', 'legendary', 'mythic', 'crew', 'lair', 'minute', 'hour', 'day'
         ];
     }
 

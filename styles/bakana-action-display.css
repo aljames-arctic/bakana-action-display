@@ -565,6 +565,15 @@
     box-shadow: 2px 2px 8px rgba(124, 58, 237, 0.4);
 }
 
+.bad-right-sub-tab.excluded {
+    border-color: #ef4444 !important;
+    outline: 2px solid #ef4444 !important;
+    outline-offset: -2px;
+    background: linear-gradient(to top right, transparent 46%, #ef4444 48%, #ef4444 52%, transparent 54%), rgba(22, 22, 29, 0.88) !important;
+    color: #f87171 !important;
+    box-shadow: 2px 2px 8px rgba(239, 68, 68, 0.4);
+}
+
 
 /* ==========================================================================
    COMMON ANIMATIONS

@@ -87,7 +87,7 @@
             {{#if this.subTabs.length}}
             <div class="bad-right-sub-tabs">
                 {{#each this.subTabs}}
-                <button class="bad-right-sub-tab {{#if this.active}}active{{/if}}" 
+                <button class="bad-right-sub-tab {{#if this.active}}active{{/if}} {{#if this.excluded}}excluded{{/if}}" 
                         data-action="changeSubActionType" 
                         data-type="{{this.id}}">
                     {{this.label}}
