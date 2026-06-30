@@ -30,16 +30,16 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
             // Extract spell components if it's a spell (for the Spell Components tab)
             const props = item.system?.properties;
             const spellComponents = [];
-            if (item.type === 'spell') {
-                if (Array.isArray(props)) {
-                    if (props.includes('vocal')) spellComponents.push(['components', 'vocal']);
-                    if (props.includes('somatic')) spellComponents.push(['components', 'somatic']);
-                    if (props.includes('material')) spellComponents.push(['components', 'material']);
-                } else if (props && typeof props === 'object') {
-                    if (props.vocal) spellComponents.push(['components', 'vocal']);
-                    if (props.somatic) spellComponents.push(['components', 'somatic']);
-                    if (props.material) spellComponents.push(['components', 'material']);
-                }
+            if (item.type === 'spell' && props) {
+                const hasProp = (p) => {
+                    if (props instanceof Set) return props.has(p);
+                    if (Array.isArray(props)) return props.includes(p);
+                    if (typeof props === 'object') return !!props[p];
+                    return false;
+                };
+                if (hasProp('vocal')) spellComponents.push(['components', 'vocal']);
+                if (hasProp('somatic')) spellComponents.push(['components', 'somatic']);
+                if (hasProp('material')) spellComponents.push(['components', 'material']);
             }
 
             // 1. Filter by allowed item types
