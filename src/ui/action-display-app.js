@@ -187,7 +187,6 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         // System-specific sorting and tab injection is now delegated to the system adapter in modifyContext
 
         // Prune active left sub-tabs that are no longer available for this actor (prevents stuck empty filters)
-        // Prune active left sub-tabs that are no longer available for this actor (prevents stuck empty filters)
         const activeLeftParentGroup = leftGroups[this.activeLeftParentType];
         if (activeLeftParentGroup && activeLeftParentGroup.subTabs.length > 0) {
             const availableLeftSubs = new Set(activeLeftParentGroup.subTabs.map(t => t.id));
