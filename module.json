@@ -1,40 +1,67 @@
 {
-    "id": "bakana-action-display",
-    "title": "Bakana Action Display",
-    "description": "<p>An elegant action display overlay for tokens in Foundry VTT.</p>",
-    "version": "#{VERSION}#",
-    "authors": [
-        {
-            "name": "Bakana",
-            "url": "https://github.com/aljames-arctic",
-            "flags": {}
+  "id": "bakana-action-display",
+  "title": "Bakana Action Display",
+  "description": "<p>An elegant action display overlay for tokens in Foundry VTT.</p>",
+  "version": "#{VERSION}#",
+  "authors": [
+    {
+      "name": "Bakana",
+      "url": "https://github.com/aljames-arctic",
+      "flags": {}
+    }
+  ],
+  "compatibility": {
+    "minimum": "12",
+    "verified": "14"
+  },
+  "esmodules": [
+    "src/module.js"
+  ],
+  "languages": [
+    {
+      "lang": "en",
+      "name": "English",
+      "path": "lang/en.json",
+      "flags": {}
+    }
+  ],
+  "url": "#{URL}#",
+  "manifest": "#{MANIFEST}#",
+  "download": "#{DOWNLOAD}#",
+  "changelog": "https://github.com/aljames-arctic/bakana-action-display/releases",
+  "bugs": "https://github.com/aljames-arctic/bakana-action-display/issues",
+  "license": "LICENSE",
+  "relationships": {
+    "systems": [
+      {
+        "id": "dnd5e",
+        "type": "system",
+        "compatibility": {
+            "minimum": "4",
+            "verified": "5.3.3"
         }
-    ],
-    "compatibility": {
-        "minimum": "12",
-        "verified": "14"
-    },
-    "esmodules": [
-        "src/module.js"
-    ],
-    "languages": [
-        {
-            "lang": "en",
-            "name": "English",
-            "path": "lang/en.json",
-            "flags": {}
+      },
+      {
+        "id": "pf1",
+        "type": "system",
+        "compatibility": {
+            "minimum": "11",
+            "verified": "11.11"
         }
-    ],
-    "url": "#{URL}#",
-    "manifest": "#{MANIFEST}#",
-    "download": "#{DOWNLOAD}#",
-    "changelog": "https://github.com/aljames-arctic/bakana-action-display/releases",
-    "bugs": "https://github.com/aljames-arctic/bakana-action-display/issues",
-    "license": "LICENSE",
-    "relationships": {},
-    "styles": [
-        "styles/bakana-action-display.css"
-    ],
-    "socket": true,
-    "flags": {}
+      },
+      {
+        "id": "pf2e",
+        "type": "system",
+        "compatibility": {
+            "minimum": "7",
+            "verified": "8.2"
+        }
+      }
+    ]
+  },
+  "styles": [
+      "styles/bakana-action-display.css"
+  ],
+  "socket": true,
+  "flags": {}
 }
