@@ -267,4 +267,22 @@ export class Pf2eSystemAdapter extends BaseSystemAdapter {
 
         return { available: null, max: null };
     }
+
+    /**
+     * Modify the template context before rendering.
+     * Sorts spell sub-tabs numerically.
+     */
+    modifyContext(context, app) {
+        const spellParent = context.itemTypes.find(t => t.id === 'spell');
+        if (spellParent && spellParent.subTabs.length > 0) {
+            spellParent.subTabs.sort((a, b) => {
+                const valA = parseInt(a.id, 10);
+                const valB = parseInt(b.id, 10);
+                if (isNaN(valA) && isNaN(valB)) return a.id.localeCompare(b.id);
+                if (isNaN(valA)) return 1;
+                if (isNaN(valB)) return -1;
+                return valA - valB;
+            });
+        }
+    }
 }
