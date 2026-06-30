@@ -757,16 +757,20 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         // Reset min-height to measure natural layout first
         container.style.minHeight = '';
 
-        const leftHeight = leftTabs ? leftTabs.offsetHeight : 0;
-        const rightHeight = rightTabs ? rightTabs.offsetHeight : 0;
-        const maxTabHeight = Math.max(leftHeight, rightHeight);
+        // Measure the bottom reach of the tabs relative to the container (only if they have children)
+        const leftBottom = (leftTabs && leftTabs.children.length > 0) ? (leftTabs.offsetTop + leftTabs.offsetHeight) : 0;
+        const rightBottom = (rightTabs && rightTabs.children.length > 0) ? (rightTabs.offsetTop + rightTabs.offsetHeight) : 0;
+        const maxTabBottom = Math.max(leftBottom, rightBottom);
         
-        log.debug(`_adjustMinHeight | leftHeight: ${leftHeight}px, rightHeight: ${rightHeight}px, maxTabHeight: ${maxTabHeight}px`);
+        log.debug(`_adjustMinHeight | leftBottom: ${leftBottom}px, rightBottom: ${rightBottom}px, maxTabBottom: ${maxTabBottom}px`);
 
-        if (maxTabHeight > 0) {
-            const targetMinHeight = maxTabHeight + 24;
-            log.debug(`_adjustMinHeight | Applying min-height: ${targetMinHeight}px to container`);
-            // Add 24px safety margin (12px top/bottom) to match container padding
+        if (maxTabBottom > 0) {
+            // Get the container's bottom padding to ensure the tabs don't touch the very edge
+            const containerStyle = window.getComputedStyle(container);
+            const paddingBottom = parseFloat(containerStyle.paddingBottom) || 0;
+            
+            const targetMinHeight = maxTabBottom + paddingBottom;
+            log.debug(`_adjustMinHeight | Applying min-height: ${targetMinHeight}px to container (paddingBottom: ${paddingBottom}px)`);
             container.style.minHeight = `${targetMinHeight}px`;
         }
     }
