@@ -85,30 +85,13 @@ Hooks.once('init', async () => {
     // Initialize the core coordinator
     actionDisplay.init();
 
-    // Bind to globalThis for debugging and external integration
-    globalThis.bakanaActionDisplay = actionDisplay;
+    // Expose the official API for other modules and macros
+    game.modules.get(MODULE_ID).api = actionDisplay;
 });
 
 // Ready hook
 Hooks.once('ready', async () => {
     log.info("Ready");
-
-    // Expose global debug helper
-    globalThis.bad = {
-        closeHUD: () => {
-            log.debug("bad.closeHUD() called");
-            if (activeApp) {
-                log.debug("bad.closeHUD | activeApp found, closing:", activeApp);
-                if (activeApp.element) {
-                    activeApp.element.style.display = 'none';
-                }
-                activeApp.close();
-                activeApp = null;
-            } else {
-                log.debug("bad.closeHUD | activeApp is null");
-            }
-        }
-    };
 
     // Wrap the clear and close methods on the actual HUD class prototype (e.g. TokenHUD or TokenHUDPF)
     // to ensure it works across scene changes and supports custom system HUDs in all closing scenarios.
