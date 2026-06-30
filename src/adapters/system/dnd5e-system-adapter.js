@@ -257,15 +257,15 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                 'action': 1,
                 'bonus': 2,
                 'reaction': 3,
-                'none': 4,
-                'special': 5,
-                'legendary': 6,
-                'mythic': 7,
-                'crew': 8,
-                'lair': 9,
-                'minute': 10,
-                'hour': 11,
-                'day': 12
+                'special': 4,
+                'legendary': 5,
+                'mythic': 6,
+                'crew': 7,
+                'lair': 8,
+                'minute': 9,
+                'hour': 10,
+                'day': 11,
+                'none': 12
             }
         };
         return orders[parent]?.[sub] ?? 99;
@@ -625,7 +625,10 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
      * @returns {string[]}
      */
     getDefaultActiveSubTypes() {
-        return ['vocal', 'somatic', 'material'];
+        return [
+            'action', 'bonus', 'reaction', 'none', 'special', 'legendary', 'mythic', 'crew', 'lair', 'minute', 'hour', 'day',
+            'vocal', 'somatic', 'material'
+        ];
     }
 
     /**

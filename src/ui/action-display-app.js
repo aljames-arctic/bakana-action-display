@@ -319,7 +319,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
 
         // Sort sub-tabs within each parent and add 'All'
         const subOrder = {
-            'economy': ['all', 'action', 'bonus', 'reaction', 'none', 'special', 'legendary', 'mythic', 'crew', 'lair', 'minute', 'hour', 'day'],
+            'economy': ['action', 'bonus', 'reaction', 'special', 'legendary', 'mythic', 'crew', 'lair', 'minute', 'hour', 'day', 'none'],
             'components': ['vocal', 'somatic', 'material'],
             'standard': ['all', 'action', 'bonus', 'reaction'],
             'time': ['all', 'minute', 'hour', 'day'],
@@ -328,7 +328,9 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         };
 
         for (const parent of actionTypes) {
-            if (parent.subTabs.length > 0 && parent.id !== 'components') {
+            const skipAll = ['components', 'economy'].includes(parent.id);
+            
+            if (parent.subTabs.length > 0 && !skipAll) {
                 const isActive = this.activeParentTypes.has(parent.id);
                 parent.subTabs.unshift({
                     id: 'all',
@@ -338,7 +340,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                 
                 const order = subOrder[parent.id] ?? [];
                 parent.subTabs.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
-            } else if (parent.id === 'components') {
+            } else if (skipAll) {
                 const order = subOrder[parent.id] ?? [];
                 parent.subTabs.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
             }
