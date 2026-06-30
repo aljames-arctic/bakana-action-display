@@ -37,7 +37,11 @@
             "dragToMove": "Drag to move",
             "detachHud": "Detach HUD (make floating)",
             "attachHud": "Attach HUD to token",
-            "noActions": "No actions available."
+            "noActions": "No actions available.",
+            "allItems": "All Items",
+            "other": "Other",
+            "allActions": "All Actions",
+            "none": "None"
         },
         "dnd5e": {
             "upcast": "Upcast",
