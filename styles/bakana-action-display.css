@@ -1,5 +1,5 @@
 /* Custom Styling for Bakana's Action Display App Window */
-.bakanas-action-display-window {
+.bakana-action-display-window {
     position: fixed;
     pointer-events: all;
     opacity: var(--bad-hud-opacity, 0.88); /* Configurable opacity */
@@ -8,26 +8,26 @@
     font-size: calc(14px * var(--bad-hud-scale, 1.0)); /* Configurable scaling */
 }
 
-.bakanas-action-display-window.window-app {
+.bakana-action-display-window.window-app {
     background: none !important;
     border: none !important;
     box-shadow: none !important;
 }
 
 /* Hide the default window header entirely */
-.bakanas-action-display-window.window-app .window-header {
+.bakana-action-display-window.window-app .window-header {
     display: none !important;
 }
 
 /* Reset window content padding */
-.bakanas-action-display-window.window-app .window-content {
+.bakana-action-display-window.window-app .window-content {
     background: none !important;
     padding: 0 !important;
     overflow: visible !important;
 }
 
 /* Glassmorphism Container */
-.bakanas-action-display-container {
+.bakana-action-display-container {
     background: rgba(22, 22, 29, 0.88);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
@@ -158,7 +158,7 @@
     transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-.bakanas-action-display-container:not(.has-context-menu) .bad-action-item:hover {
+.bakana-action-display-container:not(.has-context-menu) .bad-action-item:hover {
     background: rgba(167, 139, 250, 0.12);
     border-color: rgba(167, 139, 250, 0.2);
     transform: translateX(3px);
@@ -209,7 +209,7 @@
     text-overflow: ellipsis;
 }
 
-.bakanas-action-display-container:not(.has-context-menu) .bad-action-item:hover .bad-action-name {
+.bakana-action-display-container:not(.has-context-menu) .bad-action-item:hover .bad-action-name {
     color: #ffffff;
 }
 

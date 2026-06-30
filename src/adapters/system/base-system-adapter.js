@@ -27,7 +27,7 @@ export class BaseSystemAdapter {
      */
     modifyActions(actions, actor) {
         // Default system-agnostic resource filtering
-        const filterNoResources = game.settings.get('bakanas-action-display', 'filterNoResources');
+        const filterNoResources = game.settings.get('bakana-action-display', 'filterNoResources');
         if (filterNoResources) {
             return actions.filter(action => {
                 // Never hide weapons, even if they are out of ammo or charges

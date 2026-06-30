@@ -42,7 +42,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
             if (item.type === 'spell') {
                 const prepMode = item.system.method;
                 const isPrepared = !!item.system.prepared;
-                const showUnprepared = actor.getFlag('bakanas-action-display', 'showUnprepared');
+                const showUnprepared = actor.getFlag('bakana-action-display', 'showUnprepared');
                 
                 if (!['innate', 'atwill', 'pact'].includes(prepMode) && !isPrepared) {
                     isSpellUnprepared = true;
@@ -150,7 +150,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
 
         // Resource Filtering: Filter out actions with depleted resources if enabled
         let filtered = modified;
-        const filterNoResources = game.settings.get('bakanas-action-display', 'filterNoResources');
+        const filterNoResources = game.settings.get('bakana-action-display', 'filterNoResources');
         if (filterNoResources) {
             filtered = modified.filter(action => {
                 // 1. If it has item-level uses, check if they are depleted (exempt upcastable spells)
@@ -755,7 +755,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         const spellParent = context.itemTypes.find(t => t.id === 'spell');
         if (spellParent && spellParent.subTabs.length > 0) {
             // Inject "All Spells" at the beginning
-            const showUnprepared = app.actor.getFlag('bakanas-action-display', 'showUnprepared') ?? false;
+            const showUnprepared = app.actor.getFlag('bakana-action-display', 'showUnprepared') ?? false;
             spellParent.subTabs.unshift({
                 id: 'all',
                 label: 'All Spells',
@@ -777,12 +777,12 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
             const parentGroup = el.closest('.bad-left-tab-group');
             const parentTab = parentGroup?.querySelector('.bad-left-tab');
             if (parentTab?.dataset.type === 'spell' && app.actor?.isOwner) {
-                const showUnprepared = app.actor.getFlag('bakanas-action-display', 'showUnprepared') ?? false;
+                const showUnprepared = app.actor.getFlag('bakana-action-display', 'showUnprepared') ?? false;
                 
                 log.group("BAD | Right-Click 'All Spells' Tab (Adapter)", "debug");
                 log.debug("Current showUnprepared state:", showUnprepared);
                 
-                app.actor.setFlag('bakanas-action-display', 'showUnprepared', !showUnprepared);
+                app.actor.setFlag('bakana-action-display', 'showUnprepared', !showUnprepared);
                 
                 log.debug("New showUnprepared state set to:", !showUnprepared);
                 log.groupEnd();

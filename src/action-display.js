@@ -115,7 +115,7 @@ class ActionDisplay {
         }
 
         // 4. User-Hidden Items: Override itemTypes to ['hidden'] if the item is flagged as hidden by the user
-        const hiddenIds = actor.getFlag('bakanas-action-display', 'hiddenItems') || [];
+        const hiddenIds = actor.getFlag('bakana-action-display', 'hiddenItems') || [];
         if (hiddenIds.length > 0) {
             actions = actions.map(action => {
                 const itemId = action.originalItem?.id || action.id;

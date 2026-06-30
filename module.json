@@ -1,11 +1,11 @@
 {
-    "id": "bakanas-action-display",
-    "title": "Bakana's Action Display",
+    "id": "bakana-action-display",
+    "title": "Bakana Action Display",
     "description": "<p>An elegant action display overlay for tokens in Foundry VTT.</p>",
     "version": "#{VERSION}#",
     "authors": [
         {
-            "name": "Bakana!",
+            "name": "Bakana",
             "url": "https://github.com/aljames-arctic",
             "flags": {}
         }
@@ -28,12 +28,12 @@
     "url": "#{URL}#",
     "manifest": "#{MANIFEST}#",
     "download": "#{DOWNLOAD}#",
-    "changelog": "https://github.com/aljames-arctic/bakanas-action-display/releases",
-    "bugs": "https://github.com/aljames-arctic/bakanas-action-display/issues",
+    "changelog": "https://github.com/aljames-arctic/bakana-action-display/releases",
+    "bugs": "https://github.com/aljames-arctic/bakana-action-display/issues",
     "license": "LICENSE",
     "relationships": {},
     "styles": [
-        "styles/bakanas-action-display.css"
+        "styles/bakana-action-display.css"
     ],
     "socket": true,
     "flags": {}
