@@ -716,7 +716,7 @@
     border-radius: 0 0.57em 0.57em 0 !important; /* 8px -> 0.57em */
     color: #cbd5e1 !important;
     cursor: pointer !important;
-    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), background 0.2s ease, color 0.2s ease !important;
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), height 0.3s cubic-bezier(0.4, 0, 0.2, 1), background 0.2s ease, color 0.2s ease !important;
     overflow: hidden !important;
     white-space: nowrap !important;
     box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.3) !important;
@@ -737,15 +737,18 @@
 .bad-properties-content {
     display: flex !important;
     flex-direction: column !important;
-    gap: 0.2em !important;
-    padding-right: 0.8em !important;
+    gap: 0.4em !important;
+    padding: 0.5em 0.8em !important;
     opacity: 0 !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
     transition: opacity 0.2s ease !important;
 }
 
-/* Hover State - Slide out */
+/* Hover State - Slide out and expand vertically */
 .bad-properties-section:hover {
-    width: 10em !important; /* 140px -> 10em */
+    width: 8.5em !important;
+    height: 9.5em !important;
     color: #ffffff !important;
     background: rgba(30, 30, 41, 0.95) !important;
 }
@@ -768,12 +771,14 @@
     color: #a78bfa !important;
     text-transform: uppercase !important;
     letter-spacing: 0.05em !important;
+    margin-bottom: 0.2em !important;
 }
 
 .bad-properties-grid {
     display: flex !important;
-    flex-direction: row !important;
+    flex-direction: column !important;
     gap: 0.4em !important;
+    width: 100% !important;
 }
 
 /* Property Button */
@@ -785,13 +790,13 @@
     cursor: pointer !important;
     font-size: 0.8em !important;
     font-weight: bold !important;
-    width: 2.2em !important;
-    height: 2.2em !important;
+    width: 100% !important;
+    height: 1.8em !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
     transition: all 0.15s ease !important;
-    padding: 0 !important;
+    padding: 0 0.5em !important;
     box-shadow: none !important;
     line-height: normal !important;
 }

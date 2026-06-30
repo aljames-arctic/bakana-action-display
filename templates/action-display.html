@@ -99,7 +99,7 @@
         {{/each}}
         
         {{#if isDnd5e}}
-        <div class="bad-properties-section" data-tooltip="Spell Components">
+        <div class="bad-properties-section">
             <!-- Icon shown when collapsed -->
             <div class="bad-properties-icon"><i class="fas fa-magic"></i></div>
             
@@ -107,9 +107,9 @@
             <div class="bad-properties-content">
                 <div class="bad-properties-header">Components</div>
                 <div class="bad-properties-grid">
-                    <button class="bad-property-btn {{#if activeProperties.vocal}}active{{/if}}" data-action="changeProperty" data-property="vocal" title="Verbal (V)">V</button>
-                    <button class="bad-property-btn {{#if activeProperties.somatic}}active{{/if}}" data-action="changeProperty" data-property="somatic" title="Somatic (S)">S</button>
-                    <button class="bad-property-btn {{#if activeProperties.material}}active{{/if}}" data-action="changeProperty" data-property="material" title="Material (M)">M</button>
+                    <button class="bad-property-btn {{#if activeProperties.vocal}}active{{/if}}" data-action="changeProperty" data-property="vocal" title="Verbal (V)">Verbal</button>
+                    <button class="bad-property-btn {{#if activeProperties.somatic}}active{{/if}}" data-action="changeProperty" data-property="somatic" title="Somatic (S)">Somatic</button>
+                    <button class="bad-property-btn {{#if activeProperties.material}}active{{/if}}" data-action="changeProperty" data-property="material" title="Material (M)">Material</button>
                 </div>
             </div>
         </div>
