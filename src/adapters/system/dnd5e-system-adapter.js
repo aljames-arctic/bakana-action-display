@@ -377,7 +377,9 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                 max = parseInt(max, 10) || 0;
             }
             if (max > 0) {
-                return { available: activity.uses.value ?? 0, max: max };
+                const spent = activity.uses.spent ?? 0;
+                const available = activity.uses.value !== undefined ? activity.uses.value : (max - spent);
+                return { available, max };
             }
         }
         
@@ -392,10 +394,9 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                         max = parseInt(max, 10) || 0;
                     }
                     if (max > 0) {
-                        return {
-                            available: targetActivity.uses.value ?? 0,
-                            max: max
-                        };
+                        const spent = targetActivity.uses.spent ?? 0;
+                        const available = targetActivity.uses.value !== undefined ? targetActivity.uses.value : (max - spent);
+                        return { available, max };
                     }
                 }
             } else if (target.type === 'itemUses') {
