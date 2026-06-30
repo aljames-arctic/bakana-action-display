@@ -2,9 +2,9 @@
 
 A sleek, high-performance, and highly customizable **Action HUD** for **Foundry VTT (V12+)**.
 
-**Bakana's Action Display** dynamically tracks your selected token on the canvas, instantly extracting and displaying their available attacks, spells, feats, and consumables. Designed with a premium, modern aesthetic, it helps players and GMs speed up combat by placing all their tactical options just one click away.
+**Bakana's Action Display** dynamically tracks your selected token on the canvas, instantly extracting and displaying their available attacks, spells, feats, and consumables. Designed with a premium, modern aesthetic, it helps players and GMs speed up combat by placing all their tactical options just one (or two) clicks away.
 
-<!-- [PLACEHOLDER: Hero Video/GIF - A short 10-second looping clip showing the HUD opening, switching tokens, and rolling an action with smooth animations] -->
+<video src="docs/readme-assets/hud_demo.mp4" width="100%" autoplay loop muted playsinline></video>
 
 ---
 
@@ -44,9 +44,10 @@ A sleek, high-performance, and highly customizable **Action HUD** for **Foundry 
 *   **Left-Click an Action Card**: Rolls the action! If the action has multiple options, it opens a dropdown; click the option you want to roll.
 *   **Right-Click an Action Card**: Opens the context menu to **Hide** or **Unhide** the action, or open the item's sheet.
 *   **Drag the Top Handle**: Detaches the HUD and lets you drag it anywhere.
-    <!-- [PLACEHOLDER: GIF - Dragging the HUD by its top handle to detach it, dragging it around, and clicking the anchor icon to re-attach it] -->
 *   **Click the Anchor Icon ⚓**: Re-attaches the HUD to follow your selected token.
 *   **Click the Checkbox ⚙️**: Toggles the **Hide Depleted Resources** filter.
+
+<video src="docs/readme-assets/drag_hide_demo.mp4" width="100%" autoplay loop muted playsinline></video>
 
 ---
 
@@ -58,7 +59,7 @@ The module is built on a modular adapter pattern, allowing it to hook deeply int
 
 #### V12 Activity System
 Full support for D&D 5e's V12 Activity architecture. Items with multiple activities (e.g. a spell with an attack and a saving throw, or a sword with a cleave and a slash) are presented as a single card. Left-clicking the card expands it into a dropdown showing all its active activities, allowing you to choose which one to roll.
-<!-- [PLACEHOLDER: Screenshot - A D&D 5e Spell card (like Ice Knife) clicked, showing the dropdown containing its different activities] -->
+![D&D 5e Activity Dropdown](docs/readme-assets/blind_defened.png)
 
 #### Prepared Spells Toggle
 You can choose whether to show or hide unprepared spells in the HUD. A quick **right-click shortcut on the "All Spells" tab** allows you to toggle the visibility of unprepared spells instantly without opening the settings menu.
