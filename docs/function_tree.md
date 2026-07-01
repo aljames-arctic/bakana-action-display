@@ -88,29 +88,29 @@ ActionDisplayApp.render()
   │
   ├── Left-Click Parent Tab Header
   │    └── ActionDisplayApp._onToggleLeftParent / _onToggleRightParent
-  │         └── HUDTab.onLeftClick(app, sideState, groups, event)
-  │              └── TabSideState.selectParent(parentId, groups)
+  │         └── HUDTab.onLeftClick(app, tabColumn, groups, event)
+  │              └── HUDTabColumn.selectParent(parentId, groups)
   │                   ├── Exclusive selection: clears other parent tabs & their sub-tabs
   │                   └── Sole active parent with 0 active sub-tabs ──► resets side to default ('all')
   │
   ├── Right-Click Parent Tab Header
   │    └── ActionDisplayApp._onToggleLeftParentRightClick / _onToggleRightParent
-  │         └── HUDTab.onRightClick(app, sideState, groups, event)
-  │              └── TabSideState.toggleParent(parentId, groups)
+  │         └── HUDTab.onRightClick(app, tabColumn, groups, event)
+  │              └── HUDTabColumn.toggleParent(parentId, groups)
   │                   ├── First Click: Clears all active sub-tabs under this parent (reset shortcut)
   │                   └── Second Click: Toggles parent OFF (falls back to 'all' if no parents left active)
   │
   ├── Left-Click Sub-Tab Header
   │    └── ActionDisplayApp._onChangeLeftSubActionType / _onChangeSubActionType
-  │         └── HUDTab.onLeftClick(app, sideState, groups, event)
-  │              └── TabSideState.selectSub(parentId, type, groups)
+  │         └── HUDTab.onLeftClick(app, tabColumn, groups, event)
+  │              └── HUDTabColumn.selectSub(parentId, type, groups)
   │                   ├── Multiple sub-tabs active ──► isolates clicked sub-tab
   │                   └── Sole active sub-tab ──► toggles it off
   │
   └── Right-Click Sub-Tab Header
        └── ActionDisplayApp._onToggleLeftSub / _onToggleRightSub
-            └── HUDTab.onRightClick(app, sideState, groups, event)
-                 └── TabSideState.toggleSub(parentId, type, groups)
+            └── HUDTab.onRightClick(app, tabColumn, groups, event)
+                 └── HUDTabColumn.toggleSub(parentId, type, groups)
                       └── Toggles sub-tab ON/OFF (multi-select)
 ```
 
@@ -292,15 +292,15 @@ flowchart TD
 - [**`_createContextMenu()`**](../src/ui/action-display-app.js#L1085-L1155): Spawns custom right-click context menu for action cards.
 - [**`_toggleActionHidden(actionId, shouldHide)`**](../src/ui/action-display-app.js#L1161-L1190): Flags an action card as hidden/unhidden and re-renders.
 
-### [`src/ui/tab-side-state.js`](../src/ui/tab-side-state.js) — Tab State Manager (`TabSideState`)
-- [**`constructor({ side, cached, getDefaultSubTypes })`**](../src/ui/tab-side-state.js#L14-L33): Initializes left or right tab column state.
-- [**`resetToDefault()`**](../src/ui/tab-side-state.js#L38-L48): Resets column to `'all'` parent and default sub-types.
-- [**`selectParent(parentId, groups)`**](../src/ui/tab-side-state.js#L60-L90): Handles exclusive left-click parent selection.
-- [**`toggleParent(parentId, groups)`**](../src/ui/tab-side-state.js#L97-L135): Handles multi-stage right-click parent toggling.
-- [**`selectSub(parentId, type, groups)`**](../src/ui/tab-side-state.js#L143-L189): Handles left-click sub-tab isolation/toggling.
-- [**`toggleSub(parentId, type, groups)`**](../src/ui/tab-side-state.js#L197-L223): Handles right-click sub-tab multi-select toggles.
-- [**`prune(groups)`**](../src/ui/tab-side-state.js#L229-L244): Removes sub-types that are no longer present in active parent tabs.
-- [**`serialize()`**](../src/ui/tab-side-state.js#L250-L256): Exports tab state for per-actor persistence.
+### [`src/ui/hud-tab-column.js`](../src/ui/hud-tab-column.js) — Tab Column Manager (`HUDTabColumn`)
+- [**`constructor({ side, cached, getDefaultSubTypes })`**](../src/ui/hud-tab-column.js#L14-L33): Initializes left or right tab column state.
+- [**`resetToDefault()`**](../src/ui/hud-tab-column.js#L38-L48): Resets column to `'all'` parent and default sub-types.
+- [**`selectParent(parentId, groups)`**](../src/ui/hud-tab-column.js#L60-L90): Handles exclusive left-click parent selection.
+- [**`toggleParent(parentId, groups)`**](../src/ui/hud-tab-column.js#L97-L135): Handles multi-stage right-click parent toggling.
+- [**`selectSub(parentId, type, groups)`**](../src/ui/hud-tab-column.js#L143-L189): Handles left-click sub-tab isolation/toggling.
+- [**`toggleSub(parentId, type, groups)`**](../src/ui/hud-tab-column.js#L197-L223): Handles right-click sub-tab multi-select toggles.
+- [**`prune(groups)`**](../src/ui/hud-tab-column.js#L229-L244): Removes sub-types that are no longer present in active parent tabs.
+- [**`serialize()`**](../src/ui/hud-tab-column.js#L250-L256): Exports tab state for per-actor persistence.
 
 ### [`src/ui/hud-tab.js`](../src/ui/hud-tab.js) — Unified Tab Node (`HUDTab`)
 - [**`constructor(options)`**](../src/ui/hud-tab.js#L23-L55): Instantiates a tab node with depth `level`, `rootParent`, and child `subTabs`.
@@ -308,8 +308,8 @@ flowchart TD
 - [**`getOrder()`**](../src/ui/hud-tab.js#L128-L130): Returns array of child sub-tab IDs in display order.
 - [**`updateOrder(orderArray)`**](../src/ui/hud-tab.js#L136-L140): Re-orders child sub-tabs matching an ordered ID array.
 - [**`getSubTab(subId)`**](../src/ui/hud-tab.js#L146-L154): Recursively searches for a sub-tab node by ID.
-- [**`onLeftClick(app, sideState, groups, event)`**](../src/ui/hud-tab.js#L163-L173): Executes left-click selection logic.
-- [**`onRightClick(app, sideState, groups, event)`**](../src/ui/hud-tab.js#L182-L192): Executes right-click toggle logic.
+- [**`onLeftClick(app, tabColumn, groups, event)`**](../src/ui/hud-tab.js#L163-L173): Executes left-click selection logic.
+- [**`onRightClick(app, tabColumn, groups, event)`**](../src/ui/hud-tab.js#L182-L192): Executes right-click toggle logic.
 
 ### [`src/ui/tab-ref.js`](../src/ui/tab-ref.js) — Structured Tab Data Reference (`TabRef`)
 - [**`constructor({ id, label, parent })`**](../src/ui/tab-ref.js#L12-L16): Instantiates a structured tab data node linked to parent nodes.

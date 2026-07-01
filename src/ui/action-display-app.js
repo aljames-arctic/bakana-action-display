@@ -1,7 +1,7 @@
 import { actionDisplay } from '../action-display.js';
 import { log } from '../lib/logger.js';
 import { MODULE_ID } from '../constants.js';
-import { TabSideState } from './tab-side-state.js';
+import { HUDTabColumn } from './hud-tab-column.js';
 import { HUDTab } from './hud-tab.js';
 
 // Cache to persist tab states per actor across HUD rebuilds
@@ -35,13 +35,13 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         } : null);
 
         // Encapsulated tab side state managers
-        this.leftTabs = new TabSideState({
+        this.leftTabs = new HUDTabColumn({
             side: 'left',
             cached: cachedLeft,
             getDefaultSubTypes: () => actionDisplay.activeSystemAdapter?.getDefaultActiveLeftSubTypes() ?? []
         });
 
-        this.rightTabs = new TabSideState({
+        this.rightTabs = new HUDTabColumn({
             side: 'right',
             cached: cachedRight,
             getDefaultSubTypes: () => actionDisplay.activeSystemAdapter?.getDefaultActiveSubTypes() ?? []

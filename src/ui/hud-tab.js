@@ -156,38 +156,38 @@ export class HUDTab {
     /**
      * Handle left-click on this tab.
      * @param {ApplicationV2} app 
-     * @param {TabSideState} sideState 
+     * @param {HUDTabColumn} tabColumn 
      * @param {Object} groups Tab groups dictionary
      * @param {Event} [event] 
      */
-    onLeftClick(app, sideState, groups, event) {
+    onLeftClick(app, tabColumn, groups, event) {
         if (this.customOnLeftClick) {
-            const handled = this.customOnLeftClick(app, sideState, groups, event);
+            const handled = this.customOnLeftClick(app, tabColumn, groups, event);
             if (handled) return;
         }
         if (this.isTopLevel) {
-            sideState.selectParent(this.id, groups);
+            tabColumn.selectParent(this.id, groups);
         } else {
-            sideState.selectSub(this.rootParent.id, this.id, groups);
+            tabColumn.selectSub(this.rootParent.id, this.id, groups);
         }
     }
 
     /**
      * Handle right-click on this tab.
      * @param {ApplicationV2} app 
-     * @param {TabSideState} sideState 
+     * @param {HUDTabColumn} tabColumn 
      * @param {Object} groups Tab groups dictionary
      * @param {Event} [event] 
      */
-    onRightClick(app, sideState, groups, event) {
+    onRightClick(app, tabColumn, groups, event) {
         if (this.customOnRightClick) {
-            const handled = this.customOnRightClick(app, sideState, groups, event);
+            const handled = this.customOnRightClick(app, tabColumn, groups, event);
             if (handled) return;
         }
         if (this.isTopLevel) {
-            sideState.toggleParent(this.id, groups);
+            tabColumn.toggleParent(this.id, groups);
         } else {
-            sideState.toggleSub(this.rootParent.id, this.id, groups);
+            tabColumn.toggleSub(this.rootParent.id, this.id, groups);
         }
     }
 }

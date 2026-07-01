@@ -1,13 +1,13 @@
 import { log } from '../lib/logger.js';
 
 /**
- * Encapsulates tab state management and interaction rules for a single HUD side (left or right).
+ * Encapsulates tab column state management and interaction rules for a single HUD column (left or right).
  * Handles parent focus, multi-select toggles, sub-tab isolation/toggling, and system default resets.
  */
-export class TabSideState {
+export class HUDTabColumn {
     /**
      * @param {Object} options
-     * @param {'left'|'right'} options.side Left or right side identifier
+     * @param {'left'|'right'} options.side Left or right side column identifier
      * @param {Object} [options.cached] Persisted tab state from cache
      * @param {Function} [options.getDefaultSubTypes] Function returning default active sub-types from system adapter
      */
@@ -33,7 +33,7 @@ export class TabSideState {
     }
 
     /**
-     * Reset parent tabs and sub-tabs on this side to default state ('all' and default sub-types).
+     * Reset parent tabs and sub-tabs on this column to default state ('all' and default sub-types).
      */
     resetToDefault() {
         this.focusedParent = 'all';
@@ -44,15 +44,15 @@ export class TabSideState {
         for (const sub of defaults) {
             this.activeSubTypes.add(sub);
         }
-        log.debug(`Reset ${this.side} side tabs to default state ('all')`);
+        log.debug(`Reset ${this.side} side column tabs to default state ('all')`);
     }
 
     /**
      * Handle left-click selection of a parent tab.
      * Rules:
-     * - Left-clicking 'all' resets side to default.
+     * - Left-clicking 'all' resets column to default.
      * - Left-clicking a tab deselects other parent tabs and clears their subtabs (exclusive selection).
-     * - Left-clicking the sole active parent tab with NO active subtabs disables it and resets side to default.
+     * - Left-clicking the sole active parent tab with NO active subtabs disables it and resets column to default.
      * - Left-clicking the sole active parent tab WITH active subtabs keeps it active and focuses it.
      * @param {string} parentId The parent tab ID
      * @param {Object} groups Available tab groups

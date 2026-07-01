@@ -60,11 +60,11 @@ The module is built using a clean **pipes-and-filters / adapter** architecture, 
 *   **Responsibilities**:
     *   Inspects active module flags on actions and modifies them (e.g., filtering out Midi-QOL "automation-only" activities from the player-facing HUD).
 
-### 4. UI Layer (`ActionDisplayApp`, `TabSideState`, `HUDTab`, & `TabRef`)
+### 4. UI Layer (`ActionDisplayApp`, `HUDTabColumn`, `HUDTab`, & `TabRef`)
 *   **Role**: The rendering engine and state management system, built on Foundry VTT's modern `ApplicationV2` (`HandlebarsApplication`) framework.
 *   **Responsibilities**:
     *   **`ActionDisplayApp`**: Listens to Foundry hooks (like token selection) to position and render the HUD. Manages attachment/detachment states, scroll position preservation (`scrollable` selector), and context rendering.
-    *   **`TabSideState`**: Encapsulates left and right column tab states (active parents, focused parent, active sub-types) and enforces click interaction rules (exclusive left-click parent selection, multi-stage right-click toggles, sub-tab isolation).
+    *   **`HUDTabColumn`**: Encapsulates left and right column tab states (active parents, focused parent, active sub-types) and enforces click interaction rules (exclusive left-click parent selection, multi-stage right-click toggles, sub-tab isolation).
     *   **`HUDTab`**: A unified, recursive tab UI model representing top-level parent tabs, sub-tabs, and deeply nested sub-tabs with depth levels (`level` 0, 1, 2+), parent/rootParent pointers, and click event handlers (`onLeftClick`, `onRightClick`).
     *   **`TabRef`**: A structured tab data reference class (`src/ui/tab-ref.js`) attached to item activities (`item.tabs`, `activity.tabs`). Automatically derives `.root` parent IDs and `.path` hierarchy arrays by traversing parent tree links.
     *   In `_prepareContext()`, it requests the processed actions from the Coordinator, queries the active system adapter for tab layouts, delegates tab context modification, filters actions to match active tabs, and renders `templates/action-display.html`.
@@ -162,11 +162,11 @@ classDiagram
         +getOrder()
         +updateOrder(orderArray)
         +getSubTab(subId)
-        +onLeftClick(app, sideState, groups, event)
-        +onRightClick(app, sideState, groups, event)
+        +onLeftClick(app, tabColumn, groups, event)
+        +onRightClick(app, tabColumn, groups, event)
     }
 
-    class TabSideState {
+    class HUDTabColumn {
         +string side
         +Set activeParents
         +string focusedParent
