@@ -58,10 +58,14 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         else if (cached?.rightSub) initialRightSubs = [cached.rightSub];
         this.activeSubTypes = new Set(initialRightSubs);
 
-        // Default active sub-types from system adapter (e.g. VSM active by default in D&D)
+        // Default active sub-types from system adapter
         if (!cached) {
-            const defaults = actionDisplay.activeSystemAdapter?.getDefaultActiveSubTypes() ?? [];
-            for (const sub of defaults) {
+            const leftDefaults = actionDisplay.activeSystemAdapter?.getDefaultActiveLeftSubTypes() ?? [];
+            for (const sub of leftDefaults) {
+                this.activeLeftSubTypes.add(sub);
+            }
+            const rightDefaults = actionDisplay.activeSystemAdapter?.getDefaultActiveSubTypes() ?? [];
+            for (const sub of rightDefaults) {
                 this.activeSubTypes.add(sub);
             }
         }
@@ -589,6 +593,35 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
     /* -------------------------------------------- */
 
     /**
+     * Reset left-side item tabs to their default state ('all' and default sub-types).
+     */
+    _resetLeftTabsToDefault() {
+        this.activeLeftParentTypes.clear();
+        this.activeLeftParentTypes.add('all');
+        this.activeLeftSubTypes.clear();
+        const defaults = actionDisplay.activeSystemAdapter?.getDefaultActiveLeftSubTypes() ?? [];
+        for (const sub of defaults) {
+            this.activeLeftSubTypes.add(sub);
+        }
+        log.debug("Reset left parents and sub-types to default state ('all')");
+    }
+
+    /**
+     * Reset right-side action tabs to their default state ('all' and default sub-types).
+     */
+    _resetRightTabsToDefault() {
+        this.focusedParentType = 'all';
+        this.activeParentTypes.clear();
+        this.activeParentTypes.add('all');
+        this.activeSubTypes.clear();
+        const defaults = actionDisplay.activeSystemAdapter?.getDefaultActiveSubTypes() ?? [];
+        for (const sub of defaults) {
+            this.activeSubTypes.add(sub);
+        }
+        log.debug("Reset right parents and sub-types to default state ('all')");
+    }
+
+    /**
      * Handle left-side item type (parent) selection clicks.
      * 'this' refers to the application instance.
      */
@@ -597,8 +630,12 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         this._clearMenuState();
         const parentId = target.dataset.type;
         
-        this.activeLeftParentTypes.clear();
-        this.activeLeftParentTypes.add(parentId);
+        if (parentId === 'all') {
+            this._resetLeftTabsToDefault();
+        } else {
+            this.activeLeftParentTypes.clear();
+            this.activeLeftParentTypes.add(parentId);
+        }
         
         log.debug(`Changed item parent filter to:`, Array.from(this.activeLeftParentTypes));
         this.render();
@@ -639,10 +676,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
      */
     _onToggleLeftParent(parentId) {
         if (parentId === 'all') {
-            this.activeLeftSubTypes.clear();
-            this.activeLeftParentTypes.clear();
-            this.activeLeftParentTypes.add('all');
-            log.debug("Reset left parents to 'all'");
+            this._resetLeftTabsToDefault();
         } else {
             const parentGroup = this.leftGroups?.[parentId];
             let hadActiveSubs = false;
@@ -675,9 +709,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             
             // Fall back to 'all' if no parents remain selected
             if (this.activeLeftParentTypes.size === 0) {
-                this.activeLeftParentTypes.add('all');
-                this.activeLeftSubTypes.clear();
-                log.debug("No left parents selected, resetting to 'all'");
+                this._resetLeftTabsToDefault();
             }
         }
         this.render();
@@ -716,9 +748,13 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         this._clearMenuState();
         const parentId = target.dataset.type;
         
-        this.focusedParentType = parentId;
+        if (parentId === 'all') {
+            this._resetRightTabsToDefault();
+        } else {
+            this.focusedParentType = parentId;
+        }
         
-        log.debug(`Focused action parent to: ${parentId}`);
+        log.debug(`Focused action parent to: ${this.focusedParentType}`);
         this.render();
     }
 
@@ -727,9 +763,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
      */
     _onToggleRightParent(parentId) {
         if (parentId === 'all') {
-            this.activeSubTypes.clear();
-            this.focusedParentType = 'all';
-            log.debug("Reset right parents to 'all'");
+            this._resetRightTabsToDefault();
         } else {
             const parentGroup = this.parentGroups?.[parentId];
             let hadActiveSubs = false;
@@ -760,8 +794,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             
             // Fall back to 'all' if no valid focused parent remains
             if (!this.focusedParentType) {
-                this.focusedParentType = 'all';
-                this.activeSubTypes.clear();
+                this._resetRightTabsToDefault();
             }
         }
         this.render();

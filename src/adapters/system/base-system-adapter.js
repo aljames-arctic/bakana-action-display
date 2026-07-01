@@ -143,7 +143,15 @@ export class BaseSystemAdapter {
     }
 
     /**
-     * Get the default active sub-tabs for this system.
+     * Get the default active left sub-tabs for this system.
+     * @returns {string[]}
+     */
+    getDefaultActiveLeftSubTypes() {
+        return [];
+    }
+
+    /**
+     * Get the default active sub-tabs (right side) for this system.
      * @returns {string[]}
      */
     getDefaultActiveSubTypes() {
