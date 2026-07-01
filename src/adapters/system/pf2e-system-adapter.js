@@ -164,7 +164,7 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
 
         // Sort actions: activation type first, then item type, then name
         return filtered.sort((a, b) => {
-            const actSort = this._getActivationSort(a.activationType ?? (Array.isArray(a.tabs[0]) ? a.tabs[0][1] : a.tabs[0])) - this._getActivationSort(b.activationType ?? (Array.isArray(b.tabs[0]) ? b.tabs[0][1] : b.tabs[0]));
+            const actSort = this._getActivationSort(a.activationType ?? a.tabs[0].id) - this._getActivationSort(b.activationType ?? b.tabs[0].id);
             if (actSort !== 0) return actSort;
 
             const typeSort = this._getTypeSort(a.type) - this._getTypeSort(b.type);
@@ -261,14 +261,8 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
         
         const spellGroup = context.itemTypes?.find(g => g.id === 'spell');
         if (spellGroup && spellGroup.subTabs.length > 0) {
-            const order = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'focus', 'innate', 'ritual'];
-            spellGroup.subTabs.sort((a, b) => {
-                const idxA = order.indexOf(a.id);
-                const idxB = order.indexOf(b.id);
-                const sortA = idxA === -1 ? 999 : idxA;
-                const sortB = idxB === -1 ? 999 : idxB;
-                return sortA - sortB;
-            });
+            const orderMap = new Map(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'focus', 'innate', 'ritual'].map((id, i) => [id, i]));
+            spellGroup.subTabs.sort((a, b) => (orderMap.get(a.id) ?? 999) - (orderMap.get(b.id) ?? 999));
         }
     }
 

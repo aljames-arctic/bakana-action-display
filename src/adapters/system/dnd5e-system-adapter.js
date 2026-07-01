@@ -9,6 +9,20 @@ const PARENT_SORT_ORDER = {
     'economy': 1
 };
 
+const SUB_TAB_MAP = {
+    'action': 'action',
+    'bonus': 'bonus',
+    'reaction': 'reaction',
+    'minute': 'minute',
+    'hour': 'hour',
+    'day': 'day',
+    'legendary': 'legendary',
+    'mythic': 'mythic',
+    'lair': 'lair',
+    'crew': 'crew',
+    'special': 'special'
+};
+
 const SUB_SORT_ORDERS = {
     'spell': [
         'all',
@@ -309,22 +323,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
      * Determine the sub-action tab based on DnD5e activation type.
      */
     _getSubTab(type) {
-        if (!type || type === 'none') return 'none'; // 'none' activation becomes 'none' sub-tab
-        
-        switch (type) {
-            case 'action': return 'action';
-            case 'bonus': return 'bonus';
-            case 'reaction': return 'reaction';
-            case 'minute': return 'minute';
-            case 'hour': return 'hour';
-            case 'day': return 'day';
-            case 'legendary': return 'legendary';
-            case 'mythic': return 'mythic';
-            case 'lair': return 'lair';
-            case 'crew': return 'crew';
-            case 'special': return 'special';
-            default: return 'none'; // Default to 'none' sub-tab for any unhandled
-        }
+        return SUB_TAB_MAP[type] ?? 'none';
     }
 
     _getParentSort(type) {

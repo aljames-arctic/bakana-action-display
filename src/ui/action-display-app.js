@@ -665,8 +665,8 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
 
                 const qualifyingSubActions = itemActivities.filter(sub => {
                     const tab = sub.tabs;
-                    const actionParentId = tab?.root ?? (Array.isArray(tab) ? tab[0] : tab);
-                    const actionSubId = tab?.parent ? tab.id : (Array.isArray(tab) ? tab[1] : undefined);
+                    const actionParentId = tab.root;
+                    const actionSubId = tab.parent ? tab.id : undefined;
 
                     if (actionParentId === 'components') return false;
 
