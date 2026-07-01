@@ -11,10 +11,9 @@ export class BaseModuleAdapter {
     /**
      * Modify the actions list.
      * @param {Object[]} actions The current list of actions
-     * @param {Actor} actor The actor these actions belong to
      * @returns {Object[]} The modified list of actions
      */
-    modifyActions(actions, actor) {
+    modifyActions(actions) {
         return actions;
     }
 }

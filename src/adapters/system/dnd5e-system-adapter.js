@@ -2,7 +2,6 @@ import { FantasySystemAdapter } from './genre/fantasy-system-adapter.js';
 import { localize } from '../../lib/utils.js';
 import { log } from '../../lib/logger.js';
 import { MODULE_ID } from '../../constants.js';
-import { HUDTab } from '../../ui/hud-tab.js';
 import { TabRef } from '../../ui/tab-ref.js';
 
 // Static sort order maps to prevent allocations during sorting

@@ -75,7 +75,7 @@ class ActionDisplay {
         // 3. Module Adapters: Run through active module adapters
         for (const [moduleId, adapter] of this.moduleAdapters.entries()) {
             try {
-                actions = adapter.modifyActions(actions, actor);
+                actions = adapter.modifyActions(actions);
             } catch (error) {
                 log.error(`Error in module adapter "${moduleId}":`, error);
             }

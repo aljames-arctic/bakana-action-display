@@ -12,10 +12,9 @@ export class MidiQolModuleAdapter extends BaseModuleAdapter {
     /**
      * Process actions and check for D&D 5e Midi-QOL automation flags on activities.
      * @param {Object[]} actions The current list of actions
-     * @param {Actor} actor 
      * @returns {Object[]} The modified actions
      */
-    modifyActions(actions, actor) {
+    modifyActions(actions) {
         const modified = [];
 
         for (const item of actions) {
@@ -58,9 +57,9 @@ export class MidiQolModuleAdapter extends BaseModuleAdapter {
         return modified;
     }
 
-    /* -------------------------------------------- */
+    /* ----------------------------------------------- */
     /*  Module Data Structure Accessors / Path Helpers */
-    /* -------------------------------------------- */
+    /* ----------------------------------------------- */
 
     /**
      * Check if a D&D 5e activity is flagged as automation-only by Midi-QOL.
