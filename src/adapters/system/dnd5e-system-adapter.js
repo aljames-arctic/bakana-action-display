@@ -12,16 +12,16 @@ const PARENT_SORT_ORDER = {
 const SUB_SORT_ORDERS = {
     'spell': [
         'all',
-        '0',
-        '1',
-        '2',
-        '3',
-        '4',
-        '5',
-        '6',
-        '7',
-        '8',
-        '9',
+        'level_0',
+        'level_1',
+        'level_2',
+        'level_3',
+        'level_4',
+        'level_5',
+        'level_6',
+        'level_7',
+        'level_8',
+        'level_9',
         'itemCharges'
     ],
     'economy': [
@@ -237,7 +237,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
 
                 if (type === 'spell') {
                     const level = item.system.level ?? 0;
-                    activityAction.itemTypes = ['spell', level.toString()];
+                    activityAction.itemTypes = ['spell', `level_${level}`];
                 } else if (isItemCharges) {
                     activityAction.itemTypes = ['spell', 'itemCharges'];
                 } else {
@@ -668,14 +668,20 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
      */
     getItemSubTabLabel(parentId, subId) {
         if (parentId === 'spell') {
+            if (subId === 'all') {
+                return localize('BAD.dnd5e.allSpells', 'All Spells');
+            }
             if (subId === 'itemCharges') {
                 return localize('BAD.dnd5e.itemCharges', 'Item Charges');
             }
-            if (subId === '0') {
-                return localize('DND5E.SpellCantrip', 'Cantrip');
+            if (subId.startsWith('level_')) {
+                const num = subId.replace('level_', '');
+                if (num === '0') return localize('DND5E.SpellCantrip', 'Cantrip');
+                const key = `DND5E.SpellLevel${num}`;
+                const ordinals = { '1': '1st', '2': '2nd', '3': '3rd' };
+                const ord = ordinals[num] || `${num}th`;
+                return localize(key, `${ord} Level`);
             }
-            const key = `DND5E.SpellLevel${subId}`;
-            return (game.i18n && game.i18n.has(key)) ? game.i18n.localize(key) : `${subId} Level`;
         }
         return super.getItemSubTabLabel(parentId, subId);
     }

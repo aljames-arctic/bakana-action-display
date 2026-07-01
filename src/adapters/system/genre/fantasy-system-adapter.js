@@ -24,21 +24,28 @@ export class FantasySystemAdapter extends BaseSystemAdapter {
     }
 
     /**
-     * Modify the template context before rendering.
-     * Default fantasy behavior: sort spell sub-tabs numerically (ascending).
+     * Get the sort index for left-side item sub-tabs in fantasy systems.
+     * Easily readable list determining the exact display order for spell levels.
      */
-    modifyContext(context, app) {
-        super.modifyContext(context, app);
-        const spellParent = context.itemTypes.find(t => t.id === 'spell');
-        if (spellParent && spellParent.subTabs.length > 0) {
-            spellParent.subTabs.sort((a, b) => {
-                const valA = parseInt(a.id, 10);
-                const valB = parseInt(b.id, 10);
-                if (isNaN(valA) && isNaN(valB)) return a.id.localeCompare(b.id);
-                if (isNaN(valA)) return 1;
-                if (isNaN(valB)) return -1;
-                return valA - valB;
-            });
+    getItemSubTabSortOrder(parentId, subId) {
+        if (parentId === 'spell') {
+            const spellOrder = [
+                'all',
+                'level_0',
+                'level_1',
+                'level_2',
+                'level_3',
+                'level_4',
+                'level_5',
+                'level_6',
+                'level_7',
+                'level_8',
+                'level_9',
+                'itemCharges'
+            ];
+            const idx = spellOrder.indexOf(subId);
+            return idx !== -1 ? idx : 999;
         }
+        return super.getItemSubTabSortOrder(parentId, subId);
     }
 }
