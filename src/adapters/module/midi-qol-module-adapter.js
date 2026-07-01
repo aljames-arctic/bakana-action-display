@@ -18,13 +18,13 @@ export class MidiQolModuleAdapter extends BaseModuleAdapter {
     modifyActions(actions, actor) {
         const modified = [];
 
-        for (const action of actions) {
-            // Check if the action has mapped D&D 5e Activities (subActions)
-            const subActions = action.subActions;
-            if (subActions && subActions.length > 0) {
+        for (const item of actions) {
+            // Check if the 5e item has mapped D&D 5e Activities (subActions)
+            const activities = item.subActions;
+            if (activities && activities.length > 0) {
                 // Filter out D&D 5e Activities that are marked as automationOnly by Midi-QOL
-                const filteredActivities = subActions.filter(sub => {
-                    const isAutomationOnlyActivity = sub.originalActivity?.midiProperties?.automationOnly === true;
+                const filteredActivities = activities.filter(activity => {
+                    const isAutomationOnlyActivity = activity.originalActivity?.midiProperties?.automationOnly === true;
                     return !isAutomationOnlyActivity;
                 });
 
@@ -33,34 +33,34 @@ export class MidiQolModuleAdapter extends BaseModuleAdapter {
                     continue; // Skip this item entirely (filters it out of the HUD)
                 }
 
-                // If some activities were filtered out, update the action's subActions and tabs
-                if (filteredActivities.length < subActions.length) {
-                    action.subActions = filteredActivities;
+                // If some activities were filtered out, update the item's activities (subActions) and tabs
+                if (filteredActivities.length < activities.length) {
+                    item.subActions = filteredActivities;
 
                     // Identify which parent tabs are managed by the activities (e.g. 'economy')
-                    const managedParents = new Set(subActions.map(sub => sub.tabs[0]));
+                    const managedParents = new Set(activities.map(act => act.tabs[0]));
 
                     // Preserve any tabs that are NOT managed by activities (like D&D 5e spell components)
-                    const preservedTabs = action.tabs?.filter(tab => !managedParents.has(tab[0])) ?? [];
+                    const preservedTabs = item.tabs?.filter(tab => !managedParents.has(tab[0])) ?? [];
 
                     // Recalculate unique activation tabs based on the remaining player-facing activities
                     const uniqueTabs = [];
                     const seenTabKeys = new Set();
 
-                    for (const sub of filteredActivities) {
-                        const parentTab = sub.tabs[0];
-                        const subTab = sub.tabs[1];
+                    for (const act of filteredActivities) {
+                        const parentTab = act.tabs[0];
+                        const subTab = act.tabs[1];
                         const key = subTab ? `${parentTab}/${subTab}` : parentTab;
                         if (!seenTabKeys.has(key)) {
                             seenTabKeys.add(key);
                             uniqueTabs.push(subTab ? [parentTab, subTab] : [parentTab]);
                         }
                     }
-                    action.tabs = [...uniqueTabs, ...preservedTabs];
+                    item.tabs = [...uniqueTabs, ...preservedTabs];
                 }
             }
 
-            modified.push(action);
+            modified.push(item);
         }
 
         return modified;
