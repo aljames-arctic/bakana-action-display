@@ -34,21 +34,21 @@ export class MidiQolModuleAdapter extends BaseModuleAdapter {
                 if (filteredActivities.length < activities.length) {
                     item.activities = filteredActivities;
 
-                    // Identify which parent tabs are managed by the activities (e.g. 'economy')
-                    const managedParents = new Set(activities.map(act => act.tabs.root));
+                    // Identify root tab categories controlled by D&D 5e activities (e.g. 'economy')
+                    const activityRootCategories = new Set(activities.map(activity => activity.tabs.root));
 
-                    // Preserve any tabs that are NOT managed by activities (like D&D 5e spell components)
-                    const preservedTabs = item.tabs.filter(tab => !managedParents.has(tab.root));
+                    // Preserve non-activity tabs from other categories (e.g. spell components under 'components')
+                    const preservedTabs = item.tabs.filter(tab => !activityRootCategories.has(tab.root));
 
-                    // Recalculate unique activation tabs based on the remaining player-facing activities
+                    // Recalculate unique activity tabs using only the remaining non-removed activities
                     const uniqueTabs = [];
                     const seenTabKeys = new Set();
 
-                    for (const act of filteredActivities) {
-                        const key = act.tabs.path.join('/');
+                    for (const activity of filteredActivities) {
+                        const key = activity.tabs.path.join('/');
                         if (!seenTabKeys.has(key)) {
                             seenTabKeys.add(key);
-                            uniqueTabs.push(act.tabs);
+                            uniqueTabs.push(activity.tabs);
                         }
                     }
                     item.tabs = [...uniqueTabs, ...preservedTabs];
