@@ -136,7 +136,7 @@ ActionDisplayApp.render()
 
 ---
 
-## 4. Use Case Call Flowcharts
+## 4. Use Case Call Flowcharts & Source Links
 
 ### Flowchart 1: Token Selection & Initial HUD Render
 ```mermaid
@@ -158,17 +158,22 @@ flowchart TD
     O --> P["SystemAdapter.modifyContext()"]
     P --> Q["Filter finalActions to active tabs"]
     Q --> R["Render templates/action-display.html"]
-
-    click B href "../src/module.js#L136-L161" "View renderTokenHUD Hook"
-    click F href "../src/ui/action-display-app.js#L25" "View ActionDisplayApp constructor"
-    click H href "../src/ui/action-display-app.js#L140-L370" "View _prepareContext method"
-    click I href "../src/action-display.js#L59-L104" "View getActions method"
-    click J href "../src/adapters/system/base-system-adapter.js#L30-L32" "View shouldExtractItem method"
-    click K href "../src/action-display.js#L111-L141" "View _extractBaseActions method"
-    click L href "../src/adapters/system/base-system-adapter.js#L40-L52" "View modifyActions method"
-    click M href "../src/adapters/module/base-module-adapter.js#L20" "View module modifyActions method"
-    click P href "../src/adapters/system/base-system-adapter.js#L141-L143" "View modifyContext method"
 ```
+
+**Flowchart 1 Source Code References:**
+| Diagram Step | Function / Method | Source File & Line Number |
+| :--- | :--- | :--- |
+| **B** | `Hook: renderTokenHUD` | [`src/module.js`](../src/module.js#L136-L161) |
+| **F** | `new ActionDisplayApp(token)` | [`src/ui/action-display-app.js`](../src/ui/action-display-app.js#L25) |
+| **H** | `ActionDisplayApp._prepareContext()` | [`src/ui/action-display-app.js`](../src/ui/action-display-app.js#L140-L370) |
+| **I** | `ActionDisplay.getActions(actor)` | [`src/action-display.js`](../src/action-display.js#L59-L104) |
+| **J** | `BaseSystemAdapter.shouldExtractItem()` | [`src/adapters/system/base-system-adapter.js`](../src/adapters/system/base-system-adapter.js#L30-L32) |
+| **K** | `ActionDisplay._extractBaseActions()` | [`src/action-display.js`](../src/action-display.js#L111-L141) |
+| **L** | `BaseSystemAdapter.modifyActions()` | [`src/adapters/system/base-system-adapter.js`](../src/adapters/system/base-system-adapter.js#L40-L52) |
+| **M** | `BaseModuleAdapter.modifyActions()` | [`src/adapters/module/base-module-adapter.js`](../src/adapters/module/base-module-adapter.js#L20) |
+| **P** | `BaseSystemAdapter.modifyContext()` | [`src/adapters/system/base-system-adapter.js`](../src/adapters/system/base-system-adapter.js#L141-L143) |
+
+---
 
 ### Flowchart 2: Tab Click & State Modification
 ```mermaid
@@ -201,16 +206,19 @@ flowchart TD
     R --> S["TabSideState.toggleSub()"]
     S --> T["Multi-Select: Toggle sub-tab ON/OFF"]
     T --> G
-
-    click D href "../src/ui/hud-tab.js#L163-L173" "View HUDTab.onLeftClick"
-    click E href "../src/ui/tab-side-state.js#L60-L90" "View TabSideState.selectParent"
-    click H href "../src/ui/hud-tab.js#L182-L192" "View HUDTab.onRightClick"
-    click I href "../src/ui/tab-side-state.js#L97-L135" "View TabSideState.toggleParent"
-    click M href "../src/ui/hud-tab.js#L163-L173" "View HUDTab.onLeftClick"
-    click N href "../src/ui/tab-side-state.js#L143-L189" "View TabSideState.selectSub"
-    click R href "../src/ui/hud-tab.js#L182-L192" "View HUDTab.onRightClick"
-    click S href "../src/ui/tab-side-state.js#L197-L223" "View TabSideState.toggleSub"
 ```
+
+**Flowchart 2 Source Code References:**
+| Diagram Step | Function / Method | Source File & Line Number |
+| :--- | :--- | :--- |
+| **D, M** | `HUDTab.onLeftClick()` | [`src/ui/hud-tab.js`](../src/ui/hud-tab.js#L163-L173) |
+| **E** | `TabSideState.selectParent()` | [`src/ui/tab-side-state.js`](../src/ui/tab-side-state.js#L60-L90) |
+| **H, R** | `HUDTab.onRightClick()` | [`src/ui/hud-tab.js`](../src/ui/hud-tab.js#L182-L192) |
+| **I** | `TabSideState.toggleParent()` | [`src/ui/tab-side-state.js`](../src/ui/tab-side-state.js#L97-L135) |
+| **N** | `TabSideState.selectSub()` | [`src/ui/tab-side-state.js`](../src/ui/tab-side-state.js#L143-L189) |
+| **S** | `TabSideState.toggleSub()` | [`src/ui/tab-side-state.js`](../src/ui/tab-side-state.js#L197-L223) |
+
+---
 
 ### Flowchart 3: Rolling Actions & Multi-Option Dropdowns
 ```mermaid
@@ -223,9 +231,14 @@ flowchart TD
     F --> G["Toggle dropdown menu in DOM"]
     E -- Option Item --> H["ActionDisplayApp._onSelectSubActionOption()"]
     H --> I["Execute action.rollAction(option)"]
-
-    click B href "../src/ui/action-display-app.js#L678-L880" "View _onRollAction method"
 ```
+
+**Flowchart 3 Source Code References:**
+| Diagram Step | Function / Method | Source File & Line Number |
+| :--- | :--- | :--- |
+| **B** | `ActionDisplayApp._onRollAction()` | [`src/ui/action-display-app.js`](../src/ui/action-display-app.js#L678-L880) |
+
+---
 
 ### Flowchart 4: Right-Click Action Card & Context Menu
 ```mermaid
@@ -238,12 +251,14 @@ flowchart TD
     D -- "Open Sheet" --> G["item.sheet.render(true)"]
     E --> H["Save hidden flags on actor & activeApp.render()"]
     F --> H
-
-    click B href "../src/ui/action-display-app.js#L1080" "View _onContextMenuCapture"
-    click C href "../src/ui/action-display-app.js#L1085-L1155" "View _createContextMenu"
-    click E href "../src/ui/action-display-app.js#L1161-L1190" "View _toggleActionHidden"
-    click F href "../src/ui/action-display-app.js#L1161-L1190" "View _toggleActionHidden"
 ```
+
+**Flowchart 4 Source Code References:**
+| Diagram Step | Function / Method | Source File & Line Number |
+| :--- | :--- | :--- |
+| **B** | `ActionDisplayApp._onContextMenuCapture()` | [`src/ui/action-display-app.js`](../src/ui/action-display-app.js#L1080) |
+| **C** | `ActionDisplayApp._createContextMenu()` | [`src/ui/action-display-app.js`](../src/ui/action-display-app.js#L1085-L1155) |
+| **E, F** | `ActionDisplayApp._toggleActionHidden()` | [`src/ui/action-display-app.js`](../src/ui/action-display-app.js#L1161-L1190) |
 
 ---
 
