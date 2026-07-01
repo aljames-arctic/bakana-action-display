@@ -319,8 +319,7 @@ flowchart TD
 - [**`at(index)`**](../src/ui/tab-ref.js#L59-L61): Provides positional index fallback for legacy array compatibility.
 
 ### [`src/adapters/system/base-system-adapter.js`](../src/adapters/system/base-system-adapter.js) — System Adapter Interface (`BaseSystemAdapter`)
-- [**`isCompatible()`**](../src/adapters/system/base-system-adapter.js#L20-L22): Returns whether adapter matches active game system.
-- [**`shouldExtractItem(item, actor)`**](../src/adapters/system/base-system-adapter.js#L30-L32): Performance filter to bypass unneeded item allocations.
+- [**`shouldExtractItem(item, actor)`**](../src/adapters/system/base-system-adapter.js#L26-L28): Performance filter to bypass unneeded item allocations.
 - [**`modifyActions(actions, actor)`**](../src/adapters/system/base-system-adapter.js#L40-L52): Modifies base actions with system-specific calculations.
 - [**`modifyContext(context)`**](../src/adapters/system/base-system-adapter.js#L141-L143): Customizes tab layout context and sub-tab ordering.
 - [**`getItemTypeLabel(parentId)`**](../src/adapters/system/base-system-adapter.js#L59-L66) / [**`getItemTypeIcon(parentId)`**](../src/adapters/system/base-system-adapter.js#L73-L80): Returns tab labels and font-awesome icons.

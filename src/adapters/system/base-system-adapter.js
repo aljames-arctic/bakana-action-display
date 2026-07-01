@@ -14,14 +14,6 @@ export class BaseSystemAdapter {
     }
 
     /**
-     * Determine if this adapter is compatible with the current system.
-     * @returns {boolean}
-     */
-    isCompatible() {
-        return game.system.id === this.systemId;
-    }
-
-    /**
      * Determine if a specific item should be extracted as a base action.
      * Overridden by system adapters to prevent allocating objects for items that will be discarded.
      * @param {Item} item The Foundry Item instance

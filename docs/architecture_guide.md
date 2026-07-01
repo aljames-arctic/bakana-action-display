@@ -90,7 +90,6 @@ classDiagram
 
     class BaseSystemAdapter {
         +string systemId
-        +isCompatible()
         +shouldExtractItem(item, actor)
         +modifyActions(actions, actor)
         +modifyContext(context)
