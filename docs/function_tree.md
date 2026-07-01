@@ -158,6 +158,16 @@ flowchart TD
     O --> P["SystemAdapter.modifyContext()"]
     P --> Q["Filter finalActions to active tabs"]
     Q --> R["Render templates/action-display.html"]
+
+    click B "../src/module.js#L136-L161" "View renderTokenHUD Hook"
+    click F "../src/ui/action-display-app.js#L25" "View ActionDisplayApp constructor"
+    click H "../src/ui/action-display-app.js#L140-L370" "View _prepareContext method"
+    click I "../src/action-display.js#L59-L104" "View getActions method"
+    click J "../src/adapters/system/base-system-adapter.js#L30-L32" "View shouldExtractItem method"
+    click K "../src/action-display.js#L111-L141" "View _extractBaseActions method"
+    click L "../src/adapters/system/base-system-adapter.js#L40-L52" "View modifyActions method"
+    click M "../src/adapters/module/base-module-adapter.js#L20" "View module modifyActions method"
+    click P "../src/adapters/system/base-system-adapter.js#L141-L143" "View modifyContext method"
 ```
 
 ### Flowchart 2: Tab Click & State Modification
@@ -191,6 +201,15 @@ flowchart TD
     R --> S["TabSideState.toggleSub()"]
     S --> T["Multi-Select: Toggle sub-tab ON/OFF"]
     T --> G
+
+    click D "../src/ui/hud-tab.js#L163-L173" "View HUDTab.onLeftClick"
+    click E "../src/ui/tab-side-state.js#L60-L90" "View TabSideState.selectParent"
+    click H "../src/ui/hud-tab.js#L182-L192" "View HUDTab.onRightClick"
+    click I "../src/ui/tab-side-state.js#L97-L135" "View TabSideState.toggleParent"
+    click M "../src/ui/hud-tab.js#L163-L173" "View HUDTab.onLeftClick"
+    click N "../src/ui/tab-side-state.js#L143-L189" "View TabSideState.selectSub"
+    click R "../src/ui/hud-tab.js#L182-L192" "View HUDTab.onRightClick"
+    click S "../src/ui/tab-side-state.js#L197-L223" "View TabSideState.toggleSub"
 ```
 
 ### Flowchart 3: Rolling Actions & Multi-Option Dropdowns
@@ -204,6 +223,8 @@ flowchart TD
     F --> G["Toggle dropdown menu in DOM"]
     E -- Option Item --> H["ActionDisplayApp._onSelectSubActionOption()"]
     H --> I["Execute action.rollAction(option)"]
+
+    click B "../src/ui/action-display-app.js#L678-L880" "View _onRollAction method"
 ```
 
 ### Flowchart 4: Right-Click Action Card & Context Menu
@@ -217,6 +238,11 @@ flowchart TD
     D -- "Open Sheet" --> G["item.sheet.render(true)"]
     E --> H["Save hidden flags on actor & activeApp.render()"]
     F --> H
+
+    click B "../src/ui/action-display-app.js#L1080" "View _onContextMenuCapture"
+    click C "../src/ui/action-display-app.js#L1085-L1155" "View _createContextMenu"
+    click E "../src/ui/action-display-app.js#L1161-L1190" "View _toggleActionHidden"
+    click F "../src/ui/action-display-app.js#L1161-L1190" "View _toggleActionHidden"
 ```
 
 ---
