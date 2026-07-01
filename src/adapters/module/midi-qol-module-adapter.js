@@ -34,22 +34,18 @@ export class MidiQolModuleAdapter extends BaseModuleAdapter {
                 if (filteredActivities.length < activities.length) {
                     item.activities = filteredActivities;
 
-                    // Helper to resolve root parent ID and unique tab key across TabRef nodes and array tuples
-                    const getRootId = (t) => t?.root ?? (Array.isArray(t) ? t[0] : t);
-                    const getTabKey = (t) => t?.path ? t.path.join('/') : (Array.isArray(t) ? (t[1] ? `${t[0]}/${t[1]}` : t[0]) : String(t));
-
                     // Identify which parent tabs are managed by the activities (e.g. 'economy')
-                    const managedParents = new Set(activities.map(act => getRootId(act.tabs)));
+                    const managedParents = new Set(activities.map(act => act.tabs.root));
 
                     // Preserve any tabs that are NOT managed by activities (like D&D 5e spell components)
-                    const preservedTabs = item.tabs?.filter(tab => !managedParents.has(getRootId(tab))) ?? [];
+                    const preservedTabs = item.tabs.filter(tab => !managedParents.has(tab.root));
 
                     // Recalculate unique activation tabs based on the remaining player-facing activities
                     const uniqueTabs = [];
                     const seenTabKeys = new Set();
 
                     for (const act of filteredActivities) {
-                        const key = getTabKey(act.tabs);
+                        const key = act.tabs.path.join('/');
                         if (!seenTabKeys.has(key)) {
                             seenTabKeys.add(key);
                             uniqueTabs.push(act.tabs);

@@ -34,17 +34,12 @@ export class TabRef {
 
     /**
      * Full path array from root down to this leaf node.
+     * Delegates up parent links recursively and appends current node ID.
      * e.g. ['spells', 'level_1', 'evocation']
      * @type {string[]}
      */
     get path() {
-        const chain = [];
-        let curr = this;
-        while (curr) {
-            chain.unshift(curr.id);
-            curr = curr.parent;
-        }
-        return chain;
+        return this.parent ? [...this.parent.path, this.id] : [this.id];
     }
 
     /**
