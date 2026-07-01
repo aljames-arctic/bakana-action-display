@@ -456,7 +456,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
             }
             if (max > 0) {
                 const spent = uses.spent ?? 0;
-                const available = uses.value !== undefined ? uses.value : (max - spent);
+                const available = uses.value ?? (max - spent);
                 return { available, max };
             }
         }
@@ -583,7 +583,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
             }
             return { available: 0, max };
         } else {
-            const lvl = typeof level === 'string' ? (parseInt(level, 10) || 0) : level;
+            const lvl = Number(level) || 0;
             if (lvl <= 0) return { available: null, max: null };
             
             const spellSlot = actorSpells?.[`spell${lvl}`];
