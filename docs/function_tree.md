@@ -164,14 +164,19 @@ flowchart TD
 | Diagram Step | Function / Method | Source File & Line Number |
 | :--- | :--- | :--- |
 | **B** | `Hook: renderTokenHUD` | [`src/module.js`](../src/module.js#L136-L161) |
-| **F** | `new ActionDisplayApp(token)` | [`src/ui/action-display-app.js`](../src/ui/action-display-app.js#L25) |
+| **C, D, E** | `activeApp` lifecycle & instance check | [`src/module.js`](../src/module.js#L143-L155) |
+| **F, G** | `new ActionDisplayApp(token)` & `.render()` | [`src/ui/action-display-app.js`](../src/ui/action-display-app.js#L25) / [`src/module.js`](../src/module.js#L158-L160) |
 | **H** | `ActionDisplayApp._prepareContext()` | [`src/ui/action-display-app.js`](../src/ui/action-display-app.js#L140-L370) |
 | **I** | `ActionDisplay.getActions(actor)` | [`src/action-display.js`](../src/action-display.js#L59-L104) |
 | **J** | `BaseSystemAdapter.shouldExtractItem()` | [`src/adapters/system/base-system-adapter.js`](../src/adapters/system/base-system-adapter.js#L30-L32) |
 | **K** | `ActionDisplay._extractBaseActions()` | [`src/action-display.js`](../src/action-display.js#L111-L141) |
 | **L** | `BaseSystemAdapter.modifyActions()` | [`src/adapters/system/base-system-adapter.js`](../src/adapters/system/base-system-adapter.js#L40-L52) |
 | **M** | `BaseModuleAdapter.modifyActions()` | [`src/adapters/module/base-module-adapter.js`](../src/adapters/module/base-module-adapter.js#L20) |
+| **N** | Apply User-Hidden Filters | [`src/action-display.js`](../src/action-display.js#L85-L99) |
+| **O** | Sync `TabSideState` & `HUDTab` Trees | [`src/ui/action-display-app.js`](../src/ui/action-display-app.js#L210-L310) |
 | **P** | `BaseSystemAdapter.modifyContext()` | [`src/adapters/system/base-system-adapter.js`](../src/adapters/system/base-system-adapter.js#L141-L143) |
+| **Q** | Filter `finalActions` to active tabs | [`src/ui/action-display-app.js`](../src/ui/action-display-app.js#L315-L365) |
+| **R** | Render `templates/action-display.html` | [`templates/action-display.html`](../templates/action-display.html) |
 
 ---
 
@@ -211,12 +216,14 @@ flowchart TD
 **Flowchart 2 Source Code References:**
 | Diagram Step | Function / Method | Source File & Line Number |
 | :--- | :--- | :--- |
+| **C** | `ActionDisplayApp._onToggleLeftParent / _onToggleRightParent` | [`src/ui/action-display-app.js`](../src/ui/action-display-app.js#L580-L605) |
 | **D, M** | `HUDTab.onLeftClick()` | [`src/ui/hud-tab.js`](../src/ui/hud-tab.js#L163-L173) |
-| **E** | `TabSideState.selectParent()` | [`src/ui/tab-side-state.js`](../src/ui/tab-side-state.js#L60-L90) |
+| **E, F** | `TabSideState.selectParent()` & Exclusive Selection | [`src/ui/tab-side-state.js`](../src/ui/tab-side-state.js#L60-L90) |
+| **G** | `activeApp.render()` | [`src/ui/action-display-app.js`](../src/ui/action-display-app.js#L588) |
 | **H, R** | `HUDTab.onRightClick()` | [`src/ui/hud-tab.js`](../src/ui/hud-tab.js#L182-L192) |
-| **I** | `TabSideState.toggleParent()` | [`src/ui/tab-side-state.js`](../src/ui/tab-side-state.js#L97-L135) |
-| **N** | `TabSideState.selectSub()` | [`src/ui/tab-side-state.js`](../src/ui/tab-side-state.js#L143-L189) |
-| **S** | `TabSideState.toggleSub()` | [`src/ui/tab-side-state.js`](../src/ui/tab-side-state.js#L197-L223) |
+| **I, J, K, L** | `TabSideState.toggleParent()` (Multi-stage toggle) | [`src/ui/tab-side-state.js`](../src/ui/tab-side-state.js#L97-L135) |
+| **N, O, P, Q** | `TabSideState.selectSub()` & Sub-tab Isolation | [`src/ui/tab-side-state.js`](../src/ui/tab-side-state.js#L143-L189) |
+| **S, T** | `TabSideState.toggleSub()` (Multi-select toggle) | [`src/ui/tab-side-state.js`](../src/ui/tab-side-state.js#L197-L223) |
 
 ---
 
@@ -236,7 +243,10 @@ flowchart TD
 **Flowchart 3 Source Code References:**
 | Diagram Step | Function / Method | Source File & Line Number |
 | :--- | :--- | :--- |
-| **B** | `ActionDisplayApp._onRollAction()` | [`src/ui/action-display-app.js`](../src/ui/action-display-app.js#L678-L880) |
+| **B, C** | `ActionDisplayApp._onRollAction()` & subActions check | [`src/ui/action-display-app.js`](../src/ui/action-display-app.js#L678-L700) |
+| **D** | `action.roll()` (Single Action) | [`src/action-display.js`](../src/action-display.js#L127-L135) / [`src/ui/action-display-app.js`](../src/ui/action-display-app.js#L841) |
+| **E, F, G** | Multi-Option Dropdown Menu | [`src/ui/action-display-app.js`](../src/ui/action-display-app.js#L761-L831) |
+| **H, I** | Sub-Action Option Roll | [`src/ui/action-display-app.js`](../src/ui/action-display-app.js#L785-L788) |
 
 ---
 
@@ -257,8 +267,11 @@ flowchart TD
 | Diagram Step | Function / Method | Source File & Line Number |
 | :--- | :--- | :--- |
 | **B** | `ActionDisplayApp._onContextMenuCapture()` | [`src/ui/action-display-app.js`](../src/ui/action-display-app.js#L1080) |
-| **C** | `ActionDisplayApp._createContextMenu()` | [`src/ui/action-display-app.js`](../src/ui/action-display-app.js#L1085-L1155) |
-| **E, F** | `ActionDisplayApp._toggleActionHidden()` | [`src/ui/action-display-app.js`](../src/ui/action-display-app.js#L1161-L1190) |
+| **C, D** | `ActionDisplayApp._createContextMenu()` | [`src/ui/action-display-app.js`](../src/ui/action-display-app.js#L1085-L1155) |
+| **E** | `_toggleActionHidden(actionId, true)` (Hide) | [`src/ui/action-display-app.js`](../src/ui/action-display-app.js#L1098) / [`L1161-L1190`](../src/ui/action-display-app.js#L1161-L1190) |
+| **F** | `_toggleActionHidden(actionId, false)` (Unhide) | [`src/ui/action-display-app.js`](../src/ui/action-display-app.js#L1112) / [`L1161-L1190`](../src/ui/action-display-app.js#L1161-L1190) |
+| **G** | `item.sheet.render(true)` (Open Sheet) | [`src/ui/action-display-app.js`](../src/ui/action-display-app.js#L1121) |
+| **H** | Save hidden flags & `activeApp.render()` | [`src/ui/action-display-app.js`](../src/ui/action-display-app.js#L1175-L1188) |
 
 ---
 
