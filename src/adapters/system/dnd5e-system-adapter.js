@@ -632,7 +632,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
      */
     getActionTypeLabel(parentId) {
         const labels = {
-            'economy': localize('BAD.dnd5e.actionEconomy', 'Action Economy'),
+            'economy': localize('BAD.common.actionEconomy', 'Action Economy'),
             'components': localize('BAD.dnd5e.spellComponents', 'Spell Components')
         };
         return labels[parentId] ?? super.getActionTypeLabel(parentId);
