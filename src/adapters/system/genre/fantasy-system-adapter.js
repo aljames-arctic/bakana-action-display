@@ -1,5 +1,19 @@
 import { BaseSystemAdapter } from '../base-system-adapter.js';
 
+const SPELL_SUB_SORT_ORDER = {
+    'all': 0,
+    'level_0': 1,
+    'level_1': 2,
+    'level_2': 3,
+    'level_3': 4,
+    'level_4': 5,
+    'level_5': 6,
+    'level_7': 7,
+    'level_8': 8,
+    'level_9': 9,
+    'itemCharges': 99
+};
+
 /**
  * Intermediate adapter for fantasy-based systems (D&D 5e, PF1e, PF2e).
  * Provides shared fantasy defaults like common item type labels (Weapons, Spells, Feats, Consumables),
@@ -29,22 +43,7 @@ export class FantasySystemAdapter extends BaseSystemAdapter {
      */
     getItemSubTabSortOrder(parentId, subId) {
         if (parentId === 'spell') {
-            const spellOrder = [
-                'all',
-                'level_0',
-                'level_1',
-                'level_2',
-                'level_3',
-                'level_4',
-                'level_5',
-                'level_6',
-                'level_7',
-                'level_8',
-                'level_9',
-                'itemCharges'
-            ];
-            const idx = spellOrder.indexOf(subId);
-            return idx !== -1 ? idx : 999;
+            return SPELL_SUB_SORT_ORDER[subId] ?? 999;
         }
         return super.getItemSubTabSortOrder(parentId, subId);
     }
