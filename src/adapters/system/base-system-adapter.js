@@ -159,6 +159,69 @@ export class BaseSystemAdapter {
     }
 
     /**
+     * Get the sort index for a left-side item parent tab.
+     * @param {string} parentId 
+     * @returns {number}
+     */
+    getItemTypeSortOrder(parentId) {
+        const order = {
+            'all': 0, 'weapon': 1, 'spell': 2, 'feat': 3, 'buff': 4,
+            'equipment': 5, 'consumable': 6, 'tool': 7, 'backpack': 8,
+            'loot': 9, 'other': 10, 'hidden': 11
+        };
+        return order[parentId] ?? 999;
+    }
+
+    /**
+     * Get the sort index for a left-side item sub-tab.
+     * @param {string} parentId 
+     * @param {string} subId 
+     * @returns {number}
+     */
+    getItemSubTabSortOrder(parentId, subId) {
+        if (subId === 'all') return 0;
+        if (subId === 'itemCharges') return 99;
+        const num = parseInt(subId, 10);
+        return isNaN(num) ? 999 : num + 1;
+    }
+
+    /**
+     * Get the sort index for a right-side action parent tab.
+     * @param {string} parentId 
+     * @returns {number}
+     */
+    getActionTypeSortOrder(parentId) {
+        const order = {
+            'all': 0, 'economy': 1, 'components': 2, 'standard': 3, 'action': 4, 'bonus': 5,
+            'reaction': 6, 'free': 7, 'time': 8, 'monster': 9, 'vehicle': 10, 'special': 11, 'none': 12
+        };
+        return order[parentId] ?? 999;
+    }
+
+    /**
+     * Get the sort index for a right-side action sub-tab.
+     * @param {string} parentId 
+     * @param {string} subId 
+     * @returns {number}
+     */
+    getActionSubTabSortOrder(parentId, subId) {
+        const subOrders = {
+            'economy': ['all', 'action', 'bonus', 'reaction', 'other', 'special', 'legendary', 'mythic', 'crew', 'lair', 'minute', 'hour', 'day', 'none'],
+            'components': ['vocal', 'somatic', 'material'],
+            'standard': ['all', 'action', 'bonus', 'reaction'],
+            'time': ['all', 'minute', 'hour', 'day'],
+            'monster': ['all', 'legendary', 'mythic', 'lair'],
+            'vehicle': ['all', 'crew']
+        };
+        const order = subOrders[parentId];
+        if (order) {
+            const idx = order.indexOf(subId);
+            return idx !== -1 ? idx : 999;
+        }
+        return 999;
+    }
+
+    /**
      * Handle right-click on a tab.
      * @param {ApplicationV2} app The ActionDisplayApp instance
      * @param {HTMLElement} el The tab element that was right-clicked

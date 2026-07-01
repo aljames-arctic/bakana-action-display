@@ -593,6 +593,10 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         };
     }
 
+    getItemTypeSortOrder(parentId) {
+        return TYPE_SORT_ORDER[parentId] ?? super.getItemTypeSortOrder(parentId);
+    }
+
     getItemTypeLabel(parentId) {
         const labels = {
             'all': 'All Items',

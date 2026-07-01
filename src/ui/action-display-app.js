@@ -7,18 +7,6 @@ import { HUDTab, HUDSubTab } from './hud-tab.js';
 // Cache to persist tab states per actor across HUD rebuilds
 const activeTabCache = new Map();
 
-// Static sort order maps for high-performance O(1) tab sorting (prevents GC allocations on every render)
-const LEFT_ORDER_MAP = {
-    'all': 0, 'weapon': 1, 'spell': 2, 'feat': 3, 'buff': 4,
-    'equipment': 5, 'consumable': 6, 'tool': 7, 'backpack': 8,
-    'loot': 9, 'other': 10, 'hidden': 11
-};
-
-const RIGHT_ORDER_MAP = {
-    'all': 0, 'economy': 1, 'components': 2, 'standard': 3, 'action': 4, 'bonus': 5,
-    'reaction': 6, 'free': 7, 'time': 8, 'monster': 9, 'vehicle': 10, 'special': 11, 'none': 12
-};
-
 /**
  * Modern ApplicationV2-based HUD overlay for Bakana's Action Display.
  * Uses HandlebarsApplicationMixin for rendering and the Actions API for event handling.
@@ -243,15 +231,11 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             }
         }
 
-        // Convert to array and sort by our static O(1) order map
+        // Convert to array and sort by system adapter order
         const itemTypes = Object.values(leftGroups);
-        itemTypes.sort((a, b) => {
-            const sortA = LEFT_ORDER_MAP[a.id] ?? 999;
-            const sortB = LEFT_ORDER_MAP[b.id] ?? 999;
-            return sortA - sortB;
-        });
+        itemTypes.sort((a, b) => adapter.getItemTypeSortOrder(a.id) - adapter.getItemTypeSortOrder(b.id));
 
-        // Post-process leftGroups to set active, expanded, and activeParent
+        // Post-process leftGroups to set active, expanded, and activeParent, and sort sub-tabs
         for (const parent of itemTypes) {
             const validSubIds = new Set(parent.subTabs.map(t => t.id));
             const activeSubsForParent = Array.from(this.activeLeftSubTypes).filter(id => validSubIds.has(id));
@@ -261,6 +245,10 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                 parent.activeParent = true;
             }
             parent.expanded = parent.id === this.focusedLeftParentType || activeSubsForParent.length > 0;
+            
+            if (parent.subTabs.length > 0) {
+                parent.subTabs.sort((a, b) => adapter.getItemSubTabSortOrder(parent.id, a.id) - adapter.getItemSubTabSortOrder(parent.id, b.id));
+            }
         }
 
         // Cache leftGroups on the instance for use in event handlers/action rolling
@@ -326,24 +314,11 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             }
         }
 
-        // Convert to array and sort by our static O(1) order map
+        // Convert to array and sort by system adapter order
         const actionTypes = Object.values(parentGroups);
-        actionTypes.sort((a, b) => {
-            const sortA = RIGHT_ORDER_MAP[a.id] ?? 999;
-            const sortB = RIGHT_ORDER_MAP[b.id] ?? 999;
-            return sortA - sortB;
-        });
+        actionTypes.sort((a, b) => adapter.getActionTypeSortOrder(a.id) - adapter.getActionTypeSortOrder(b.id));
 
-        // Sort sub-tabs within each parent and add 'All'
-        const subOrder = {
-            'economy': ['all', 'action', 'bonus', 'reaction', 'other', 'special', 'legendary', 'mythic', 'crew', 'lair', 'minute', 'hour', 'day', 'none'],
-            'components': ['vocal', 'somatic', 'material'],
-            'standard': ['all', 'action', 'bonus', 'reaction'],
-            'time': ['all', 'minute', 'hour', 'day'],
-            'monster': ['all', 'legendary', 'mythic', 'lair'],
-            'vehicle': ['all', 'crew']
-        };
-
+        // Sort sub-tabs within each parent using system adapter order
         for (const parent of actionTypes) {
             const skipAll = ['components'].includes(parent.id);
             
@@ -358,11 +333,9 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                     active: isActive && activeSubsForParent.length === 0
                 }));
                 
-                const order = subOrder[parent.id] ?? [];
-                parent.subTabs.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
+                parent.subTabs.sort((a, b) => adapter.getActionSubTabSortOrder(parent.id, a.id) - adapter.getActionSubTabSortOrder(parent.id, b.id));
             } else if (skipAll) {
-                const order = subOrder[parent.id] ?? [];
-                parent.subTabs.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
+                parent.subTabs.sort((a, b) => adapter.getActionSubTabSortOrder(parent.id, a.id) - adapter.getActionSubTabSortOrder(parent.id, b.id));
             }
         }
 
