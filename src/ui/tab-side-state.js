@@ -15,24 +15,12 @@ export class TabSideState {
         this.side = side;
         this.getDefaultSubTypes = getDefaultSubTypes;
 
-        // Restore active parents (support new object schema and legacy flat arrays)
-        let initialParents = ['all'];
-        if (cached?.parents) initialParents = cached.parents;
-        else if (cached?.leftParents) initialParents = cached.leftParents;
-        else if (cached?.rightParents) initialParents = cached.rightParents;
-        else if (cached?.leftParent) initialParents = [cached.leftParent];
-        else if (cached?.rightParent) initialParents = [cached.rightParent];
+        const initialParents = cached?.parents ?? ['all'];
         this.activeParents = new Set(initialParents);
 
-        // Restore focused parent
-        this.focusedParent = cached?.focusedParent || cached?.focusedLeftParent || (initialParents.includes('all') ? 'all' : initialParents[0]);
+        this.focusedParent = cached?.focusedParent || (initialParents.includes('all') ? 'all' : initialParents[0]);
 
-        // Restore active sub-types
-        let initialSubs = [];
-        if (cached?.subTypes) initialSubs = cached.subTypes;
-        else if (cached?.leftSubTypes) initialSubs = cached.leftSubTypes;
-        else if (cached?.leftSub) initialSubs = [cached.leftSub];
-        else if (cached?.rightSub) initialSubs = [cached.rightSub];
+        const initialSubs = cached?.subTypes ?? [];
         this.activeSubTypes = new Set(initialSubs);
 
         // Populate adapter defaults if fresh initialization
