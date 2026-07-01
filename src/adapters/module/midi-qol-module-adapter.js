@@ -41,17 +41,14 @@ export class MidiQolModuleAdapter extends BaseModuleAdapter {
                     const preservedTabs = item.tabs.filter(tab => !activityRootCategories.has(tab.root));
 
                     // Recalculate unique activity tabs using only the remaining non-removed activities
-                    const uniqueTabs = [];
-                    const seenTabKeys = new Set();
-
+                    const uniqueTabsMap = new Map();
                     for (const activity of filteredActivities) {
                         const key = activity.tabs.path.join('/');
-                        if (!seenTabKeys.has(key)) {
-                            seenTabKeys.add(key);
-                            uniqueTabs.push(activity.tabs);
+                        if (!uniqueTabsMap.has(key)) {
+                            uniqueTabsMap.set(key, activity.tabs);
                         }
                     }
-                    item.tabs = [...uniqueTabs, ...preservedTabs];
+                    item.tabs = [...uniqueTabsMap.values(), ...preservedTabs];
                 }
             }
 
