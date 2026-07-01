@@ -34,23 +34,25 @@ export class MidiQolModuleAdapter extends BaseModuleAdapter {
                 if (filteredActivities.length < activities.length) {
                     item.activities = filteredActivities;
 
+                    // Helper to resolve root parent ID and unique tab key across TabRef nodes and array tuples
+                    const getRootId = (t) => t?.root ?? (Array.isArray(t) ? t[0] : t);
+                    const getTabKey = (t) => t?.path ? t.path.join('/') : (Array.isArray(t) ? (t[1] ? `${t[0]}/${t[1]}` : t[0]) : String(t));
+
                     // Identify which parent tabs are managed by the activities (e.g. 'economy')
-                    const managedParents = new Set(activities.map(act => act.tabs[0]));
+                    const managedParents = new Set(activities.map(act => getRootId(act.tabs)));
 
                     // Preserve any tabs that are NOT managed by activities (like D&D 5e spell components)
-                    const preservedTabs = item.tabs?.filter(tab => !managedParents.has(tab[0])) ?? [];
+                    const preservedTabs = item.tabs?.filter(tab => !managedParents.has(getRootId(tab))) ?? [];
 
                     // Recalculate unique activation tabs based on the remaining player-facing activities
                     const uniqueTabs = [];
                     const seenTabKeys = new Set();
 
                     for (const act of filteredActivities) {
-                        const parentTab = act.tabs[0];
-                        const subTab = act.tabs[1];
-                        const key = subTab ? `${parentTab}/${subTab}` : parentTab;
+                        const key = getTabKey(act.tabs);
                         if (!seenTabKeys.has(key)) {
                             seenTabKeys.add(key);
-                            uniqueTabs.push(subTab ? [parentTab, subTab] : [parentTab]);
+                            uniqueTabs.push(act.tabs);
                         }
                     }
                     item.tabs = [...uniqueTabs, ...preservedTabs];

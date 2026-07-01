@@ -465,8 +465,10 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         if (!matchesLeft) return false;
 
         // Filter by Right Side (Action Type)
-        if (!action.tabs || !Array.isArray(action.tabs)) return false;
-        const tabsList = Array.isArray(action.tabs[0]) ? action.tabs : [action.tabs];
+        if (!action.tabs) return false;
+        const tabsList = Array.isArray(action.tabs) 
+            ? (Array.isArray(action.tabs[0]) || action.tabs[0]?.root ? action.tabs : [action.tabs]) 
+            : [action.tabs];
 
         // Spell Components Filter (restrictive AND-filter, only for spells)
         if (action.originalItem?.type === 'spell') {
@@ -479,8 +481,8 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                 if (activeCompSubs.length > 0) {
                     const spellCompSubs = new Set(
                         tabsList
-                            .filter(tab => tab[0] === 'components')
-                            .map(tab => tab[1])
+                            .filter(tab => (tab?.root ?? tab?.[0]) === 'components')
+                            .map(tab => tab?.id ?? tab?.[1])
                     );
                     const hasBannedComponent = Array.from(spellCompSubs).some(comp => activeCompSubs.includes(comp));
                     if (hasBannedComponent) return false;
@@ -494,8 +496,8 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         let matchesRight = true;
         if (activeEconomyParents.length > 0 || this.activeParentTypes.has('all')) {
             matchesRight = tabsList.some(tab => {
-                const actionParentId = tab[0];
-                const actionSubId = tab[1];
+                const actionParentId = tab?.root ?? (Array.isArray(tab) ? tab[0] : tab);
+                const actionSubId = tab?.parent ? tab.id : (Array.isArray(tab) ? tab[1] : undefined);
 
                 // Ignore components parent in the OR-filter
                 if (actionParentId === 'components') return false;
@@ -705,8 +707,9 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                 const activeEconomyParents = Array.from(activeParents).filter(p => p !== 'components' && p !== 'all');
 
                 const qualifyingSubActions = itemActivities.filter(sub => {
-                    const actionParentId = sub.tabs[0];
-                    const actionSubId = sub.tabs[1];
+                    const tab = sub.tabs;
+                    const actionParentId = tab?.root ?? (Array.isArray(tab) ? tab[0] : tab);
+                    const actionSubId = tab?.parent ? tab.id : (Array.isArray(tab) ? tab[1] : undefined);
 
                     if (actionParentId === 'components') return false;
 

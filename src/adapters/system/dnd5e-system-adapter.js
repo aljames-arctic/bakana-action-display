@@ -144,9 +144,10 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                     if (typeof props === 'object') return !!props[p];
                     return false;
                 };
-                if (hasProp('vocal')) spellComponents.push(['components', 'vocal']);
-                if (hasProp('somatic')) spellComponents.push(['components', 'somatic']);
-                if (hasProp('material')) spellComponents.push(['components', 'material']);
+                const compRoot = new TabRef({ id: 'components', label: 'Components' });
+                if (hasProp('vocal')) spellComponents.push(new TabRef({ id: 'vocal', label: 'V', parent: compRoot }));
+                if (hasProp('somatic')) spellComponents.push(new TabRef({ id: 'somatic', label: 'S', parent: compRoot }));
+                if (hasProp('material')) spellComponents.push(new TabRef({ id: 'material', label: 'M', parent: compRoot }));
             }
 
             // 1. Filter out unprepared spells (unless innate/at-will/pact, or showUnprepared is enabled)
@@ -175,14 +176,17 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                 // Map D&D 5e Activities to sub-actions for the generic HUD item model
                 const mappedActivities = activeActivities.map(activity => {
                     const activationType = activity.activation.type;
-                    const parentTab = this._getParentTab(activationType);
-                    const subTab = this._getSubTab(activationType);
+                    const parentId = this._getParentTab(activationType);
+                    const subId = this._getSubTab(activationType);
+                    const parentRef = new TabRef({ id: parentId, label: parentId });
+                    const tabRef = subId !== 'none' ? new TabRef({ id: subId, label: subId, parent: parentRef }) : parentRef;
+                    
                     return {
                         id: activity.id,
                         name: activity.name || activity.type.toUpperCase(),
                         img: activity.img || item.img,
                         uses: this._calculateActivityUses(activity, item, actor, ammoQuantities, highestAvailableSlot),
-                        tabs: subTab ? [parentTab, subTab] : [parentTab],
+                        tabs: tabRef,
                         roll: async (event) => {
                             const proxiedEvent = this._createRollEvent(event);
                             return activity.use({ event: proxiedEvent }, { event: proxiedEvent });
@@ -224,7 +228,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                 const seenTabKeys = new Set();
 
                 for (const sub of filteredActivities) {
-                    const key = sub.tabs[1] ? `${sub.tabs[0]}/${sub.tabs[1]}` : sub.tabs[0];
+                    const key = sub.tabs.path.join('/');
                     if (!seenTabKeys.has(key)) {
                         seenTabKeys.add(key);
                         uniqueTabs.push(sub.tabs);
@@ -239,7 +243,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                 activityAction.tabs = uniqueTabs;
 
                 // Assign to hierarchical item types: [parentType, subType] (for left-side tabs)
-                const hasCastActivity = filteredSubs.some(sub => sub.originalActivity?.type === 'cast');
+                const hasCastActivity = filteredActivities.some(sub => sub.originalActivity?.type === 'cast');
                 const isItemCharges = (type === 'equipment' && this._hasLimitedUses(item, actor))
                     || (['feat', 'weapon', 'consumable', 'tool'].includes(type) && this._hasLimitedUses(item, actor) && hasCastActivity);
 
