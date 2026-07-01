@@ -339,6 +339,10 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         return TYPE_SORT_ORDER[type] ?? 99;
     }
 
+    /* ------------------------------------------------------------------------- */
+    /*  System Data Structure Accessors / Schema Extraction Helpers              */
+    /* ------------------------------------------------------------------------- */
+
     /**
      * Calculate available and maximum uses for an item.
      */

@@ -52,23 +52,19 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
         // Pre-calculate ammunition quantities by baseItem in a single pass to avoid nested loops (O(I) complexity)
         const ammoQuantities = new Map();
         for (const i of actor.items) {
-            if (i.type === 'ammo') {
-                const baseItem = i.system.baseItem;
-                if (baseItem) {
-                    const qty = i.system.quantity ?? 0;
-                    ammoQuantities.set(baseItem, (ammoQuantities.get(baseItem) || 0) + qty);
-                }
+            const { baseItem, quantity } = this.getAmmoInfo(i);
+            if (baseItem) {
+                ammoQuantities.set(baseItem, (ammoQuantities.get(baseItem) || 0) + quantity);
             }
         }
 
         // Pre-calculate a map of spell ID to spellcasting entry to avoid nested searches in the loop (O(1) lookups)
         const spellToEntryMap = new Map();
-        if (actor.spellcasting) {
-            for (const entry of actor.spellcasting) {
-                if (entry.spells) {
-                    for (const spell of entry.spells) {
-                        spellToEntryMap.set(spell.id, entry);
-                    }
+        const entries = this.getSpellcastingEntries(actor);
+        for (const entry of entries) {
+            if (entry.spells) {
+                for (const spell of entry.spells) {
+                    spellToEntryMap.set(spell.id, entry);
                 }
             }
         }
@@ -79,8 +75,7 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
             const type = item.type;
 
             if (['action', 'feat'].includes(type)) {
-                const actionType = item.system.actionType;
-                const activationType = this._parseActivationType(actionType);
+                const activationType = this.getActionType(item);
 
                 // Skip passive feats/actions that don't have an active cost
                 if (!activationType) continue;
@@ -89,7 +84,7 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
                 action.activationType = activationType; // Keep for sorting
                 action.tabs = [new TabRef({ id: activationType, label: activationType, parent: econRoot })];
                 action.itemTypes = [type === 'action' ? 'feat' : type];
-                action.uses = this._calculateUses(item);
+                action.uses = this.getUses(item);
 
                 // Override roll to post the action's chat card (standard PF2e behavior)
                 action.roll = (event) => {
@@ -129,7 +124,7 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
                         item.toMessage();
                     }
                 };
-                action.uses = this._calculateSpellUses(entry, item);
+                action.uses = this.getSpellUses(entry, item);
                 action.name = `${item.name} (${entry.name})`;
 
                 modified.push(action);
@@ -138,9 +133,9 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
 
         // 2. Inject Strikes (attacks)
         // Strikes are dynamically calculated on the actor and are not standard inventory items
-        const strikes = actor.system.actions ?? [];
+        const strikes = this.getActorStrikes(actor);
         for (const strike of strikes) {
-            const uses = this._calculateStrikeAmmo(strike, ammoQuantities);
+            const uses = this.getStrikeAmmoUses(strike, ammoQuantities);
 
             modified.push({
                 id: `strike-${strike.slug ?? strike.name}`,
@@ -179,64 +174,12 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
         });
     }
 
-    /**
-     * Translate PF2e action cost structures into our core activation types.
-     */
-    _parseActivationType(actionType) {
-        if (!actionType) return null;
-        const value = actionType.value;
-
-        if (value === 'reaction') return 'reaction';
-        if (value === 'free') return 'other'; // Map free actions to 'other'
-        if (value === 'action') return 'action'; // Group 1, 2, or 3 actions under 'action'
-        
-        return null;
-    }
-
     _getActivationSort(type) {
         return ACTIVATION_SORT_ORDER[type] ?? 99;
     }
 
     _getTypeSort(type) {
         return TYPE_SORT_ORDER[type] ?? 99;
-    }
-
-    /**
-     * Calculate frequency limits (uses) for PF2e actions/feats.
-     */
-    _calculateUses(item) {
-        const frequency = item.system.frequency;
-        if (frequency) {
-            return {
-                available: frequency.value ?? 0,
-                max: frequency.max ?? 0
-            };
-        }
-        return { available: null, max: null };
-    }
-
-    /**
-     * Calculate spell slot / focus pool uses for PF2e spells.
-     */
-    _calculateSpellUses(entry, spell) {
-        if (entry.isFocusPool) {
-            const focus = entry.actor?.system?.resources?.focus;
-            return {
-                available: focus?.value ?? 0,
-                max: focus?.max ?? 0
-            };
-        }
-
-        const level = spell.rank ?? 0;
-        if (entry.isSpontaneous && level > 0) {
-            const slot = entry.system.slots?.[`slot${level}`];
-            return {
-                available: slot?.value ?? 0,
-                max: slot?.max ?? 0
-            };
-        }
-
-        return { available: null, max: null };
     }
 
     /**
@@ -274,7 +217,6 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
         }
         return super.getItemSubTabLabel(parentId, subId);
     }
-
 
     /**
      * Get the localized label for a right-side action type (parent tab) in PF2e.
@@ -330,17 +272,111 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
         }
     }
 
+    /* ------------------------------------------------------------------------- */
+    /*  System Data Structure Accessors / Schema Extraction Helpers              */
+    /* ------------------------------------------------------------------------- */
+
+    /**
+     * Extract ammunition quantity and base item ID from a PF2e item.
+     * @param {Item} item
+     * @returns {{ baseItem: string|undefined, quantity: number }}
+     */
+    getAmmoInfo(item) {
+        if (item.type !== 'ammo') return { baseItem: undefined, quantity: 0 };
+        return {
+            baseItem: item.system.baseItem,
+            quantity: item.system.quantity ?? 0
+        };
+    }
+
+    /**
+     * Translate PF2e action cost structures into core activation types.
+     * @param {Item} item
+     * @returns {string|null}
+     */
+    getActionType(item) {
+        const actionType = item.system.actionType;
+        if (!actionType) return null;
+        const value = actionType.value;
+        if (value === 'reaction') return 'reaction';
+        if (value === 'free') return 'other';
+        if (value === 'action') return 'action';
+        return null;
+    }
+
+    /**
+     * Get spellcasting entries from a PF2e Actor.
+     * @param {Actor} actor
+     * @returns {Object[]}
+     */
+    getSpellcastingEntries(actor) {
+        return actor.spellcasting ?? [];
+    }
+
+    /**
+     * Get Strikes (attacks) registered on a PF2e Actor.
+     * @param {Actor} actor
+     * @returns {Object[]}
+     */
+    getActorStrikes(actor) {
+        return actor.system.actions ?? [];
+    }
+
+    /**
+     * Calculate frequency limits (uses) for PF2e actions/feats.
+     * @param {Item} item
+     * @returns {{ available: number|null, max: number|null }}
+     */
+    getUses(item) {
+        const frequency = item.system.frequency;
+        if (frequency) {
+            return {
+                available: frequency.value ?? 0,
+                max: frequency.max ?? 0
+            };
+        }
+        return { available: null, max: null };
+    }
+
+    /**
+     * Calculate spell slot / focus pool uses for PF2e spells.
+     * @param {Object} entry Spellcasting entry
+     * @param {Item} spell Spell item
+     * @returns {{ available: number|null, max: number|null }}
+     */
+    getSpellUses(entry, spell) {
+        if (entry.isFocusPool) {
+            const focus = entry.actor?.system?.resources?.focus;
+            return {
+                available: focus?.value ?? 0,
+                max: focus?.max ?? 0
+            };
+        }
+
+        const level = spell.rank ?? 0;
+        if (entry.isSpontaneous && level > 0) {
+            const slot = entry.system.slots?.[`slot${level}`];
+            return {
+                available: slot?.value ?? 0,
+                max: slot?.max ?? 0
+            };
+        }
+
+        return { available: null, max: null };
+    }
+
     /**
      * Calculate remaining ammunition for a PF2e Strike.
-     * @private
+     * @param {Object} strike PF2e strike object
+     * @param {Map<string, number>} ammoQuantities
+     * @returns {{ available: number|null, max: number|null }}
      */
-    _calculateStrikeAmmo(strike, ammoQuantities) {
+    getStrikeAmmoUses(strike, ammoQuantities) {
         const weapon = strike.item;
         if (!weapon || weapon.type !== 'weapon') return { available: null, max: null };
 
         const ammoConfig = weapon.system.ammo;
         if (ammoConfig && ammoConfig.baseType) {
-            // This ranged weapon requires ammunition!
             const baseType = ammoConfig.baseType;
             const quantity = ammoQuantities.get(baseType) ?? 0;
 
@@ -352,6 +388,4 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
 
         return { available: null, max: null };
     }
-
-
 }

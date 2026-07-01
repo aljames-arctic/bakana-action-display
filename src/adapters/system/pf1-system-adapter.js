@@ -336,6 +336,10 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
         return null; // Passive or other unhandled types are ignored
     }
 
+    /* ------------------------------------------------------------------------- */
+    /*  System Data Structure Accessors / Schema Extraction Helpers              */
+    /* ------------------------------------------------------------------------- */
+
     /**
      * Calculate remaining charges/uses for PF1e items.
      */
