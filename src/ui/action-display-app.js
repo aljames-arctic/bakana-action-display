@@ -599,7 +599,6 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         
         this.activeLeftParentTypes.clear();
         this.activeLeftParentTypes.add(parentId);
-        this.activeLeftSubTypes.clear();
         
         log.debug(`Changed item parent filter to:`, Array.from(this.activeLeftParentTypes));
         this.render();
