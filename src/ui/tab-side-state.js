@@ -62,10 +62,10 @@ export class TabSideState {
     /**
      * Handle left-click selection of a parent tab.
      * Rules:
-     * - 'all' resets side to default.
-     * - If parent is not enabled: enable it, remove 'all', set focus to it.
-     * - If parent is enabled with active subtabs: just change focus to it.
-     * - If parent is enabled with NO active subtabs: disable it, shift focus to next remaining parent or 'all'.
+     * - Left-clicking 'all' resets side to default.
+     * - Left-clicking a tab deselects other parent tabs and clears their subtabs (exclusive selection).
+     * - Left-clicking the sole active parent tab with NO active subtabs disables it and resets side to default.
+     * - Left-clicking the sole active parent tab WITH active subtabs keeps it active and focuses it.
      * @param {string} parentId The parent tab ID
      * @param {Object} groups Available tab groups
      */
@@ -79,22 +79,24 @@ export class TabSideState {
         const validSubIds = group ? new Set(group.subTabs.map(t => t.id)) : new Set();
         const hasActiveSubs = Array.from(this.activeSubTypes).some(id => validSubIds.has(id));
 
-        const isEnabled = this.activeParents.has(parentId);
+        const isSoleActive = this.activeParents.size === 1 && this.activeParents.has(parentId);
 
-        if (!isEnabled) {
+        if (!isSoleActive) {
+            // Deselect other parent tabs and clear their sub-tabs
+            this.activeParents.clear();
             this.activeParents.add(parentId);
-            this.activeParents.delete('all');
             this.focusedParent = parentId;
+            for (const subId of Array.from(this.activeSubTypes)) {
+                if (!validSubIds.has(subId)) {
+                    this.activeSubTypes.delete(subId);
+                }
+            }
         } else if (hasActiveSubs) {
+            // Already sole active parent with active subtabs: change focus to it
             this.focusedParent = parentId;
         } else {
-            this.activeParents.delete(parentId);
-            const remaining = Array.from(this.activeParents).filter(p => p !== 'all');
-            if (remaining.length > 0) {
-                this.focusedParent = remaining[remaining.length - 1];
-            } else {
-                this.resetToDefault();
-            }
+            // Already sole active parent with NO active subtabs: disable it and reset to default
+            this.resetToDefault();
         }
         log.debug(`[${this.side}] selectParent: ${parentId}, active:`, Array.from(this.activeParents), `focused: ${this.focusedParent}`);
     }
