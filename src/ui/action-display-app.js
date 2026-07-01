@@ -136,7 +136,8 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         const path = game.modules.get(MODULE_ID)?.path ?? `modules/${MODULE_ID}`;
         return {
             hud: {
-                template: `${path}/templates/action-display.html`
+                template: `${path}/templates/action-display.html`,
+                scrollable: ['.bad-tab-content']
             }
         };
     }
