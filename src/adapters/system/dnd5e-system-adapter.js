@@ -152,16 +152,10 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
             const props = item.system?.properties;
             const spellComponents = [];
             if (item.type === 'spell' && props) {
-                const hasProp = (p) => {
-                    if (props instanceof Set) return props.has(p);
-                    if (Array.isArray(props)) return props.includes(p);
-                    if (typeof props === 'object') return !!props[p];
-                    return false;
-                };
                 const compRoot = new TabRef({ id: 'components', label: 'Components' });
-                if (hasProp('vocal')) spellComponents.push(new TabRef({ id: 'vocal', label: 'V', parent: compRoot }));
-                if (hasProp('somatic')) spellComponents.push(new TabRef({ id: 'somatic', label: 'S', parent: compRoot }));
-                if (hasProp('material')) spellComponents.push(new TabRef({ id: 'material', label: 'M', parent: compRoot }));
+                if (props.has('vocal')) spellComponents.push(new TabRef({ id: 'vocal', label: 'V', parent: compRoot }));
+                if (props.has('somatic')) spellComponents.push(new TabRef({ id: 'somatic', label: 'S', parent: compRoot }));
+                if (props.has('material')) spellComponents.push(new TabRef({ id: 'material', label: 'M', parent: compRoot }));
             }
 
             // 1. Filter out unprepared spells (unless innate/at-will/pact, or showUnprepared is enabled)
