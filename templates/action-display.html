@@ -22,15 +22,28 @@
                 </div>
             </div>
             
-            <!-- Sub-tabs (Spell Levels - revealed when Spells is expanded) -->
+            <!-- Sub-tabs (Spell Levels & nested sub-tabs - revealed when parent is expanded) -->
             {{#if this.subTabs.length}}
             <div class="bad-left-sub-tabs">
                 {{#each this.subTabs}}
-                <button class="bad-left-sub-tab {{#if this.active}}active{{/if}} {{#if this.showUnprepared}}unprepared-active{{/if}}" 
-                        data-action="changeLeftSubItemType" 
-                        data-type="{{this.id}}">
-                    {{this.label}}
-                </button>
+                <div class="bad-left-sub-tab-group {{#if this.subTabs.length}}has-nested{{/if}}">
+                    <button class="bad-left-sub-tab {{#if this.active}}active{{/if}} {{#if this.showUnprepared}}unprepared-active{{/if}}" 
+                            data-action="changeLeftSubItemType" 
+                            data-type="{{this.id}}">
+                        {{this.label}}
+                    </button>
+                    {{#if this.subTabs.length}}
+                    <div class="bad-left-sub-tabs bad-nested-sub-tabs">
+                        {{#each this.subTabs}}
+                        <button class="bad-left-sub-tab bad-nested-sub-tab {{#if this.active}}active{{/if}}" 
+                                data-action="changeLeftSubItemType" 
+                                data-type="{{this.id}}">
+                            {{this.label}}
+                        </button>
+                        {{/each}}
+                    </div>
+                    {{/if}}
+                </div>
                 {{/each}}
             </div>
             {{/if}}
@@ -83,15 +96,28 @@
                 <span class="bad-right-tab-text">{{this.label}}</span>
             </div>
             
-            <!-- Sub-tabs (Action/Bonus/Reaction - revealed when parent is expanded) -->
+            <!-- Sub-tabs & nested sub-tabs (revealed when parent is expanded) -->
             {{#if this.subTabs.length}}
             <div class="bad-right-sub-tabs">
                 {{#each this.subTabs}}
-                <button class="bad-right-sub-tab {{#if this.active}}active{{/if}} {{#if this.excluded}}excluded{{/if}}" 
-                        data-action="changeSubActionType" 
-                        data-type="{{this.id}}">
-                    {{this.label}}
-                </button>
+                <div class="bad-right-sub-tab-group {{#if this.subTabs.length}}has-nested{{/if}}">
+                    <button class="bad-right-sub-tab {{#if this.active}}active{{/if}} {{#if this.excluded}}excluded{{/if}}" 
+                            data-action="changeSubActionType" 
+                            data-type="{{this.id}}">
+                        {{this.label}}
+                    </button>
+                    {{#if this.subTabs.length}}
+                    <div class="bad-right-sub-tabs bad-nested-sub-tabs">
+                        {{#each this.subTabs}}
+                        <button class="bad-right-sub-tab bad-nested-sub-tab {{#if this.active}}active{{/if}} {{#if this.excluded}}excluded{{/if}}" 
+                                data-action="changeSubActionType" 
+                                data-type="{{this.id}}">
+                            {{this.label}}
+                        </button>
+                        {{/each}}
+                    </div>
+                    {{/if}}
+                </div>
                 {{/each}}
             </div>
             {{/if}}

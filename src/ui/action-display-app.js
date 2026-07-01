@@ -2,7 +2,7 @@ import { actionDisplay } from '../action-display.js';
 import { log } from '../lib/logger.js';
 import { MODULE_ID } from '../constants.js';
 import { TabSideState } from './tab-side-state.js';
-import { HUDTab, HUDSubTab } from './hud-tab.js';
+import { HUDTab } from './hud-tab.js';
 
 // Cache to persist tab states per actor across HUD rebuilds
 const activeTabCache = new Map();
@@ -327,10 +327,11 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                 const validSubIds = new Set(parent.subTabs.map(t => t.id));
                 const activeSubsForParent = Array.from(this.activeSubTypes).filter(id => validSubIds.has(id));
 
-                parent.subTabs.unshift(new HUDSubTab({
+                parent.subTabs.unshift(new HUDTab({
                     id: 'all',
                     label: adapter.getActionSubTabLabel('all') ?? 'All',
-                    active: isActive && activeSubsForParent.length === 0
+                    active: isActive && activeSubsForParent.length === 0,
+                    level: 1
                 }));
                 
                 parent.subTabs.sort((a, b) => adapter.getActionSubTabSortOrder(parent.id, a.id) - adapter.getActionSubTabSortOrder(parent.id, b.id));
@@ -565,7 +566,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         const parentGroup = target.closest('.bad-left-tab-group');
         const parentId = parentGroup?.querySelector('.bad-left-tab')?.dataset.type;
         const parentTab = this.leftGroups?.[parentId];
-        const subTab = parentTab?.getSubTab(type) || new HUDSubTab({ id: type });
+        const subTab = parentTab?.getSubTab(type) || new HUDTab({ id: type, level: 1 });
         subTab.onLeftClick(this, this.leftTabs, parentId, this.leftGroups, event);
         this.render();
     }
@@ -586,7 +587,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         const parentGroup = target.closest('.bad-left-tab-group');
         const parentId = parentGroup?.querySelector('.bad-left-tab')?.dataset.type;
         const parentTab = this.leftGroups?.[parentId];
-        const subTab = parentTab?.getSubTab(type) || new HUDSubTab({ id: type });
+        const subTab = parentTab?.getSubTab(type) || new HUDTab({ id: type, level: 1 });
         subTab.onRightClick(this, this.leftTabs, parentId, this.leftGroups);
         this.render();
     }
@@ -615,7 +616,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         const parentGroup = target.closest('.bad-right-tab-group');
         const parentId = parentGroup?.querySelector('.bad-right-tab')?.dataset.type;
         const parentTab = this.parentGroups?.[parentId];
-        const subTab = parentTab?.getSubTab(type) || new HUDSubTab({ id: type });
+        const subTab = parentTab?.getSubTab(type) || new HUDTab({ id: type, level: 1 });
         subTab.onLeftClick(this, this.rightTabs, parentId, this.parentGroups, event);
         this.render();
     }
@@ -636,7 +637,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         const parentGroup = target.closest('.bad-right-tab-group');
         const parentId = parentGroup?.querySelector('.bad-right-tab')?.dataset.type;
         const parentTab = this.parentGroups?.[parentId];
-        const subTab = parentTab?.getSubTab(type) || new HUDSubTab({ id: type });
+        const subTab = parentTab?.getSubTab(type) || new HUDTab({ id: type, level: 1 });
         subTab.onRightClick(this, this.rightTabs, parentId, this.parentGroups);
         this.render();
     }

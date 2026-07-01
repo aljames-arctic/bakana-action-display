@@ -423,6 +423,20 @@
     color: #ffffff;
 }
 
+/* Nested sub-tabs layout and indentation */
+.bad-nested-sub-tabs {
+    margin-left: 0.75em;
+    margin-top: 0.25em;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25em;
+}
+
+.bad-nested-sub-tab {
+    font-size: 0.85em;
+    padding: 0.2em 0.5em;
+}
+
 
 /* ==========================================================================
    RIGHT-SIDE SLIDE-OUT TABS (Action Types Accordion)

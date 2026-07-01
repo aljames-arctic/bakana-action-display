@@ -2,7 +2,7 @@ import { FantasySystemAdapter } from './genre/fantasy-system-adapter.js';
 import { localize } from '../../lib/utils.js';
 import { log } from '../../lib/logger.js';
 import { MODULE_ID } from '../../constants.js';
-import { HUDSubTab } from '../../ui/hud-tab.js';
+import { HUDTab } from '../../ui/hud-tab.js';
 
 // Static sort order maps to prevent allocations during sorting
 const PARENT_SORT_ORDER = {
@@ -29,12 +29,12 @@ const SUB_SORT_ORDERS = {
 const TYPE_SORT_ORDER = {
     'weapon': 1,
     'equipment': 2,
-    'consumable': 3,
-    'tool': 4,
-    'backpack': 5,
-    'loot': 6,
-    'feat': 7,
-    'spell': 8
+    'spell': 3,
+    'consumable': 4,
+    'tool': 5,
+    'backpack': 6,
+    'loot': 7,
+    'feat': 8,
 };
 
 const ALLOWED_TYPES = new Set(['weapon', 'equipment', 'consumable', 'tool', 'backpack', 'loot', 'feat', 'spell']);
@@ -765,11 +765,12 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         if (spellParent && spellParent.subTabs.length > 0) {
             // Inject "All Spells" at the beginning
             const showUnprepared = app.actor.getFlag(MODULE_ID, 'showUnprepared') ?? false;
-            spellParent.subTabs.unshift(new HUDSubTab({
+            spellParent.subTabs.unshift(new HUDTab({
                 id: 'all',
                 label: 'All Spells',
                 active: app.activeLeftParentTypes.has('spell') && app.activeLeftSubTypes.size === 0,
-                showUnprepared: showUnprepared
+                showUnprepared: showUnprepared,
+                level: 1
             }));
         }
     }
