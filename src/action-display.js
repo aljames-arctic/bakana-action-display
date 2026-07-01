@@ -1,7 +1,7 @@
 import { BaseSystemAdapter } from './adapters/system/base-system-adapter.js';
 import { BaseModuleAdapter } from './adapters/module/base-module-adapter.js';
 import { log } from './lib/logger.js';
-
+import { TabRef } from './ui/tab-ref.js';
 import { MODULE_ID } from './constants.js';
 
 /**
@@ -120,7 +120,7 @@ class ActionDisplay {
                 name: item.name,
                 type: item.type,
                 img: item.img,
-                tabs: ['all'], // Default tab
+                tabs: [new TabRef({ id: 'all', label: 'All' })], // Default tab array
                 itemTypes: [item.type], // Default item type category
                 hidden: false,
                 uses: { available: null, max: null },

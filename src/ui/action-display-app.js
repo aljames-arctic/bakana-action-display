@@ -159,12 +159,8 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
 
             // Extract unique Action Types (for Right-side Tabs)
             if (action.tabs) {
-                const tabsList = Array.isArray(action.tabs)
-                    ? (Array.isArray(action.tabs[0]) || action.tabs[0]?.root ? action.tabs : [action.tabs])
-                    : [action.tabs];
-
-                for (const tab of tabsList) {
-                    const path = tab?.path ?? (Array.isArray(tab) ? tab : (tab ? [tab] : []));
+                for (const tab of action.tabs) {
+                    const path = tab.path;
                     if (path.length >= 2) {
                         existingCombinations.add(`${path[0]}/${path[1]}`);
                     } else if (path.length === 1) {
@@ -323,84 +319,50 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
 
                 parent.addSubTab({
                     id: 'all',
-                    label: adapter.getActionSubTabLabel('all') ?? 'All',
+                    label: adapter.getActionSubTabLabel('all'),
                     active: isActive && activeSubsForParent.length === 0
                 });
-                
-                parent.subTabs.sort((a, b) => adapter.getActionSubTabSortOrder(parent.id, a.id) - adapter.getActionSubTabSortOrder(parent.id, b.id));
-            } else if (skipAll) {
                 parent.subTabs.sort((a, b) => adapter.getActionSubTabSortOrder(parent.id, a.id) - adapter.getActionSubTabSortOrder(parent.id, b.id));
             }
         }
 
         // Post-process parentGroups to set active, expanded, and activeParent
-        const parentsWithFilters = new Set();
         for (const parent of actionTypes) {
-            if (parent.subTabs.length > 0) {
-                const validSubIds = new Set(parent.subTabs.map(t => t.id));
-                const activeSubsForParent = Array.from(this.activeSubTypes).filter(id => validSubIds.has(id));
-                
-                if (activeSubsForParent.length > 0) {
-                    parent.activeParent = true;
-                    parentsWithFilters.add(parent.id);
-                }
-                
-                parent.active = parent.id === this.focusedParentType;
-                parent.expanded = parent.active || activeSubsForParent.length > 0;
-            } else {
-                parent.active = parent.id === this.focusedParentType;
-                parent.expanded = parent.active;
+            if (parent.id === 'components') continue; // Exclude components from activeParent calculation
+            const validSubIds = new Set(parent.subTabs.map(t => t.id));
+            const activeSubsForParent = Array.from(this.activeSubTypes).filter(id => validSubIds.has(id));
+            
+            parent.active = this.activeParentTypes.has(parent.id);
+            if (parent.subTabs.length > 0 && parent.active && activeSubsForParent.length > 0) {
+                parent.activeParent = true;
             }
+            parent.expanded = parent.id === this.focusedParentType || activeSubsForParent.length > 0;
         }
 
-        // Dynamically update activeParentTypes for filtering
-        this.activeParentTypes.clear();
-        this.activeParentTypes.add(this.focusedParentType);
-        for (const pId of parentsWithFilters) {
-            this.activeParentTypes.add(pId);
-        }
-
-        // Cache parentGroups on the instance
+        // Cache parentGroups on the instance for use in event handlers/action rolling
         this.parentGroups = parentGroups;
 
-        // Prune active right sub-tabs that are no longer available in any parent group
+        // Prune active sub-tabs that are no longer available in any active parent
         this.rightTabs.prune(parentGroups);
 
-        // If the active parent type is no longer available, default to 'all'
+        // If no active parent type is available, default to 'all'
         if (actionTypes.length && !actionTypes.some(p => this.rightTabs.activeParents.has(p.id))) {
             this.rightTabs.resetToDefault();
-            actionTypes[0].active = true;
-            actionTypes[0].expanded = true;
-        }
-
-        // 4. Second pass: Filter actions now that tab groups are fully populated
-        const filteredActions = [];
-        for (const action of rawActions) {
-            if (this._matchesFilters(action)) {
-                filteredActions.push(action);
+            const allTab = actionTypes.find(t => t.id === 'all');
+            if (allTab) {
+                allTab.active = true;
+                allTab.expanded = true;
             }
         }
-        // Inject data and attachment state into context
+
+        // 4. Filter actions based on state
+        const visibleActions = rawActions.filter(action => this._matchesFilters(action));
+
         context.itemTypes = itemTypes;
         context.actionTypes = actionTypes;
-        context.items = filteredActions;
+        context.items = visibleActions;
         context.isAttached = this.isAttached;
         context.filterNoResources = game.settings.get(MODULE_ID, 'filterNoResources');
-
-        // Persist the validated tab states for this actor
-        if (this.actor?.uuid) {
-            activeTabCache.set(this.actor.uuid, {
-                left: this.leftTabs.serialize(),
-                right: this.rightTabs.serialize(),
-                // Keep flat array fallbacks for external or legacy module consumers
-                leftParents: Array.from(this.leftTabs.activeParents),
-                focusedLeftParent: this.leftTabs.focusedParent,
-                leftSubTypes: Array.from(this.leftTabs.activeSubTypes),
-                rightParents: Array.from(this.rightTabs.activeParents),
-                subTypes: Array.from(this.rightTabs.activeSubTypes),
-                focusedParent: this.rightTabs.focusedParent
-            });
-        }
 
         // Delegate to system adapter to allow system-specific context modifications
         adapter?.modifyContext?.(context, this);
@@ -409,60 +371,61 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
     }
 
     /**
-     * Check if an action matches the currently active left and right tab filters.
-     * @param {Object} action The action to check
-     * @returns {boolean} True if the action matches the filters
+     * Helper method to evaluate if an action card matches current left and right tab filter selections.
+     * 
+     * @param {Object} action The action card to evaluate
+     * @returns {boolean} True if the action card should be rendered
      * @private
      */
     _matchesFilters(action) {
+        if (!action) return false;
+
+        // Hidden Filter: If 'hidden' tab is selected, ONLY show actions that have action.hidden === true
+        const isHiddenActive = this.activeLeftParentTypes.has('hidden');
+        if (isHiddenActive) {
+            return action.hidden === true;
+        } else if (action.hidden === true) {
+            return false; // Hide hidden actions from all other tabs
+        }
+
         // Filter by Left Side (Item Type)
         if (!action.itemTypes || !Array.isArray(action.itemTypes)) return false;
-        const itemParentId = action.itemTypes[0];
-        const itemSubId = action.itemTypes[1];
-
-        // If the item is hidden, it only matches if the "Hidden" tab is selected.
-        // If the "Hidden" tab is selected, only hidden items match.
-        const isHiddenActive = this.activeLeftParentTypes.has('hidden');
-        if (itemParentId === 'hidden' && !isHiddenActive) return false;
-        if (itemParentId !== 'hidden' && isHiddenActive) return false;
-
-        let matchesLeft = false;
         
-        // 1. Direct parent match
-        if (this.activeLeftParentTypes.has(itemParentId)) {
-            const parentGroup = this.leftGroups?.[itemParentId];
-            const validSubIds = parentGroup ? new Set(parentGroup.subTabs.map(t => t.id)) : new Set();
-            const activeSubsForParent = Array.from(this.activeLeftSubTypes).filter(id => validSubIds.has(id));
-            
-            if (activeSubsForParent.length === 0) {
-                matchesLeft = true;
-            } else {
-                matchesLeft = this.activeLeftSubTypes.has(itemSubId);
-            }
-        }
-        
-        // 2. 'all' parent match (shows other items, but respects specific sub-tab filters on active parents)
-        if (!matchesLeft && this.activeLeftParentTypes.has('all') && !action.excludeFromAll) {
-            const isParentActive = this.activeLeftParentTypes.has(itemParentId);
-            if (!isParentActive) {
-                matchesLeft = true;
-            } else {
-                const parentGroup = this.leftGroups?.[itemParentId];
+        const matchesLeft = action.itemTypes.some(type => {
+            if (this.activeLeftParentTypes.has(type)) {
+                const parentGroup = this.leftGroups?.[type];
                 const validSubIds = parentGroup ? new Set(parentGroup.subTabs.map(t => t.id)) : new Set();
                 const activeSubsForParent = Array.from(this.activeLeftSubTypes).filter(id => validSubIds.has(id));
+                
                 if (activeSubsForParent.length === 0) {
-                    matchesLeft = true;
+                    return true;
+                } else {
+                    const actionSubId = action.itemTypes[1];
+                    return this.activeLeftSubTypes.has(actionSubId);
                 }
             }
-        }
-        
+            
+            if (this.activeLeftParentTypes.has('all')) {
+                const isParentActive = this.activeLeftParentTypes.has(type);
+                if (!isParentActive) {
+                    return true;
+                } else {
+                    const parentGroup = this.leftGroups?.[type];
+                    const validSubIds = parentGroup ? new Set(parentGroup.subTabs.map(t => t.id)) : new Set();
+                    const activeSubsForParent = Array.from(this.activeLeftSubTypes).filter(id => validSubIds.has(id));
+                    if (activeSubsForParent.length === 0) {
+                        return true;
+                    }
+                }
+            }
+            
+            return false;
+        });
+
         if (!matchesLeft) return false;
 
         // Filter by Right Side (Action Type)
         if (!action.tabs) return false;
-        const tabsList = Array.isArray(action.tabs) 
-            ? (Array.isArray(action.tabs[0]) || action.tabs[0]?.root ? action.tabs : [action.tabs]) 
-            : [action.tabs];
 
         // Spell Components Filter (restrictive AND-filter, only for spells)
         if (action.originalItem?.type === 'spell') {
@@ -474,9 +437,9 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                 
                 if (activeCompSubs.length > 0) {
                     const spellCompSubs = new Set(
-                        tabsList
-                            .filter(tab => (tab?.root ?? tab?.[0]) === 'components')
-                            .map(tab => tab?.id ?? tab?.[1])
+                        action.tabs
+                            .filter(tab => tab.root === 'components')
+                            .map(tab => tab.id)
                     );
                     const hasBannedComponent = Array.from(spellCompSubs).some(comp => activeCompSubs.includes(comp));
                     if (hasBannedComponent) return false;
@@ -489,9 +452,9 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         
         let matchesRight = true;
         if (activeEconomyParents.length > 0 || this.activeParentTypes.has('all')) {
-            matchesRight = tabsList.some(tab => {
-                const actionParentId = tab?.root ?? (Array.isArray(tab) ? tab[0] : tab);
-                const actionSubId = tab?.parent ? tab.id : (Array.isArray(tab) ? tab[1] : undefined);
+            matchesRight = action.tabs.some(tab => {
+                const actionParentId = tab.root;
+                const actionSubId = tab.parent ? tab.id : undefined;
 
                 // Ignore components parent in the OR-filter
                 if (actionParentId === 'components') return false;

@@ -1,5 +1,6 @@
 import { FantasySystemAdapter } from './genre/fantasy-system-adapter.js';
 import { localize } from '../../lib/utils.js';
+import { TabRef } from '../../ui/tab-ref.js';
 
 // Static sort order maps to prevent allocations during sorting
 const ACTIVATION_SORT_ORDER = {
@@ -84,8 +85,9 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
                 // Skip passive feats/actions that don't have an active cost
                 if (!activationType) continue;
 
+                const econRoot = new TabRef({ id: 'economy', label: 'Economy' });
                 action.activationType = activationType; // Keep for sorting
-                action.tabs = [['economy', activationType]];
+                action.tabs = [new TabRef({ id: activationType, label: activationType, parent: econRoot })];
                 action.itemTypes = [type === 'action' ? 'feat' : type];
                 action.uses = this._calculateUses(item);
 
@@ -105,7 +107,8 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
                 if (!entry) continue;
 
                 const spellLevel = item.rank ?? 0;
-                action.tabs = [['economy', 'action']]; // Spells are active actions
+                const econRoot = new TabRef({ id: 'economy', label: 'Economy' });
+                action.tabs = [new TabRef({ id: 'action', label: 'action', parent: econRoot })]; // Spells are active actions
                 action.activationType = 'action';
                 
                 let subTab = spellLevel.toString();

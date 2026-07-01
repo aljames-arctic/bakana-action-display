@@ -1,6 +1,7 @@
 import { FantasySystemAdapter } from './genre/fantasy-system-adapter.js';
 import { localize } from '../../lib/utils.js';
 import { log } from '../../lib/logger.js';
+import { TabRef } from '../../ui/tab-ref.js';
 
 // Static sort order maps to prevent allocations during sorting
 const ACTIVATION_SORT_ORDER = {
@@ -99,8 +100,8 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
                 const spellbook = actor.system.attributes?.spells?.spellbooks?.[spellbookId];
                 if (!spellbook) continue;
 
-                // Spells are active actions
-                action.tabs = [['economy', 'action']];
+                const econRoot = new TabRef({ id: 'economy', label: 'Economy' });
+                action.tabs = [new TabRef({ id: 'action', label: 'Action', parent: econRoot })];
                 action.activationType = 'action';
                 
                 const level = item.system.level ?? 0;
@@ -130,13 +131,11 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
 
                 modified.push(action);
             } else if (item.type === 'attack') {
-                // 2. Standalone Attacks (only if NOT linked to a weapon, e.g. Touch/Claws)
-                log.debug(`Pf1SystemAdapter.modifyActions | Checking attack item: "${item.name}" (ID: ${item.id})`);
+                // 2. Attacks in PF1e (if not linked to a weapon)
                 if (attackToWeaponMap.has(item.id)) {
-                    log.debug(`Pf1SystemAdapter.modifyActions | >>> SKIPPING attack "${item.name}" (ID: ${item.id}) because it is merged into weapon: "${attackToWeaponMap.get(item.id).name}"`);
+                    log.debug(`Pf1SystemAdapter.modifyActions | Skipping attack "${item.name}" (${item.id}) because it is linked to a weapon.`);
                     continue;
                 }
-                log.debug(`Pf1SystemAdapter.modifyActions | >>> KEEPING standalone attack: "${item.name}" (ID: ${item.id})`);
 
                 const itemActions = item.system.actions ?? [];
                 if (itemActions.length === 0) continue;
@@ -146,13 +145,14 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
                 action.activities = itemActions.map(act => {
                     const actType = act.activation?.type;
                     const activationType = this._parseActivationType(actType);
+                    const parentRef = new TabRef({ id: 'economy', label: 'Economy' });
                     
                     return {
                         id: act._id,
                         name: act.name || item.name,
                         img: item.img,
                         activationType: activationType,
-                        tabs: [['economy', activationType]],
+                        tabs: new TabRef({ id: activationType, label: activationType, parent: parentRef }),
                         uses: uses,
                         roll: (event) => {
                             if (typeof item.use === 'function') {
@@ -169,7 +169,7 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
 
                 const firstSub = action.activities[0];
                 action.activationType = firstSub.activationType;
-                action.tabs = [['economy', firstSub.activationType]];
+                action.tabs = [firstSub.tabs];
                 action.itemTypes = ['weapon']; // Group under weapons/attacks
                 action.uses = uses;
                 modified.push(action);
