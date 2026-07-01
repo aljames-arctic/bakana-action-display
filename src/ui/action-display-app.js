@@ -348,7 +348,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         if (!action) return false;
 
         // Hidden Filter: If 'hidden' tab is selected, ONLY show actions that have action.hidden === true
-        const isHiddenActive = this.activeLeftParentTypes.has('hidden');
+        const isHiddenActive = this.leftTabs.activeParents.has('hidden');
         if (isHiddenActive) {
             return action.hidden === true;
         } else if (action.hidden === true) {
@@ -359,27 +359,27 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         if (!action.itemTypes || !Array.isArray(action.itemTypes)) return false;
         
         const matchesLeft = action.itemTypes.some(type => {
-            if (this.activeLeftParentTypes.has(type)) {
+            if (this.leftTabs.activeParents.has(type)) {
                 const parentGroup = this.leftGroups?.[type];
                 const validSubIds = parentGroup ? new Set(parentGroup.subTabs.map(t => t.id)) : new Set();
-                const activeSubsForParent = Array.from(this.activeLeftSubTypes).filter(id => validSubIds.has(id));
+                const activeSubsForParent = Array.from(this.leftTabs.activeSubTypes).filter(id => validSubIds.has(id));
                 
                 if (activeSubsForParent.length === 0) {
                     return true;
                 } else {
                     const actionSubId = action.itemTypes[1];
-                    return this.activeLeftSubTypes.has(actionSubId);
+                    return this.leftTabs.activeSubTypes.has(actionSubId);
                 }
             }
             
-            if (this.activeLeftParentTypes.has('all')) {
-                const isParentActive = this.activeLeftParentTypes.has(type);
+            if (this.leftTabs.activeParents.has('all')) {
+                const isParentActive = this.leftTabs.activeParents.has(type);
                 if (!isParentActive) {
                     return true;
                 } else {
                     const parentGroup = this.leftGroups?.[type];
                     const validSubIds = parentGroup ? new Set(parentGroup.subTabs.map(t => t.id)) : new Set();
-                    const activeSubsForParent = Array.from(this.activeLeftSubTypes).filter(id => validSubIds.has(id));
+                    const activeSubsForParent = Array.from(this.leftTabs.activeSubTypes).filter(id => validSubIds.has(id));
                     if (activeSubsForParent.length === 0) {
                         return true;
                     }
@@ -396,11 +396,11 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
 
         // Spell Components Filter (restrictive AND-filter, only for spells)
         if (action.originalItem?.type === 'spell') {
-            const isComponentsActive = this.activeParentTypes.has('components');
+            const isComponentsActive = this.rightTabs.activeParents.has('components');
             if (isComponentsActive) {
                 const parentGroup = this.parentGroups?.['components'];
                 const validSubIds = parentGroup ? new Set(parentGroup.subTabs.map(t => t.id)) : new Set();
-                const activeCompSubs = Array.from(this.activeSubTypes).filter(id => validSubIds.has(id));
+                const activeCompSubs = Array.from(this.rightTabs.activeSubTypes).filter(id => validSubIds.has(id));
                 
                 if (activeCompSubs.length > 0) {
                     const spellCompSubs = new Set(
@@ -415,10 +415,10 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         }
 
         // Check if we have any active economy/time parents
-        const activeEconomyParents = Array.from(this.activeParentTypes).filter(p => p !== 'components' && p !== 'all');
+        const activeEconomyParents = Array.from(this.rightTabs.activeParents).filter(p => p !== 'components' && p !== 'all');
         
         let matchesRight = true;
-        if (activeEconomyParents.length > 0 || this.activeParentTypes.has('all')) {
+        if (activeEconomyParents.length > 0 || this.rightTabs.activeParents.has('all')) {
             matchesRight = action.tabs.some(tab => {
                 const actionParentId = tab.root;
                 const actionSubId = tab.parent ? tab.id : undefined;
@@ -429,27 +429,27 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                 let matchesParent = false;
                 
                 // 1. Direct parent match
-                if (this.activeParentTypes.has(actionParentId)) {
+                if (this.rightTabs.activeParents.has(actionParentId)) {
                     const parentGroup = this.parentGroups?.[actionParentId];
                     const validSubIds = parentGroup ? new Set(parentGroup.subTabs.map(t => t.id)) : new Set();
-                    const activeSubsForParent = Array.from(this.activeSubTypes).filter(id => validSubIds.has(id));
+                    const activeSubsForParent = Array.from(this.rightTabs.activeSubTypes).filter(id => validSubIds.has(id));
                     
                     if (activeSubsForParent.length === 0) {
                         matchesParent = true;
                     } else {
-                        matchesParent = this.activeSubTypes.has(actionSubId);
+                        matchesParent = this.rightTabs.activeSubTypes.has(actionSubId);
                     }
                 }
                 
                 // 2. 'all' parent match
-                if (!matchesParent && this.activeParentTypes.has('all')) {
-                    const isParentActive = this.activeParentTypes.has(actionParentId);
+                if (!matchesParent && this.rightTabs.activeParents.has('all')) {
+                    const isParentActive = this.rightTabs.activeParents.has(actionParentId);
                     if (!isParentActive) {
                         matchesParent = true;
                     } else {
                         const parentGroup = this.parentGroups?.[actionParentId];
                         const validSubIds = parentGroup ? new Set(parentGroup.subTabs.map(t => t.id)) : new Set();
-                        const activeSubsForParent = Array.from(this.activeSubTypes).filter(id => validSubIds.has(id));
+                        const activeSubsForParent = Array.from(this.rightTabs.activeSubTypes).filter(id => validSubIds.has(id));
                         if (activeSubsForParent.length === 0) {
                             matchesParent = true;
                         }
