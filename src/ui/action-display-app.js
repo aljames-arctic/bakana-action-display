@@ -331,7 +331,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                     id: 'all',
                     label: adapter.getActionSubTabLabel('all') ?? 'All',
                     active: isActive && activeSubsForParent.length === 0
-                }, { atBeginning: true });
+                });
                 
                 parent.subTabs.sort((a, b) => adapter.getActionSubTabSortOrder(parent.id, a.id) - adapter.getActionSubTabSortOrder(parent.id, b.id));
             } else if (skipAll) {

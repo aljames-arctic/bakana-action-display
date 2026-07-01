@@ -770,7 +770,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                 label: 'All Spells',
                 active: app.activeLeftParentTypes.has('spell') && app.activeLeftSubTypes.size === 0,
                 showUnprepared: showUnprepared
-            }, { atBeginning: true });
+            });
         }
     }
 

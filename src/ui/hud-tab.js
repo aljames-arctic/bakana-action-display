@@ -81,20 +81,14 @@ export class HUDTab {
      * Add a child sub-tab under this tab.
      * Automatically establishes parent link and derives child depth level.
      * @param {Object|HUDTab} subTabConfig Sub-tab configuration or instance
-     * @param {Object} [options]
-     * @param {boolean} [options.atBeginning=false] Whether to unshift to the beginning of subTabs
      * @returns {HUDTab} The created or added child HUDTab instance
      */
-    addSubTab(subTabConfig, { atBeginning = false } = {}) {
+    addSubTab(subTabConfig) {
         const subTab = subTabConfig instanceof HUDTab 
             ? subTabConfig 
             : new HUDTab(subTabConfig);
         subTab.parent = this;
-        if (atBeginning) {
-            this.subTabs.unshift(subTab);
-        } else {
-            this.subTabs.push(subTab);
-        }
+        this.subTabs.push(subTab);
         return subTab;
     }
 
