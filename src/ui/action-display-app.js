@@ -507,100 +507,64 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
     static async _onChangeLeftItemType(event, target) {
         event.preventDefault();
         this._clearMenuState();
-        const parentId = target.dataset.type;
-        const tab = this.leftGroups?.[parentId] || new HUDTab({ id: parentId });
-        tab.onLeftClick(this, this.leftTabs, this.leftGroups, event);
+        const tab = this.leftGroups?.[target.dataset.type];
+        tab?.onLeftClick(this, this.leftTabs, this.leftGroups, event);
         this.render();
     }
 
-    /**
-     * Handle left-side sub-item type (spell level) selection clicks (left-click).
-     * 'this' refers to the application instance.
-     */
     static async _onChangeLeftSubItemType(event, target) {
         event.preventDefault();
         this._clearMenuState();
-        const type = target.dataset.type;
         const parentGroup = target.closest('.bad-left-tab-group');
         const parentId = parentGroup?.querySelector('.bad-left-tab')?.dataset.type;
-        const parentTab = this.leftGroups?.[parentId];
-        const subTab = parentTab?.getSubTab(type) || new HUDTab({ id: type });
-        if (parentTab && !subTab.parent) subTab.parent = parentTab;
-        subTab.onLeftClick(this, this.leftTabs, this.leftGroups, event);
+        const subTab = this.leftGroups?.[parentId]?.getSubTab(target.dataset.type);
+        subTab?.onLeftClick(this, this.leftTabs, this.leftGroups, event);
         this.render();
     }
 
-    /**
-     * Toggle a left-side parent tab in the active set (for right-click multi-select).
-     */
     _onToggleLeftParent(parentId) {
-        const tab = this.leftGroups?.[parentId] || new HUDTab({ id: parentId });
-        tab.onRightClick(this, this.leftTabs, this.leftGroups);
+        const tab = this.leftGroups?.[parentId];
+        tab?.onRightClick(this, this.leftTabs, this.leftGroups);
         this.render();
     }
 
-    /**
-     * Toggle a left-side sub-tab (spell level) in the active set (for right-click multi-select).
-     */
     _onToggleLeftSub(target, type) {
         const parentGroup = target.closest('.bad-left-tab-group');
         const parentId = parentGroup?.querySelector('.bad-left-tab')?.dataset.type;
-        const parentTab = this.leftGroups?.[parentId];
-        const subTab = parentTab?.getSubTab(type) || new HUDTab({ id: type });
-        if (parentTab && !subTab.parent) subTab.parent = parentTab;
-        subTab.onRightClick(this, this.leftTabs, this.leftGroups);
+        const subTab = this.leftGroups?.[parentId]?.getSubTab(type);
+        subTab?.onRightClick(this, this.leftTabs, this.leftGroups);
         this.render();
     }
 
-    /**
-     * Handle parent action type (right tab) selection clicks.
-     * 'this' refers to the application instance.
-     */
     static async _onChangeActionType(event, target) {
         event.preventDefault();
         this._clearMenuState();
-        const parentId = target.dataset.type;
-        const tab = this.parentGroups?.[parentId] || new HUDTab({ id: parentId });
-        tab.onLeftClick(this, this.rightTabs, this.parentGroups, event);
+        const tab = this.parentGroups?.[target.dataset.type];
+        tab?.onLeftClick(this, this.rightTabs, this.parentGroups, event);
         this.render();
     }
 
-    /**
-     * Handle sub-action type selection clicks (left-click).
-     * 'this' refers to the application instance.
-     */
     static async _onChangeSubActionType(event, target) {
         event.preventDefault();
         this._clearMenuState();
-        const type = target.dataset.type;
         const parentGroup = target.closest('.bad-right-tab-group');
         const parentId = parentGroup?.querySelector('.bad-right-tab')?.dataset.type;
-        const parentTab = this.parentGroups?.[parentId];
-        const subTab = parentTab?.getSubTab(type) || new HUDTab({ id: type });
-        if (parentTab && !subTab.parent) subTab.parent = parentTab;
-        subTab.onLeftClick(this, this.rightTabs, this.parentGroups, event);
+        const subTab = this.parentGroups?.[parentId]?.getSubTab(target.dataset.type);
+        subTab?.onLeftClick(this, this.rightTabs, this.parentGroups, event);
         this.render();
     }
 
-    /**
-     * Toggle a right-side parent tab in the active set (for right-click multi-select).
-     */
     _onToggleRightParent(parentId) {
-        const tab = this.parentGroups?.[parentId] || new HUDTab({ id: parentId });
-        tab.onRightClick(this, this.rightTabs, this.parentGroups);
+        const tab = this.parentGroups?.[parentId];
+        tab?.onRightClick(this, this.rightTabs, this.parentGroups);
         this.render();
     }
 
-    /**
-     * Toggle a right-side sub-tab in the active set (for right-click multi-select).
-     */
     _onToggleRightSub(target, type) {
         const parentGroup = target.closest('.bad-right-tab-group');
         const parentId = parentGroup?.querySelector('.bad-right-tab')?.dataset.type;
-        const parentTab = this.parentGroups?.[parentId];
-        const subTab = parentTab?.getSubTab(type) || new HUDTab({ id: type });
-        if (parentTab && !subTab.parent) subTab.parent = parentTab;
-        subTab.onRightClick(this, this.rightTabs, this.parentGroups);
+        const subTab = this.parentGroups?.[parentId]?.getSubTab(type);
+        subTab?.onRightClick(this, this.rightTabs, this.parentGroups);
         this.render();
     }
 
@@ -925,13 +889,8 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
     _onPointerDownCapture(event) {
         if (event.button !== 2 && event.button !== 0) return; // Only care about right-clicks (2) or left-clicks (0)
         
-        const targetItem = event.target.closest('.bad-action-item') 
-            || event.target.closest('.bad-left-sub-tab') 
-            || event.target.closest('.bad-left-tab');
-        const activeItem = this._activeMenuTarget?.closest('.bad-action-item') 
-            || this._activeMenuTarget?.closest('.bad-left-sub-tab') 
-            || this._activeMenuTarget?.closest('.bad-left-tab') 
-            || this._activeMenuTarget;
+        const targetItem = event.target.closest('.bad-action-item, .bad-left-sub-tab, .bad-left-tab');
+        const activeItem = this._activeMenuTarget?.closest('.bad-action-item, .bad-left-sub-tab, .bad-left-tab') || this._activeMenuTarget;
         
         log.debug(`_onPointerDownCapture | button: ${event.button}, targetItem:`, targetItem, `activeItem:`, activeItem);
         
@@ -1012,13 +971,8 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
 
 
 
-        const targetItem = event.target.closest('.bad-action-item') 
-            || event.target.closest('.bad-left-sub-tab') 
-            || event.target.closest('.bad-left-tab');
-        const activeItem = this._activeMenuTarget?.closest('.bad-action-item') 
-            || this._activeMenuTarget?.closest('.bad-left-sub-tab') 
-            || this._activeMenuTarget?.closest('.bad-left-tab') 
-            || this._activeMenuTarget;
+        const targetItem = event.target.closest('.bad-action-item, .bad-left-sub-tab, .bad-left-tab');
+        const activeItem = this._activeMenuTarget?.closest('.bad-action-item, .bad-left-sub-tab, .bad-left-tab') || this._activeMenuTarget;
         
         log.debug(`_onContextMenuCapture | targetItem:`, targetItem, `activeItem:`, activeItem);
 
