@@ -115,7 +115,7 @@ This module is designed to be highly extensible. It uses a clean **Adapter Patte
 *   **System Adapters**: Manage how items are categorized, how rolls are triggered, and how system-specific resources are calculated. All system adapters inherit from `BaseSystemAdapter`.
 *   **Module Adapters**: Intercept and modify actions based on other active modules (like Midi-QOL). All module adapters inherit from `BaseModuleAdapter`.
 
-For a deep dive into the codebase architecture, lifecycle hooks, and instructions on how to write your own system or module adapters, please refer to our **[Architecture Guide](docs/architecture_guide.md)**.
+For a deep dive into the codebase architecture, lifecycle hooks, and instructions on how to write your own system or module adapters, please refer to our **[Architecture Guide](docs/architecture_guide.md)**. For a detailed execution flow, hook sequence, and class method index, check out the **[Function Call Tree & Developer API Reference](docs/function_tree.md)**.
 
 ---
 

@@ -165,7 +165,7 @@ To allow independent control over the window size and text size, the stylesheet 
 *   **`.bad-main-layout`**
     *   *Role*: The flexbox row housing the left tabs, the central list, and the right tabs.
 *   **`.bad-tab-content`**
-    *   *Role*: The scrollable container holding the list of action cards.
+    *   *Role*: The scrollable container holding the list of action cards. Registered as a `scrollable` selector in ApplicationV2 options (`scrollable: ['.bad-tab-content']`) to preserve scroll position across redraws.
     *   *Styling*: A vertical flexbox with a custom thin, violet scrollbar. Height is fluidly managed by the parent flex container (no hardcoded height).
 *   **`.bad-action-item`**
     *   *Role*: An individual action card (row).

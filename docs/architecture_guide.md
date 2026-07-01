@@ -1,6 +1,6 @@
 # Architecture & Lifecycle Guide
 
-This document explains the architecture of **Bakana's Action Display** and provides a visual guide to how the different class layers integrate, culminating in the rendering of the Token HUD.
+This document explains the architecture of **Bakana's Action Display** and provides a visual guide to how the different class layers integrate, culminating in the rendering of the Token HUD. For a complete function-by-function call tree and detailed API reference, see the **[Function Call Tree & Developer API Reference](function_tree.md)**.
 
 ---
 
@@ -40,14 +40,14 @@ The module is built using a clean **pipes-and-filters / adapter** architecture, 
 *   **Role**: The central pipeline controller (a singleton instance exported from `src/action-display.js`).
 *   **Responsibilities**:
     *   Detects the active game system and registers the appropriate system and module adapters.
-    *   Performs the **Core Extraction**: iterates over all items on an actor and extracts a basic, system-agnostic list of actions (name, image, item ID, and roll functions).
+    *   Performs the **Core Extraction**: iterates over all items on an actor and extracts a basic, system-agnostic list of actions (name, image, item ID, and roll functions). Before extracting full item data, queries `shouldExtractItem` on the active system adapter to bypass unneeded allocations.
     *   Runs the pipeline: `Core Extraction ──► System Adapter ──► Module Adapters ──► Core Post-Processing (User-Hidden Filters)`.
 
 ### 2. System Adapter Layer (`BaseSystemAdapter` & `FantasySystemAdapter`)
 *   **Role**: Handles system-specific rules, resource calculations, and terminology.
 *   **Responsibilities**:
-    *   **`BaseSystemAdapter`**: The core, genre-agnostic base class. It defines the interface for all adapters and provides fallback localizations for generic HUD tabs (like "All Items", "Other").
-    *   **`FantasySystemAdapter`**: An intermediate class extending the base adapter. It houses shared defaults for fantasy RPG systems, such as default icon mappings for weapons, spells, feats, and consumables, as well as the numerical spell-level sorting algorithm.
+    *   **`BaseSystemAdapter`**: The core, genre-agnostic base class. It defines the interface for all adapters, provides item filtering hooks (`shouldExtractItem`), and fallback localizations for generic HUD tabs (like "All Items", "Other").
+    *   **`FantasySystemAdapter`**: An intermediate class extending the base adapter. It houses shared defaults for fantasy RPG systems, such as default icon mappings for weapons, spells, feats, and consumables, as well as the numerical spell-level sorting algorithm and tab context modification (`modifyContext`).
     *   **Concrete Adapters** (e.g., `Dnd5eSystemAdapter`, `Pf1SystemAdapter`, `Pf2eSystemAdapter`): Inherit from `FantasySystemAdapter` to leverage shared fantasy defaults, while implementing system-specific resource calculations (like spell slots, activities, or ammunition) and custom tab mappings.
     *   Populates a generic **`subActions`** array on actions that have multiple options, converting them into a system-agnostic format.
     *   Filters out depleted actions if the "Filter Depleted Actions" setting is enabled, using system-specific rules.
@@ -57,13 +57,14 @@ The module is built using a clean **pipes-and-filters / adapter** architecture, 
 *   **Responsibilities**:
     *   Inspects active module flags on actions and modifies them (e.g., filtering out Midi-QOL "automation-only" sub-actions from the player-facing HUD).
 
-### 4. UI Layer (`ActionDisplayApp`)
-*   **Role**: The rendering engine, built on Foundry VTT's modern `ApplicationV2` (`HandlebarsApplication`) framework.
+### 4. UI Layer (`ActionDisplayApp`, `TabSideState`, & `HUDTab`)
+*   **Role**: The rendering engine and state management system, built on Foundry VTT's modern `ApplicationV2` (`HandlebarsApplication`) framework.
 *   **Responsibilities**:
-    *   Listens to Foundry hooks (like token selection) to position and render the HUD.
-    *   Coordinates attachment/detachment states and tracks position coordinates.
-    *   In `_prepareContext()`, it requests the processed actions from the Coordinator, queries the active system adapter for the tab layouts, filters the actions to match the active tabs, and renders the Handlebars template (`templates/action-display.html`).
-    *   In `_onRollAction()`, it checks if an action has multiple `subActions` and dynamically renders a left-click dropdown menu if needed, remaining completely system-agnostic.
+    *   **`ActionDisplayApp`**: Listens to Foundry hooks (like token selection) to position and render the HUD. Manages attachment/detachment states, scroll position preservation (`scrollable` selector), and context rendering.
+    *   **`TabSideState`**: Encapsulates left and right column tab states (active parents, focused parent, active sub-types) and enforces click interaction rules (exclusive left-click parent selection, multi-stage right-click toggles, sub-tab isolation).
+    *   **`HUDTab`**: A unified, recursive tab model representing top-level parent tabs, sub-tabs, and deeply nested sub-tabs with depth levels (`level` 0, 1, 2+), parent/rootParent pointers, and click event handlers (`onLeftClick`, `onRightClick`).
+    *   In `_prepareContext()`, it requests the processed actions from the Coordinator, queries the active system adapter for tab layouts, delegates tab context modification, filters actions to match active tabs, and renders `templates/action-display.html`.
+    *   In `_onRollAction()`, it checks if an action has multiple `subActions` and dynamically renders a left-click dropdown menu if needed.
 
 ---
 
@@ -86,7 +87,9 @@ classDiagram
     class BaseSystemAdapter {
         +string systemId
         +isCompatible()
+        +shouldExtractItem(item, actor)
         +modifyActions(actions, actor)
+        +modifyContext(context)
         +getItemTypeLabel(parentId)
         +getItemTypeIcon(parentId)
         +getSpellLevelLabel(level)
@@ -101,7 +104,9 @@ classDiagram
     }
 
     class Dnd5eSystemAdapter {
+        +shouldExtractItem(item, actor)
         +modifyActions(actions, actor)
+        +modifyContext(context)
         +getItemTypeLabel(parentId)
         +getSpellLevelLabel(level)
         +getActionSubTabLabel(subId)
@@ -109,15 +114,18 @@ classDiagram
         -_hasLimitedUses(item, actor)
         -_calculateActivityUses(activity, item, actor)
         -_calculateSpellSlots(item, actor)
+        -_getSpellSlotUses(item, actor)
         -_calculateWeaponAmmunition(item, actor)
         -_hasAvailableUpcastSlots(actor, level)
     }
 
     class Pf2eSystemAdapter {
+        +shouldExtractItem(item, actor)
         +modifyActions(actions, actor)
     }
 
     class Pf1SystemAdapter {
+        +shouldExtractItem(item, actor)
         +modifyActions(actions, actor)
         +getItemTypeIcon(parentId)
         -_calculateUses(item, actor)
@@ -133,10 +141,47 @@ classDiagram
         +modifyActions(actions, actor)
     }
 
+    class HUDTab {
+        +string id
+        +string label
+        +string icon
+        +number level
+        +boolean active
+        +boolean expanded
+        +boolean activeParent
+        +boolean excluded
+        +boolean showUnprepared
+        +HUDTab parent
+        +HUDTab rootParent
+        +HUDTab[] subTabs
+        +addSubTab(subTabConfig)
+        +getOrder()
+        +updateOrder(orderArray)
+        +getSubTab(subId)
+        +onLeftClick(app, sideState, groups, event)
+        +onRightClick(app, sideState, groups, event)
+    }
+
+    class TabSideState {
+        +string side
+        +Set activeParents
+        +string focusedParent
+        +Set activeSubTypes
+        +resetToDefault()
+        +selectParent(parentId, groups)
+        +toggleParent(parentId, groups)
+        +selectSub(parentId, type, groups)
+        +toggleSub(parentId, type, groups)
+        +prune(groups)
+        +serialize()
+    }
+
     class ActionDisplayApp {
         +Actor actor
         +string positionMode
         +boolean isAttached
+        +TabSideState leftTabs
+        +TabSideState rightTabs
         +render(force, options)
         #_prepareContext(options)
         #_onRender(context, options)
@@ -151,6 +196,10 @@ classDiagram
 
     ActionDisplayApp --> ActionDisplay : queries actions
     ActionDisplayApp --> BaseSystemAdapter : queries tab labels/icons
+    ActionDisplayApp *-- TabSideState : owns (left & right)
+    ActionDisplayApp ..> HUDTab : uses
+    TabSideState ..> HUDTab : manipulates
+    HUDTab *-- HUDTab : parent/subTabs hierarchy
     ActionDisplay *-- BaseSystemAdapter : owns
     ActionDisplay *-- BaseModuleAdapter : owns
     BaseSystemAdapter <|-- FantasySystemAdapter : extends
@@ -172,6 +221,7 @@ sequenceDiagram
     actor User as Player / GM
     participant Hook as Foundry VTT Hook
     participant UI as ActionDisplayApp (UI)
+    participant State as TabSideState & HUDTab
     participant Core as ActionDisplay (Coordinator)
     participant Sys as Dnd5eSystemAdapter (System)
     participant Mod as MidiQolModuleAdapter (Module)
@@ -187,6 +237,8 @@ sequenceDiagram
     %% Core Pipeline Start
     UI->>Core: getActions(actor)
     Note over Core: 1. Core Extraction
+    Core->>Sys: shouldExtractItem(item, actor)
+    Sys-->>Core: boolean
     Core->>Core: _extractBaseActions(actor)
     Note over Core: Creates system-agnostic baseActions[]
     
@@ -205,13 +257,12 @@ sequenceDiagram
     Core-->>UI: returns finalActions[]
     %% Core Pipeline End
 
-    Note over UI: UI builds Left & Right Tab structures
-    UI->>Sys: getItemTypeLabel(parentId) / getItemTypeIcon(parentId)
-    Sys-->>UI: returns localized labels & CSS icons
-    UI->>Sys: getActionTypeLabel(parentId) / getActionSubTabLabel(subId)
-    Sys-->>UI: returns localized labels & CSS icons
+    Note over UI: UI builds Left & Right HUDTab trees
+    UI->>State: Sync active tab states (left & right)
+    UI->>Sys: modifyContext(context)
+    Note over Sys: Formats spell level subtabs<br/>Applies custom tab ordering
     
-    Note over UI: UI filters finalActions[] down to<br/>currently selected Left & Right tabs
+    Note over UI: UI filters finalActions[] down to<br/>currently active TabSideState filters
     
     UI->>UI: Renders HTML (templates/action-display.html)
     UI->>User: Displays HUD on screen!
