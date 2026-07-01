@@ -311,6 +311,13 @@ flowchart TD
 - [**`onLeftClick(app, sideState, groups, event)`**](../src/ui/hud-tab.js#L163-L173): Executes left-click selection logic.
 - [**`onRightClick(app, sideState, groups, event)`**](../src/ui/hud-tab.js#L182-L192): Executes right-click toggle logic.
 
+### [`src/ui/tab-ref.js`](../src/ui/tab-ref.js) — Structured Tab Data Reference (`TabRef`)
+- [**`constructor({ id, label, parent })`**](../src/ui/tab-ref.js#L12-L16): Instantiates a structured tab data node linked to parent nodes.
+- [**`get root`**](../src/ui/tab-ref.js#L23-L25): Recursively delegates up parent links to derive the top-level root parent ID.
+- [**`get parentId`**](../src/ui/tab-ref.js#L35-L37): Returns direct parent ID or root ID.
+- [**`get path`**](../src/ui/tab-ref.js#L44-L51): Returns the complete hierarchy path array (e.g. `['spells', 'level_1', 'evocation']`).
+- [**`at(index)`**](../src/ui/tab-ref.js#L59-L61): Provides positional index fallback for legacy array compatibility.
+
 ### [`src/adapters/system/base-system-adapter.js`](../src/adapters/system/base-system-adapter.js) — System Adapter Interface (`BaseSystemAdapter`)
 - [**`isCompatible()`**](../src/adapters/system/base-system-adapter.js#L20-L22): Returns whether adapter matches active game system.
 - [**`shouldExtractItem(item, actor)`**](../src/adapters/system/base-system-adapter.js#L30-L32): Performance filter to bypass unneeded item allocations.
