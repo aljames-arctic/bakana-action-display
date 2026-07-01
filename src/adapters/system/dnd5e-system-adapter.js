@@ -519,7 +519,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         
         // Fallback for standard spells if no explicit spellSlots consumption target was resolved
         if (item.type === 'spell') {
-            return this._calculateSpellSlots(item, actor);
+            return this._calculateSpellSlots(item, actor, highestAvailableSlot);
         }
 
         // Fallback for weapons requiring ammunition if no explicit consumption target was resolved
