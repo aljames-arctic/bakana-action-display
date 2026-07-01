@@ -148,7 +148,7 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
                 type: 'weapon',
                 img: strike.item?.img ?? strike.img ?? strike.imageUrl ?? 'systems/pf2e/icons/default-icons/melee.svg',
                 activationType: 'action', // Strikes cost 1 action
-                tabs: [['economy', 'action']],
+                tabs: [new TabRef({ id: 'action', label: 'Action', parent: new TabRef({ id: 'economy', label: 'Economy' }) })],
                 itemTypes: ['weapon'],
                 hidden: false,
                 uses: uses, // Display remaining ammunition

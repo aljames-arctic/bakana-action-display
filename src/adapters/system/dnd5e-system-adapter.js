@@ -273,9 +273,10 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                 modified.push(activityAction);
             } else if (['backpack', 'loot'].includes(type)) {
                 // Passive containers and loot (no activities) are shown in the inventory
+                const econRoot = new TabRef({ id: 'economy', label: 'Economy' });
                 const passiveAction = {
                     ...action,
-                    tabs: [['economy', 'none']],
+                    tabs: [new TabRef({ id: 'none', label: 'Passive', parent: econRoot })],
                     itemTypes: [type],
                     uses: { available: null, max: null }
                 };
