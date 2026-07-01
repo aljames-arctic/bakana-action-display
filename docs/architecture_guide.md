@@ -49,7 +49,10 @@ The module is built using a clean **pipes-and-filters / adapter** architecture, 
     *   **`BaseSystemAdapter`**: The core, genre-agnostic base class. It defines the interface for all adapters, provides item filtering hooks (`shouldExtractItem`), and fallback localizations for generic HUD tabs (like "All Items", "Other").
     *   **`FantasySystemAdapter`**: An intermediate class extending the base adapter. It houses shared defaults for fantasy RPG systems, such as default icon mappings for weapons, spells, feats, and consumables, as well as the numerical spell-level sorting algorithm and tab context modification (`modifyContext`).
     *   **Concrete Adapters** (e.g., `Dnd5eSystemAdapter`, `Pf1SystemAdapter`, `Pf2eSystemAdapter`): Inherit from `FantasySystemAdapter` to leverage shared fantasy defaults, while implementing system-specific resource calculations (like spell slots, activities, or ammunition) and custom tab mappings.
-    *   Populates a generic **`subActions`** array on actions that have multiple options, converting them into a system-agnostic format.
+    *   Maps system-native entities into the generic HUD model (`action` = Item Card, `subActions` = Sub-options):
+        *   **D&D 5e**: `action` ──► `Item5e`, `subActions` ──► `Activity5e` instances.
+        *   **Pathfinder 2e**: `action` ──► `ItemPF2e` / `Strike`, `subActions` ──► Strike options / weapon modes.
+        *   **Pathfinder 1e**: `action` ──► `ItemPF1`, `subActions` ──► Linked attack items / multi-action formulas.
     *   Filters out depleted actions if the "Filter Depleted Actions" setting is enabled, using system-specific rules.
 
 ### 3. Module Adapter Layer (`BaseModuleAdapter`)

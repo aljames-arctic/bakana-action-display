@@ -172,8 +172,8 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                 : [];
 
             if (activeActivities.length > 0) {
-                // Map to sub-actions first so we can check their uses and filter them
-                const subActions = activeActivities.map(activity => {
+                // Map D&D 5e Activities to sub-actions for the generic HUD item model
+                const mappedActivities = activeActivities.map(activity => {
                     const activationType = activity.activation.type;
                     const parentTab = this._getParentTab(activationType);
                     const subTab = this._getSubTab(activationType);
@@ -191,17 +191,17 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                     };
                 });
 
-                // 5. Single-pass Resource Filtering: Filter out depleted sub-actions if enabled
-                let filteredSubs = subActions;
+                // Single-pass Resource Filtering: Filter out depleted D&D 5e Activities if enabled
+                let filteredActivities = mappedActivities;
                 if (filterNoResources) {
-                    filteredSubs = subActions.filter(sub => {
+                    filteredActivities = mappedActivities.filter(sub => {
                         // Spells are exempt from depletion if they are upcastable (handled in uses.isUpcast)
                         const isDepleted = sub.uses && sub.uses.available !== null && sub.uses.available <= 0 && !sub.uses.isUpcast;
                         return !isDepleted;
                     });
 
-                    // If all activities are depleted, skip this item entirely! (Fixes the silent bug)
-                    if (filteredSubs.length === 0) {
+                    // If all activities are depleted, skip this item entirely!
+                    if (filteredActivities.length === 0) {
                         continue;
                     }
                 }
@@ -212,10 +212,10 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                     name: item.name, // Keep the clean item name
                     img: item.img, // Use the parent item's icon
                     unprepared: isSpellUnprepared,
-                    subActions: filteredSubs,
+                    subActions: filteredActivities,
                     roll: async (event) => {
                         // Roll the first active activity directly
-                        return filteredSubs[0].roll(event);
+                        return filteredActivities[0].roll(event);
                     }
                 };
 
@@ -223,7 +223,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                 const uniqueTabs = [];
                 const seenTabKeys = new Set();
 
-                for (const sub of filteredSubs) {
+                for (const sub of filteredActivities) {
                     const key = sub.tabs[1] ? `${sub.tabs[0]}/${sub.tabs[1]}` : sub.tabs[0];
                     if (!seenTabKeys.has(key)) {
                         seenTabKeys.add(key);
