@@ -223,44 +223,44 @@ flowchart TD
 
 ## 5. Class & Module Method Reference
 
-### [`src/action-display.js`](file:///usr/local/google/home/aljames/github/bakanas-action-display/src/action-display.js) — Coordinator (`ActionDisplay`)
-- [**`init()`**](file:///usr/local/google/home/aljames/github/bakanas-action-display/src/action-display.js#L20-L27): Initializes the coordinator instance.
-- [**`registerSystemAdapter(adapter)`**](file:///usr/local/google/home/aljames/github/bakanas-action-display/src/action-display.js#L33-L39): Registers the active system adapter.
-- [**`registerModuleAdapter(adapter)`**](file:///usr/local/google/home/aljames/github/bakanas-action-display/src/action-display.js#L45-L51): Registers an active module adapter.
-- [**`getActions(actor)`**](file:///usr/local/google/home/aljames/github/bakanas-action-display/src/action-display.js#L59-L104): Executes the main 4-stage action processing pipeline for an actor.
-- [**`_extractBaseActions(actor)`**](file:///usr/local/google/home/aljames/github/bakanas-action-display/src/action-display.js#L111-L141): Extracts system-agnostic base actions from an actor's item inventory.
+### [`src/action-display.js`](../src/action-display.js) — Coordinator (`ActionDisplay`)
+- [**`init()`**](../src/action-display.js#L20-L27): Initializes the coordinator instance.
+- [**`registerSystemAdapter(adapter)`**](../src/action-display.js#L33-L39): Registers the active system adapter.
+- [**`registerModuleAdapter(adapter)`**](../src/action-display.js#L45-L51): Registers an active module adapter.
+- [**`getActions(actor)`**](../src/action-display.js#L59-L104): Executes the main 4-stage action processing pipeline for an actor.
+- [**`_extractBaseActions(actor)`**](../src/action-display.js#L111-L141): Extracts system-agnostic base actions from an actor's item inventory.
 
-### [`src/ui/action-display-app.js`](file:///usr/local/google/home/aljames/github/bakanas-action-display/src/ui/action-display-app.js) — UI Window (`ActionDisplayApp`)
-- [**`_prepareContext(options)`**](file:///usr/local/google/home/aljames/github/bakanas-action-display/src/ui/action-display-app.js#L140-L370): Prepares context data, triggers coordinator pipeline, and builds tab trees.
-- [**`_onRender(context, options)`**](file:///usr/local/google/home/aljames/github/bakanas-action-display/src/ui/action-display-app.js#L890-L1080): Attaches DOM event listeners and scroll position listeners.
-- [**`setPosition(positionMode, options)`**](file:///usr/local/google/home/aljames/github/bakanas-action-display/src/ui/action-display-app.js#L1269-L1350): Calculates 60fps HUD positioning relative to token or detached coordinates.
-- [**`_onRollAction(event)`**](file:///usr/local/google/home/aljames/github/bakanas-action-display/src/ui/action-display-app.js#L678-L880): Triggers action rolls or toggles multi-option dropdowns.
-- [**`_createContextMenu()`**](file:///usr/local/google/home/aljames/github/bakanas-action-display/src/ui/action-display-app.js#L1085-L1155): Spawns custom right-click context menu for action cards.
-- [**`_toggleActionHidden(actionId, shouldHide)`**](file:///usr/local/google/home/aljames/github/bakanas-action-display/src/ui/action-display-app.js#L1161-L1190): Flags an action card as hidden/unhidden and re-renders.
+### [`src/ui/action-display-app.js`](../src/ui/action-display-app.js) — UI Window (`ActionDisplayApp`)
+- [**`_prepareContext(options)`**](../src/ui/action-display-app.js#L140-L370): Prepares context data, triggers coordinator pipeline, and builds tab trees.
+- [**`_onRender(context, options)`**](../src/ui/action-display-app.js#L890-L1080): Attaches DOM event listeners and scroll position listeners.
+- [**`setPosition(positionMode, options)`**](../src/ui/action-display-app.js#L1269-L1350): Calculates 60fps HUD positioning relative to token or detached coordinates.
+- [**`_onRollAction(event)`**](../src/ui/action-display-app.js#L678-L880): Triggers action rolls or toggles multi-option dropdowns.
+- [**`_createContextMenu()`**](../src/ui/action-display-app.js#L1085-L1155): Spawns custom right-click context menu for action cards.
+- [**`_toggleActionHidden(actionId, shouldHide)`**](../src/ui/action-display-app.js#L1161-L1190): Flags an action card as hidden/unhidden and re-renders.
 
-### [`src/ui/tab-side-state.js`](file:///usr/local/google/home/aljames/github/bakanas-action-display/src/ui/tab-side-state.js) — Tab State Manager (`TabSideState`)
-- [**`constructor({ side, cached, getDefaultSubTypes })`**](file:///usr/local/google/home/aljames/github/bakanas-action-display/src/ui/tab-side-state.js#L14-L33): Initializes left or right tab column state.
-- [**`resetToDefault()`**](file:///usr/local/google/home/aljames/github/bakanas-action-display/src/ui/tab-side-state.js#L38-L48): Resets column to `'all'` parent and default sub-types.
-- [**`selectParent(parentId, groups)`**](file:///usr/local/google/home/aljames/github/bakanas-action-display/src/ui/tab-side-state.js#L60-L90): Handles exclusive left-click parent selection.
-- [**`toggleParent(parentId, groups)`**](file:///usr/local/google/home/aljames/github/bakanas-action-display/src/ui/tab-side-state.js#L97-L135): Handles multi-stage right-click parent toggling.
-- [**`selectSub(parentId, type, groups)`**](file:///usr/local/google/home/aljames/github/bakanas-action-display/src/ui/tab-side-state.js#L143-L189): Handles left-click sub-tab isolation/toggling.
-- [**`toggleSub(parentId, type, groups)`**](file:///usr/local/google/home/aljames/github/bakanas-action-display/src/ui/tab-side-state.js#L197-L223): Handles right-click sub-tab multi-select toggles.
-- [**`prune(groups)`**](file:///usr/local/google/home/aljames/github/bakanas-action-display/src/ui/tab-side-state.js#L229-L244): Removes sub-types that are no longer present in active parent tabs.
-- [**`serialize()`**](file:///usr/local/google/home/aljames/github/bakanas-action-display/src/ui/tab-side-state.js#L250-L256): Exports tab state for per-actor persistence.
+### [`src/ui/tab-side-state.js`](../src/ui/tab-side-state.js) — Tab State Manager (`TabSideState`)
+- [**`constructor({ side, cached, getDefaultSubTypes })`**](../src/ui/tab-side-state.js#L14-L33): Initializes left or right tab column state.
+- [**`resetToDefault()`**](../src/ui/tab-side-state.js#L38-L48): Resets column to `'all'` parent and default sub-types.
+- [**`selectParent(parentId, groups)`**](../src/ui/tab-side-state.js#L60-L90): Handles exclusive left-click parent selection.
+- [**`toggleParent(parentId, groups)`**](../src/ui/tab-side-state.js#L97-L135): Handles multi-stage right-click parent toggling.
+- [**`selectSub(parentId, type, groups)`**](../src/ui/tab-side-state.js#L143-L189): Handles left-click sub-tab isolation/toggling.
+- [**`toggleSub(parentId, type, groups)`**](../src/ui/tab-side-state.js#L197-L223): Handles right-click sub-tab multi-select toggles.
+- [**`prune(groups)`**](../src/ui/tab-side-state.js#L229-L244): Removes sub-types that are no longer present in active parent tabs.
+- [**`serialize()`**](../src/ui/tab-side-state.js#L250-L256): Exports tab state for per-actor persistence.
 
-### [`src/ui/hud-tab.js`](file:///usr/local/google/home/aljames/github/bakanas-action-display/src/ui/hud-tab.js) — Unified Tab Node (`HUDTab`)
-- [**`constructor(options)`**](file:///usr/local/google/home/aljames/github/bakanas-action-display/src/ui/hud-tab.js#L23-L55): Instantiates a tab node with depth `level`, `rootParent`, and child `subTabs`.
-- [**`addSubTab(subTabConfig)`**](file:///usr/local/google/home/aljames/github/bakanas-action-display/src/ui/hud-tab.js#L115-L122): Appends a child sub-tab, updating parent and level references.
-- [**`getOrder()`**](file:///usr/local/google/home/aljames/github/bakanas-action-display/src/ui/hud-tab.js#L128-L130): Returns array of child sub-tab IDs in display order.
-- [**`updateOrder(orderArray)`**](file:///usr/local/google/home/aljames/github/bakanas-action-display/src/ui/hud-tab.js#L136-L140): Re-orders child sub-tabs matching an ordered ID array.
-- [**`getSubTab(subId)`**](file:///usr/local/google/home/aljames/github/bakanas-action-display/src/ui/hud-tab.js#L146-L154): Recursively searches for a sub-tab node by ID.
-- [**`onLeftClick(app, sideState, groups, event)`**](file:///usr/local/google/home/aljames/github/bakanas-action-display/src/ui/hud-tab.js#L163-L173): Executes left-click selection logic.
-- [**`onRightClick(app, sideState, groups, event)`**](file:///usr/local/google/home/aljames/github/bakanas-action-display/src/ui/hud-tab.js#L182-L192): Executes right-click toggle logic.
+### [`src/ui/hud-tab.js`](../src/ui/hud-tab.js) — Unified Tab Node (`HUDTab`)
+- [**`constructor(options)`**](../src/ui/hud-tab.js#L23-L55): Instantiates a tab node with depth `level`, `rootParent`, and child `subTabs`.
+- [**`addSubTab(subTabConfig)`**](../src/ui/hud-tab.js#L115-L122): Appends a child sub-tab, updating parent and level references.
+- [**`getOrder()`**](../src/ui/hud-tab.js#L128-L130): Returns array of child sub-tab IDs in display order.
+- [**`updateOrder(orderArray)`**](../src/ui/hud-tab.js#L136-L140): Re-orders child sub-tabs matching an ordered ID array.
+- [**`getSubTab(subId)`**](../src/ui/hud-tab.js#L146-L154): Recursively searches for a sub-tab node by ID.
+- [**`onLeftClick(app, sideState, groups, event)`**](../src/ui/hud-tab.js#L163-L173): Executes left-click selection logic.
+- [**`onRightClick(app, sideState, groups, event)`**](../src/ui/hud-tab.js#L182-L192): Executes right-click toggle logic.
 
-### [`src/adapters/system/base-system-adapter.js`](file:///usr/local/google/home/aljames/github/bakanas-action-display/src/adapters/system/base-system-adapter.js) — System Adapter Interface (`BaseSystemAdapter`)
-- [**`isCompatible()`**](file:///usr/local/google/home/aljames/github/bakanas-action-display/src/adapters/system/base-system-adapter.js#L20-L22): Returns whether adapter matches active game system.
-- [**`shouldExtractItem(item, actor)`**](file:///usr/local/google/home/aljames/github/bakanas-action-display/src/adapters/system/base-system-adapter.js#L30-L32): Performance filter to bypass unneeded item allocations.
-- [**`modifyActions(actions, actor)`**](file:///usr/local/google/home/aljames/github/bakanas-action-display/src/adapters/system/base-system-adapter.js#L40-L52): Modifies base actions with system-specific calculations.
-- [**`modifyContext(context)`**](file:///usr/local/google/home/aljames/github/bakanas-action-display/src/adapters/system/base-system-adapter.js#L141-L143): Customizes tab layout context and sub-tab ordering.
-- [**`getItemTypeLabel(parentId)`**](file:///usr/local/google/home/aljames/github/bakanas-action-display/src/adapters/system/base-system-adapter.js#L59-L66) / [**`getItemTypeIcon(parentId)`**](file:///usr/local/google/home/aljames/github/bakanas-action-display/src/adapters/system/base-system-adapter.js#L73-L80): Returns tab labels and font-awesome icons.
-- [**`getSpellLevelLabel(level)`**](file:///usr/local/google/home/aljames/github/bakanas-action-display/src/adapters/system/base-system-adapter.js#L88-L90): Localizes spell level sub-tab labels.
+### [`src/adapters/system/base-system-adapter.js`](../src/adapters/system/base-system-adapter.js) — System Adapter Interface (`BaseSystemAdapter`)
+- [**`isCompatible()`**](../src/adapters/system/base-system-adapter.js#L20-L22): Returns whether adapter matches active game system.
+- [**`shouldExtractItem(item, actor)`**](../src/adapters/system/base-system-adapter.js#L30-L32): Performance filter to bypass unneeded item allocations.
+- [**`modifyActions(actions, actor)`**](../src/adapters/system/base-system-adapter.js#L40-L52): Modifies base actions with system-specific calculations.
+- [**`modifyContext(context)`**](../src/adapters/system/base-system-adapter.js#L141-L143): Customizes tab layout context and sub-tab ordering.
+- [**`getItemTypeLabel(parentId)`**](../src/adapters/system/base-system-adapter.js#L59-L66) / [**`getItemTypeIcon(parentId)`**](../src/adapters/system/base-system-adapter.js#L73-L80): Returns tab labels and font-awesome icons.
+- [**`getSpellLevelLabel(level)`**](../src/adapters/system/base-system-adapter.js#L88-L90): Localizes spell level sub-tab labels.
