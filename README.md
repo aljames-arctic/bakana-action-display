@@ -40,7 +40,9 @@ https://github.com/user-attachments/assets/c842ee1e-783c-4d7e-b55d-de86e5cb0b44
 ## How to Use
 
 *   **Left-Click a Tab**: Selects that category exclusively. If multiple sub-tabs are already active, left-clicking one of them will **isolate** it (deselecting all others, making it the sole active filter) rather than toggling it off.
-*   **Right-Click a Tab**: Toggles that sub-tab in/out of your active filters. Right-clicking a **parent tab header** (like *Action Economy* or *Spell Components*) acts as a **reset shortcut**, returning that tab group to its default state (all selected for Action Economy, none banned for Spell Components).
+*   **Right-Click a Tab**: Toggles that sub-tab in/out of your active filters. Right-clicking a **parent tab header** (like *Spells* or *Action Economy*) acts as a multi-stage toggle:
+    *   **First Click**: Acts as a **reset shortcut**, clearing all active sub-tab filters under that parent.
+    *   **Second Click (when already cleared)**: Toggles the parent tab itself **off** (unselecting it). If no parent tabs remain active on that side, the column automatically falls back to selecting the **All** parent tab.
 *   **Left-Click an Action Card**: Rolls the action! If the action has multiple options, it opens a dropdown; click the option you want to roll.
 *   **Right-Click an Action Card**: Opens the context menu to **Hide** or **Unhide** the action, or open the item's sheet.
 *   **Drag the Top Handle**: Detaches the HUD and lets you drag it anywhere.
