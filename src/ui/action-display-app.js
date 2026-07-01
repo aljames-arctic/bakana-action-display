@@ -21,24 +21,21 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         
         const cached = activeTabCache.get(this.actor?.uuid);
 
-        const cachedLeft = cached?.left;
-        const cachedRight = cached?.right;
-
         // Encapsulated tab side state managers
         this.leftTabs = new HUDTabColumn({
             side: 'left',
-            cached: cachedLeft,
+            cached: cached?.left,
             getDefaultSubTypes: () => actionDisplay.activeSystemAdapter?.getDefaultActiveLeftSubTypes() ?? []
         });
 
         this.rightTabs = new HUDTabColumn({
             side: 'right',
-            cached: cachedRight,
+            cached: cached?.right,
             getDefaultSubTypes: () => actionDisplay.activeSystemAdapter?.getDefaultActiveSubTypes() ?? []
         });
 
         // HUD Attachment/Position Mode (persisted client-side)
-        this.positionMode = game.settings.get(MODULE_ID, 'hudPositionMode') || 'attached';
+        this.positionMode = game.settings.get(MODULE_ID, 'hudPositionMode');
         this.isAttached = this.positionMode === 'attached';
         
         // Dragging state
@@ -138,24 +135,13 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
 
         // 1. Single-pass loop: Extract unique tabs and filter actions simultaneously (O(N) vs O(3N))
         for (const action of rawActions) {
-            // Extract unique Item Types (for Left-side Tabs)
-            if (action.itemTypes && Array.isArray(action.itemTypes)) {
-                if (action.itemTypes.length === 2) {
-                    existingItemCombinations.add(`${action.itemTypes[0]}/${action.itemTypes[1]}`);
-                } else if (action.itemTypes.length === 1) {
-                    existingItemCombinations.add(action.itemTypes[0]);
-                }
+            if (action.itemTypes?.length) {
+                existingItemCombinations.add(action.itemTypes.join('/'));
             }
 
-            // Extract unique Action Types (for Right-side Tabs)
             if (action.tabs) {
                 for (const tab of action.tabs) {
-                    const path = tab.path;
-                    if (path.length >= 2) {
-                        existingCombinations.add(`${path[0]}/${path[1]}`);
-                    } else if (path.length === 1) {
-                        existingCombinations.add(path[0]);
-                    }
+                    existingCombinations.add(tab.path.slice(0, 2).join('/'));
                 }
             }
         }
