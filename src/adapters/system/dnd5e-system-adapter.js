@@ -434,44 +434,8 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                 return this._calculateUses(item, actor);
             } else if (target.type === 'spellSlots') {
                 // Consumes actor spell slots
-                const actorSpells = actor.system.spells;
                 const level = target.target || item.system.level; // Fallback to spell's base level if target is empty (dynamic slots)
-                if (level === 'pact') {
-                    const pact = actorSpells?.pact;
-                    const available = pact?.value ?? 0;
-                    const max = pact?.max ?? 0;
-                    
-                    if (available > 0) {
-                        return { available, max };
-                    }
-                    
-                    if (this._hasAvailableUpcastSlots(pact?.level ?? 0, highestAvailableSlot)) {
-                        return {
-                            available: localize('BAD.dnd5e.upcast', 'Upcast'),
-                            max: null,
-                            isUpcast: true
-                        };
-                    }
-                    return { available: 0, max };
-                } else {
-                    const lvl = parseInt(level, 10) || 0;
-                    const spellSlot = actorSpells?.[`spell${lvl}`];
-                    const available = spellSlot?.value ?? 0;
-                    const max = spellSlot?.max ?? 0;
-                    
-                    if (available > 0) {
-                        return { available, max };
-                    }
-                    
-                    if (this._hasAvailableUpcastSlots(lvl, highestAvailableSlot)) {
-                        return {
-                            available: localize('BAD.dnd5e.upcast', 'Upcast'),
-                            max: null,
-                            isUpcast: true
-                        };
-                    }
-                    return { available: 0, max };
-                }
+                return this._getSpellSlotUses(actor, level, highestAvailableSlot);
             } else if (target.type === 'item') {
                 // Consumes quantity of another item (e.g. ammunition) or charges of another item
                 // Robust resolution: Check if the target is a UUID or a plain ID, resolving relative to item/actor
@@ -531,20 +495,13 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
     }
 
     /**
-     * Fallback method to calculate spell slots for standard slot-based spells.
-     * Used when the Cast activity doesn't have an explicit spellSlots consumption target.
-     * @param {Item} item The spell item
-     * @param {Actor} actor The actor
-     * @param {number} highestAvailableSlot The highest available spell slot level on the actor
+     * Calculate spell slot uses (pact or standard) for a given slot level, including upcast logic.
      * @private
      */
-    _calculateSpellSlots(item, actor, highestAvailableSlot) {
-        const system = item.system;
-        const prepMode = system.method;
+    _getSpellSlotUses(actor, level, highestAvailableSlot) {
         const actorSpells = actor.system.spells;
-        const level = system.level ?? 0;
         
-        if (prepMode === 'pact') {
+        if (level === 'pact') {
             const pact = actorSpells?.pact;
             const available = pact?.value ?? 0;
             const max = pact?.max ?? 0;
@@ -560,28 +517,47 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                     isUpcast: true
                 };
             }
-            
             return { available: 0, max };
-        } else if (!['innate', 'atwill'].includes(prepMode)) {
-            if (level > 0) {
-                const spellSlot = actorSpells?.[`spell${level}`];
-                const available = spellSlot?.value ?? 0;
-                const max = spellSlot?.max ?? 0;
-                
-                if (available > 0) {
-                    return { available, max };
-                }
-                
-                if (this._hasAvailableUpcastSlots(level, highestAvailableSlot)) {
-                    return {
-                        available: localize('BAD.dnd5e.upcast', 'Upcast'),
-                        max: null,
-                        isUpcast: true
-                    };
-                }
-                
-                return { available: 0, max };
+        } else {
+            const lvl = typeof level === 'string' ? (parseInt(level, 10) || 0) : level;
+            if (lvl <= 0) return { available: null, max: null };
+            
+            const spellSlot = actorSpells?.[`spell${lvl}`];
+            const available = spellSlot?.value ?? 0;
+            const max = spellSlot?.max ?? 0;
+            
+            if (available > 0) {
+                return { available, max };
             }
+            
+            if (this._hasAvailableUpcastSlots(lvl, highestAvailableSlot)) {
+                return {
+                    available: localize('BAD.dnd5e.upcast', 'Upcast'),
+                    max: null,
+                    isUpcast: true
+                };
+            }
+            return { available: 0, max };
+        }
+    }
+
+    /**
+     * Fallback method to calculate spell slots for standard slot-based spells.
+     * Used when the Cast activity doesn't have an explicit spellSlots consumption target.
+     * @param {Item} item The spell item
+     * @param {Actor} actor The actor
+     * @param {number} highestAvailableSlot The highest available spell slot level on the actor
+     * @private
+     */
+    _calculateSpellSlots(item, actor, highestAvailableSlot) {
+        const system = item.system;
+        const prepMode = system.method;
+        const level = system.level ?? 0;
+        
+        if (prepMode === 'pact') {
+            return this._getSpellSlotUses(actor, 'pact', highestAvailableSlot);
+        } else if (!['innate', 'atwill'].includes(prepMode)) {
+            return this._getSpellSlotUses(actor, level, highestAvailableSlot);
         }
         return { available: null, max: null };
     }
