@@ -49,16 +49,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         this._onDragEnd = this._onDragEnd.bind(this);
     }
 
-    // Backwards-compatibility property getters/setters
-    get activeLeftParentTypes() { return this.leftTabs.activeParents; }
-    get focusedLeftParentType() { return this.leftTabs.focusedParent; }
-    set focusedLeftParentType(val) { this.leftTabs.focusedParent = val; }
-    get activeLeftSubTypes() { return this.leftTabs.activeSubTypes; }
 
-    get activeParentTypes() { return this.rightTabs.activeParents; }
-    get focusedParentType() { return this.rightTabs.focusedParent; }
-    set focusedParentType(val) { this.rightTabs.focusedParent = val; }
-    get activeSubTypes() { return this.rightTabs.activeSubTypes; }
 
     /**
      * Close the application, logging the transition.
@@ -148,7 +139,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
 
         // Always ensure 'hidden' tab is present if we are currently viewing it,
         // even if it is empty, to prevent jarring automatic tab switches when unhiding the last item.
-        if (this.activeLeftParentTypes.has('hidden')) {
+        if (this.leftTabs.activeParents.has('hidden')) {
             existingItemCombinations.add('hidden');
         }
 
@@ -161,8 +152,8 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                 id: 'all',
                 label: adapter.getItemTypeLabel('all'),
                 icon: adapter.getItemTypeIcon('all'),
-                active: this.activeLeftParentTypes.has('all'),
-                expanded: this.activeLeftParentTypes.has('all'),
+                active: this.leftTabs.activeParents.has('all'),
+                expanded: this.leftTabs.activeParents.has('all'),
                 activeParent: false,
                 subTabs: []
             });
@@ -174,7 +165,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             const subId = parts[1]; // might be undefined (spell level)
 
             if (!leftGroups[parentId]) {
-                const isActive = this.activeLeftParentTypes.has(parentId);
+                const isActive = this.leftTabs.activeParents.has(parentId);
                 leftGroups[parentId] = new HUDTab({
                     id: parentId,
                     label: adapter.getItemTypeLabel(parentId),
@@ -187,8 +178,8 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             }
 
             if (subId) {
-                const isActive = this.activeLeftParentTypes.has(parentId);
-                const isSubActive = this.activeLeftSubTypes.has(subId);
+                const isActive = this.leftTabs.activeParents.has(parentId);
+                const isSubActive = this.leftTabs.activeSubTypes.has(subId);
                 leftGroups[parentId].addSubTab({
                     id: subId,
                     label: adapter.getItemSubTabLabel(parentId, subId),
@@ -204,13 +195,13 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         // Post-process leftGroups to set active, expanded, and activeParent, and sort sub-tabs
         for (const parent of itemTypes) {
             const validSubIds = new Set(parent.subTabs.map(t => t.id));
-            const activeSubsForParent = Array.from(this.activeLeftSubTypes).filter(id => validSubIds.has(id));
+            const activeSubsForParent = Array.from(this.leftTabs.activeSubTypes).filter(id => validSubIds.has(id));
             
-            parent.active = this.activeLeftParentTypes.has(parent.id);
+            parent.active = this.leftTabs.activeParents.has(parent.id);
             if (parent.subTabs.length > 0 && parent.active && activeSubsForParent.length > 0) {
                 parent.activeParent = true;
             }
-            parent.expanded = parent.id === this.focusedLeftParentType || activeSubsForParent.length > 0;
+            parent.expanded = parent.id === this.leftTabs.focusedParent || activeSubsForParent.length > 0;
             
             if (parent.subTabs.length > 0) {
                 parent.subTabs.sort((a, b) => adapter.getItemSubTabSortOrder(parent.id, a.id) - adapter.getItemSubTabSortOrder(parent.id, b.id));
@@ -242,8 +233,8 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                 id: 'all',
                 label: adapter.getActionTypeLabel('all'),
                 icon: adapter.getActionTypeIcon('all'),
-                active: this.activeParentTypes.has('all'),
-                expanded: this.activeParentTypes.has('all'),
+                active: this.rightTabs.activeParents.has('all'),
+                expanded: this.rightTabs.activeParents.has('all'),
                 activeParent: false,
                 subTabs: []
             });
@@ -255,7 +246,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             const subId = parts[1]; // might be undefined
 
             if (!parentGroups[parentId]) {
-                const isActive = this.activeParentTypes.has(parentId);
+                const isActive = this.rightTabs.activeParents.has(parentId);
                 parentGroups[parentId] = new HUDTab({
                     id: parentId,
                     label: adapter.getActionTypeLabel(parentId),
@@ -268,8 +259,8 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             }
 
             if (subId) {
-                const isActive = this.activeParentTypes.has(parentId);
-                const isSubActive = this.activeSubTypes.has(subId);
+                const isActive = this.rightTabs.activeParents.has(parentId);
+                const isSubActive = this.rightTabs.activeSubTypes.has(subId);
                 const isComponents = parentId === 'components';
                 parentGroups[parentId].addSubTab({
                     id: subId,
@@ -289,9 +280,9 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             const skipAll = ['components'].includes(parent.id);
             
             if (parent.subTabs.length > 0 && !skipAll) {
-                const isActive = parent.id === this.focusedParentType;
+                const isActive = parent.id === this.rightTabs.focusedParent;
                 const validSubIds = new Set(parent.subTabs.map(t => t.id));
-                const activeSubsForParent = Array.from(this.activeSubTypes).filter(id => validSubIds.has(id));
+                const activeSubsForParent = Array.from(this.rightTabs.activeSubTypes).filter(id => validSubIds.has(id));
 
                 parent.addSubTab({
                     id: 'all',
@@ -306,13 +297,13 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         for (const parent of actionTypes) {
             if (parent.id === 'components') continue; // Exclude components from activeParent calculation
             const validSubIds = new Set(parent.subTabs.map(t => t.id));
-            const activeSubsForParent = Array.from(this.activeSubTypes).filter(id => validSubIds.has(id));
+            const activeSubsForParent = Array.from(this.rightTabs.activeSubTypes).filter(id => validSubIds.has(id));
             
-            parent.active = this.activeParentTypes.has(parent.id);
+            parent.active = this.rightTabs.activeParents.has(parent.id);
             if (parent.subTabs.length > 0 && parent.active && activeSubsForParent.length > 0) {
                 parent.activeParent = true;
             }
-            parent.expanded = parent.id === this.focusedParentType || activeSubsForParent.length > 0;
+            parent.expanded = parent.id === this.rightTabs.focusedParent || activeSubsForParent.length > 0;
         }
 
         // Cache parentGroups on the instance for use in event handlers/action rolling
@@ -597,8 +588,8 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             const itemActivities = action.activities;
             if (itemActivities && itemActivities.length > 0) {
                 // Filter sub-actions to only those that match the currently active right-side tabs
-                const activeParents = this.activeParentTypes;
-                const activeSubs = this.activeSubTypes;
+                const activeParents = this.rightTabs.activeParents;
+                const activeSubs = this.rightTabs.activeSubTypes;
                 const filterNoResources = game.settings.get(MODULE_ID, 'filterNoResources');
 
                 const activeEconomyParents = Array.from(activeParents).filter(p => p !== 'components' && p !== 'all');
