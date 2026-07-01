@@ -158,23 +158,17 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             }
 
             // Extract unique Action Types (for Right-side Tabs)
-            if (action.tabs && Array.isArray(action.tabs)) {
-                // Support both single tab [parent, sub] and multiple tabs [[parent1, sub1], ...]
-                const tabsList = Array.isArray(action.tabs[0]) ? action.tabs : null;
-                if (tabsList) {
-                    for (const tab of tabsList) {
-                        if (tab.length === 2) {
-                            existingCombinations.add(`${tab[0]}/${tab[1]}`);
-                        } else if (tab.length === 1) {
-                            existingCombinations.add(tab[0]);
-                        }
-                    }
-                } else {
-                    const tab = action.tabs;
-                    if (tab.length === 2) {
-                        existingCombinations.add(`${tab[0]}/${tab[1]}`);
-                    } else if (tab.length === 1) {
-                        existingCombinations.add(tab[0]);
+            if (action.tabs) {
+                const tabsList = Array.isArray(action.tabs)
+                    ? (Array.isArray(action.tabs[0]) || action.tabs[0]?.root ? action.tabs : [action.tabs])
+                    : [action.tabs];
+
+                for (const tab of tabsList) {
+                    const path = tab?.path ?? (Array.isArray(tab) ? tab : (tab ? [tab] : []));
+                    if (path.length >= 2) {
+                        existingCombinations.add(`${path[0]}/${path[1]}`);
+                    } else if (path.length === 1) {
+                        existingCombinations.add(path[0]);
                     }
                 }
             }

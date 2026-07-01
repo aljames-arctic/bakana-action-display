@@ -3,6 +3,7 @@ import { localize } from '../../lib/utils.js';
 import { log } from '../../lib/logger.js';
 import { MODULE_ID } from '../../constants.js';
 import { HUDTab } from '../../ui/hud-tab.js';
+import { TabRef } from '../../ui/tab-ref.js';
 
 // Static sort order maps to prevent allocations during sorting
 const PARENT_SORT_ORDER = {
@@ -257,8 +258,8 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                 }
 
                 // Roll up uses to the main action
-                if (filteredSubs.length === 1) {
-                    activityAction.uses = filteredSubs[0].uses;
+                if (filteredActivities.length === 1) {
+                    activityAction.uses = filteredActivities[0].uses;
                 } else {
                     // For multiple activities, use item-level uses (e.g. wand charges)
                     // Spells fall back to spell slots
