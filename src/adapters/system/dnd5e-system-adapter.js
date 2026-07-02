@@ -296,9 +296,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         return baseFiltered.filter(sub => {
             const spellProps = sub.linkedAction?.system?.properties ?? sub.originalActivity?.spell?.properties;
             if (spellProps) {
-                const hasBannedComp = activeCompSubs.some(comp => 
-                    spellProps instanceof Set ? spellProps.has(comp) : (Array.isArray(spellProps) && spellProps.includes(comp))
-                );
+                const hasBannedComp = activeCompSubs.some(comp => spellProps.has?.(comp) || spellProps.includes?.(comp));
                 if (hasBannedComp) return false;
             }
             return true;
@@ -325,9 +323,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
             const allSubactionsBanned = action.subactions.every(sub => {
                 const spellProps = sub.linkedAction?.system?.properties ?? sub.originalActivity?.spell?.properties;
                 if (!spellProps) return false;
-                return activeCompSubs.some(comp => 
-                    spellProps instanceof Set ? spellProps.has(comp) : (Array.isArray(spellProps) && spellProps.includes(comp))
-                );
+                return activeCompSubs.some(comp => spellProps.has?.(comp) || spellProps.includes?.(comp));
             });
             if (allSubactionsBanned) return false;
         } else {
