@@ -40,10 +40,7 @@
             "none": "None"
         },
         "common": {
-            "actionEconomy": "Action Economy"
-        },
-        "dnd5e": {
-            "upcast": "Upcast",
+            "actionEconomy": "Action Economy",
             "itemCharges": "Item Charges",
             "prepareSpell": "Prepare Spell",
             "unprepareSpell": "Unprepare Spell",
@@ -53,6 +50,9 @@
             "allWeapons": "All Weapons",
             "allEquipment": "All Equipment",
             "spellComponents": "Spell Components"
+        },
+        "dnd5e": {
+            "upcast": "Upcast"
         }
     }
 }

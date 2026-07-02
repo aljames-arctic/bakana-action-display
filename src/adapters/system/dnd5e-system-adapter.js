@@ -374,7 +374,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
             const showUnprepared = app.actor.getFlag(MODULE_ID, 'showUnprepared') ?? false;
             spellParent.addSubTab({
                 id: 'all',
-                label: localize('BAD.dnd5e.allSpells', 'All Spells'),
+                label: localize('BAD.common.allSpells', 'All Spells'),
                 active: app.leftTabs.activeParents.has('spell') && app.leftTabs.activeSubTypes.size === 0,
                 showUnprepared: showUnprepared
             });
@@ -386,7 +386,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
             const showUnequipped = app.actor.getFlag(MODULE_ID, 'showUnequipped_weapon') ?? false;
             weaponParent.addSubTab({
                 id: 'all',
-                label: localize('BAD.dnd5e.allWeapons', 'All Weapons'),
+                label: localize('BAD.common.allWeapons', 'All Weapons'),
                 active: app.leftTabs.activeParents.has('weapon') && app.leftTabs.activeSubTypes.size === 0,
                 showUnprepared: showUnequipped
             });
@@ -398,7 +398,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
             const showUnequipped = app.actor.getFlag(MODULE_ID, 'showUnequipped_equipment') ?? false;
             equipmentParent.addSubTab({
                 id: 'all',
-                label: localize('BAD.dnd5e.allEquipment', 'All Equipment'),
+                label: localize('BAD.common.allEquipment', 'All Equipment'),
                 active: app.leftTabs.activeParents.has('equipment') && app.leftTabs.activeSubTypes.size === 0,
                 showUnprepared: showUnequipped
             });
@@ -414,7 +414,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
     getContextMenuItems(app) {
         return [
             {
-                name: "BAD.dnd5e.prepareSpell",
+                name: "BAD.common.prepareSpell",
                 icon: '<i class="fas fa-book"></i>',
                 condition: el => {
                     if (!app.actor?.isOwner) return false;
@@ -437,7 +437,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                 }
             },
             {
-                name: "BAD.dnd5e.unprepareSpell",
+                name: "BAD.common.unprepareSpell",
                 icon: '<i class="fas fa-book-dead"></i>',
                 condition: el => {
                     if (!app.actor?.isOwner) return false;
@@ -459,7 +459,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                 }
             },
             {
-                name: "BAD.dnd5e.equipItem",
+                name: "BAD.common.equipItem",
                 icon: '<i class="fas fa-shield-halved"></i>',
                 condition: el => {
                     if (!app.actor?.isOwner) return false;
@@ -479,7 +479,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                 }
             },
             {
-                name: "BAD.dnd5e.unequipItem",
+                name: "BAD.common.unequipItem",
                 icon: '<i class="fas fa-shield-slash"></i>',
                 condition: el => {
                     if (!app.actor?.isOwner) return false;
@@ -573,10 +573,10 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
     getItemSubTabLabel(parentId, subId) {
         if (parentId === 'spell') {
             if (subId === 'all') {
-                return localize('BAD.dnd5e.allSpells', 'All Spells');
+                return localize('BAD.common.allSpells', 'All Spells');
             }
             if (subId === 'itemCharges') {
-                return localize('BAD.dnd5e.itemCharges', 'Item Charges');
+                return localize('BAD.common.itemCharges', 'Item Charges');
             }
             if (subId.startsWith('level_')) {
                 const num = subId.replace('level_', '');
@@ -588,12 +588,12 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
             }
         }
         if (parentId === 'weapon') {
-            if (subId === 'all') return localize('BAD.dnd5e.allWeapons', 'All Weapons');
+            if (subId === 'all') return localize('BAD.common.allWeapons', 'All Weapons');
             const key = `DND5E.Weapon${subId.charAt(0).toUpperCase() + subId.slice(1)}`;
             return localize(key, CONFIG?.DND5E?.weaponTypes?.[subId] ?? subId);
         }
         if (parentId === 'equipment') {
-            if (subId === 'all') return localize('BAD.dnd5e.allEquipment', 'All Equipment');
+            if (subId === 'all') return localize('BAD.common.allEquipment', 'All Equipment');
             const key = `DND5E.Equipment${subId.charAt(0).toUpperCase() + subId.slice(1)}`;
             return localize(key, CONFIG?.DND5E?.equipmentTypes?.[subId] ?? subId);
         }
@@ -606,7 +606,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
     getActionTypeLabel(parentId) {
         const labels = {
             'economy': localize('BAD.common.actionEconomy', 'Action Economy'),
-            'components': localize('BAD.dnd5e.spellComponents', 'Spell Components')
+            'components': localize('BAD.common.spellComponents', 'Spell Components')
         };
         return labels[parentId] ?? super.getActionTypeLabel(parentId);
     }
