@@ -149,9 +149,9 @@ export class BaseSystemAdapter {
      */
     getItemTypeLabel(parentId) {
         const labels = {
-            'all': localize('BAD.hud.allItems', 'All Items'),
-            'other': localize('BAD.hud.other', 'Other'),
-            'hidden': localize('BAD.hud.hidden', 'Hidden')
+            'all': localize('BAD.core.allItems', 'All Items'),
+            'other': localize('BAD.core.other', 'Other'),
+            'hidden': localize('BAD.core.hidden', 'Hidden')
         };
         return labels[parentId] ?? parentId.toUpperCase();
     }
@@ -187,8 +187,8 @@ export class BaseSystemAdapter {
      */
     getActionTypeLabel(parentId) {
         const labels = {
-            'all': localize('BAD.hud.allActions', 'All Actions'),
-            'none': localize('BAD.hud.none', 'None')
+            'all': localize('BAD.core.allActions', 'All Actions'),
+            'none': localize('BAD.core.none', 'None')
         };
         return labels[parentId] ?? parentId.toUpperCase();
     }

@@ -228,7 +228,7 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
      */
     getActionSubTabLabel(subId) {
         const labels = {
-            'all': localize('BAD.hud.allActions', 'All Actions'),
+            'all': localize('BAD.core.allActions', 'All Actions'),
             'action': localize('PF2E.TabActionsLabel', 'Actions'),
             'reaction': localize('PF2E.ActionsReactionsHeader', 'Reactions'),
             'other': localize('PF2E.ActionsFreeActionsHeader', 'Free Actions')

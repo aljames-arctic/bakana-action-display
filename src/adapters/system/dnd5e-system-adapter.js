@@ -542,7 +542,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
 
     getItemTypeLabel(parentId) {
         const labels = {
-            'all': localize('BAD.hud.allItems', 'All Items'),
+            'all': localize('BAD.core.allItems', 'All Items'),
             'weapon': localize('DND5E.ItemTypeWeapon', 'Weapon'),
             'equipment': localize('DND5E.ItemTypeEquipment', 'Equipment'),
             'consumable': localize('DND5E.ItemTypeConsumable', 'Consumable'),
@@ -552,7 +552,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
             'feat': localize('DND5E.ItemTypeFeat', 'Feature'),
             'spell': localize('DND5E.ItemTypeSpell', 'Spell'),
             'other': localize('DND5E.ActionOther', 'Other'),
-            'hidden': localize('BAD.hud.hidden', 'Hidden')
+            'hidden': localize('BAD.core.hidden', 'Hidden')
         };
         return labels[parentId] ?? super.getItemTypeLabel(parentId);
     }
@@ -624,7 +624,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
 
     getActionSubTabLabel(subId) {
         const labels = {
-            'all': localize('BAD.hud.allActions', 'All Actions'),
+            'all': localize('BAD.core.allActions', 'All Actions'),
             'action': localize('DND5E.Action', 'Action'),
             'bonus': localize('DND5E.BonusAction', 'Bonus Action'),
             'reaction': localize('DND5E.Reaction', 'Reaction'),

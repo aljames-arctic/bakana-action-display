@@ -28,7 +28,7 @@
                 "hint": "If enabled, a detached HUD will stay open when clicking off the token, and will only close if you right-click the same token again."
             }
         },
-        "hud": {
+        "core": {
             "filterNoResources": "Hide Depleted",
             "hidden": "Hidden",
             "hideAction": "Hide Action",

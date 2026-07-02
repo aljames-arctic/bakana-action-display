@@ -356,7 +356,7 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
      */
     getActionSubTabLabel(subId) {
         const labels = {
-            'all': localize('BAD.hud.allActions', 'All Actions'),
+            'all': localize('BAD.core.allActions', 'All Actions'),
             'action': localize('PF1.Activation.action.Plural', 'Actions'),
             'bonus': localize('PF1.Activation.swift.Single', 'Swift'),
             'reaction': localize('PF1.Activation.immediate.Single', 'Immediate'),

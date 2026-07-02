@@ -930,7 +930,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
     _createContextMenu() {
         const menuItems = [
             {
-                name: "BAD.hud.hideAction",
+                name: "BAD.core.hideAction",
                 icon: '<i class="fas fa-eye-slash"></i>',
                 condition: el => {
                     if (!this.actor?.isOwner) return false;
@@ -942,7 +942,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                 }
             },
             {
-                name: "BAD.hud.unhideAction",
+                name: "BAD.core.unhideAction",
                 icon: '<i class="fas fa-eye"></i>',
                 condition: el => {
                     if (!this.actor?.isOwner) return false;
