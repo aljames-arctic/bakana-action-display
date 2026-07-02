@@ -296,10 +296,10 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         return baseFiltered.filter(sub => {
             const spellProps = sub.linkedAction?.system?.properties ?? sub.originalActivity?.spell?.properties;
             if (spellProps) {
-                const propsSet = Array.isArray(spellProps) ? new Set(spellProps) : (spellProps instanceof Set ? spellProps : new Set());
-                if (activeCompSubs.some(comp => propsSet.has(comp))) {
-                    return false;
-                }
+                const hasBannedComp = activeCompSubs.some(comp => 
+                    spellProps instanceof Set ? spellProps.has(comp) : (Array.isArray(spellProps) && spellProps.includes(comp))
+                );
+                if (hasBannedComp) return false;
             }
             return true;
         });
@@ -325,15 +325,14 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
             const allSubactionsBanned = action.subactions.every(sub => {
                 const spellProps = sub.linkedAction?.system?.properties ?? sub.originalActivity?.spell?.properties;
                 if (!spellProps) return false;
-                const propsSet = Array.isArray(spellProps) ? new Set(spellProps) : (spellProps instanceof Set ? spellProps : new Set());
-                return activeCompSubs.some(comp => propsSet.has(comp));
+                return activeCompSubs.some(comp => 
+                    spellProps instanceof Set ? spellProps.has(comp) : (Array.isArray(spellProps) && spellProps.includes(comp))
+                );
             });
             if (allSubactionsBanned) return false;
         } else {
             // For single-action items: check tabs for component matches
-            const hasBannedComponent = action.tabs.some(
-                tab => tab.root === 'components' && activeCompSubs.includes(tab.label)
-            );
+            const hasBannedComponent = action.tabs.some(tab => (tab.root === 'components') && (activeCompSubs.includes(tab.label)));
             if (hasBannedComponent) return false;
         }
 
