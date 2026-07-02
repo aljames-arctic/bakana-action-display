@@ -413,9 +413,9 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                         if (!spellProps) return false;
                         const propsSet = Array.isArray(spellProps) ? new Set(spellProps) : (spellProps instanceof Set ? spellProps : new Set());
                         const subCompLabels = new Set();
-                        if (propsSet.has('vocal') || propsSet.has('v')) subCompLabels.add('vocal');
-                        if (propsSet.has('somatic') || propsSet.has('s')) subCompLabels.add('somatic');
-                        if (propsSet.has('material') || propsSet.has('m')) subCompLabels.add('material');
+                        if (propsSet.has('vocal')) subCompLabels.add('vocal');
+                        if (propsSet.has('somatic')) subCompLabels.add('somatic');
+                        if (propsSet.has('material')) subCompLabels.add('material');
                         return Array.from(subCompLabels).some(comp => activeCompSubs.includes(comp));
                     });
                     if (allSubactionsBanned) return false;
@@ -645,9 +645,9 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                         if (spellProps) {
                             const propsSet = Array.isArray(spellProps) ? new Set(spellProps) : (spellProps instanceof Set ? spellProps : new Set());
                             const subCompLabels = new Set();
-                            if (propsSet.has('vocal') || propsSet.has('v')) subCompLabels.add('vocal');
-                            if (propsSet.has('somatic') || propsSet.has('s')) subCompLabels.add('somatic');
-                            if (propsSet.has('material') || propsSet.has('m')) subCompLabels.add('material');
+                            if (propsSet.has('vocal')) subCompLabels.add('vocal');
+                            if (propsSet.has('somatic')) subCompLabels.add('somatic');
+                            if (propsSet.has('material')) subCompLabels.add('material');
 
                             const hasBannedComponent = Array.from(subCompLabels).some(comp => activeCompSubs.includes(comp));
                             if (hasBannedComponent) return false;

@@ -181,9 +181,9 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                     if (spellProps) {
                         const propsSet = Array.isArray(spellProps) ? new Set(spellProps) : (spellProps instanceof Set ? spellProps : new Set());
                         const compRoot = new TabRef({ label: 'components' });
-                        if (propsSet.has('vocal') || propsSet.has('v')) spellComponents.push(new TabRef({ label: 'vocal', parent: compRoot }));
-                        if (propsSet.has('somatic') || propsSet.has('s')) spellComponents.push(new TabRef({ label: 'somatic', parent: compRoot }));
-                        if (propsSet.has('material') || propsSet.has('m')) spellComponents.push(new TabRef({ label: 'material', parent: compRoot }));
+                        if (propsSet.has('vocal')) spellComponents.push(new TabRef({ label: 'vocal', parent: compRoot }));
+                        if (propsSet.has('somatic')) spellComponents.push(new TabRef({ label: 'somatic', parent: compRoot }));
+                        if (propsSet.has('material')) spellComponents.push(new TabRef({ label: 'material', parent: compRoot }));
                     }
                 }
 
