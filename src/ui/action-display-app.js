@@ -91,13 +91,13 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         },
         // Declarative Actions API - maps data-action attributes in HTML to static handlers
         actions: {
-            changeLeftItemType: "_onChangeLeftItemType",
-            changeLeftSubItemType: "_onChangeLeftSubItemType",
-            changeActionType: "_onChangeActionType",
-            changeSubActionType: "_onChangeSubActionType",
-            toggleAnchor: "_onToggleAnchor",
-            rollAction: "_onRollAction",
-            toggleFilterResources: "_onToggleFilterResources"
+            changeLeftItemType: ActionDisplayApp.prototype._onChangeLeftItemType,
+            changeLeftSubItemType: ActionDisplayApp.prototype._onChangeLeftSubItemType,
+            changeActionType: ActionDisplayApp.prototype._onChangeActionType,
+            changeSubActionType: ActionDisplayApp.prototype._onChangeSubActionType,
+            toggleAnchor: ActionDisplayApp.prototype._onToggleAnchor,
+            rollAction: ActionDisplayApp.prototype._onRollAction,
+            toggleFilterResources: ActionDisplayApp.prototype._onToggleFilterResources
         }
     };
 
