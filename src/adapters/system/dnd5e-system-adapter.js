@@ -271,6 +271,21 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
     }
 
     /**
+     * Check if a spell's properties contain a specific property label (e.g. 'vocal', 'somatic', 'material').
+     * Enforces strict type validation (must be Set or Array if present).
+     * @param {Set<string>|Array<string>|null} spellProps
+     * @param {string} prop
+     * @returns {boolean}
+     * @private
+     */
+    _hasSpellProperty(spellProps, prop) {
+        if (!spellProps) return false;
+        if (spellProps instanceof Set) return spellProps.has(prop);
+        if (Array.isArray(spellProps)) return spellProps.includes(prop);
+        throw new Error(`DnD5eSystemAdapter | Unexpected spell properties type: expected Set or Array, received ${typeof spellProps}`);
+    }
+
+    /**
      * System-specific sub-action filtering for D&D 5e activities.
      * Checks D&D 5e spell components (vocal, somatic, material) on linkedActions/originalActivities.
      */
@@ -295,11 +310,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         // Filter out subactions requiring banned spell components
         return baseFiltered.filter(sub => {
             const spellProps = sub.linkedAction?.system?.properties ?? sub.originalActivity?.spell?.properties;
-            if (spellProps) {
-                const hasBannedComp = activeCompSubs.some(comp => spellProps.has?.(comp) || spellProps.includes?.(comp));
-                if (hasBannedComp) return false;
-            }
-            return true;
+            return !activeCompSubs.some(comp => this._hasSpellProperty(spellProps, comp));
         });
     }
 
@@ -322,8 +333,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
             // For items with subactions: hide card ONLY if ALL subactions are banned by components filter
             const allSubactionsBanned = action.subactions.every(sub => {
                 const spellProps = sub.linkedAction?.system?.properties ?? sub.originalActivity?.spell?.properties;
-                if (!spellProps) return false;
-                return activeCompSubs.some(comp => spellProps.has?.(comp) || spellProps.includes?.(comp));
+                return activeCompSubs.some(comp => this._hasSpellProperty(spellProps, comp));
             });
             if (allSubactionsBanned) return false;
         } else {
