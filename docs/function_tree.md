@@ -314,7 +314,6 @@ flowchart TD
 ### [`src/ui/tab-ref.js`](../src/ui/tab-ref.js) — Structured Tab Data Reference (`TabRef`)
 - [**`constructor({ id, label, parent })`**](../src/ui/tab-ref.js#L12-L20): Instantiates a pre-computed tab data node linked to parent nodes, caching `.root` and `.path` string (`'economy/action'`).
 - [**`get parentId`**](../src/ui/tab-ref.js#L26-L28): Returns direct parent ID or root ID.
-- [**`toJSON()`**](../src/ui/tab-ref.js#L34-L36): Serializes to the pre-computed `.path` string.
 
 ### [`src/adapters/system/base-system-adapter.js`](../src/adapters/system/base-system-adapter.js) — System Adapter Interface (`BaseSystemAdapter`)
 - [**`shouldExtractItem(item, actor)`**](../src/adapters/system/base-system-adapter.js#L26-L28): Performance filter to bypass unneeded item allocations.

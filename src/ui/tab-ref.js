@@ -18,20 +18,4 @@ export class TabRef {
         this.root = parent ? parent.root : id;
         this.path = parent ? `${parent.path}/${id}` : id;
     }
-
-    /**
-     * Direct parent tab ID if one exists, otherwise the root parent ID.
-     * @type {string}
-     */
-    get parentId() {
-        return this.parent ? this.parent.id : this.id;
-    }
-
-    /**
-     * Custom JSON serialization.
-     * @returns {string}
-     */
-    toJSON() {
-        return this.path;
-    }
 }
