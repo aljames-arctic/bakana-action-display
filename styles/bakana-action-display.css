@@ -686,6 +686,16 @@
     width: 100% !important;
 }
 
+/* Context menu icon styling */
+#context-menu .bad-menu-icon, .context-menu .bad-menu-icon {
+    width: 16px;
+    height: 16px;
+    border: none;
+    vertical-align: middle;
+    margin-right: 8px;
+    border-radius: 4px;
+}
+
 /* Push the uses span to the far right */
 #context-menu .bad-menu-uses, .context-menu .bad-menu-uses {
     margin-left: auto !important;
