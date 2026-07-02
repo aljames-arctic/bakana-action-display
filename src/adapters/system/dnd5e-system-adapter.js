@@ -331,12 +331,9 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
             if (allSubactionsBanned) return false;
         } else {
             // For single-action items: check tabs for component matches
-            const spellCompSubs = new Set(
-                action.tabs
-                    .filter(tab => tab.root === 'components')
-                    .map(tab => tab.label)
+            const hasBannedComponent = action.tabs.some(
+                tab => tab.root === 'components' && activeCompSubs.includes(tab.label)
             );
-            const hasBannedComponent = Array.from(spellCompSubs).some(comp => activeCompSubs.includes(comp));
             if (hasBannedComponent) return false;
         }
 

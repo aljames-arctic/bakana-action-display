@@ -74,7 +74,7 @@ export class HUDTabColumn {
             this.activeParents.clear();
             this.activeParents.add(parentId);
             this.focusedParent = parentId;
-            for (const subId of Array.from(this.activeSubTypes)) {
+            for (const subId of this.activeSubTypes) {
                 if (!validSubIds.has(subId)) {
                     this.activeSubTypes.delete(subId);
                 }
