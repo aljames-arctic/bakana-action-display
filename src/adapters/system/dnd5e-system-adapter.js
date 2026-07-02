@@ -78,31 +78,10 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         const filterNoResources = game.settings.get(MODULE_ID, 'filterNoResources');
 
         // Pre-calculate ammunition quantities by subtype in a single pass to avoid nested loops (O(I) complexity)
-        const ammoQuantities = new Map();
-        for (const i of actor.items) {
-            if (i.type === 'consumable' && i.system.type?.value === 'ammo') {
-                const subtype = i.system.type.subtype;
-                if (subtype) {
-                    const qty = i.system.quantity ?? 0;
-                    ammoQuantities.set(subtype, (ammoQuantities.get(subtype) ?? 0) + qty);
-                }
-            }
-        }
+        const ammoQuantities = this._getAmmoQuantities(actor);
 
         // Pre-calculate the highest available spell slot level in a single pass (O(1) upcast checks later)
-        let highestAvailableSlot = 0;
-        const actorSpells = actor.system.spells;
-        if (actorSpells) {
-            for (let i = 1; i <= 9; i++) {
-                if (actorSpells[`spell${i}`]?.value > 0) {
-                    highestAvailableSlot = i; // Since we loop 1 to 9, this naturally finds the highest
-                }
-            }
-            const pact = actorSpells.pact;
-            if (pact?.value > 0) {
-                highestAvailableSlot = Math.max(highestAvailableSlot, pact.level ?? 0);
-            }
-        }
+        let highestAvailableSlot = this._getHighestAvailableSpellSlot(actor);
 
         for (const action of actions) {
             const item = action.originalItem;
@@ -154,9 +133,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
 
             // 4. Process activities if they exist (D&D 5e v4+)
             const activities = this.getItemActivities(item);
-            const activeActivities = activities 
-                ? Array.from(activities.values()).filter(a => a.activation?.type && a.activation.type !== 'none')
-                : [];
+            const activeActivities = activities.filter(a => a.activation?.type && a.activation.type !== 'none');
 
             if (activeActivities.length > 0) {
                 // Map D&D 5e Activities to sub-actions for the generic HUD item model
@@ -582,10 +559,10 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
     /**
      * Get activities collection from a D&D 5e item.
      * @param {Item} item
-     * @returns {Map|undefined}
+     * @returns {Activities[]}
      */
     getItemActivities(item) {
-        return item.system.activities;
+        return Array.from(item.system.activities?.values() ?? []);
     }
 
     /**
@@ -864,5 +841,36 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
             available: quantity,
             max: null
         };
+    }
+
+    _getAmmoQuantities(actor) {
+        const ammoQuantities = new Map();
+        for (const i of actor.items) {
+            if (i.type === 'consumable' && i.system.type?.value === 'ammo') {
+                const subtype = i.system.type.subtype;
+                if (subtype) {
+                    const qty = i.system.quantity ?? 0;
+                    ammoQuantities.set(subtype, (ammoQuantities.get(subtype) ?? 0) + qty);
+                }
+            }
+        }
+        return ammoQuantities;
+    }
+
+    _getHighestAvailableSpellSlot(actor) {
+        let highestAvailableSlot = 0;
+        const actorSpells = actor.system.spells;
+        if (actorSpells) {
+            for (let i = 1; i <= 9; i++) {
+                if (actorSpells[`spell${i}`]?.value > 0) {
+                    highestAvailableSlot = i; // Since we loop 1 to 9, this naturally finds the highest
+                }
+            }
+            const pact = actorSpells.pact;
+            if (pact?.value > 0) {
+                highestAvailableSlot = Math.max(highestAvailableSlot, pact.level ?? 0);
+            }
+        }
+        return highestAvailableSlot;
     }
 }
