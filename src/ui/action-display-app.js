@@ -405,7 +405,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             parentGroups: this.parentGroups
         };
         const adapter = actionDisplay.activeSystemAdapter;
-        if (adapter && !adapter.matchesComponentsFilter(action, filterContext)) {
+        if (!adapter.matchesComponentsFilter(action, filterContext)) {
             return false;
         }
 
