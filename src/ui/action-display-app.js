@@ -398,7 +398,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         // Filter by Right Side (Action Type)
         if (!action.tabs) return false;
 
-        // Spell Components Filter (restrictive AND-filter, for spells and spell-casting items/activities)
+        // Spell Components Filter (restrictive AND-filter)
         const isComponentsActive = this.rightTabs.activeParents.has('components');
         if (isComponentsActive) {
             const parentGroup = this.parentGroups?.['components'];
@@ -406,26 +406,29 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             const activeCompSubs = Array.from(this.rightTabs.activeSubTypes).filter(id => validSubIds.has(id));
             
             if (activeCompSubs.length > 0) {
-                const spellCompSubs = new Set(
-                    action.tabs
-                        .filter(tab => tab.root === 'components')
-                        .map(tab => tab.label)
-                );
-
-                if (action.subactions?.length) {
-                    for (const sub of action.subactions) {
+                if (action.subactions?.length > 0) {
+                    // For items with subactions: hide card ONLY if ALL subactions are banned by components filter
+                    const allSubactionsBanned = action.subactions.every(sub => {
                         const spellProps = sub.linkedAction?.system?.properties ?? sub.originalActivity?.spell?.properties;
-                        if (spellProps) {
-                            const propsSet = Array.isArray(spellProps) ? new Set(spellProps) : (spellProps instanceof Set ? spellProps : new Set());
-                            if (propsSet.has('vocal') || propsSet.has('v')) spellCompSubs.add('vocal');
-                            if (propsSet.has('somatic') || propsSet.has('s')) spellCompSubs.add('somatic');
-                            if (propsSet.has('material') || propsSet.has('m')) spellCompSubs.add('material');
-                        }
-                    }
+                        if (!spellProps) return false;
+                        const propsSet = Array.isArray(spellProps) ? new Set(spellProps) : (spellProps instanceof Set ? spellProps : new Set());
+                        const subCompLabels = new Set();
+                        if (propsSet.has('vocal') || propsSet.has('v')) subCompLabels.add('vocal');
+                        if (propsSet.has('somatic') || propsSet.has('s')) subCompLabels.add('somatic');
+                        if (propsSet.has('material') || propsSet.has('m')) subCompLabels.add('material');
+                        return Array.from(subCompLabels).some(comp => activeCompSubs.includes(comp));
+                    });
+                    if (allSubactionsBanned) return false;
+                } else {
+                    // For single-action items: check tabs for component matches
+                    const spellCompSubs = new Set(
+                        action.tabs
+                            .filter(tab => tab.root === 'components')
+                            .map(tab => tab.label)
+                    );
+                    const hasBannedComponent = Array.from(spellCompSubs).some(comp => activeCompSubs.includes(comp));
+                    if (hasBannedComponent) return false;
                 }
-
-                const hasBannedComponent = Array.from(spellCompSubs).some(comp => activeCompSubs.includes(comp));
-                if (hasBannedComponent) return false;
             }
         }
 
