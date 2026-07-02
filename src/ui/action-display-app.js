@@ -604,76 +604,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                 const showDropdown = qualifyingSubActions.length > 1 || (itemActivities.length > 1 && qualifyingSubActions.length === 1);
 
                 if (showDropdown) {
-                    // Show a left-click dropdown menu.
-                    const menuItems = qualifyingSubActions.map(sub => {
-                        const uses = sub.uses;
-                        const name = sub.name;
-                        
-                        const iconHtml = sub.img 
-                            ? `<img src="${sub.img}" style="width: 16px; height: 16px; border: none; vertical-align: middle; margin-right: 8px; border-radius: 4px;" />` 
-                            : '<i class="fas fa-play" style="margin-right: 8px;"></i>';
-                        
-                        let usesHtml = "";
-                        if (uses && uses.available !== null) {
-                            const isDepleted = uses.available <= 0 && !uses.isUpcast;
-                            const depletedClass = isDepleted ? ' depleted' : '';
-                            const upcastClass = uses.isUpcast ? ' upcast' : '';
-                            const usesText = uses.max ? `${uses.available}/${uses.max}` : `${uses.available}`;
-                            usesHtml = `<span class="bad-menu-uses${depletedClass}${upcastClass}">${usesText}</span>`;
-                        }
-                        
-                        // Workaround: Foundry escapes 'name' but renders 'icon' as unescaped HTML.
-                        // We pack the entire HTML (icon + name + uses) into 'icon' and leave 'name' empty!
-                        return {
-                            name: "",
-                            icon: `${iconHtml}<span class="bad-menu-name">${name}</span>${usesHtml}`,
-                            callback: () => {
-                                log.debug(`Rolling sub-action: ${sub.name} via dropdown`);
-                                sub.roll(event);
-                            }
-                        };
-                    });
-
-                    let menu; // Declare menu here so it can be captured in the onClose closure
-                    const targetRow = target; // Capture the target in a local variable to prevent race conditions
-                    log.debug(`_onRollAction | Creating menu for: ${targetRow.dataset.actionId}`, targetRow);
-                    const options = {
-                        jQuery: false, // Opt-out of jQuery for callbacks
-                        onClose: () => {
-                            log.debug(`onClose | Target: ${targetRow.dataset.actionId}`, targetRow);
-                            targetRow.classList.remove('bad-menu-active'); // Safely remove class from the correct row
-                            log.debug(`onClose | Removed class from target: ${targetRow.dataset.actionId}. Classes now:`, targetRow.className);
-                            
-                            // Only clear global references and classes if this specific menu is still the active one
-                            if (this._activeLeftClickMenu === menu) {
-                                log.debug(`onClose | Clearing global active menu reference`);
-                                this._activeLeftClickMenu = null;
-                                this.element.querySelector('.bakana-action-display-container')?.classList.remove('has-context-menu');
-                            }
-                            if (this._activeMenuTarget === targetRow) {
-                                log.debug(`onClose | Clearing global active target reference`);
-                                this._activeMenuTarget = null;
-                            }
-                        }
-                    };
-
-                    // Create and render a temporary ContextMenu at the clicked element (passing raw HTMLElement)
-                    const container = this.element.querySelector('.bakana-action-display-container') ?? this.element;
-                    menu = new ContextMenu.implementation(container, null, menuItems, options);
-                    this._activeMenuTarget = target; // Set target directly to ensure toggle-off tracking works
-                    this._activeLeftClickMenu = menu; // Store the menu instance directly
-                    log.debug(`_onRollAction | Rendering menu for: ${targetRow.dataset.actionId}`);
-                    menu.render(target);
-
-                    // Add classes synchronously since V12 ContextMenu.render() doesn't trigger onOpen programmatically
-                    targetRow.classList.add('bad-menu-active');
-                    this.element.querySelectorAll('.bad-action-item').forEach(el => {
-                        if (el !== targetRow) {
-                            el.classList.remove('bad-menu-active');
-                        }
-                    });
-                    this.element.querySelector('.bakana-action-display-container')?.classList.add('has-context-menu');
-                    log.debug(`_onRollAction | Synchronously applied bad-menu-active to: ${targetRow.dataset.actionId}`);
+                    this._showActivityDropdown(target, qualifyingSubActions, event);
                 } else if (qualifyingSubActions.length === 1) {
                     // Natively only 1 option, and it qualifies: roll directly!
                     qualifyingSubActions[0].roll(event);
@@ -685,6 +616,85 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                 action.roll(event);
             }
         }
+    }
+
+    /**
+     * Show a left-click dropdown context menu displaying qualifying sub-actions / activities.
+     * @param {HTMLElement} target The row element clicked
+     * @param {Action[]} subactions The qualifying sub-actions to display
+     * @param {Event} event The trigger click event
+     * @private
+     */
+    _showActivityDropdown(target, subactions, event) {
+        const menuItems = subactions.map(sub => {
+            const uses = sub.uses;
+            const name = sub.name;
+
+            const iconHtml = sub.img 
+                ? `<img src="${sub.img}" style="width: 16px; height: 16px; border: none; vertical-align: middle; margin-right: 8px; border-radius: 4px;" />` 
+                : '<i class="fas fa-play" style="margin-right: 8px;"></i>';
+
+            let usesHtml = "";
+            if (uses && uses.available !== null) {
+                const isDepleted = uses.available <= 0 && !uses.isUpcast;
+                const depletedClass = isDepleted ? ' depleted' : '';
+                const upcastClass = uses.isUpcast ? ' upcast' : '';
+                const usesText = uses.max ? `${uses.available}/${uses.max}` : `${uses.available}`;
+                usesHtml = `<span class="bad-menu-uses${depletedClass}${upcastClass}">${usesText}</span>`;
+            }
+
+            // Workaround: Foundry escapes 'name' but renders 'icon' as unescaped HTML.
+            // We pack the entire HTML (icon + name + uses) into 'icon' and leave 'name' empty!
+            return {
+                name: "",
+                icon: `${iconHtml}<span class="bad-menu-name">${name}</span>${usesHtml}`,
+                callback: () => {
+                    log.debug(`Rolling sub-action: ${sub.name} via dropdown`);
+                    sub.roll(event);
+                }
+            };
+        });
+
+        let menu; // Declare menu here so it can be captured in the onClose closure
+        const targetRow = target; // Capture the target in a local variable to prevent race conditions
+        log.debug(`_showActivityDropdown | Creating menu for: ${targetRow.dataset.actionId}`, targetRow);
+
+        const options = {
+            jQuery: false, // Opt-out of jQuery for callbacks
+            onClose: () => {
+                log.debug(`onClose | Target: ${targetRow.dataset.actionId}`, targetRow);
+                targetRow.classList.remove('bad-menu-active');
+
+                // Only clear global references and classes if this specific menu is still the active one
+                if (this._activeLeftClickMenu === menu) {
+                    log.debug(`onClose | Clearing global active menu reference`);
+                    this._activeLeftClickMenu = null;
+                    this.element.querySelector('.bakana-action-display-container')?.classList.remove('has-context-menu');
+                }
+                if (this._activeMenuTarget === targetRow) {
+                    log.debug(`onClose | Clearing global active target reference`);
+                    this._activeMenuTarget = null;
+                }
+            }
+        };
+
+        // Create and render a temporary ContextMenu at the clicked element (passing raw HTMLElement)
+        const container = this.element.querySelector('.bakana-action-display-container') ?? this.element;
+        menu = new ContextMenu.implementation(container, null, menuItems, options);
+        this._activeMenuTarget = target; // Set target directly to ensure toggle-off tracking works
+        this._activeLeftClickMenu = menu; // Store the menu instance directly
+        log.debug(`_showActivityDropdown | Rendering menu for: ${targetRow.dataset.actionId}`);
+        menu.render(target);
+
+        // Add classes synchronously since V12 ContextMenu.render() doesn't trigger onOpen programmatically
+        targetRow.classList.add('bad-menu-active');
+        this.element.querySelectorAll('.bad-action-item').forEach(el => {
+            if (el !== targetRow) {
+                el.classList.remove('bad-menu-active');
+            }
+        });
+        this.element.querySelector('.bakana-action-display-container')?.classList.add('has-context-menu');
+        log.debug(`_showActivityDropdown | Synchronously applied bad-menu-active to: ${targetRow.dataset.actionId}`);
     }
 
     /**
