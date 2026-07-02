@@ -1,6 +1,6 @@
 import { actionDisplay } from '../action-display.js';
 import { log } from '../lib/logger.js';
-import { localize, toSet } from '../lib/utils.js';
+import { toSet } from '../lib/utils.js';
 import { MODULE_ID } from '../constants.js';
 import { HUDTabColumn } from './hud-tab-column.js';
 import { HUDTab } from './hud-tab.js';
@@ -661,22 +661,21 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
      */
     _showActivityDropdown(target, subactions, event) {
         const menuItems = subactions.map(sub => this._buildSubactionMenuItem(sub, event));
-        const targetRow = target;
-        log.debug(`_showActivityDropdown | Creating menu for: ${targetRow.dataset.actionId}`, targetRow);
+        log.debug(`_showActivityDropdown | Creating menu for: ${target.dataset.actionId}`, target);
 
         let menu;
         const options = {
             jQuery: false,
             onClose: () => {
-                log.debug(`onClose | Target: ${targetRow.dataset.actionId}`, targetRow);
-                targetRow.classList.remove('bad-menu-active');
+                log.debug(`onClose | Target: ${target.dataset.actionId}`, target);
+                target.classList.remove('bad-menu-active');
 
                 if (this._activeLeftClickMenu === menu) {
                     log.debug(`onClose | Clearing global active menu reference`);
                     this._activeLeftClickMenu = null;
                     this.element.querySelector('.bakana-action-display-container')?.classList.remove('has-context-menu');
                 }
-                if (this._activeMenuTarget === targetRow) {
+                if (this._activeMenuTarget === target) {
                     log.debug(`onClose | Clearing global active target reference`);
                     this._activeMenuTarget = null;
                 }
@@ -687,12 +686,12 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         menu = new ContextMenu.implementation(container, null, menuItems, options);
         this._activeMenuTarget = target;
         this._activeLeftClickMenu = menu;
-        log.debug(`_showActivityDropdown | Rendering menu for: ${targetRow.dataset.actionId}`);
+        log.debug(`_showActivityDropdown | Rendering menu for: ${target.dataset.actionId}`);
         menu.render(target);
 
-        targetRow.classList.add('bad-menu-active');
+        target.classList.add('bad-menu-active');
         this.element.querySelectorAll('.bad-action-item').forEach(el => {
-            if (el !== targetRow) {
+            if (el !== target) {
                 el.classList.remove('bad-menu-active');
             }
         });

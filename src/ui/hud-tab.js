@@ -1,5 +1,3 @@
-import { log } from '../lib/logger.js';
-
 /**
  * Unified tab model for parent tabs, sub-tabs, and deeply nested sub-tabs in the HUD.
  * Every node in the tab hierarchy is a HUDTab instance with a level indicator (0 = top-level parent).
