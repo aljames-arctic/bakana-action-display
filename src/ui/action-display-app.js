@@ -96,7 +96,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             changeActionType: ActionDisplayApp._onChangeActionType,
             changeSubActionType: ActionDisplayApp._onChangeSubActionType,
             toggleAnchor: ActionDisplayApp._onToggleAnchor,
-            rollAction: ActionDisplayApp._onRollAction,
+            rollAction: ActionDisplayApp.prototype._onRollAction,
             toggleFilterResources: ActionDisplayApp._onToggleFilterResources
         }
     };
@@ -560,7 +560,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
      * Handle action item clicks to roll them.
      * 'this' refers to the application instance.
      */
-    static async _onRollAction(event, target) {
+    async _onRollAction(event, target) {
         event.preventDefault();
         
         if (this._preventReopen) {
