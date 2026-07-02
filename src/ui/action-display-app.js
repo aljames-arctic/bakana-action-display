@@ -91,13 +91,13 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         },
         // Declarative Actions API - maps data-action attributes in HTML to static handlers
         actions: {
-            changeLeftItemType: ActionDisplayApp._onChangeLeftItemType,
-            changeLeftSubItemType: ActionDisplayApp._onChangeLeftSubItemType,
-            changeActionType: ActionDisplayApp._onChangeActionType,
-            changeSubActionType: ActionDisplayApp._onChangeSubActionType,
-            toggleAnchor: ActionDisplayApp._onToggleAnchor,
-            rollAction: ActionDisplayApp.prototype._onRollAction,
-            toggleFilterResources: ActionDisplayApp._onToggleFilterResources
+            changeLeftItemType: "_onChangeLeftItemType",
+            changeLeftSubItemType: "_onChangeLeftSubItemType",
+            changeActionType: "_onChangeActionType",
+            changeSubActionType: "_onChangeSubActionType",
+            toggleAnchor: "_onToggleAnchor",
+            rollAction: "_onRollAction",
+            toggleFilterResources: "_onToggleFilterResources"
         }
     };
 
@@ -466,7 +466,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
      * Handle left-side item type (parent) selection clicks.
      * 'this' refers to the application instance.
      */
-    static async _onChangeLeftItemType(event, target) {
+    async _onChangeLeftItemType(event, target) {
         event.preventDefault();
         this._clearMenuState();
         const tab = this.leftGroups?.[target.dataset.type];
@@ -474,7 +474,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         this.render();
     }
 
-    static async _onChangeLeftSubItemType(event, target) {
+    async _onChangeLeftSubItemType(event, target) {
         event.preventDefault();
         this._clearMenuState();
         const parentGroup = target.closest('.bad-left-tab-group');
@@ -498,7 +498,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         this.render();
     }
 
-    static async _onChangeActionType(event, target) {
+    async _onChangeActionType(event, target) {
         event.preventDefault();
         this._clearMenuState();
         const tab = this.parentGroups?.[target.dataset.type];
@@ -506,7 +506,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         this.render();
     }
 
-    static async _onChangeSubActionType(event, target) {
+    async _onChangeSubActionType(event, target) {
         event.preventDefault();
         this._clearMenuState();
         const parentGroup = target.closest('.bad-right-tab-group');
@@ -532,9 +532,8 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
 
     /**
      * Toggle between attached (token-tracking) and detached (floating) modes.
-     * 'this' refers to the application instance.
      */
-    static async _onToggleAnchor(event, target) {
+    async _onToggleAnchor(event, target) {
         event.preventDefault();
         this.isAttached = !this.isAttached;
         this.positionMode = this.isAttached ? 'attached' : 'detached';
@@ -701,9 +700,8 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
 
     /**
      * Toggle the "Filter Out of Resources" setting.
-     * 'this' refers to the application instance.
      */
-    static async _onToggleFilterResources(event, target) {
+    async _onToggleFilterResources(event, target) {
         const checked = target.checked;
         await game.settings.set(MODULE_ID, 'filterNoResources', checked);
         log.debug(`Toggled filterNoResources to: ${checked}`);
