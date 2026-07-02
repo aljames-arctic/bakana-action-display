@@ -191,8 +191,8 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                     
                     return {
                         id: activity.id,
-                        name: activity.name || activity.type.toUpperCase(),
-                        img: activity.img || item.img,
+                        name: activity.name ?? activity.type.toUpperCase(),
+                        img: activity.img ?? item.img,
                         uses: this._calculateActivityUses(activity, item, actor, ammoQuantities, highestAvailableSlot),
                         tabs: tabRef,
                         roll: async (event) => {
@@ -501,7 +501,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                 return this._calculateUses(item);
             } else if (target.type === 'spellSlots') {
                 // Consumes actor spell slots
-                const level = target.target || item.system.level; // Fallback to spell's base level if target is empty (dynamic slots)
+                const level = target.target ?? item.system.level; // Fallback to spell's base level if target is empty (dynamic slots)
                 return this._getSpellSlotUses(actor, level, highestAvailableSlot);
             } else if (target.type === 'item') {
                 // Consumes quantity of another item (e.g. ammunition) or charges of another item
@@ -627,7 +627,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
      */
     _calculateWeaponAmmunition(item, ammoQuantities) {
         const ammoType = item.system.ammunition?.type;
-        const quantity = ammoType ? (ammoQuantities.get(ammoType) ?? 0) : 0;
+        const quantity = ammoQuantities.get(ammoType) ?? 0;
         return {
             available: quantity,
             max: null

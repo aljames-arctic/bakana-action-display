@@ -142,23 +142,24 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
 
                 const uses = this._calculateUses(item, actor);
 
-                action.activities = itemActions.map(act => {
-                    const actType = act.activation?.type;
-                    const activationType = this._parseActivationType(actType);
+                action.activities = itemActions.map(itemAction => {
+                    const actionType = itemAction.activation?.type;
+                    const activationType = this._parseActivationType(actionType);
                     const parentRef = new TabRef({ id: 'economy', label: 'Economy' });
+                    const actionName = itemAction.name ?? item.name;
                     
                     return {
-                        id: act._id,
-                        name: act.name || item.name,
+                        id: itemAction._id,
+                        name: actionName,
                         img: item.img,
                         activationType: activationType,
                         tabs: new TabRef({ id: activationType, label: activationType, parent: parentRef }),
                         uses: uses,
                         roll: (event) => {
                             if (typeof item.use === 'function') {
-                                item.use({ actionId: act._id, event });
+                                item.use({ actionId: itemAction._id, event });
                             } else if (typeof item.roll === 'function') {
-                                item.roll({ actionId: act._id, event });
+                                item.roll({ actionId: itemAction._id, event });
                             }
                         }
                     };
@@ -185,25 +186,28 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
                     // Merge actions from all linked attack items
                     for (const attackItem of linkedAttacks) {
                         const attackActions = this.getItemActions(attackItem);
-                        for (const act of attackActions) {
-                            const actType = act.activation?.type;
-                            const activationType = this._parseActivationType(actType);
+                        for (const itemAction of attackActions) {
+                            const actionType = itemAction.activation?.type;
+                            const activationType = this._parseActivationType(actionType);
                             if (!activationType) continue;
 
                             const econRoot = new TabRef({ id: 'economy', label: 'Economy' });
+                            const actionName = linkedAttacks.length > 1 
+                                ? `${attackItem.name}: ${itemAction.name ?? 'Attack'}` 
+                                : (itemAction.name ?? attackItem.name);
+
                             itemActionsList.push({
-                                id: act._id,
-                                // If multiple attacks are linked, prefix with attack name for clarity
-                                name: linkedAttacks.length > 1 ? `${attackItem.name}: ${act.name || 'Attack'}` : (act.name || attackItem.name),
-                                img: attackItem.img || item.img,
+                                id: itemAction._id,
+                                name: actionName,
+                                img: attackItem.img ?? item.img,
                                 activationType: activationType,
                                 tabs: new TabRef({ id: activationType, label: activationType, parent: econRoot }),
                                 uses: uses, // Shares weapon's ammunition/charges
                                 roll: (event) => {
                                     if (typeof attackItem.use === 'function') {
-                                        attackItem.use({ actionId: act._id, event });
+                                        attackItem.use({ actionId: itemAction._id, event });
                                     } else if (typeof attackItem.roll === 'function') {
-                                        attackItem.roll({ actionId: act._id, event });
+                                        attackItem.roll({ actionId: itemAction._id, event });
                                     }
                                 }
                             });
@@ -212,24 +216,26 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
                 } else {
                     // Fallback to the weapon's own actions if no attacks are linked
                     const itemActions = this.getItemActions(item);
-                    for (const act of itemActions) {
-                        const actType = act.activation?.type;
-                        const activationType = this._parseActivationType(actType);
+                    for (const itemAction of itemActions) {
+                        const actionType = itemAction.activation?.type;
+                        const activationType = this._parseActivationType(actionType);
                         if (!activationType) continue;
 
                         const econRoot = new TabRef({ id: 'economy', label: 'Economy' });
+                        const actionName = itemAction.name ?? item.name;
+
                         itemActionsList.push({
-                            id: act._id,
-                            name: act.name || item.name,
+                            id: itemAction._id,
+                            name: actionName,
                             img: item.img,
                             activationType: activationType,
                             tabs: new TabRef({ id: activationType, label: activationType, parent: econRoot }),
                             uses: uses,
                             roll: (event) => {
                                 if (typeof item.use === 'function') {
-                                    item.use({ actionId: act._id, event });
+                                    item.use({ actionId: itemAction._id, event });
                                 } else if (typeof item.roll === 'function') {
-                                    item.roll({ actionId: act._id, event });
+                                    item.roll({ actionId: itemAction._id, event });
                                 }
                             }
                         });
@@ -253,23 +259,24 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
 
                 const uses = this._calculateUses(item, actor);
 
-                action.activities = itemActions.map(act => {
-                    const actType = act.activation?.type;
-                    const activationType = this._parseActivationType(actType);
+                action.activities = itemActions.map(itemAction => {
+                    const actionType = itemAction.activation?.type;
+                    const activationType = this._parseActivationType(actionType);
                     const econRoot = new TabRef({ id: 'economy', label: 'Economy' });
+                    const actionName = itemAction.name ?? item.name;
                     
                     return {
-                        id: act._id,
-                        name: act.name || item.name,
+                        id: itemAction._id,
+                        name: actionName,
                         img: item.img,
                         activationType: activationType,
                         tabs: new TabRef({ id: activationType, label: activationType, parent: econRoot }),
                         uses: uses,
                         roll: (event) => {
                             if (typeof item.use === 'function') {
-                                item.use({ actionId: act._id, event });
+                                item.use({ actionId: itemAction._id, event });
                             } else if (typeof item.roll === 'function') {
-                                item.roll({ actionId: act._id, event });
+                                item.roll({ actionId: itemAction._id, event });
                             }
                         }
                     };
@@ -407,10 +414,10 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
         const uses = item.system.uses;
         
         // Check if it has actual charges/uses (max > 0 or value > 0)
-        const hasMax = uses && uses.max !== null && uses.max > 0;
-        const hasValue = uses && uses.value !== null && uses.value > 0;
+        const hasMax = (uses?.max ?? 0) > 0;
+        const hasValue = (uses?.value ?? 0) > 0;
         
-        if (uses && (hasMax || hasValue)) {
+        if (hasMax || hasValue) {
             // If value is null but max is defined, it means the item is fully charged (available = max)
             const max = uses.max ?? 0;
             return {

@@ -62,10 +62,9 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
         const spellToEntryMap = new Map();
         const entries = this.getSpellcastingEntries(actor);
         for (const entry of entries) {
-            if (entry.spells) {
-                for (const spell of entry.spells) {
-                    spellToEntryMap.set(spell.id, entry);
-                }
+            const spells = entry.spells ?? [];
+            for (const spell of spells) {
+                spellToEntryMap.set(spell.id, entry);
             }
         }
 
@@ -289,13 +288,8 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
      * @returns {string|null}
      */
     getActionType(item) {
-        const actionType = item.system.actionType;
-        if (!actionType) return null;
-        const value = actionType.value;
-        if (value === 'reaction') return 'reaction';
-        if (value === 'free') return 'other';
-        if (value === 'action') return 'action';
-        return null;
+        const typeMap = { 'reaction': 'reaction', 'free': 'other', 'action': 'action' };
+        return typeMap[item.system.actionType?.value] ?? null;
     }
 
     /**

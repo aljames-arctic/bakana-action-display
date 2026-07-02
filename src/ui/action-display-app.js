@@ -704,7 +704,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                     };
 
                     // Create and render a temporary ContextMenu at the clicked element (passing raw HTMLElement)
-                    const container = this.element.querySelector('.bakana-action-display-container') || this.element;
+                    const container = this.element.querySelector('.bakana-action-display-container') ?? this.element;
                     menu = new foundry.applications.ux.ContextMenu.implementation(container, null, menuItems, options);
                     this._activeMenuTarget = target; // Set target directly to ensure toggle-off tracking works
                     this._activeLeftClickMenu = menu; // Store the menu instance directly
@@ -857,7 +857,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         if (event.button !== 2 && event.button !== 0) return; // Only care about right-clicks (2) or left-clicks (0)
         
         const targetItem = event.target.closest('.bad-action-item, .bad-left-sub-tab, .bad-left-tab');
-        const activeItem = this._activeMenuTarget?.closest('.bad-action-item, .bad-left-sub-tab, .bad-left-tab') || this._activeMenuTarget;
+        const activeItem = this._activeMenuTarget?.closest('.bad-action-item, .bad-left-sub-tab, .bad-left-tab') ?? this._activeMenuTarget;
         
         log.debug(`_onPointerDownCapture | button: ${event.button}, targetItem:`, targetItem, `activeItem:`, activeItem);
         
@@ -939,7 +939,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
 
 
         const targetItem = event.target.closest('.bad-action-item, .bad-left-sub-tab, .bad-left-tab');
-        const activeItem = this._activeMenuTarget?.closest('.bad-action-item, .bad-left-sub-tab, .bad-left-tab') || this._activeMenuTarget;
+        const activeItem = this._activeMenuTarget?.closest('.bad-action-item, .bad-left-sub-tab, .bad-left-tab') ?? this._activeMenuTarget;
         
         log.debug(`_onContextMenuCapture | targetItem:`, targetItem, `activeItem:`, activeItem);
 
@@ -1159,7 +1159,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             const tokenTop = tokenTransform.ty;
             
             // Use cached width if available to prevent layout thrashing (reflow) at 60fps
-            const appWidth = this._width || el.offsetWidth || (320 * scale);
+            const appWidth = this._width ?? (el.offsetWidth || 320 * scale);
 
             const spaceAbove = tokenTop;
             const spaceBelow = window.innerHeight - (tokenTop + tokenHeight);
@@ -1198,8 +1198,8 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             const savedPos = game.settings.get(MODULE_ID, 'hudDetachedPosition');
             
             // Use cached dimensions if available to prevent layout thrashing (reflow) at 60fps
-            const appWidth = this._width ?? el.offsetWidth ?? (320 * scale);
-            const appHeight = this._height ?? (el.offsetHeight ?? 200) * (el.offsetHeight ? 1 : scale);
+            const appWidth = this._width ?? (el.offsetWidth || 320 * scale);
+            const appHeight = this._height ?? (el.offsetHeight || 200 * scale);
             
             let left = savedPos?.left ?? 100;
             let top = savedPos?.top ?? 100;
