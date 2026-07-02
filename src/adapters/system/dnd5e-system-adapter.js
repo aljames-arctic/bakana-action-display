@@ -74,7 +74,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
      * @param {Actor} actor 
      * @returns {Object[]} The modified actions list
      */
-    modifyActions(actions, actor) {
+    async modifyActions(actions, actor) {
         const modified = [];
         const filterNoResources = game.settings.get(MODULE_ID, 'filterNoResources');
 
@@ -138,7 +138,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
 
             if (activeActivities.length > 0) {
                 // Map D&D 5e Activities to sub-actions for the generic HUD item model
-                const mappedActivities = activeActivities.map(activity => {
+                const mappedActivities = await Promise.all(activeActivities.map(async (activity) => {
                     const activationType = activity.activation.type;
                     const parentId = this._getParentTab(activationType);
                     const subId = this._getSubTab(activationType);
@@ -148,7 +148,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                     let linkedAction = null;
                     if (activity.type === 'cast' && activity.spell?.uuid) {
                         try {
-                            linkedAction = fromUuidSync(activity.spell.uuid);
+                            linkedAction = await fromUuid(activity.spell.uuid);
                         } catch (e) {
                             log.debug(`Failed to resolve compendium spell UUID ${activity.spell.uuid}:`, e);
                         }
@@ -173,7 +173,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                         originalActivity: activity,
                         linkedAction: linkedAction
                     });
-                });
+                }));
 
                 // Extract spell components from linked spells on cast activities if present
                 for (const activity of mappedActivities) {

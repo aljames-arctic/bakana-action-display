@@ -41,7 +41,7 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
      * @param {Actor} actor 
      * @returns {Object[]} The modified actions list
      */
-    modifyActions(actions, actor) {
+    async modifyActions(actions, actor) {
         const modified = [];
 
         // Pre-calculate ammunition quantities by baseItem in a single pass to avoid nested loops (O(I) complexity)

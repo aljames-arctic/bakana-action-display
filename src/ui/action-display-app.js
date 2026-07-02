@@ -119,7 +119,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
      */
     async _prepareContext(options) {
         const context = await super._prepareContext(options);
-        const rawActions = actionDisplay.getActions(this.actor);
+        const rawActions = await actionDisplay.getActions(this.actor);
         this.actions = rawActions; // Cache the processed actions for high-performance UI lookups
         const adapter = actionDisplay.activeSystemAdapter;
 

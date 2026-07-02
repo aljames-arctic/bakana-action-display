@@ -57,7 +57,7 @@ class ActionDisplay {
      * @param {Actor} actor 
      * @returns {Object[]} The processed actions
      */
-    getActions(actor) {
+    async getActions(actor) {
         if (!actor) return [];
 
         // 1. Core: Extract all items as base actions
@@ -67,7 +67,7 @@ class ActionDisplay {
         // 2. System Adapter: Modify/Filter/Sort the base actions
         if (this.activeSystemAdapter) {
             try {
-                actions = this.activeSystemAdapter.modifyActions(actions, actor);
+                actions = await this.activeSystemAdapter.modifyActions(actions, actor);
             } catch (error) {
                 log.error(`Error in system adapter "${this.activeSystemAdapter.systemId}":`, error);
             }
@@ -76,7 +76,7 @@ class ActionDisplay {
         // 3. Module Adapters: Run through active module adapters
         for (const [moduleId, adapter] of this.moduleAdapters.entries()) {
             try {
-                actions = adapter.modifyActions(actions);
+                actions = await adapter.modifyActions(actions);
             } catch (error) {
                 log.error(`Error in module adapter "${moduleId}":`, error);
             }

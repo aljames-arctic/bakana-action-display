@@ -58,7 +58,7 @@ export class BaseSystemAdapter {
      * @param {Actor} actor The actor these actions belong to
      * @returns {Object[]} The modified/filtered/sorted actions list
      */
-    modifyActions(actions, actor) {
+    async modifyActions(actions, actor) {
         // Default system-agnostic resource filtering
         const filterNoResources = game.settings.get(MODULE_ID, 'filterNoResources');
         if (filterNoResources) {

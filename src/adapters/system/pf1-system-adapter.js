@@ -43,7 +43,7 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
      * @param {Actor} actor 
      * @returns {Object[]} The modified actions list
      */
-    modifyActions(actions, actor) {
+    async modifyActions(actions, actor) {
         log.debug(`Pf1SystemAdapter.modifyActions | Starting for actor: ${actor.name}`);
         const modified = [];
 

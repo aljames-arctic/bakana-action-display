@@ -14,7 +14,7 @@ export class MidiQolModuleAdapter extends BaseModuleAdapter {
      * @param {Object[]} actions The current list of actions
      * @returns {Object[]} The modified actions
      */
-    modifyActions(actions) {
+    async modifyActions(actions) {
         const modified = [];
 
         for (const item of actions) {

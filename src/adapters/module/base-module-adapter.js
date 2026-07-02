@@ -13,7 +13,7 @@ export class BaseModuleAdapter {
      * @param {Object[]} actions The current list of actions
      * @returns {Object[]} The modified list of actions
      */
-    modifyActions(actions) {
+    async modifyActions(actions) {
         return actions;
     }
 }
