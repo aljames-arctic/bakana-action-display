@@ -166,16 +166,16 @@ flowchart TD
 | **B** | `Hook: renderTokenHUD` | [`src/module.js`](../src/module.js#L136-L161) |
 | **C, D, E** | `activeApp` lifecycle & instance check | [`src/module.js`](../src/module.js#L143-L155) |
 | **F, G** | `new ActionDisplayApp(token)` & `.render()` | [`src/ui/action-display-app.js`](../src/ui/action-display-app.js#L25) / [`src/module.js`](../src/module.js#L158-L160) |
-| **H** | `ActionDisplayApp._prepareContext()` | [`src/ui/action-display-app.js`](../src/ui/action-display-app.js#L140-L370) |
+| **H** | `ActionDisplayApp._prepareContext()` | [`src/ui/action-display-app.js`](../src/ui/action-display-app.js#L119-L330) |
 | **I** | `ActionDisplay.getActions(actor)` | [`src/action-display.js`](../src/action-display.js#L59-L104) |
-| **J** | `BaseSystemAdapter.shouldExtractItem()` | [`src/adapters/system/base-system-adapter.js`](../src/adapters/system/base-system-adapter.js#L30-L32) |
+| **J** | `BaseSystemAdapter.shouldExtractItem()` | [`src/adapters/system/base-system-adapter.js`](../src/adapters/system/base-system-adapter.js#L35-L37) |
 | **K** | `ActionDisplay._extractBaseActions()` | [`src/action-display.js`](../src/action-display.js#L111-L141) |
-| **L** | `BaseSystemAdapter.modifyActions()` | [`src/adapters/system/base-system-adapter.js`](../src/adapters/system/base-system-adapter.js#L40-L52) |
+| **L** | `BaseSystemAdapter.modifyActions()` | [`src/adapters/system/base-system-adapter.js`](../src/adapters/system/base-system-adapter.js#L45-L57) |
 | **M** | `BaseModuleAdapter.modifyActions()` | [`src/adapters/module/base-module-adapter.js`](../src/adapters/module/base-module-adapter.js#L20) |
 | **N** | Apply User-Hidden Filters | [`src/action-display.js`](../src/action-display.js#L85-L99) |
-| **O** | Sync `TabSideState` & `HUDTab` Trees | [`src/ui/action-display-app.js`](../src/ui/action-display-app.js#L210-L310) |
-| **P** | `BaseSystemAdapter.modifyContext()` | [`src/adapters/system/base-system-adapter.js`](../src/adapters/system/base-system-adapter.js#L141-L143) |
-| **Q** | Filter `finalActions` to active tabs | [`src/ui/action-display-app.js`](../src/ui/action-display-app.js#L315-L365) |
+| **O** | Sync `TabSideState` & `HUDTab` Trees | [`src/ui/action-display-app.js`](../src/ui/action-display-app.js#L148-L310) |
+| **P** | `BaseSystemAdapter.modifyContext()` | [`src/adapters/system/base-system-adapter.js`](../src/adapters/system/base-system-adapter.js#L146-L148) |
+| **Q** | Filter `finalActions` to active tabs | [`src/ui/action-display-app.js`](../src/ui/action-display-app.js#L348-L455) |
 | **R** | Render `templates/action-display.html` | [`templates/action-display.html`](../templates/action-display.html) |
 
 ---
@@ -285,12 +285,12 @@ flowchart TD
 - [**`_extractBaseActions(actor)`**](../src/action-display.js#L111-L141): Extracts system-agnostic base actions from an actor's item inventory.
 
 ### [`src/ui/action-display-app.js`](../src/ui/action-display-app.js) — UI Window (`ActionDisplayApp`)
-- [**`_prepareContext(options)`**](../src/ui/action-display-app.js#L140-L370): Prepares context data, triggers coordinator pipeline, and builds tab trees.
-- [**`_onRender(context, options)`**](../src/ui/action-display-app.js#L890-L1080): Attaches DOM event listeners and scroll position listeners.
-- [**`setPosition(positionMode, options)`**](../src/ui/action-display-app.js#L1269-L1350): Calculates 60fps HUD positioning relative to token or detached coordinates.
-- [**`_onRollAction(event)`**](../src/ui/action-display-app.js#L678-L880): Triggers action rolls or toggles multi-option dropdowns.
-- [**`_createContextMenu()`**](../src/ui/action-display-app.js#L1085-L1155): Spawns custom right-click context menu for action cards.
-- [**`_toggleActionHidden(actionId, shouldHide)`**](../src/ui/action-display-app.js#L1161-L1190): Flags an action card as hidden/unhidden and re-renders.
+- [**`_prepareContext(options)`**](../src/ui/action-display-app.js#L119-L330): Prepares context data, triggers coordinator pipeline, and builds tab trees.
+- [**`_onRender(context, options)`**](../src/ui/action-display-app.js#L846-L1038): Attaches DOM event listeners and scroll position listeners.
+- [**`setPosition(positionMode, options)`**](../src/ui/action-display-app.js#L1145-L1225): Calculates 60fps HUD positioning relative to token or detached coordinates.
+- [**`_onRollAction(event)`**](../src/ui/action-display-app.js#L644-L845): Triggers action rolls or toggles multi-option dropdowns.
+- [**`_createContextMenu()`**](../src/ui/action-display-app.js#L1043-L1114): Spawns custom right-click context menu for action cards.
+- [**`_toggleActionHidden(actionId, shouldHide)`**](../src/ui/action-display-app.js#L1117-L1143): Flags an action card as hidden/unhidden and re-renders.
 
 ### [`src/ui/hud-tab-column.js`](../src/ui/hud-tab-column.js) — Tab Column Manager (`HUDTabColumn`)
 - [**`constructor({ side, cached, getDefaultSubTypes })`**](../src/ui/hud-tab-column.js#L14-L33): Initializes left or right tab column state.
@@ -312,11 +312,9 @@ flowchart TD
 - [**`onRightClick(app, tabColumn, groups, event)`**](../src/ui/hud-tab.js#L182-L192): Executes right-click toggle logic.
 
 ### [`src/ui/tab-ref.js`](../src/ui/tab-ref.js) — Structured Tab Data Reference (`TabRef`)
-- [**`constructor({ id, label, parent })`**](../src/ui/tab-ref.js#L12-L16): Instantiates a structured tab data node linked to parent nodes.
-- [**`get root`**](../src/ui/tab-ref.js#L23-L25): Recursively delegates up parent links to derive the top-level root parent ID.
-- [**`get parentId`**](../src/ui/tab-ref.js#L35-L37): Returns direct parent ID or root ID.
-- [**`get path`**](../src/ui/tab-ref.js#L44-L51): Returns the complete hierarchy path array (e.g. `['spells', 'level_1', 'evocation']`).
-- [**`at(index)`**](../src/ui/tab-ref.js#L59-L61): Provides positional index fallback for legacy array compatibility.
+- [**`constructor({ id, label, parent })`**](../src/ui/tab-ref.js#L12-L20): Instantiates a pre-computed tab data node linked to parent nodes, caching `.root` and `.path` string (`'economy/action'`).
+- [**`get parentId`**](../src/ui/tab-ref.js#L26-L28): Returns direct parent ID or root ID.
+- [**`toJSON()`**](../src/ui/tab-ref.js#L34-L36): Serializes to the pre-computed `.path` string.
 
 ### [`src/adapters/system/base-system-adapter.js`](../src/adapters/system/base-system-adapter.js) — System Adapter Interface (`BaseSystemAdapter`)
 - [**`shouldExtractItem(item, actor)`**](../src/adapters/system/base-system-adapter.js#L26-L28): Performance filter to bypass unneeded item allocations.
