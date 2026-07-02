@@ -588,12 +588,17 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         const action = this.actions?.find(a => a.id === actionId);
         
         if (action) {
+            log.debug(`_onRollAction | Left-clicked action "${action.name}" (${action.id}):`, action);
             const itemActivities = action.subactions;
+            log.debug(`_onRollAction | Action subactions (${itemActivities?.length ?? 0}):`, itemActivities);
+
             if (itemActivities && itemActivities.length > 0) {
                 // Filter sub-actions to only those that match the currently active right-side tabs
                 const activeParents = this.rightTabs.activeParents;
                 const activeSubs = this.rightTabs.activeSubTypes;
                 const filterNoResources = game.settings.get(MODULE_ID, 'filterNoResources');
+
+                log.debug(`_onRollAction | Right-side Tab Filters - activeParents:`, Array.from(activeParents), `activeSubs:`, Array.from(activeSubs), `filterNoResources:`, filterNoResources);
 
                 const activeEconomyParents = Array.from(activeParents).filter(p => p !== 'components' && p !== 'all');
 
@@ -601,6 +606,16 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                     const tab = sub.tabs;
                     const actionParentId = tab?.root;
                     const actionSubId = tab?.parent ? tab.label : undefined;
+
+                    log.debug(`_onRollAction | Evaluating subaction "${sub.name}" (${sub.id}):`, {
+                        tabPath: tab?.path,
+                        actionParentId,
+                        actionSubId,
+                        uses: sub.uses,
+                        isDepleted: sub.isDepleted,
+                        linkedAction: sub.linkedAction,
+                        originalActivity: sub.originalActivity
+                    });
 
                     if (actionParentId === 'components') return false;
 
