@@ -1,5 +1,6 @@
 import { actionDisplay } from '../action-display.js';
 import { log } from '../lib/logger.js';
+import { localize, toSet } from '../lib/utils.js';
 import { MODULE_ID } from '../constants.js';
 import { HUDTabColumn } from './hud-tab-column.js';
 import { HUDTab } from './hud-tab.js';
@@ -285,7 +286,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             
             if (parent.subTabs.length > 0 && !skipAll) {
                 const isActive = parent.id === this.rightTabs.focusedParent;
-                const validSubIds = new Set(parent.subTabs.map(t => t.id));
+                const validSubIds = toSet(parent.subTabs, t => t.id);
                 const activeSubsForParent = Array.from(this.rightTabs.activeSubTypes).filter(id => validSubIds.has(id));
 
                 parent.addSubTab({
@@ -300,7 +301,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         // Post-process parentGroups to set active, expanded, and activeParent
         for (const parent of actionTypes) {
             if (parent.id === 'components') continue; // Exclude components from activeParent calculation
-            const validSubIds = new Set(parent.subTabs.map(t => t.id));
+            const validSubIds = toSet(parent.subTabs, t => t.id);
             const activeSubsForParent = Array.from(this.rightTabs.activeSubTypes).filter(id => validSubIds.has(id));
             
             parent.active = this.rightTabs.activeParents.has(parent.id);
@@ -365,7 +366,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         const matchesLeft = action.itemTypes.some(type => {
             if (this.leftTabs.activeParents.has(type)) {
                 const parentGroup = this.leftGroups?.[type];
-                const validSubIds = parentGroup ? new Set(parentGroup.subTabs.map(t => t.id)) : new Set();
+                const validSubIds = toSet(parentGroup?.subTabs, t => t.id);
                 const activeSubsForParent = Array.from(this.leftTabs.activeSubTypes).filter(id => validSubIds.has(id));
                 
                 if (activeSubsForParent.length === 0) {
@@ -382,7 +383,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                     return true;
                 } else {
                     const parentGroup = this.leftGroups?.[type];
-                    const validSubIds = parentGroup ? new Set(parentGroup.subTabs.map(t => t.id)) : new Set();
+                    const validSubIds = toSet(parentGroup?.subTabs, t => t.id);
                     const activeSubsForParent = Array.from(this.leftTabs.activeSubTypes).filter(id => validSubIds.has(id));
                     if (activeSubsForParent.length === 0) {
                         return true;
@@ -426,7 +427,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                 // 1. Direct parent match
                 if (this.rightTabs.activeParents.has(actionParentId)) {
                     const parentGroup = this.parentGroups?.[actionParentId];
-                    const validSubIds = parentGroup ? new Set(parentGroup.subTabs.map(t => t.id)) : new Set();
+                    const validSubIds = toSet(parentGroup?.subTabs, t => t.id);
                     const activeSubsForParent = Array.from(this.rightTabs.activeSubTypes).filter(id => validSubIds.has(id));
                     
                     if (activeSubsForParent.length === 0) {
@@ -443,7 +444,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                         matchesParent = true;
                     } else {
                         const parentGroup = this.parentGroups?.[actionParentId];
-                        const validSubIds = parentGroup ? new Set(parentGroup.subTabs.map(t => t.id)) : new Set();
+                        const validSubIds = toSet(parentGroup?.subTabs, t => t.id);
                         const activeSubsForParent = Array.from(this.rightTabs.activeSubTypes).filter(id => validSubIds.has(id));
                         if (activeSubsForParent.length === 0) {
                             matchesParent = true;

@@ -1,4 +1,4 @@
-import { localize } from '../../lib/utils.js';
+import { localize, toSet } from '../../lib/utils.js';
 import { MODULE_ID } from '../../constants.js';
 import { KeyboardManager } from '../../lib/compat.js';
 
@@ -98,7 +98,7 @@ export class BaseSystemAdapter {
             let matchesParent = false;
             if (activeParents.has(actionParentId)) {
                 const parentGroup = parentGroups?.[actionParentId];
-                const validSubIds = parentGroup ? new Set(parentGroup.subTabs.map(t => t.id)) : new Set();
+                const validSubIds = toSet(parentGroup?.subTabs, t => t.id);
                 const activeSubsForParent = Array.from(activeSubs).filter(id => validSubIds.has(id));
 
                 if (activeSubsForParent.length === 0) {
@@ -114,7 +114,7 @@ export class BaseSystemAdapter {
                     matchesParent = true;
                 } else {
                     const parentGroup = parentGroups?.[actionParentId];
-                    const validSubIds = parentGroup ? new Set(parentGroup.subTabs.map(t => t.id)) : new Set();
+                    const validSubIds = toSet(parentGroup?.subTabs, t => t.id);
                     const activeSubsForParent = Array.from(activeSubs).filter(id => validSubIds.has(id));
                     if (activeSubsForParent.length === 0) {
                         matchesParent = true;

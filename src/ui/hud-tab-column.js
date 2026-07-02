@@ -1,4 +1,5 @@
 import { log } from '../lib/logger.js';
+import { toSet } from '../lib/utils.js';
 
 /**
  * Encapsulates tab column state management and interaction rules for a single HUD column (left or right).
@@ -64,7 +65,7 @@ export class HUDTabColumn {
         }
 
         const group = groups?.[parentId];
-        const validSubIds = new Set(group?.subTabs?.map(t => t.id) ?? []);
+        const validSubIds = toSet(group?.subTabs, t => t.id);
         const hasActiveSubs = Array.from(this.activeSubTypes).some(id => validSubIds.has(id));
 
         const isSoleActive = this.activeParents.size === 1 && this.activeParents.has(parentId);
@@ -103,7 +104,7 @@ export class HUDTabColumn {
         const group = groups?.[parentId];
         let hadActiveSubs = false;
         if (group) {
-            const validSubIds = new Set(group.subTabs.map(t => t.id));
+            const validSubIds = toSet(group.subTabs, t => t.id);
             for (const subId of this.activeSubTypes) {
                 if (validSubIds.has(subId)) {
                     hadActiveSubs = true;
@@ -149,7 +150,7 @@ export class HUDTabColumn {
 
         if (type === 'all') {
             if (parentId && groups?.[parentId]) {
-                const validSubIds = new Set(groups[parentId].subTabs.map(t => t.id));
+                const validSubIds = toSet(groups[parentId].subTabs, t => t.id);
                 for (const subId of this.activeSubTypes) {
                     if (validSubIds.has(subId)) {
                         this.activeSubTypes.delete(subId);
@@ -160,7 +161,7 @@ export class HUDTabColumn {
             }
         } else {
             if (parentId && groups?.[parentId]) {
-                const validSubIds = new Set(groups[parentId].subTabs.map(t => t.id));
+                const validSubIds = toSet(groups[parentId].subTabs, t => t.id);
                 const activeSubsForParent = Array.from(this.activeSubTypes).filter(id => validSubIds.has(id));
 
                 if (activeSubsForParent.length > 1) {
@@ -203,7 +204,7 @@ export class HUDTabColumn {
 
         if (type === 'all') {
             if (parentId && groups?.[parentId]) {
-                const validSubIds = new Set(groups[parentId].subTabs.map(t => t.id));
+                const validSubIds = toSet(groups[parentId].subTabs, t => t.id);
                 for (const subId of this.activeSubTypes) {
                     if (validSubIds.has(subId)) {
                         this.activeSubTypes.delete(subId);

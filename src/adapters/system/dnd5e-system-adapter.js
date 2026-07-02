@@ -1,5 +1,5 @@
 import { FantasySystemAdapter } from './genre/fantasy-system-adapter.js';
-import { localize } from '../../lib/utils.js';
+import { localize, toSet } from '../../lib/utils.js';
 import { log } from '../../lib/logger.js';
 import { MODULE_ID } from '../../constants.js';
 import { TabRef } from '../../ui/tab-ref.js';
@@ -301,7 +301,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         let activeCompSubs = [];
         if (isCompActive) {
             const compGroup = parentGroups?.['components'];
-            const validSubIds = compGroup ? new Set(compGroup.subTabs.map(t => t.id)) : new Set();
+            const validSubIds = toSet(compGroup?.subTabs, t => t.id);
             activeCompSubs = Array.from(activeSubs).filter(id => validSubIds.has(id));
         }
 
@@ -329,7 +329,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         if (!isComponentsActive) return true;
 
         const parentGroup = parentGroups?.['components'];
-        const validSubIds = parentGroup ? new Set(parentGroup.subTabs.map(t => t.id)) : new Set();
+        const validSubIds = toSet(parentGroup?.subTabs, t => t.id);
         const activeCompSubs = Array.from(activeSubs).filter(id => validSubIds.has(id));
 
         if (activeCompSubs.length === 0) return true;
