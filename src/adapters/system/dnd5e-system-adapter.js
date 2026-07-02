@@ -147,16 +147,13 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                     
                     let linkedSpell = null;
                     if (activity.type === 'cast' && activity.spell?.uuid) {
-                        if (activity.item) {
-                            linkedSpell = activity.item;
-                        } else if (activity.cachedSpell) {
-                            linkedSpell = activity.cachedSpell;
-                        } else if (typeof fromUuidSync === 'function') {
-                            try {
-                                linkedSpell = fromUuidSync(activity.spell.uuid);
-                            } catch (e) {
-                                log.debug(`Failed to resolve compendium spell UUID ${activity.spell.uuid}:`, e);
-                            }
+                        try {
+                            linkedSpell = fromUuidSync(activity.spell.uuid);
+                        } catch (e) {
+                            log.debug(`Failed to resolve compendium spell UUID ${activity.spell.uuid}:`, e);
+                        }
+                        if (!linkedSpell) {
+                            linkedSpell = activity.item ?? activity.cachedSpell ?? null;
                         }
                     }
 
