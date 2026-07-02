@@ -678,8 +678,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                     // Natively only 1 option, and it qualifies: roll directly!
                     qualifyingSubActions[0].roll(event);
                 } else {
-                    // Fallback: roll the first sub-action
-                    itemActivities[0].roll(event);
+                    throw new Error(`_onRollAction | Unexpected | No qualifying sub-actions found for action "${action.name}" (${action.id}) with current right-side tab filters.`);
                 }
             } else {
                 // No sub-actions: roll directly
