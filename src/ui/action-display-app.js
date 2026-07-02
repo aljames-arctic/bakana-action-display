@@ -619,13 +619,6 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
     }
 
     /**
-     * Show a left-click dropdown context menu displaying qualifying sub-actions / activities.
-     * @param {HTMLElement} target The row element clicked
-     * @param {Action[]} subactions The qualifying sub-actions to display
-     * @param {Event} event The trigger click event
-     * @private
-     */
-    /**
      * Build a ContextMenu item configuration for a sub-action.
      * @param {Action} sub The sub-action instance
      * @param {Event} event The trigger click event
