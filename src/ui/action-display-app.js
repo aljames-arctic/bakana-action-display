@@ -639,7 +639,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             : '<i class="fas fa-play bad-menu-icon"></i>';
 
         let usesHtml = "";
-        if (uses && uses.available !== null) {
+        if (uses?.available != null) {
             const isDepleted = uses.available <= 0 && !uses.isUpcast;
             const depletedClass = isDepleted ? ' depleted' : '';
             const upcastClass = uses.isUpcast ? ' upcast' : '';
