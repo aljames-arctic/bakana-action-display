@@ -328,6 +328,114 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
     }
 
     /**
+     * Modify the rendering context before it is sent to the template.
+     * Used here to sort the spell sub-tabs (Cantrips, Orisons, Levels, SLAs) in the correct order.
+     */
+    modifyContext(context, app) {
+        super.modifyContext?.(context, app);
+        
+        const spellGroup = context.itemTypes?.find(g => g.id === 'spell');
+        if (spellGroup && spellGroup.subTabs.length > 0) {
+            const orderMap = new Map(['cantrip', 'orison', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'sla'].map((id, i) => [id, i]));
+            spellGroup.subTabs.sort((a, b) => (orderMap.get(a.id) ?? 999) - (orderMap.get(b.id) ?? 999));
+        }
+    }
+
+    /**
+     * Get the localized label for a right-side action type (parent tab) in PF1e.
+     */
+    getActionTypeLabel(parentId) {
+        const labels = {
+            'economy': localize('BAD.common.actionEconomy', 'Action Economy')
+        };
+        return labels[parentId] ?? super.getActionTypeLabel(parentId);
+    }
+
+    /**
+     * Get the CSS icon class for a right-side action type (parent tab) in PF1e.
+     */
+    getActionTypeIcon(parentId) {
+        const icons = {
+            'all': 'fas fa-border-all',
+            'economy': 'fas fa-stopwatch'
+        };
+        return icons[parentId] ?? super.getActionTypeIcon(parentId);
+    }
+
+    /**
+     * Get the localized label for a right-side action sub-tab in PF1e.
+     */
+    getActionSubTabLabel(subId) {
+        const labels = {
+            'all': localize('BAD.hud.allActions', 'All Actions'),
+            'action': localize('PF1.Activation.action.Plural', 'Actions'),
+            'bonus': localize('PF1.Activation.swift.Single', 'Swift'),
+            'reaction': localize('PF1.Activation.immediate.Single', 'Immediate'),
+            'other': localize('PF1.Activation.free.Single', 'Free')
+        };
+        return labels[subId] ?? super.getActionSubTabLabel(subId);
+    }
+
+    /**
+     * Get the localized label for a left-side item type (parent tab) in PF1e.
+     */
+    getItemTypeLabel(parentId) {
+        const labels = {
+            'weapon': localize('PF1.InventoryWeapons', 'Weapons'),
+            'spell': localize('PF1.Spells', 'Spells'),
+            'feat': localize('PF1.Feats', 'Feats'),
+            'buff': localize('PF1.Buffs', 'Buffs'),
+            'consumable': localize('PF1.InventoryConsumables', 'Consumables')
+        };
+        return labels[parentId] ?? super.getItemTypeLabel(parentId);
+    }
+
+    /**
+     * Get the localized label for a left-side item sub-tab (spell level/spellbook) in PF1e.
+     */
+    getItemSubTabLabel(parentId, subId) {
+        if (parentId === 'spell') {
+            if (subId === 'sla') {
+                return localize('PF1.SpellBookSpelllike', 'Spell-like');
+            }
+            if (subId === 'cantrip') {
+                return localize('PF1.Cantrip', localize('PF1.Cantrips', 'Cantrips'));
+            }
+            if (subId === 'orison') {
+                return localize('PF1.Orison', localize('PF1.Orisons', 'Orisons'));
+            }
+            const key = `PF1.SpellLevels.${subId}`;
+            return localize(key, `${subId} Level`);
+        }
+        return super.getItemSubTabLabel(parentId, subId);
+    }
+
+    /**
+     * Get the CSS icon class for a left-side item type (parent tab) in PF1e.
+     */
+    getItemTypeIcon(parentId) {
+        const icons = {
+            'buff': 'fas fa-sparkles'
+        };
+        return icons[parentId] ?? super.getItemTypeIcon(parentId);
+    }
+
+    /**
+     * Sort order for PF1e action types.
+     */
+    _getActivationSort(type) {
+        return ACTIVATION_SORT_ORDER[type] ?? 99;
+    }
+
+    _getTypeSort(type) {
+        return TYPE_SORT_ORDER[type] ?? 99;
+    }
+
+    /* ------------------------------------------------------------------------- */
+    /*  System Data Structure Accessors / Schema Extraction Helpers              */
+    /* ------------------------------------------------------------------------- */
+
+    /**
      * Translate PF1e activation types into our core activation types.
      * Maps Swift -> bonus, Immediate -> reaction, Free/Nonaction -> other.
      */
@@ -342,10 +450,6 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
         
         return null; // Passive or other unhandled types are ignored
     }
-
-    /* ------------------------------------------------------------------------- */
-    /*  System Data Structure Accessors / Schema Extraction Helpers              */
-    /* ------------------------------------------------------------------------- */
 
     /**
      * Extract weapon link children for a PF1e weapon item.
@@ -474,109 +578,4 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
 
         return { available: null, max: null };
     }
-
-    /**
-     * Get the localized label for a right-side action type (parent tab) in PF1e.
-     */
-    getActionTypeLabel(parentId) {
-        const labels = {
-            'economy': localize('BAD.common.actionEconomy', 'Action Economy')
-        };
-        return labels[parentId] ?? super.getActionTypeLabel(parentId);
-    }
-
-    /**
-     * Get the CSS icon class for a right-side action type (parent tab) in PF1e.
-     */
-    getActionTypeIcon(parentId) {
-        const icons = {
-            'all': 'fas fa-border-all',
-            'economy': 'fas fa-stopwatch'
-        };
-        return icons[parentId] ?? super.getActionTypeIcon(parentId);
-    }
-
-    /**
-     * Get the localized label for a right-side action sub-tab in PF1e.
-     */
-    getActionSubTabLabel(subId) {
-        const labels = {
-            'all': localize('BAD.hud.allActions', 'All Actions'),
-            'action': localize('PF1.Activation.action.Plural', 'Actions'),
-            'bonus': localize('PF1.Activation.swift.Single', 'Swift'),
-            'reaction': localize('PF1.Activation.immediate.Single', 'Immediate'),
-            'other': localize('PF1.Activation.free.Single', 'Free')
-        };
-        return labels[subId] ?? super.getActionSubTabLabel(subId);
-    }
-
-    /**
-     * Get the localized label for a left-side item type (parent tab) in PF1e.
-     */
-    getItemTypeLabel(parentId) {
-        const labels = {
-            'weapon': localize('PF1.InventoryWeapons', 'Weapons'),
-            'spell': localize('PF1.Spells', 'Spells'),
-            'feat': localize('PF1.Feats', 'Feats'),
-            'buff': localize('PF1.Buffs', 'Buffs'),
-            'consumable': localize('PF1.InventoryConsumables', 'Consumables')
-        };
-        return labels[parentId] ?? super.getItemTypeLabel(parentId);
-    }
-
-    /**
-     * Get the localized label for a left-side item sub-tab (spell level/spellbook) in PF1e.
-     */
-    getItemSubTabLabel(parentId, subId) {
-        if (parentId === 'spell') {
-            if (subId === 'sla') {
-                return localize('PF1.SpellBookSpelllike', 'Spell-like');
-            }
-            if (subId === 'cantrip') {
-                return localize('PF1.Cantrip', localize('PF1.Cantrips', 'Cantrips'));
-            }
-            if (subId === 'orison') {
-                return localize('PF1.Orison', localize('PF1.Orisons', 'Orisons'));
-            }
-            const key = `PF1.SpellLevels.${subId}`;
-            return localize(key, `${subId} Level`);
-        }
-        return super.getItemSubTabLabel(parentId, subId);
-    }
-
-    /**
-     * Get the CSS icon class for a left-side item type (parent tab) in PF1e.
-     */
-    getItemTypeIcon(parentId) {
-        const icons = {
-            'buff': 'fas fa-sparkles'
-        };
-        return icons[parentId] ?? super.getItemTypeIcon(parentId);
-    }
-
-    /**
-     * Modify the rendering context before it is sent to the template.
-     * Used here to sort the spell sub-tabs (Cantrips, Orisons, Levels, SLAs) in the correct order.
-     */
-    modifyContext(context, app) {
-        super.modifyContext?.(context, app);
-        
-        const spellGroup = context.itemTypes?.find(g => g.id === 'spell');
-        if (spellGroup && spellGroup.subTabs.length > 0) {
-            const orderMap = new Map(['cantrip', 'orison', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'sla'].map((id, i) => [id, i]));
-            spellGroup.subTabs.sort((a, b) => (orderMap.get(a.id) ?? 999) - (orderMap.get(b.id) ?? 999));
-        }
-    }
-
-    /**
-     * Sort order for PF1e action types.
-     */
-    _getActivationSort(type) {
-        return ACTIVATION_SORT_ORDER[type] ?? 99;
-    }
-
-    _getTypeSort(type) {
-        return TYPE_SORT_ORDER[type] ?? 99;
-    }
-
 }
