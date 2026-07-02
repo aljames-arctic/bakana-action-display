@@ -398,38 +398,15 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         // Filter by Right Side (Action Type)
         if (!action.tabs) return false;
 
-        // Spell Components Filter (restrictive AND-filter)
-        const isComponentsActive = this.rightTabs.activeParents.has('components');
-        if (isComponentsActive) {
-            const parentGroup = this.parentGroups?.['components'];
-            const validSubIds = parentGroup ? new Set(parentGroup.subTabs.map(t => t.id)) : new Set();
-            const activeCompSubs = Array.from(this.rightTabs.activeSubTypes).filter(id => validSubIds.has(id));
-            
-            if (activeCompSubs.length > 0) {
-                if (action.subactions?.length > 0) {
-                    // For items with subactions: hide card ONLY if ALL subactions are banned by components filter
-                    const allSubactionsBanned = action.subactions.every(sub => {
-                        const spellProps = sub.linkedAction?.system?.properties ?? sub.originalActivity?.spell?.properties;
-                        if (!spellProps) return false;
-                        const propsSet = Array.isArray(spellProps) ? new Set(spellProps) : (spellProps instanceof Set ? spellProps : new Set());
-                        const subCompLabels = new Set();
-                        if (propsSet.has('vocal')) subCompLabels.add('vocal');
-                        if (propsSet.has('somatic')) subCompLabels.add('somatic');
-                        if (propsSet.has('material')) subCompLabels.add('material');
-                        return Array.from(subCompLabels).some(comp => activeCompSubs.includes(comp));
-                    });
-                    if (allSubactionsBanned) return false;
-                } else {
-                    // For single-action items: check tabs for component matches
-                    const spellCompSubs = new Set(
-                        action.tabs
-                            .filter(tab => tab.root === 'components')
-                            .map(tab => tab.label)
-                    );
-                    const hasBannedComponent = Array.from(spellCompSubs).some(comp => activeCompSubs.includes(comp));
-                    if (hasBannedComponent) return false;
-                }
-            }
+        // Spell Components Filter (delegated to system adapter)
+        const filterContext = {
+            activeParents: this.rightTabs.activeParents,
+            activeSubs: this.rightTabs.activeSubTypes,
+            parentGroups: this.parentGroups
+        };
+        const adapter = actionDisplay.activeSystemAdapter;
+        if (adapter && !adapter.matchesComponentsFilter(action, filterContext)) {
+            return false;
         }
 
         // Check if we have any active economy/time parents
@@ -610,95 +587,17 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                 // Filter sub-actions to only those that match the currently active right-side tabs
                 const activeParents = this.rightTabs.activeParents;
                 const activeSubs = this.rightTabs.activeSubTypes;
-                const filterNoResources = game.settings.get(MODULE_ID, 'filterNoResources');
+                const filterContext = {
+                    activeParents: this.rightTabs.activeParents,
+                    activeSubs: this.rightTabs.activeSubTypes,
+                    parentGroups: this.parentGroups,
+                    filterNoResources: game.settings.get(MODULE_ID, 'filterNoResources')
+                };
 
-                log.debug(`_onRollAction | Right-side Tab Filters - activeParents:`, Array.from(activeParents), `activeSubs:`, Array.from(activeSubs), `filterNoResources:`, filterNoResources);
+                log.debug(`_onRollAction | Right-side Tab Filters - activeParents:`, Array.from(this.rightTabs.activeParents), `activeSubs:`, Array.from(this.rightTabs.activeSubTypes));
 
-                const activeEconomyParents = Array.from(activeParents).filter(p => p !== 'components' && p !== 'all');
-
-                const isCompActive = activeParents.has('components');
-                let activeCompSubs = [];
-                if (isCompActive) {
-                    const compGroup = this.parentGroups?.['components'];
-                    const validSubIds = compGroup ? new Set(compGroup.subTabs.map(t => t.id)) : new Set();
-                    activeCompSubs = Array.from(activeSubs).filter(id => validSubIds.has(id));
-                }
-
-                const qualifyingSubActions = itemActivities.filter(sub => {
-                    const tab = sub.tabs;
-                    const actionParentId = tab?.root;
-                    const actionSubId = tab?.parent ? tab.label : undefined;
-
-                    log.debug(`_onRollAction | Evaluating subaction "${sub.name}" (${sub.id}):`, {
-                        tabPath: tab?.path,
-                        actionParentId,
-                        actionSubId,
-                        uses: sub.uses,
-                        isDepleted: sub.isDepleted,
-                        linkedAction: sub.linkedAction,
-                        originalActivity: sub.originalActivity
-                    });
-
-                    // 1. Spell Components Filter for sub-actions
-                    if (activeCompSubs.length > 0) {
-                        const spellProps = sub.linkedAction?.system?.properties ?? sub.originalActivity?.spell?.properties;
-                        if (spellProps) {
-                            const propsSet = Array.isArray(spellProps) ? new Set(spellProps) : (spellProps instanceof Set ? spellProps : new Set());
-                            const subCompLabels = new Set();
-                            if (propsSet.has('vocal')) subCompLabels.add('vocal');
-                            if (propsSet.has('somatic')) subCompLabels.add('somatic');
-                            if (propsSet.has('material')) subCompLabels.add('material');
-
-                            const hasBannedComponent = Array.from(subCompLabels).some(comp => activeCompSubs.includes(comp));
-                            if (hasBannedComponent) return false;
-                        }
-                    }
-
-                    if (actionParentId === 'components') return false;
-
-                    if (activeEconomyParents.length === 0 && !activeParents.has('all')) {
-                        return true; // Bypass economy filter if only components is active
-                    }
-                    
-                    let matchesParent = false;
-                    
-                    // 1. Direct parent match
-                    if (activeParents.has(actionParentId)) {
-                        const parentGroup = this.parentGroups?.[actionParentId];
-                        const validSubIds = parentGroup ? new Set(parentGroup.subTabs.map(t => t.id)) : new Set();
-                        const activeSubsForParent = Array.from(activeSubs).filter(id => validSubIds.has(id));
-                        
-                        if (activeSubsForParent.length === 0) {
-                            matchesParent = true;
-                        } else {
-                            matchesParent = activeSubs.has(actionSubId);
-                        }
-                    }
-                    
-                    // 2. 'all' parent match
-                    if (!matchesParent && activeParents.has('all')) {
-                        const isParentActive = activeParents.has(actionParentId);
-                        if (!isParentActive) {
-                            matchesParent = true;
-                        } else {
-                            const parentGroup = this.parentGroups?.[actionParentId];
-                            const validSubIds = parentGroup ? new Set(parentGroup.subTabs.map(t => t.id)) : new Set();
-                            const activeSubsForParent = Array.from(activeSubs).filter(id => validSubIds.has(id));
-                            if (activeSubsForParent.length === 0) {
-                                matchesParent = true;
-                            }
-                        }
-                    }
-                    
-                    if (!matchesParent) return false;
-                    
-                    // Filter out depleted sub-actions if Hide Depleted is enabled
-                    if (filterNoResources && sub.uses && sub.uses.available !== null && sub.uses.available <= 0) {
-                        return false;
-                    }
-                    
-                    return true;
-                });
+                const adapter = actionDisplay.activeSystemAdapter;
+                const qualifyingSubActions = adapter.filterSubactions(itemActivities, filterContext);
 
                 log.debug(`_onRollAction | activeParents: ${Array.from(activeParents).join(', ')}, activeSubs: ${Array.from(activeSubs).join(', ')}, qualifying: ${qualifyingSubActions.length}`, qualifyingSubActions);
 

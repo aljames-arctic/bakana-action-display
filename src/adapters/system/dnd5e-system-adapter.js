@@ -271,6 +271,79 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
     }
 
     /**
+     * System-specific sub-action filtering for D&D 5e activities.
+     * Checks D&D 5e spell components (vocal, somatic, material) on linkedActions/originalActivities.
+     */
+    filterSubactions(subactions, filterContext) {
+        const { activeParents, activeSubs, parentGroups } = filterContext;
+        const isCompActive = activeParents.has('components');
+
+        let activeCompSubs = [];
+        if (isCompActive) {
+            const compGroup = parentGroups?.['components'];
+            const validSubIds = compGroup ? new Set(compGroup.subTabs.map(t => t.id)) : new Set();
+            activeCompSubs = Array.from(activeSubs).filter(id => validSubIds.has(id));
+        }
+
+        // Base filtering by action/economy tab and resource depletion
+        const baseFiltered = super.filterSubactions(subactions, filterContext);
+
+        if (activeCompSubs.length === 0) {
+            return baseFiltered;
+        }
+
+        // Filter out subactions requiring banned spell components
+        return baseFiltered.filter(sub => {
+            const spellProps = sub.linkedAction?.system?.properties ?? sub.originalActivity?.spell?.properties;
+            if (spellProps) {
+                const propsSet = Array.isArray(spellProps) ? new Set(spellProps) : (spellProps instanceof Set ? spellProps : new Set());
+                if (activeCompSubs.some(comp => propsSet.has(comp))) {
+                    return false;
+                }
+            }
+            return true;
+        });
+    }
+
+    /**
+     * System-specific components filter for D&D 5e parent action cards.
+     */
+    matchesComponentsFilter(action, filterContext) {
+        const { activeParents, activeSubs, parentGroups } = filterContext;
+        const isComponentsActive = activeParents.has('components');
+
+        if (!isComponentsActive) return true;
+
+        const parentGroup = parentGroups?.['components'];
+        const validSubIds = parentGroup ? new Set(parentGroup.subTabs.map(t => t.id)) : new Set();
+        const activeCompSubs = Array.from(activeSubs).filter(id => validSubIds.has(id));
+
+        if (activeCompSubs.length === 0) return true;
+
+        if (action.subactions?.length > 0) {
+            // For items with subactions: hide card ONLY if ALL subactions are banned by components filter
+            const allSubactionsBanned = action.subactions.every(sub => {
+                const spellProps = sub.linkedAction?.system?.properties ?? sub.originalActivity?.spell?.properties;
+                if (!spellProps) return false;
+                const propsSet = Array.isArray(spellProps) ? new Set(spellProps) : (spellProps instanceof Set ? spellProps : new Set());
+                return activeCompSubs.some(comp => propsSet.has(comp));
+            });
+            if (allSubactionsBanned) return false;
+        } else {
+            // For single-action items: check tabs for component matches
+            const spellCompSubs = new Set(
+                action.tabs
+                    .filter(tab => tab.root === 'components')
+                    .map(tab => tab.label)
+            );
+            const hasBannedComponent = Array.from(spellCompSubs).some(comp => activeCompSubs.includes(comp));
+            if (hasBannedComponent) return false;
+        }
+
+        return true;
+    }
+
+    /**
      * Determine the parent action tab based on DnD5e activation type.
      */
     _getParentTab(type) {

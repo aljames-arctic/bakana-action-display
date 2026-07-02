@@ -73,6 +73,76 @@ export class BaseSystemAdapter {
     }
 
     /**
+     * Filter a list of sub-actions (activities) for a dropdown menu based on current UI filter state.
+     * @param {Action[]} subactions The array of child Action instances
+     * @param {Object} filterContext Current HUD filter context { activeParents, activeSubs, parentGroups, filterNoResources }
+     * @returns {Action[]} Qualifying sub-actions to show in the dropdown menu
+     */
+    filterSubactions(subactions, filterContext) {
+        if (!subactions || subactions.length === 0) return [];
+        const { activeParents, activeSubs, parentGroups, filterNoResources } = filterContext;
+
+        const activeEconomyParents = Array.from(activeParents).filter(p => p !== 'components' && p !== 'all');
+
+        return subactions.filter(sub => {
+            const tab = sub.tabs;
+            const actionParentId = tab?.root;
+            const actionSubId = tab?.parent ? tab.label : undefined;
+
+            if (actionParentId === 'components') return false;
+
+            if (activeEconomyParents.length === 0 && !activeParents.has('all')) {
+                return true;
+            }
+
+            let matchesParent = false;
+            if (activeParents.has(actionParentId)) {
+                const parentGroup = parentGroups?.[actionParentId];
+                const validSubIds = parentGroup ? new Set(parentGroup.subTabs.map(t => t.id)) : new Set();
+                const activeSubsForParent = Array.from(activeSubs).filter(id => validSubIds.has(id));
+
+                if (activeSubsForParent.length === 0) {
+                    matchesParent = true;
+                } else {
+                    matchesParent = activeSubs.has(actionSubId);
+                }
+            }
+
+            if (!matchesParent && activeParents.has('all')) {
+                const isParentActive = activeParents.has(actionParentId);
+                if (!isParentActive) {
+                    matchesParent = true;
+                } else {
+                    const parentGroup = parentGroups?.[actionParentId];
+                    const validSubIds = parentGroup ? new Set(parentGroup.subTabs.map(t => t.id)) : new Set();
+                    const activeSubsForParent = Array.from(activeSubs).filter(id => validSubIds.has(id));
+                    if (activeSubsForParent.length === 0) {
+                        matchesParent = true;
+                    }
+                }
+            }
+
+            if (!matchesParent) return false;
+
+            if (filterNoResources && sub.uses && sub.uses.available !== null && sub.uses.available <= 0) {
+                return false;
+            }
+
+            return true;
+        });
+    }
+
+    /**
+     * Determine if a parent action card matches system-specific component filters.
+     * @param {Action} action The parent Action instance
+     * @param {Object} filterContext Current HUD filter context { activeParents, activeSubs, parentGroups }
+     * @returns {boolean} True if the action passes components filtering
+     */
+    matchesComponentsFilter(action, filterContext) {
+        return true;
+    }
+
+    /**
      * Get the localized label for a left-side item type (parent tab).
      * @param {string} parentId 
      * @returns {string}
