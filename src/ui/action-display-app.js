@@ -134,7 +134,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
 
             if (action.tabs) {
                 for (const tab of action.tabs) {
-                    existingCombinations.add(tab.path);
+                    if (tab?.path) existingCombinations.add(tab.path);
                 }
             }
         }
@@ -162,6 +162,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         }
 
         for (const combo of existingItemCombinations) {
+            if (!combo || typeof combo !== 'string') continue;
             const parts = combo.split('/');
             const parentId = parts[0];
             const subId = parts[1]; // might be undefined (spell level)
@@ -243,6 +244,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         }
 
         for (const combo of existingCombinations) {
+            if (!combo || typeof combo !== 'string') continue;
             const parts = combo.split('/');
             const parentId = parts[0];
             const subId = parts[1]; // might be undefined
@@ -586,7 +588,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         const action = this.actions?.find(a => a.id === actionId);
         
         if (action) {
-            const itemActivities = action.activities;
+            const itemActivities = action.subactions;
             if (itemActivities && itemActivities.length > 0) {
                 // Filter sub-actions to only those that match the currently active right-side tabs
                 const activeParents = this.rightTabs.activeParents;
@@ -597,8 +599,8 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
 
                 const qualifyingSubActions = itemActivities.filter(sub => {
                     const tab = sub.tabs;
-                    const actionParentId = tab.root;
-                    const actionSubId = tab.parent ? tab.label : undefined;
+                    const actionParentId = tab?.root;
+                    const actionSubId = tab?.parent ? tab.label : undefined;
 
                     if (actionParentId === 'components') return false;
 

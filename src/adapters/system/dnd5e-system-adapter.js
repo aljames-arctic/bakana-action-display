@@ -3,6 +3,7 @@ import { localize } from '../../lib/utils.js';
 import { log } from '../../lib/logger.js';
 import { MODULE_ID } from '../../constants.js';
 import { TabRef } from '../../ui/tab-ref.js';
+import { Action } from '../../ui/action.js';
 
 const SORT_ORDERS = {
     tabs: {
@@ -144,28 +145,55 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                     const parentRef = new TabRef({ label: parentId });
                     const tabRef = subId !== 'none' ? new TabRef({ label: subId, parent: parentRef }) : parentRef;
                     
-                    return {
+                    let linkedSpell = null;
+                    if (activity.type === 'cast' && activity.spell?.uuid) {
+                        if (activity.item) {
+                            linkedSpell = activity.item;
+                        } else if (activity.cachedSpell) {
+                            linkedSpell = activity.cachedSpell;
+                        } else if (typeof fromUuidSync === 'function') {
+                            try {
+                                linkedSpell = fromUuidSync(activity.spell.uuid);
+                            } catch (e) {
+                                log.debug(`Failed to resolve compendium spell UUID ${activity.spell.uuid}:`, e);
+                            }
+                        }
+                    }
+
+                    const activityName = activity.name || linkedSpell?.name || activity.type.toUpperCase();
+                    const activityImg = activity.img || linkedSpell?.img || item.img;
+
+                    return new Action({
                         id: activity.id,
-                        name: activity.name ?? activity.type.toUpperCase(),
-                        img: activity.img ?? item.img,
+                        name: activityName,
+                        img: activityImg,
                         uses: this._calculateActivityUses(activity, item, actor, ammoQuantities, highestAvailableSlot),
                         tabs: tabRef,
                         roll: async (event) => {
                             const proxiedEvent = this._createRollEvent(event);
                             return activity.use({ event: proxiedEvent }, { event: proxiedEvent });
                         },
-                        originalActivity: activity // Store for module adapters (like midi-qol)
-                    };
+                        originalActivity: activity,
+                        linkedSpell: linkedSpell
+                    });
                 });
+
+                // Extract spell components from linked spells on cast activities if present
+                for (const activity of mappedActivities) {
+                    const spellProps = activity.linkedSpell?.system?.properties ?? activity.originalActivity?.spell?.properties;
+                    if (spellProps) {
+                        const propsSet = Array.isArray(spellProps) ? new Set(spellProps) : (spellProps instanceof Set ? spellProps : new Set());
+                        const compRoot = new TabRef({ label: 'components' });
+                        if (propsSet.has('vocal') || propsSet.has('v')) spellComponents.push(new TabRef({ label: 'vocal', parent: compRoot }));
+                        if (propsSet.has('somatic') || propsSet.has('s')) spellComponents.push(new TabRef({ label: 'somatic', parent: compRoot }));
+                        if (propsSet.has('material') || propsSet.has('m')) spellComponents.push(new TabRef({ label: 'material', parent: compRoot }));
+                    }
+                }
 
                 // Single-pass Resource Filtering: Filter out depleted D&D 5e Activities if enabled
                 let filteredActivities = mappedActivities;
                 if (filterNoResources) {
-                    filteredActivities = mappedActivities.filter(sub => {
-                        // Spells are exempt from depletion if they are upcastable (handled in uses.isUpcast)
-                        const isDepleted = sub.uses && sub.uses.available !== null && sub.uses.available <= 0 && !sub.uses.isUpcast;
-                        return !isDepleted;
-                    });
+                    filteredActivities = mappedActivities.filter(act => !act.isDepleted);
 
                     // If all activities are depleted, skip this item entirely!
                     if (filteredActivities.length === 0) {
@@ -173,75 +201,71 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                     }
                 }
 
-                // Create a SINGLE action for the item, representing all its active/non-depleted activities
-                const activityAction = {
-                    ...action,
-                    name: item.name, // Keep the clean item name
-                    img: item.img, // Use the parent item's icon
-                    unprepared: isSpellUnprepared || isUnequipped,
-                    activities: filteredActivities,
-                    roll: async (event) => {
-                        // Roll the first active activity directly
-                        return filteredActivities[0].roll(event);
+                // Assign to hierarchical item types: [parentType, subType] (for left-side tabs)
+                const hasCastActivity = filteredActivities.some(act => act.originalActivity?.type === 'cast');
+                const isItemCharges = (type === 'equipment' && this._hasLimitedUses(item))
+                    || (['feat', 'weapon', 'consumable', 'tool'].includes(type) && this._hasLimitedUses(item) && hasCastActivity);
+
+                let itemTypes = [type];
+                if (type === 'spell') {
+                    const level = item.system.level ?? 0;
+                    itemTypes = ['spell', `level_${level}`];
+                } else if (isItemCharges) {
+                    itemTypes = ['spell', 'itemCharges'];
+                } else if (type === 'weapon' || type === 'equipment') {
+                    const subType = item.system.type?.value;
+                    itemTypes = subType ? [type, subType] : [type];
+                }
+
+                // Calculate main action uses
+                let actionUses;
+                if (filteredActivities.length === 1) {
+                    actionUses = filteredActivities[0].uses;
+                } else {
+                    if (type === 'spell') {
+                        actionUses = this._calculateSpellSlots(item, actor, highestAvailableSlot);
+                    } else {
+                        actionUses = this._calculateUses(item);
                     }
-                };
+                }
 
                 // Collect all unique tabs from the remaining non-depleted activities
                 const uniqueTabsMap = new Map();
                 for (const activity of filteredActivities) {
-                    const key = activity.tabs.path;
-                    if (!uniqueTabsMap.has(key)) {
-                        uniqueTabsMap.set(key, activity.tabs);
+                    const tab = activity.tabs;
+                    if (tab && !uniqueTabsMap.has(tab.path)) {
+                        uniqueTabsMap.set(tab.path, tab);
                     }
                 }
 
-                activityAction.tabs = [...uniqueTabsMap.values(), ...spellComponents];
-
-                // Assign to hierarchical item types: [parentType, subType] (for left-side tabs)
-                const hasCastActivity = filteredActivities.some(sub => sub.originalActivity?.type === 'cast');
-                const isItemCharges = (type === 'equipment' && this._hasLimitedUses(item))
-                    || (['feat', 'weapon', 'consumable', 'tool'].includes(type) && this._hasLimitedUses(item) && hasCastActivity);
-
-                if (type === 'spell') {
-                    const level = item.system.level ?? 0;
-                    activityAction.itemTypes = ['spell', `level_${level}`];
-                } else if (isItemCharges) {
-                    activityAction.itemTypes = ['spell', 'itemCharges'];
-                } else if (type === 'weapon') {
-                    const subType = item.system.type?.value;
-                    activityAction.itemTypes = subType ? ['weapon', subType] : ['weapon'];
-                } else if (type === 'equipment') {
-                    const subType = item.system.type?.value;
-                    activityAction.itemTypes = subType ? ['equipment', subType] : ['equipment'];
-                } else {
-                    activityAction.itemTypes = [type];
-                }
-
-                // Roll up uses to the main action
-                if (filteredActivities.length === 1) {
-                    activityAction.uses = filteredActivities[0].uses;
-                } else {
-                    // For multiple activities, use item-level uses (e.g. wand charges)
-                    // Spells fall back to spell slots
-                    if (type === 'spell') {
-                        activityAction.uses = this._calculateSpellSlots(item, actor, highestAvailableSlot);
-                    } else {
-                        activityAction.uses = this._calculateUses(item);
+                // Create a SINGLE Action instance for the item
+                const activityAction = new Action({
+                    ...action,
+                    name: item.name, // Keep the clean item name
+                    img: item.img, // Use the parent item's icon
+                    available: !(isSpellUnprepared || isUnequipped),
+                    subactions: filteredActivities,
+                    tabs: [...uniqueTabsMap.values(), ...spellComponents],
+                    itemTypes: itemTypes,
+                    uses: actionUses,
+                    roll: async (event) => {
+                        // Roll the first active activity directly
+                        return filteredActivities[0].roll(event);
                     }
-                }
+                });
 
                 modified.push(activityAction);
             } else if (['equipment', 'weapon', 'backpack', 'loot'].includes(type)) {
                 // Passive items (armor, passive shields, containers, loot) are assigned right-side tab 'none' under 'economy'
                 const subType = item.system.type?.value;
                 const econRoot = new TabRef({ label: 'economy' });
-                const passiveAction = {
+                const passiveAction = new Action({
                     ...action,
-                    unprepared: isSpellUnprepared || isUnequipped,
+                    available: !(isSpellUnprepared || isUnequipped),
                     tabs: [new TabRef({ label: 'none', parent: econRoot })],
                     itemTypes: subType ? [type, subType] : [type],
                     uses: { available: null, max: null }
-                };
+                });
                 modified.push(passiveAction);
             }
         }

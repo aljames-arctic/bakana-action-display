@@ -18,8 +18,8 @@ export class MidiQolModuleAdapter extends BaseModuleAdapter {
         const modified = [];
 
         for (const item of actions) {
-            // Check if the 5e item has mapped D&D 5e Activities
-            const activities = item.activities;
+            // Check if the 5e item has mapped activities
+            const activities = item.subactions;
             if (activities?.length > 0) {
                 // Filter out D&D 5e Activities that are marked as automationOnly by Midi-QOL
                 const filteredActivities = activities.filter(activity => !this.isAutomationOnly(activity));
@@ -29,12 +29,12 @@ export class MidiQolModuleAdapter extends BaseModuleAdapter {
                     continue; // Skip this item entirely (filters it out of the HUD)
                 }
 
-                // If some activities were filtered out, update the item's activities and tabs
+                // If some activities were filtered out, update the item's subactions and tabs
                 if (filteredActivities.length < activities.length) {
-                    item.activities = filteredActivities;
+                    item.subactions = filteredActivities;
 
                     // Identify root tab categories controlled by D&D 5e activities (e.g. 'economy')
-                    const activityRootCategories = new Set(activities.map(activity => activity.tabs.root));
+                    const activityRootCategories = new Set(activities.map(act => act.tabs.root));
 
                     // Preserve non-activity tabs from other categories (e.g. spell components under 'components')
                     const preservedTabs = item.tabs.filter(tab => !activityRootCategories.has(tab.root));
@@ -42,9 +42,9 @@ export class MidiQolModuleAdapter extends BaseModuleAdapter {
                     // Recalculate unique activity tabs using only the remaining non-removed activities
                     const uniqueTabsMap = new Map();
                     for (const activity of filteredActivities) {
-                        const key = activity.tabs.path;
-                        if (!uniqueTabsMap.has(key)) {
-                            uniqueTabsMap.set(key, activity.tabs);
+                        const tab = activity.tabs;
+                        if (tab && !uniqueTabsMap.has(tab.path)) {
+                            uniqueTabsMap.set(tab.path, tab);
                         }
                     }
                     item.tabs = [...uniqueTabsMap.values(), ...preservedTabs];

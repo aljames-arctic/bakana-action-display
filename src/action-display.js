@@ -2,6 +2,7 @@ import { BaseSystemAdapter } from './adapters/system/base-system-adapter.js';
 import { BaseModuleAdapter } from './adapters/module/base-module-adapter.js';
 import { log } from './lib/logger.js';
 import { TabRef } from './ui/tab-ref.js';
+import { Action } from './ui/action.js';
 import { MODULE_ID } from './constants.js';
 
 /**
@@ -94,7 +95,7 @@ class ActionDisplay {
                 action.isHidden = true;
                 action.itemTypes = ['hidden'];
                 // Ensure hidden actions are never skipped due to preparedness/equipped status
-                action.unprepared = false;
+                action.available = true;
             }
 
             filtered.push(action);
@@ -120,7 +121,7 @@ class ActionDisplay {
             if (!item.name) continue;
             if (!adapter.shouldExtractItem(item)) continue;
 
-            baseActions.push({
+            baseActions.push(new Action({
                 id: item.id,
                 name: item.name,
                 type: item.type,
@@ -140,7 +141,7 @@ class ActionDisplay {
                 },
                 originalItem: item,
                 extra: {}
-            });
+            }));
         }
         return baseActions;
     }

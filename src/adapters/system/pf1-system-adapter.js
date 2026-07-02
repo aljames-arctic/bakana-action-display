@@ -141,7 +141,7 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
 
                 const uses = this._calculateUses(item, actor);
 
-                action.activities = itemActions.map(itemAction => {
+                action.subactions = itemActions.map(itemAction => {
                     const actionType = itemAction.activation?.type;
                     const activationType = this._parseActivationType(actionType);
                     const parentRef = new TabRef({ label: 'economy' });
@@ -164,10 +164,10 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
                     };
                 });
 
-                action.activities = action.activities.filter(sub => sub.activationType !== null);
-                if (action.activities.length === 0) continue;
+                action.subactions = action.subactions.filter(sub => sub.activationType !== null);
+                if (action.subactions.length === 0) continue;
 
-                const firstSub = action.activities[0];
+                const firstSub = action.subactions[0];
                 action.activationType = firstSub.activationType;
                 action.tabs = [firstSub.tabs];
                 action.itemTypes = ['weapon']; // Group under weapons/attacks
@@ -244,7 +244,7 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
 
                 if (itemActionsList.length === 0) continue; // Skip if no active actions
 
-                action.activities = itemActionsList;
+                action.subactions = itemActionsList;
                 const firstSub = itemActionsList[0];
                 action.activationType = firstSub.activationType;
                 action.tabs = [firstSub.tabs];
@@ -259,7 +259,7 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
 
                 const uses = this._calculateUses(item, actor);
 
-                action.activities = itemActions.map(itemAction => {
+                action.subactions = itemActions.map(itemAction => {
                     const actionType = itemAction.activation?.type;
                     const activationType = this._parseActivationType(actionType);
                     const econRoot = new TabRef({ label: 'economy' });
@@ -282,10 +282,10 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
                     };
                 });
 
-                action.activities = action.activities.filter(sub => sub.activationType !== null);
-                if (action.activities.length === 0) continue;
+                action.subactions = action.subactions.filter(sub => sub.activationType !== null);
+                if (action.subactions.length === 0) continue;
 
-                const firstSub = action.activities[0];
+                const firstSub = action.subactions[0];
                 action.activationType = firstSub.activationType;
                 action.tabs = [firstSub.tabs];
                 action.itemTypes = [item.type];
