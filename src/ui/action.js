@@ -20,7 +20,7 @@ export class Action {
      * @param {Item|null} [options.originalItem=null] Foundry Item instance
      * @param {Action[]} [options.subactions=[]] Array of child Action instances
      * @param {Object|null} [options.originalActivity=null] Underlying system Activity instance
-     * @param {Object|null} [options.linkedSpell=null] Linked compendium spell data
+     * @param {Object|null} [options.linkedAction=null] Linked document/item data (e.g. compendium spell)
      * @param {Object} [options.extra={}] Additional metadata
      */
     constructor({
@@ -38,7 +38,7 @@ export class Action {
         originalItem = null,
         subactions = [],
         originalActivity = null,
-        linkedSpell = null,
+        linkedAction = null,
         extra = {}
     } = {}) {
         this.id = id;
@@ -55,7 +55,7 @@ export class Action {
         this.originalItem = originalItem;
         this.subactions = subactions;
         this.originalActivity = originalActivity;
-        this.linkedSpell = linkedSpell;
+        this.linkedAction = linkedAction;
         this.extra = extra;
     }
 

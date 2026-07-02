@@ -145,20 +145,20 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                     const parentRef = new TabRef({ label: parentId });
                     const tabRef = subId !== 'none' ? new TabRef({ label: subId, parent: parentRef }) : parentRef;
                     
-                    let linkedSpell = null;
+                    let linkedAction = null;
                     if (activity.type === 'cast' && activity.spell?.uuid) {
                         try {
-                            linkedSpell = fromUuidSync(activity.spell.uuid);
+                            linkedAction = fromUuidSync(activity.spell.uuid);
                         } catch (e) {
                             log.debug(`Failed to resolve compendium spell UUID ${activity.spell.uuid}:`, e);
                         }
-                        if (!linkedSpell) {
-                            linkedSpell = activity.item ?? activity.cachedSpell ?? null;
+                        if (!linkedAction) {
+                            linkedAction = activity.item ?? activity.cachedSpell ?? null;
                         }
                     }
 
-                    const activityName = activity.name || linkedSpell?.name || activity.type.toUpperCase();
-                    const activityImg = activity.img || linkedSpell?.img || item.img;
+                    const activityName = activity.name || linkedAction?.name || activity.type.toUpperCase();
+                    const activityImg = activity.img || linkedAction?.img || item.img;
 
                     return new Action({
                         id: activity.id,
@@ -171,13 +171,13 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                             return activity.use({ event: proxiedEvent }, { event: proxiedEvent });
                         },
                         originalActivity: activity,
-                        linkedSpell: linkedSpell
+                        linkedAction: linkedAction
                     });
                 });
 
                 // Extract spell components from linked spells on cast activities if present
                 for (const activity of mappedActivities) {
-                    const spellProps = activity.linkedSpell?.system?.properties ?? activity.originalActivity?.spell?.properties;
+                    const spellProps = activity.linkedAction?.system?.properties ?? activity.originalActivity?.spell?.properties;
                     if (spellProps) {
                         const propsSet = Array.isArray(spellProps) ? new Set(spellProps) : (spellProps instanceof Set ? spellProps : new Set());
                         const compRoot = new TabRef({ label: 'components' });
