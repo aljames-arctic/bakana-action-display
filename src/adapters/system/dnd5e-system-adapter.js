@@ -179,11 +179,16 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                 for (const activity of mappedActivities) {
                     const spellProps = activity.linkedAction?.system?.properties ?? activity.originalActivity?.spell?.properties;
                     if (spellProps) {
-                        const propsSet = Array.isArray(spellProps) ? new Set(spellProps) : (spellProps instanceof Set ? spellProps : new Set());
-                        const compRoot = new TabRef({ label: 'components' });
-                        if (propsSet.has('vocal')) spellComponents.push(new TabRef({ label: 'vocal', parent: compRoot }));
-                        if (propsSet.has('somatic')) spellComponents.push(new TabRef({ label: 'somatic', parent: compRoot }));
-                        if (propsSet.has('material')) spellComponents.push(new TabRef({ label: 'material', parent: compRoot }));
+                        const isVocal = this._hasSpellProperty(spellProps, 'vocal');
+                        const isSomatic = this._hasSpellProperty(spellProps, 'somatic');
+                        const isMaterial = this._hasSpellProperty(spellProps, 'material');
+
+                        if (isVocal || isSomatic || isMaterial) {
+                            const compRoot = new TabRef({ label: 'components' });
+                            if (isVocal) spellComponents.push(new TabRef({ label: 'vocal', parent: compRoot }));
+                            if (isSomatic) spellComponents.push(new TabRef({ label: 'somatic', parent: compRoot }));
+                            if (isMaterial) spellComponents.push(new TabRef({ label: 'material', parent: compRoot }));
+                        }
                     }
                 }
 
