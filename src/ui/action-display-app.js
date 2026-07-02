@@ -198,7 +198,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
 
         // Post-process leftGroups to set active, expanded, and activeParent, and sort sub-tabs
         for (const parent of itemTypes) {
-            const validSubIds = new Set(parent.subTabs.map(t => t.id));
+            const validSubIds = toSet(parent.subTabs, t => t.id);
             const activeSubsForParent = Array.from(this.leftTabs.activeSubTypes).filter(id => validSubIds.has(id));
             
             parent.active = this.leftTabs.activeParents.has(parent.id);
