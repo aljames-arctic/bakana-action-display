@@ -37,6 +37,14 @@ https://github.com/user-attachments/assets/c842ee1e-783c-4d7e-b55d-de86e5cb0b44
 
 ---
 
+## What's New in 0.3.0
+
+*   **AppV2 Declarative Action Architecture**: Fully updated to standard Foundry V12 `ApplicationV2` idioms with instance action handlers and clean prototype dispatch.
+*   **Dynamic Sub-Action Filtering**: Dropdown menus for multi-option items (like D&D 5e activities and PF1 linked attacks) now dynamically react to active HUD tab filters.
+*   **Modular Component Filtering Layer**: Extracted spell component exclusion checks into system adapter methods (`matchesComponentsFilter`) with strict, cross-realm type validation.
+*   **Zero-Allocation Performance (`toSet`)**: Introduced a high-performance `toSet(input, mapFn)` utility function to eliminate intermediate `.map()` array heap allocations across UI rendering passes.
+*   **Refactored i18n Namespaces**: Renamed the `BAD.hud` localization block to `BAD.core`, and centralized generic system terms into `BAD.common` for easy cross-system reuse.
+
 ## How to Use
 
 *   **Left-Click a Tab**: Selects that category exclusively. If multiple sub-tabs are already active, left-clicking one of them will **isolate** it (deselecting all others, making it the sole active filter) rather than toggling it off.

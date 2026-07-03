@@ -70,6 +70,8 @@ ActionDisplayApp.render()
        │
        ├── 3. Action Filtering
        │    └── Filter finalActions[] against active TabSideState filters
+       │         ├── BaseSystemAdapter.matchesComponentsFilter(action, filterContext)
+       │         ├── BaseSystemAdapter.filterSubactions(subactions, filterContext)
        │         ├── leftTabs.activeParents & leftTabs.activeSubTypes
        │         └── rightTabs.activeParents & rightTabs.activeSubTypes
        │
