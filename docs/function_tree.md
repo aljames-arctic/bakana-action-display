@@ -70,7 +70,7 @@ ActionDisplayApp.render()
        │
        ├── 3. Action Filtering
        │    └── Filter finalActions[] against active TabSideState filters
-       │         ├── BaseSystemAdapter.matchesComponentsFilter(action, filterContext)
+       │         ├── BaseSystemAdapter.matchesEconomyTabs(action, filterContext)
        │         ├── BaseSystemAdapter.filterSubactions(subactions, filterContext)
        │         ├── leftTabs.activeParents & leftTabs.activeSubTypes
        │         └── rightTabs.activeParents & rightTabs.activeSubTypes
@@ -316,7 +316,6 @@ flowchart TD
 ### [`src/ui/tab-ref.js`](../src/ui/tab-ref.js) — Structured Tab Data Reference (`TabRef`)
 - [**`constructor({ label, parent })`**](../src/ui/tab-ref.js#L11-L18): Instantiates a pre-computed tab data node linked to parent nodes, caching `.root` and `.path` string (`'economy/action'`).
 - [**`static from(rootLabel, subLabel)`**](../src/ui/tab-ref.js#L26-L31): Helper to instantiate a nested parent/child `TabRef` node.
-- [**`static normalize(tabs)`**](../src/ui/tab-ref.js#L38-L43): Flattens nested arrays (`tabs.flat(Infinity)`) and returns a clean 1D `TabRef[]` array.
 
 ### [`src/adapters/system/base-system-adapter.js`](../src/adapters/system/base-system-adapter.js) — System Adapter Interface (`BaseSystemAdapter`)
 - [**`_createRollEvent(event)`**](../src/adapters/system/base-system-adapter.js#L23-L42): Creates a proxy around a roll event to inject keyboard modifiers (`Alt`, `Control`, `Shift`).

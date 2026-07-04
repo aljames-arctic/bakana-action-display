@@ -30,15 +30,4 @@ export class TabRef {
         const parent = new TabRef({ label: rootLabel });
         return new TabRef({ label: subLabel, parent });
     }
-
-    /**
-     * Normalize any TabRef input (single instance, array, nested arrays) into a flat array of TabRef instances.
-     * @param {TabRef|TabRef[]|Array} tabs 
-     * @returns {TabRef[]} Flat array of valid TabRef objects
-     */
-    static normalize(tabs) {
-        if (!tabs) return [];
-        const flat = Array.isArray(tabs) ? tabs.flat(Infinity) : [tabs];
-        return flat.filter(t => t instanceof TabRef || (t && typeof t === 'object' && t.path));
-    }
 }

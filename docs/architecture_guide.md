@@ -94,9 +94,8 @@ classDiagram
         +modifyActions(actions, actor)
         +modifyContext(context)
         +filterSubactions(subactions, filterContext)
-        +matchesComponentsFilter(action, filterContext)
         +isExclusionTab(parentId)
-        +matchesEconomyTabs(tabRefs, filterContext)
+        +matchesEconomyTabs(action, filterContext)
         +getActiveExclusionSubs(filterContext)
         +getItemTypeLabel(parentId)
         +getItemTypeIcon(parentId)
@@ -116,13 +115,11 @@ classDiagram
         +modifyActions(actions, actor)
         +modifyContext(context)
         +filterSubactions(subactions, filterContext)
-        +matchesComponentsFilter(action, filterContext)
         +getContextMenuItems(app)
         +onTabRightClick(app, el, event)
         +getItemTypeLabel(parentId)
         +getItemSubTabLabel(parentId, subId)
         +getActionSubTabLabel(subId)
-        -_hasSpellProperty(spellProps, prop)
         -_calculateUses(item, actor)
         -_hasLimitedUses(item, actor)
         -_calculateActivityUses(activity, item, actor)
@@ -313,7 +310,7 @@ flowchart TD
         TabRefNode2["TabRef Node 2 (Vocal)\n• label: 'vocal', root: 'components'\n• combinator: 'difference'"]
         TabRefNode3["TabRef Node 3 (Somatic)\n• label: 'somatic', root: 'components'\n• combinator: 'difference'"]
         
-        TabRefGen -->|TabRef.normalize| ActionObj["Action Instance\n(id, name, uses, subactions)\ntabs: [TabRef Node 1, TabRef Node 2, TabRef Node 3]"]
+        TabRefGen -->|TabRef.from| ActionObj["Action Instance\n(id, name, uses, subactions)\ntabs: [TabRef Node 1, TabRef Node 2, TabRef Node 3]"]
         TabRefNode1 --> ActionObj
         TabRefNode2 --> ActionObj
         TabRefNode3 --> ActionObj
@@ -344,18 +341,18 @@ flowchart TD
    - When instantiated, `TabRef` computes its `.root` (e.g. `'economy'`) and `.path` string (e.g. `'economy/action'`).
    - UI filtering loops query `tab.root` and `tab.path` directly, eliminating runtime string splitting and regex matching during render passes.
 
-2. **Set-Algebraic Combinators (`combinator`)**:
-   - `TabRef` instances store a `combinator` property (`'union'`, `'intersection'`, `'difference'`) to dictate how their tree branch combines during set evaluation.
+2. **System Adapter Set Authority (`getTabCombinator`)**:
+   - Parent tab groups defined on the active system adapter (`adapter.getTabCombinator(parentId)`) dictate set-algebraic rules (`union`, `intersection`, `difference`) for all sub-tabs under that parent group.
 
 3. **Multi-Category Mapping**:
    - A single `Action` can belong to multiple tab paths simultaneously by storing an array of `TabRef` nodes (e.g., Action Economy tab + Spell Component exclusion tabs).
 
-4. **Defensive Normalization (`TabRef.normalize`)**:
-   - `TabRef.normalize(tabs)` flattens deeply nested arrays (`tabs.flat(Infinity)`) and filters invalid inputs into a guaranteed 1D `TabRef[]` array. Integrated directly into `Action`'s constructor.
+4. **Guaranteed Flat `TabRef[]` Arrays (`Action.tabs`)**:
+   - All system adapters and core extractors construct `tabs` directly as a flat `TabRef[]` array using `TabRef.from(rootLabel, subLabel)`.
 
 5. **Factory Instantiation (`TabRef.from`)**:
-   - System adapters use `TabRef.from(rootLabel, subLabel, combinator)` to instantiate parent/child tab nodes without writing verbose constructor boilerplate:
+   - System adapters use `TabRef.from(rootLabel, subLabel)` to instantiate parent/child tab nodes without writing verbose constructor boilerplate:
      ```javascript
-     const tabRef = TabRef.from('components', 'vocal', 'difference');
-     // Instantiates TabRef(label: 'vocal', parent: TabRef(label: 'components', combinator: 'difference'))
+     const tabRef = TabRef.from('components', 'vocal');
+     // Instantiates TabRef(label: 'vocal', parent: TabRef(label: 'components'))
      ```

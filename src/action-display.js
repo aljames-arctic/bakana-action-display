@@ -126,7 +126,7 @@ class ActionDisplay {
                 name: item.name,
                 type: item.type,
                 img: item.img,
-                tabs: [new TabRef({ label: 'all' })], // Default tab array
+                tabs: [TabRef.from('all')], // Default tab array
                 itemTypes: [item.type], // Default item type category
                 hidden: false,
                 uses: { available: null, max: null },

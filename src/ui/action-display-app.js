@@ -463,7 +463,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         }
 
         // Filter by Left Side (Item Type)
-        if (!action.itemTypes || !Array.isArray(action.itemTypes)) return false;
+        if (!action.itemTypes || action.itemTypes.length === 0) return false;
         
         const matchesLeft = action.itemTypes.some(type => {
             if (this.leftTabs.activeParents.has(type)) {

@@ -137,13 +137,7 @@ export class HUDTabColumn {
 
     /**
      * Handle left-click selection of a sub-tab.
-     * @param {string|undefined} parentId Parent group ID
-     * @param {string} type Sub-tab ID
-     * @param {Object} groups Available tab groups
-     */
-    /**
-     * Handle left-click selection of a sub-tab.
-     * @param {string|undefined} parentId Parent group ID
+     * @param {string} parentId Parent group ID
      * @param {string} type Sub-tab ID
      * @param {Object} groups Available tab groups
      * @param {boolean} [isExclusion=false] Whether this parent tab is an exclusion filter
@@ -200,7 +194,7 @@ export class HUDTabColumn {
 
     /**
      * Handle right-click toggling of a sub-tab (for multi-select).
-     * @param {string|undefined} parentId Parent group ID
+     * @param {string} parentId Parent group ID
      * @param {string} type Sub-tab ID
      * @param {Object} groups Available tab groups
      * @param {boolean} [isExclusion=false] Whether this parent tab is an exclusion filter

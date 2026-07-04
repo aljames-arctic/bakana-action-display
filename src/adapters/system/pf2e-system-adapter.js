@@ -74,9 +74,8 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
                 // Skip passive feats/actions that don't have an active cost
                 if (!activationType) continue;
 
-                const econRoot = new TabRef({ label: 'economy' });
                 action.activationType = activationType; // Keep for sorting
-                action.tabs = [new TabRef({ label: activationType, parent: econRoot })];
+                action.tabs = [TabRef.from('economy', activationType)];
                 action.itemTypes = [type === 'action' ? 'feat' : type];
                 action.uses = this.getUses(item);
 
@@ -96,8 +95,7 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
                 if (!entry) continue;
 
                 const spellLevel = item.rank ?? 0;
-                const econRoot = new TabRef({ label: 'economy' });
-                action.tabs = [new TabRef({ label: 'action', parent: econRoot })]; // Spells are active actions
+                action.tabs = [TabRef.from('economy', 'action')]; // Spells are active actions
                 action.activationType = 'action';
                 
                 let subTab = spellLevel.toString();
@@ -137,7 +135,7 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
                 type: 'weapon',
                 img: strike.item?.img ?? strike.img ?? strike.imageUrl ?? 'systems/pf2e/icons/default-icons/melee.svg',
                 activationType: 'action', // Strikes cost 1 action
-                tabs: [new TabRef({ label: 'action', parent: new TabRef({ label: 'economy' }) })],
+                tabs: [TabRef.from('economy', 'action')],
                 itemTypes: ['weapon'],
                 hidden: false,
                 uses: uses, // Display remaining ammunition

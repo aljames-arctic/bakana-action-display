@@ -81,27 +81,27 @@ export class BaseSystemAdapter {
      */
     /**
      * Set-algebraic filter tree evaluator.
-     * Evaluates an action's TabRef nodes against active UI filter groups using parent tab combinators:
+     * Evaluates an Action instance against active UI filter groups using parent tab combinators:
      * - 'difference' (AND NOT): If action matches any active difference sub-tab, return false.
      * - 'union' (OR): Action must match at least one active union parent group.
      * - 'intersection' (AND): Action must match all active intersection sub-tabs.
      * 
-     * @param {Action|TabRef|TabRef[]} actionOrTabs Parent Action instance or tab references
+     * @param {Action} action Action instance to evaluate
      * @param {Object} filterContext Current HUD filter context { activeParents, activeSubs, parentGroups }
      * @returns {boolean} True if the action matches current filter selection
      */
-    matchesEconomyTabs(actionOrTabs, filterContext) {
-        if (!actionOrTabs) return false;
+    matchesEconomyTabs(action, filterContext) {
+        if (!action) return false;
         const { activeParents, activeSubs, parentGroups } = filterContext;
 
         // If an Action instance with subactions is passed, card passes if at least one subaction qualifies
-        if (actionOrTabs.subactions?.length > 0) {
-            const qualifyingSubactions = this.filterSubactions(actionOrTabs.subactions, filterContext);
+        if (action.subactions?.length > 0) {
+            const qualifyingSubactions = this.filterSubactions(action.subactions, filterContext);
             return qualifyingSubactions.length > 0;
         }
 
-        const tabRefs = actionOrTabs.tabs ?? actionOrTabs;
-        const tabs = TabRef.normalize(tabRefs);
+        const tabs = action.tabs;
+        if (!tabs || tabs.length === 0) return false;
 
         // 1. Evaluate DIFFERENCE (exclusion) parent groups first
         for (const parentId of activeParents) {
@@ -185,7 +185,7 @@ export class BaseSystemAdapter {
         const { filterNoResources } = filterContext;
 
         return subactions.filter(sub => {
-            if (!this.matchesEconomyTabs(sub.tabs, filterContext)) {
+            if (!this.matchesEconomyTabs(sub, filterContext)) {
                 return false;
             }
 
@@ -195,16 +195,6 @@ export class BaseSystemAdapter {
 
             return true;
         });
-    }
-
-    /**
-     * Determine if a parent action card matches system-specific component filters.
-     * @param {Action} action The parent Action instance
-     * @param {Object} filterContext Current HUD filter context { activeParents, activeSubs, parentGroups }
-     * @returns {boolean} True if the action passes components filtering
-     */
-    matchesComponentsFilter(action, filterContext) {
-        return true;
     }
 
     /**
