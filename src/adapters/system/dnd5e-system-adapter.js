@@ -241,9 +241,11 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                 // Collect all unique tabs from the remaining non-depleted activities
                 const uniqueTabsMap = new Map();
                 for (const activity of filteredActivities) {
-                    const tab = activity.tabs;
-                    if (tab && !uniqueTabsMap.has(tab.path)) {
-                        uniqueTabsMap.set(tab.path, tab);
+                    const actTabs = Array.isArray(activity.tabs) ? activity.tabs : (activity.tabs ? [activity.tabs] : []);
+                    for (const tab of actTabs) {
+                        if (tab && tab.path && !uniqueTabsMap.has(tab.path)) {
+                            uniqueTabsMap.set(tab.path, tab);
+                        }
                     }
                 }
 
@@ -254,7 +256,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                     img: item.img, // Use the parent item's icon
                     available: !(isSpellUnprepared || isUnequipped),
                     subactions: filteredActivities,
-                    tabs: [...uniqueTabsMap.values(), ...spellComponents],
+                    tabs: Array.from(uniqueTabsMap.values()),
                     itemTypes: itemTypes,
                     uses: actionUses,
                     roll: async (event) => {
