@@ -26,6 +26,11 @@
             "persistDetached": {
                 "name": "Persist Detached HUD on Click-Off",
                 "hint": "If enabled, a detached HUD will stay open when clicking off the token, and will only close if you right-click the same token again."
+            },
+
+            "persistTabState": {
+                "name": "Persist Tab Selections",
+                "hint": "If enabled, your active tab selections for each character are saved and restored whenever you re-open the HUD or refresh Foundry."
             }
         },
         "core": {

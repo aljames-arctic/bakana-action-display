@@ -8,6 +8,7 @@ import { ContextMenu } from '../lib/compat.js';
 
 // Cache to persist tab states per actor across HUD rebuilds
 const activeTabCache = new Map();
+let lastActiveTabState = null;
 
 /**
  * Modern ApplicationV2-based HUD overlay for Bakana's Action Display.
@@ -22,7 +23,17 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         this.actor = token.actor;
         this.actions = [];
         
-        const cached = activeTabCache.get(this.actor?.uuid);
+        const actorKey = this.actor?.uuid || this.actor?.id;
+        let cached = activeTabCache.get(actorKey);
+        if (!cached && game.settings.get(MODULE_ID, 'persistTabState')) {
+            const allStates = game.settings.get(MODULE_ID, 'hudTabStates') ?? {};
+            cached = (actorKey ? allStates[actorKey] : null) ?? lastActiveTabState;
+            if (cached && actorKey) {
+                activeTabCache.set(actorKey, cached);
+            }
+        } else if (!cached && lastActiveTabState) {
+            cached = lastActiveTabState;
+        }
 
         // Encapsulated tab side state managers
         this.leftTabs = new HUDTabColumn({
@@ -50,6 +61,37 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         this._onDragStart = this._onDragStart.bind(this);
         this._onDragMove = this._onDragMove.bind(this);
         this._onDragEnd = this._onDragEnd.bind(this);
+    }
+
+    /**
+     * Save active tab states for this actor to in-memory cache and client setting if enabled.
+     */
+    _saveTabState() {
+        const actorKey = this.actor?.uuid || this.actor?.id;
+        
+        const serialized = {
+            left: this.leftTabs.serialize(),
+            right: this.rightTabs.serialize()
+        };
+
+        // Track most recent active tab selections for seamless actor switching
+        lastActiveTabState = serialized;
+
+        if (!actorKey) return;
+
+        // Always update in-memory cache for fast session lookups
+        activeTabCache.set(actorKey, serialized);
+
+        // Persist client-side across refreshes if enabled
+        if (game.settings.get(MODULE_ID, 'persistTabState')) {
+            try {
+                const allStates = foundry.utils.duplicate(game.settings.get(MODULE_ID, 'hudTabStates') ?? {});
+                allStates[actorKey] = serialized;
+                game.settings.set(MODULE_ID, 'hudTabStates', allStates);
+            } catch (err) {
+                log.error("Failed to save persisted tab state:", err);
+            }
+        }
     }
 
 
@@ -333,11 +375,18 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         context.itemTypes = itemTypes;
         context.actionTypes = actionTypes;
         context.items = visibleActions;
-        context.isAttached = this.isAttached;
+        context.isAttached = this.positionMode === 'attached';
+        context.isPinned = this.positionMode === 'pinned';
+        context.anchorTooltip = context.isAttached 
+            ? "Attached (Dynamic Placement)" 
+            : (context.isPinned ? "Pinned (Fixed Offset to Token)" : "Detached (Floating Screen)");
         context.filterNoResources = game.settings.get(MODULE_ID, 'filterNoResources');
 
         // Delegate to system adapter to allow system-specific context modifications
         adapter?.modifyContext?.(context, this);
+
+        // Save serialized tab selections for active actor
+        this._saveTabState();
 
         return context;
     }
@@ -532,27 +581,48 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
     }
 
     /**
-     * Toggle between attached (token-tracking) and detached (floating) modes.
+     * Toggle between Attached (dynamic), Pinned (fixed offset), and Detached (floating) modes.
      */
     async _onToggleAnchor(event, target) {
         event.preventDefault();
-        this.isAttached = !this.isAttached;
-        this.positionMode = this.isAttached ? 'attached' : 'detached';
-        
-        if (!this.isAttached) {
-            // Detaching: Save current screen position
-            const el = this.element;
+        const el = this.element;
+
+        if (this.positionMode === 'attached') {
+            // Attached -> Pinned
+            this.positionMode = 'pinned';
+            this.isAttached = false;
+            this.isPinned = true;
+
+            if (el && this.token) {
+                const tokenTransform = this.token.worldTransform;
+                const rect = el.getBoundingClientRect();
+                const offset = {
+                    x: rect.left - tokenTransform.tx,
+                    y: rect.top - tokenTransform.ty
+                };
+                await game.settings.set(MODULE_ID, 'hudPinnedOffset', offset);
+            }
+        } else if (this.positionMode === 'pinned') {
+            // Pinned -> Detached
+            this.positionMode = 'detached';
+            this.isAttached = false;
+            this.isPinned = false;
+
             if (el) {
                 const rect = el.getBoundingClientRect();
                 const pos = { left: rect.left, top: rect.top };
                 await game.settings.set(MODULE_ID, 'hudDetachedPosition', pos);
             }
+        } else {
+            // Detached -> Attached
+            this.positionMode = 'attached';
+            this.isAttached = true;
+            this.isPinned = false;
         }
-        
+
         await game.settings.set(MODULE_ID, 'hudPositionMode', this.positionMode);
-        log.debug(`Toggled HUD anchor mode to: ${this.positionMode}`);
-        
-        // Re-render to update the control bar icon and re-position
+        log.debug(`Toggled HUD position mode to: ${this.positionMode}`);
+
         this.render();
     }
 
@@ -1068,12 +1138,13 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         // Apply styles directly for ultra-smooth 60fps dragging
         el.style.left = `${left}px`;
         el.style.top = `${top}px`;
-        el.style.bottom = ''; // Clear bottom to prevent layout conflicts
+        el.style.bottom = '';
+        el.style.right = '';
 
-        // Dragging immediately detaches the HUD from the token
+        // Dragging while in Attached mode automatically switches to Pinned mode
         if (this.isAttached) {
             this.isAttached = false;
-            this.positionMode = 'detached';
+            this.positionMode = 'pinned';
         }
     }
 
@@ -1085,24 +1156,34 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         const el = this.element;
         if (el && this._dragData) {
             const rect = el.getBoundingClientRect();
-            const pos = { left: rect.left, top: rect.top };
-            
-            // Persist the new detached coordinates and mode
-            await game.settings.set(MODULE_ID, 'hudDetachedPosition', pos);
-            await game.settings.set(MODULE_ID, 'hudPositionMode', 'detached');
-            
-            log.debug("Drag ended, saved position:", pos);
+
+            if (this.positionMode === 'pinned' && this.token) {
+                const tokenTransform = this.token.worldTransform;
+                const offset = {
+                    x: rect.left - tokenTransform.tx,
+                    y: rect.top - tokenTransform.ty
+                };
+                await game.settings.set(MODULE_ID, 'hudPinnedOffset', offset);
+                await game.settings.set(MODULE_ID, 'hudPositionMode', 'pinned');
+                log.debug("Drag ended in Pinned mode, saved offset:", offset);
+            } else {
+                const pos = { left: rect.left, top: rect.top };
+                await game.settings.set(MODULE_ID, 'hudDetachedPosition', pos);
+                await game.settings.set(MODULE_ID, 'hudPositionMode', 'detached');
+                log.debug("Drag ended in Detached mode, saved position:", pos);
+            }
         }
-        
+
         this._dragData = null;
-        
-        // Re-render to update the anchor icon/tooltip in the control bar
+
+        // Re-render to update the control bar icon and tooltip
         this.render();
     }
 
     /**
      * Position the application window.
-     * In Attached mode, anchors dynamically above/below the token.
+     * In Attached mode, anchors dynamically around token in preference order.
+     * In Pinned mode, pins top-left of HUD to token top-left with fixed offset (clamped to page).
      * In Detached mode, places it at the user's last dragged screen coordinates.
      */
     setPosition(position = {}) {
@@ -1110,9 +1191,12 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         if (!el) return super.setPosition(position);
 
         const scale = game.settings.get(MODULE_ID, 'hudScale') ?? 1.0;
+        const appWidth = this._width ?? (el.offsetWidth || 320 * scale);
+        const appHeight = this._height ?? (el.offsetHeight || 200 * scale);
+        const tabExtension = 150 * scale;
 
-        if (this.isAttached && this.token) {
-            // --- ATTACHED MODE (Tracks Token) ---
+        if (this.positionMode === 'attached' && this.token) {
+            // --- ATTACHED MODE (Dynamic Token Placement) ---
             const tokenTransform = this.token.worldTransform;
             const canvasScale = game.canvas.stage?.scale?.x ?? 1;
             const tokenWidth = this.token.w * canvasScale;
@@ -1120,50 +1204,87 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
 
             const tokenLeft = tokenTransform.tx;
             const tokenTop = tokenTransform.ty;
-            
-            // Use cached width if available to prevent layout thrashing (reflow) at 60fps
-            const appWidth = this._width ?? (el.offsetWidth || 320 * scale);
 
             const spaceAbove = tokenTop;
             const spaceBelow = window.innerHeight - (tokenTop + tokenHeight);
-            const side = spaceAbove > spaceBelow ? 'above' : 'below';
+            const positionSide = spaceAbove > spaceBelow ? 'above' : 'below';
 
-            // Leave safety margin on both sides for slide-out tabs, scaled proportionally
-            const tabExtension = 150 * scale;
+            const safetyMargin = 10;
+            const minLeft = Math.max(safetyMargin, tabExtension);
+            const maxLeft = Math.min(window.innerWidth - appWidth - safetyMargin, window.innerWidth - appWidth - tabExtension);
+
             let left = tokenLeft + (tokenWidth / 2) - (appWidth / 2);
-            left = Math.max(tabExtension, Math.min(window.innerWidth - appWidth - tabExtension, left));
+            left = Math.max(minLeft, Math.min(maxLeft, left));
+
+            let bottomOffset = '';
+            let topPos = '';
+
+            if (positionSide === 'above') {
+                bottomOffset = window.innerHeight - tokenTop + safetyMargin;
+            } else {
+                topPos = tokenTop + tokenHeight + safetyMargin;
+            }
 
             const targetPosition = foundry.utils.mergeObject(position, {
                 left,
-                width: 'auto', // Let CSS control the width via ems
+                width: 'auto',
                 height: 'auto'
             });
 
             const result = super.setPosition(targetPosition);
-
-            // Force the window wrapper to auto-size so it grows/shrinks dynamically with the container,
-            // allowing it to grow upwards (when bottom-anchored) or downwards (when top-anchored).
             el.style.height = 'auto';
+            el.style.left = `${left}px`;
+            el.style.right = '';
 
-            if (side === 'above') {
-                const bottomOffset = window.innerHeight - tokenTop + 10;
+            if (positionSide === 'above') {
                 el.style.bottom = `${bottomOffset}px`;
                 el.style.top = '';
             } else {
-                const topOffset = tokenTop + tokenHeight + 10;
-                el.style.top = `${topOffset}px`;
+                el.style.top = `${topPos}px`;
                 el.style.bottom = '';
             }
 
             return result;
+
+        } else if (this.positionMode === 'pinned' && this.token) {
+            // --- PINNED MODE (Fixed Offset to Token Top-Left, Clamped to Page) ---
+            const tokenTransform = this.token.worldTransform;
+            const tokenLeft = tokenTransform.tx;
+            const tokenTop = tokenTransform.ty;
+
+            const pinnedOffset = game.settings.get(MODULE_ID, 'hudPinnedOffset') ?? { x: 0, y: -50 };
+
+            // Top-left corner of HUD is pinned relative to token top-left
+            let left = tokenLeft + pinnedOffset.x;
+            let top = tokenTop + pinnedOffset.y;
+
+            // Clamp to screen bounds so it is ALWAYS fully on the page
+            const minLeft = Math.max(10, tabExtension);
+            const maxLeft = Math.min(window.innerWidth - appWidth - 10, window.innerWidth - appWidth - tabExtension);
+
+            left = Math.max(minLeft, Math.min(maxLeft, left));
+            top = Math.max(10, Math.min(window.innerHeight - appHeight - 10, top));
+
+            const targetPosition = foundry.utils.mergeObject(position, {
+                left,
+                top,
+                width: 'auto',
+                height: 'auto'
+            });
+
+            const result = super.setPosition(targetPosition);
+            el.style.height = 'auto';
+            el.style.left = `${left}px`;
+            el.style.top = `${top}px`;
+            el.style.bottom = '';
+            el.style.right = '';
+
+            return result;
+
         } else {
-            // --- DETACHED MODE (Floating / Fixed Position) ---
+            // --- DETACHED MODE (Floating / Fixed Screen Position) ---
             const savedPos = game.settings.get(MODULE_ID, 'hudDetachedPosition');
-            
-            // Use cached dimensions if available to prevent layout thrashing (reflow) at 60fps
-            const appWidth = this._width ?? (el.offsetWidth || 320 * scale);
-            const appHeight = this._height ?? (el.offsetHeight || 200 * scale);
-            
+
             let left = savedPos?.left ?? 100;
             let top = savedPos?.top ?? 100;
 
@@ -1174,12 +1295,12 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             const targetPosition = foundry.utils.mergeObject(position, {
                 left,
                 top,
-                width: 'auto', // Let CSS control the width via ems
+                width: 'auto',
                 height: 'auto'
             });
 
-            // Clear bottom styling since we are using absolute top/left
             el.style.bottom = '';
+            el.style.right = '';
 
             return super.setPosition(targetPosition);
         }
