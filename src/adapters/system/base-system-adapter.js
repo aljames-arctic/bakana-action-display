@@ -1,6 +1,7 @@
 import { localize, toSet } from '../../lib/utils.js';
 import { MODULE_ID } from '../../constants.js';
 import { KeyboardManager } from '../../lib/compat.js';
+import { TabRef } from '../../ui/tab-ref.js';
 
 /**
  * Base class for all system-specific adapters.
@@ -85,7 +86,7 @@ export class BaseSystemAdapter {
         const activeEconomyParents = Array.from(activeParents).filter(p => !this.isExclusionTab(p) && p !== 'all');
         const showAllEconomy = activeParents.has('all') || activeEconomyParents.length === 0;
 
-        const tabs = Array.isArray(tabRefs) ? tabRefs : [tabRefs];
+        const tabs = TabRef.normalize(tabRefs);
 
         return tabs.some(tab => {
             const actionParentId = tab.root;

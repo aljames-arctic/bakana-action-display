@@ -16,4 +16,29 @@ export class TabRef {
         this.root = parent ? parent.root : label;
         this.path = parent ? `${parent.path}/${label}` : label;
     }
+
+    /**
+     * Helper to create a nested parent/child TabRef node.
+     * @param {string} rootLabel Root tab label (e.g. 'economy', 'components')
+     * @param {string} [subLabel] Sub tab label (e.g. 'action', 'vocal')
+     * @returns {TabRef}
+     */
+    static from(rootLabel, subLabel) {
+        if (!subLabel || subLabel === 'none') {
+            return new TabRef({ label: rootLabel });
+        }
+        const parent = new TabRef({ label: rootLabel });
+        return new TabRef({ label: subLabel, parent });
+    }
+
+    /**
+     * Normalize any TabRef input (single instance, array, nested arrays) into a flat array of TabRef instances.
+     * @param {TabRef|TabRef[]|Array} tabs 
+     * @returns {TabRef[]} Flat array of valid TabRef objects
+     */
+    static normalize(tabs) {
+        if (!tabs) return [];
+        const flat = Array.isArray(tabs) ? tabs.flat(Infinity) : [tabs];
+        return flat.filter(t => t instanceof TabRef || (t && typeof t === 'object' && t.path));
+    }
 }

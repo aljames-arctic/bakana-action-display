@@ -45,7 +45,7 @@ export class Action {
         this.name = name;
         this.type = type;
         this.img = img;
-        this.tabs = Array.isArray(tabs) ? tabs : (tabs ? [tabs] : []);
+        this.tabs = TabRef.normalize(tabs);
         this.itemTypes = Array.isArray(itemTypes) ? itemTypes : (itemTypes ? [itemTypes] : []);
         this.hidden = hidden;
         this.isHidden = isHidden;

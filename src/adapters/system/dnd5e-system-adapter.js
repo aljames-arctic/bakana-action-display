@@ -147,8 +147,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                     const activationType = activity.activation.type;
                     const parentId = this._getParentTab(activationType);
                     const subId = this._getSubTab(activationType);
-                    const parentRef = new TabRef({ label: parentId });
-                    const tabRef = subId !== 'none' ? new TabRef({ label: subId, parent: parentRef }) : parentRef;
+                    const tabRef = TabRef.from(parentId, subId);
                     
                     let linkedAction = null;
                     if (activity.type === 'cast' && activity.spell?.uuid) {
@@ -269,11 +268,10 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
             } else if (['equipment', 'weapon', 'backpack', 'loot'].includes(type)) {
                 // Passive items (armor, passive shields, containers, loot) are assigned right-side tab 'none' under 'economy'
                 const subType = item.system.type?.value;
-                const econRoot = new TabRef({ label: 'economy' });
                 const passiveAction = new Action({
                     ...action,
                     available: !(isSpellUnprepared || isUnequipped),
-                    tabs: [new TabRef({ label: 'none', parent: econRoot })],
+                    tabs: [TabRef.from('economy', 'none')],
                     itemTypes: subType ? [type, subType] : [type],
                     uses: { available: null, max: null }
                 });
