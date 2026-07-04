@@ -24,16 +24,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         this.actions = [];
         
         const actorKey = this.actor?.uuid || this.actor?.id;
-        let cached = activeTabCache.get(actorKey);
-        if (!cached && game.settings.get(MODULE_ID, 'persistTabState')) {
-            const allStates = game.settings.get(MODULE_ID, 'hudTabStates') ?? {};
-            cached = (actorKey ? allStates[actorKey] : null) ?? lastActiveTabState;
-            if (cached && actorKey) {
-                activeTabCache.set(actorKey, cached);
-            }
-        } else if (!cached && lastActiveTabState) {
-            cached = lastActiveTabState;
-        }
+        const cached = this.retrieveActorTabCache(actorKey);
 
         // Encapsulated tab side state managers
         this.leftTabs = new HUDTabColumn({
@@ -109,7 +100,22 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         }
     }
 
-
+    /**
+     * Retrieve active tab states for this actor from in-memory cache or client setting.
+     */
+    retrieveActorTabCache(actorKey) {
+        let cached = activeTabCache.get(actorKey);
+        if (!cached && game.settings.get(MODULE_ID, 'persistTabState')) {
+            const allStates = game.settings.get(MODULE_ID, 'hudTabStates') ?? {};
+            cached = (actorKey ? allStates[actorKey] : null) ?? lastActiveTabState;
+            if (cached && actorKey) {
+                activeTabCache.set(actorKey, cached);
+            }
+        } else if (!cached && lastActiveTabState) {
+            cached = lastActiveTabState;
+        }
+        return cached;
+    }
 
     /**
      * Close the application, logging the transition.
