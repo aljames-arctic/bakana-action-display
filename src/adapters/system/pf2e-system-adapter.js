@@ -27,6 +27,8 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
         super('pf2e');
     }
 
+    // #region Core Action Modification
+
     /**
      * Determine if a specific item should be extracted as a base action for PF2e.
      * Prevents allocating objects for unhandled item types (like equipment/consumables).
@@ -47,7 +49,7 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
         // Pre-calculate ammunition quantities by baseItem in a single pass to avoid nested loops (O(I) complexity)
         const ammoQuantities = new Map();
         for (const i of actor.items) {
-            const { baseItem, quantity } = this.getAmmoInfo(i);
+            const { baseItem, quantity } = this.#getAmmoInfo(i);
             if (baseItem) {
                 ammoQuantities.set(baseItem, (ammoQuantities.get(baseItem) ?? 0) + quantity);
             }
@@ -55,7 +57,7 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
 
         // Pre-calculate a map of spell ID to spellcasting entry to avoid nested searches in the loop (O(1) lookups)
         const spellToEntryMap = new Map();
-        const entries = this.getSpellcastingEntries(actor);
+        const entries = this.#getSpellcastingEntries(actor);
         for (const entry of entries) {
             const spells = entry.spells ?? [];
             for (const spell of spells) {
@@ -69,7 +71,7 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
             const type = item.type;
 
             if (['action', 'feat'].includes(type)) {
-                const activationType = this.getActionType(item);
+                const activationType = this.#getActionType(item);
 
                 // Skip passive feats/actions that don't have an active cost
                 if (!activationType) continue;
@@ -77,7 +79,7 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
                 action.activationType = activationType; // Keep for sorting
                 action.tabs = [TabRef.from('economy', activationType)];
                 action.itemTypes = [type === 'action' ? 'feat' : type];
-                action.uses = this.getUses(item);
+                action.uses = this.#getUses(item);
 
                 // Override roll to post the action's chat card (standard PF2e behavior)
                 action.roll = (event) => {
@@ -116,7 +118,7 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
                         item.toMessage();
                     }
                 };
-                action.uses = this.getSpellUses(entry, item);
+                action.uses = this.#getSpellUses(entry, item);
                 action.name = `${item.name} (${entry.name})`;
 
                 modified.push(action);
@@ -125,9 +127,9 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
 
         // 2. Inject Strikes (attacks)
         // Strikes are dynamically calculated on the actor and are not standard inventory items
-        const strikes = this.getActorStrikes(actor);
+        const strikes = this.#getActorStrikes(actor);
         for (const strike of strikes) {
-            const uses = this.getStrikeAmmoUses(strike, ammoQuantities);
+            const uses = this.#getStrikeAmmoUses(strike, ammoQuantities);
 
             modified.push({
                 id: `strike-${strike.slug ?? strike.name}`,
@@ -155,6 +157,10 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
         // 3. Apply default resource filtering (e.g. hiding depleted actions)
         return super.modifyActions(modified, actor);
     }
+
+    // #endregion
+
+    // #region Localizations & UI Formatting
 
     /**
      * Get the localized label for a left-side item type (parent tab) in PF2e.
@@ -248,16 +254,16 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
         }
     }
 
-    /* ------------------------------------------------------------------------- */
-    /*  System Data Structure Accessors / Schema Extraction Helpers              */
-    /* ------------------------------------------------------------------------- */
+    // #endregion
+
+    // #region System Specific Data Extractors & Schema Helpers
 
     /**
      * Extract ammunition quantity and base item ID from a PF2e item.
      * @param {Item} item
      * @returns {{ baseItem: string|undefined, quantity: number }}
      */
-    getAmmoInfo(item) {
+    #getAmmoInfo(item) {
         if (item.type !== 'ammo') return { baseItem: undefined, quantity: 0 };
         return {
             baseItem: item.system.baseItem,
@@ -270,7 +276,7 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
      * @param {Item} item
      * @returns {string|null}
      */
-    getActionType(item) {
+    #getActionType(item) {
         const typeMap = { 'reaction': 'reaction', 'free': 'other', 'action': 'action' };
         return typeMap[item.system.actionType?.value] ?? null;
     }
@@ -280,7 +286,7 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
      * @param {Actor} actor
      * @returns {Object[]}
      */
-    getSpellcastingEntries(actor) {
+    #getSpellcastingEntries(actor) {
         return actor.spellcasting ?? [];
     }
 
@@ -289,7 +295,7 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
      * @param {Actor} actor
      * @returns {Object[]}
      */
-    getActorStrikes(actor) {
+    #getActorStrikes(actor) {
         return actor.system.actions ?? [];
     }
 
@@ -298,7 +304,7 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
      * @param {Item} item
      * @returns {{ available: number|null, max: number|null }}
      */
-    getUses(item) {
+    #getUses(item) {
         const frequency = item.system.frequency;
         if (frequency) {
             return {
@@ -315,7 +321,7 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
      * @param {Item} spell Spell item
      * @returns {{ available: number|null, max: number|null }}
      */
-    getSpellUses(entry, spell) {
+    #getSpellUses(entry, spell) {
         if (entry.isFocusPool) {
             const focus = entry.actor?.system?.resources?.focus;
             return {
@@ -342,7 +348,7 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
      * @param {Map<string, number>} ammoQuantities
      * @returns {{ available: number|null, max: number|null }}
      */
-    getStrikeAmmoUses(strike, ammoQuantities) {
+    #getStrikeAmmoUses(strike, ammoQuantities) {
         const weapon = strike.item;
         if (!weapon || weapon.type !== 'weapon') return { available: null, max: null };
 
@@ -359,4 +365,6 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
 
         return { available: null, max: null };
     }
+
+    // #endregion
 }

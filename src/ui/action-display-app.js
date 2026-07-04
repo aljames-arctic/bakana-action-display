@@ -17,6 +17,8 @@ let lastActiveTabState = null;
  * Supports dragging and persists its position and attachment state.
  */
 export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplicationMixin(foundry.applications.api.ApplicationV2) {
+    // #region Application Initialization & Lifecycle
+
     constructor(token, options = {}) {
         super(options);
         this.token = token;
@@ -84,6 +86,10 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
     get isTracked() {
         return this.positionMode !== 'detached';
     }
+
+    // #endregion
+
+    // #region Application Context & Rendering
 
     /**
      * Save active tab states for this actor to in-memory cache and client setting if enabled.
@@ -444,6 +450,10 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         return context;
     }
 
+    // #endregion
+
+    // #region Internal Filtering Logic
+
     /**
      * Helper method to evaluate if an action card matches current left and right tab filter selections.
      * 
@@ -509,6 +519,10 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         const adapter = actionDisplay.activeSystemAdapter;
         return adapter.matchesEconomyTabs(action, filterContext);
     }
+
+    // #endregion
+
+    // #region User Interaction Events & Helpers
 
     /* -------------------------------------------- */
     /*  Actions Handlers                            */
@@ -1300,4 +1314,6 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             return super.setPosition(targetPosition);
         }
     }
+
+    // #endregion
 }

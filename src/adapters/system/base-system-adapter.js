@@ -14,6 +14,8 @@ export class BaseSystemAdapter {
         this.systemId = systemId;
     }
 
+    // #region User Interaction Events & Helpers
+
     /**
      * Create a proxy around a browser event to inject keyboard modifiers (Alt/Ctrl/Shift)
      * while preserving all other native event properties and methods (like target, preventDefault).
@@ -42,6 +44,10 @@ export class BaseSystemAdapter {
             }
         });
     }
+
+    // #endregion
+
+    // #region Core Action Modification
 
     /**
      * Determine if a specific item should be extracted as a base action.
@@ -72,6 +78,10 @@ export class BaseSystemAdapter {
         }
         return actions;
     }
+
+    // #endregion
+
+    // #region Internal Filtering Logic
 
     /**
      * Helper to test if a set of tab references matches active economy/time right-side filters.
@@ -219,6 +229,10 @@ export class BaseSystemAdapter {
     isExclusionTab(parentId) {
         return this.getTabCombinator(parentId) === 'difference';
     }
+
+    // #endregion
+
+    // #region Localizations & UI Formatting
 
     /**
      * Get the localized label for a left-side item type (parent tab).
@@ -388,4 +402,6 @@ export class BaseSystemAdapter {
     onTabRightClick(app, el, event) {
         return false;
     }
+
+    // #endregion
 }

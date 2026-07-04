@@ -28,6 +28,8 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
         super('pf1');
     }
 
+    // #region Core Action Modification
+
     /**
      * Determine if a specific item should be extracted as a base action for PF1e.
      * Prevents allocating objects for unhandled item types (like equipment/containers).
@@ -55,7 +57,7 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
         log.debug(`Pf1SystemAdapter.modifyActions | Found ${weapons.length} weapons on actor`);
 
         for (const weapon of weapons) {
-            const children = this.getWeaponLinkChildren(weapon);
+            const children = this.#getWeaponLinkChildren(weapon);
             if (children.length > 0) {
                 log.debug(`Pf1SystemAdapter.modifyActions | Weapon "${weapon.name}" (${weapon.id}) has ${children.length} children in links:`, children);
             }
@@ -96,7 +98,7 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
             if (item.type === 'spell') {
                 // 1. Spells in PF1e
                 const spellbookId = item.system.spellbook ?? 'primary';
-                const spellbook = this.getSpellbook(actor, spellbookId);
+                const spellbook = this.#getSpellbook(actor, spellbookId);
                 if (!spellbook) continue;
 
                 action.tabs = [TabRef.from('economy', 'action')];
@@ -116,7 +118,7 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
                 action.itemTypes = ['spell', subTab];
                 
                 // Calculate uses (slots or prepared casts)
-                action.uses = this._calculateSpellUses(spellbook, item);
+                action.uses = this.#calculateSpellUses(spellbook, item);
                 
                 // Roll function
                 action.roll = (event) => {
@@ -135,14 +137,14 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
                     continue;
                 }
 
-                const itemActions = this.getItemActions(item);
+                const itemActions = this.#getItemActions(item);
                 if (itemActions.length === 0) continue;
 
-                const uses = this._calculateUses(item, actor);
+                const uses = this.#calculateUses(item, actor);
 
                 action.subactions = itemActions.map(itemAction => {
                     const actionType = itemAction.activation?.type;
-                    const activationType = this._parseActivationType(actionType);
+                    const activationType = this.#parseActivationType(actionType);
                     const actionName = itemAction.name ?? item.name;
                     
                     return {
@@ -174,7 +176,7 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
 
             } else if (item.type === 'weapon') {
                 // 3. Weapons (with ammo resolution and linked attacks merging)
-                const uses = this._calculateUses(item, actor);
+                const uses = this.#calculateUses(item, actor);
                 const linkedAttacks = weaponLinkedAttacks.get(item.id) ?? [];
 
                 let itemActionsList = [];
@@ -182,10 +184,10 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
                 if (linkedAttacks.length > 0) {
                     // Merge actions from all linked attack items
                     for (const attackItem of linkedAttacks) {
-                        const attackActions = this.getItemActions(attackItem);
+                        const attackActions = this.#getItemActions(attackItem);
                         for (const itemAction of attackActions) {
                             const actionType = itemAction.activation?.type;
-                            const activationType = this._parseActivationType(actionType);
+                            const activationType = this.#parseActivationType(actionType);
                             if (!activationType) continue;
 
                             const actionName = linkedAttacks.length > 1 
@@ -212,10 +214,10 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
                     }
                 } else {
                     // Fallback to the weapon's own actions if no attacks are linked
-                    const itemActions = this.getItemActions(item);
+                    const itemActions = this.#getItemActions(item);
                     for (const itemAction of itemActions) {
                         const actionType = itemAction.activation?.type;
-                        const activationType = this._parseActivationType(actionType);
+                        const activationType = this.#parseActivationType(actionType);
                         if (!activationType) continue;
 
                         const actionName = itemAction.name ?? item.name;
@@ -253,11 +255,11 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
                 const itemActions = item.system.actions ?? [];
                 if (itemActions.length === 0) continue;
 
-                const uses = this._calculateUses(item, actor);
+                const uses = this.#calculateUses(item, actor);
 
                 action.subactions = itemActions.map(itemAction => {
                     const actionType = itemAction.activation?.type;
-                    const activationType = this._parseActivationType(actionType);
+                    const activationType = this.#parseActivationType(actionType);
                     const actionName = itemAction.name ?? item.name;
                     
                     return {
@@ -294,7 +296,7 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
                 action.itemTypes = ['buff'];
                 
                 action.roll = async (event) => {
-                    const active = this.getBuffActiveState(item);
+                    const active = this.#getBuffActiveState(item);
                     await item.update({ "system.active": !active });
                 };
                 
@@ -309,6 +311,10 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
         // Apply default resource filtering (e.g. hiding depleted actions)
         return super.modifyActions(modified, actor);
     }
+
+    // #endregion
+
+    // #region Localizations & UI Formatting
 
     /**
      * Modify the rendering context before it is sent to the template.
@@ -421,7 +427,11 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
      * Translate PF1e activation types into our core activation types.
      * Maps Swift -> bonus, Immediate -> reaction, Free/Nonaction -> other.
      */
-    _parseActivationType(actType) {
+    // #endregion
+
+    // #region System Specific Data Extractors & Schema Helpers
+
+    #parseActivationType(actType) {
         if (!actType) return null;
 
         const type = actType.toLowerCase();
@@ -438,7 +448,7 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
      * @param {Item} weapon
      * @returns {Object[]} Link children objects
      */
-    getWeaponLinkChildren(weapon) {
+    #getWeaponLinkChildren(weapon) {
         return weapon.system.links?.children ?? [];
     }
 
@@ -448,7 +458,7 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
      * @param {string} spellbookId
      * @returns {Object|undefined}
      */
-    getSpellbook(actor, spellbookId) {
+    #getSpellbook(actor, spellbookId) {
         return actor.system.attributes?.spells?.spellbooks?.[spellbookId];
     }
 
@@ -457,7 +467,7 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
      * @param {Item} item
      * @returns {Object[]} Sub-action objects
      */
-    getItemActions(item) {
+    #getItemActions(item) {
         return item.system.actions ?? [];
     }
 
@@ -466,14 +476,14 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
      * @param {Item} item
      * @returns {boolean}
      */
-    getBuffActiveState(item) {
+    #getBuffActiveState(item) {
         return item.system.active ?? false;
     }
 
     /**
      * Calculate remaining charges/uses for PF1e items.
      */
-    _calculateUses(item, actor) {
+    #calculateUses(item, actor) {
         // 1. Ranged weapon ammunition tracking
         if (item.type === 'weapon' && item.system.weaponSubtype === 'ranged') {
             const ammoType = item.system.ammo?.type;
@@ -526,7 +536,7 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
     /**
      * Calculate spell slot / prepared uses for PF1e spells.
      */
-    _calculateSpellUses(spellbook, spell) {
+    #calculateSpellUses(spellbook, spell) {
         const level = spell.system.level ?? 0;
         
         // Cantrips (level 0) have infinite uses
@@ -560,4 +570,6 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
 
         return { available: null, max: null };
     }
+
+    // #endregion
 }

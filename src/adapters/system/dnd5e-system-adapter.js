@@ -57,6 +57,8 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         super('dnd5e');
     }
 
+    // #region Core Action Modification
+
     /**
      * Determine if a specific item should be extracted as a base action for DnD5e.
      * Prevents allocating objects for unallowed types, cached helper items, and unequipped gear.
@@ -84,10 +86,10 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         const filterNoResources = game.settings.get(MODULE_ID, 'filterNoResources');
 
         // Pre-calculate ammunition quantities by subtype in a single pass to avoid nested loops (O(I) complexity)
-        const ammoQuantities = this._getAmmoQuantities(actor);
+        const ammoQuantities = this.#getAmmoQuantities(actor);
 
         // Pre-calculate the highest available spell slot level in a single pass (O(1) upcast checks later)
-        let highestAvailableSlot = this._getHighestAvailableSpellSlot(actor);
+        let highestAvailableSlot = this.#getHighestAvailableSpellSlot(actor);
 
         for (const action of actions) {
             const item = action.originalItem;
@@ -96,9 +98,9 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
             const props = item.system?.properties;
             const spellComponents = [];
             if (item.type === 'spell') {
-                if (this._subRequiresComponent(action, 'vocal')) spellComponents.push(TabRef.from('components', 'vocal'));
-                if (this._subRequiresComponent(action, 'somatic')) spellComponents.push(TabRef.from('components', 'somatic'));
-                if (this._subRequiresComponent(action, 'material')) spellComponents.push(TabRef.from('components', 'material'));
+                if (this.#subRequiresComponent(action, 'vocal')) spellComponents.push(TabRef.from('components', 'vocal'));
+                if (this.#subRequiresComponent(action, 'somatic')) spellComponents.push(TabRef.from('components', 'somatic'));
+                if (this.#subRequiresComponent(action, 'material')) spellComponents.push(TabRef.from('components', 'material'));
             }
 
             // Check if user has hidden this item
@@ -144,8 +146,8 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                 // Map D&D 5e Activities to sub-actions for the generic HUD item model
                 const mappedActivities = await Promise.all(activeActivities.map(async (activity) => {
                     const activationType = activity.activation.type;
-                    const parentId = this._getParentTab(activationType);
-                    const subId = this._getSubTab(activationType);
+                    const parentId = this.#getParentTab(activationType);
+                    const subId = this.#getSubTab(activationType);
                     const tabRef = TabRef.from(parentId, subId);
                     
                     let linkedAction = null;
@@ -167,7 +169,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                         id: activity.id,
                         name: activityName,
                         img: activityImg,
-                        uses: this._calculateActivityUses(activity, item, actor, ammoQuantities, highestAvailableSlot),
+                        uses: this.#calculateActivityUses(activity, item, actor, ammoQuantities, highestAvailableSlot),
                         tabs: [tabRef],
                         roll: async (event) => {
                             const proxiedEvent = this._createRollEvent(event);
@@ -180,9 +182,9 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
 
                 // Extract spell components from linked spells on cast activities or item properties if present
                 for (const act of mappedActivities) {
-                    const isVocal = this._subRequiresComponent(act, 'vocal');
-                    const isSomatic = this._subRequiresComponent(act, 'somatic');
-                    const isMaterial = this._subRequiresComponent(act, 'material');
+                    const isVocal = this.#subRequiresComponent(act, 'vocal');
+                    const isSomatic = this.#subRequiresComponent(act, 'somatic');
+                    const isMaterial = this.#subRequiresComponent(act, 'material');
 
                     if (isVocal || isSomatic || isMaterial) {
                         const compTabs = [];
@@ -208,8 +210,8 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
 
                 // Assign to hierarchical item types: [parentType, subType] (for left-side tabs)
                 const hasCastActivity = filteredActivities.some(act => act.originalActivity?.type === 'cast');
-                const isItemCharges = (type === 'equipment' && this._hasLimitedUses(item))
-                    || (['feat', 'weapon', 'consumable', 'tool'].includes(type) && this._hasLimitedUses(item) && hasCastActivity);
+                const isItemCharges = (type === 'equipment' && this.#hasLimitedUses(item))
+                    || (['feat', 'weapon', 'consumable', 'tool'].includes(type) && this.#hasLimitedUses(item) && hasCastActivity);
 
                 let itemTypes = [type];
                 if (type === 'spell') {
@@ -228,9 +230,9 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                     actionUses = filteredActivities[0].uses;
                 } else {
                     if (type === 'spell') {
-                        actionUses = this._calculateSpellSlots(item, actor, highestAvailableSlot);
+                        actionUses = this.#calculateSpellSlots(item, actor, highestAvailableSlot);
                     } else {
-                        actionUses = this._calculateUses(item);
+                        actionUses = this.#calculateUses(item);
                     }
                 }
 
@@ -286,96 +288,9 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
      * @returns {boolean}
      * @private
      */
-    /**
-     * Recursively resolve the true root spell / item document for an activity or item.
-     * Follows linkedActions, activity.spell.uuid, activity.item, activity.cachedSpell recursively.
-     * @param {Object} sub Sub-action or Activity Action instance
-     * @param {Object} [parentItem] Parent Item5e document
-     * @returns {Object|null} The resolved root Item5e document, spell data, or item properties
-     * @private
-     */
-    _resolveRootSpellDocument(sub, parentItem) {
-        if (!sub) return null;
+    // #endregion
 
-        // 1. Check direct linkedAction (if resolved from UUID)
-        let doc = sub.linkedAction;
-
-        // 2. Check activity linked sources if doc is not set
-        const activity = sub.originalActivity ?? sub;
-        if (!doc && activity) {
-            doc = activity.item ?? activity.cachedSpell ?? (activity.spell instanceof Item ? activity.spell : null);
-        }
-
-        // 3. Follow doc links recursively if doc itself has a linked spell / UUID
-        const maxDepth = 5;
-        let depth = 0;
-        while (doc && depth < maxDepth) {
-            const nextDoc = doc.linkedAction ?? doc.item ?? doc.cachedSpell ?? (doc.spell instanceof Item ? doc.spell : null);
-            if (nextDoc && nextDoc !== doc) {
-                doc = nextDoc;
-                depth++;
-            } else {
-                break;
-            }
-        }
-
-        if (doc) return doc;
-
-        // 4. Fallback if no linked spell document was found: check activity.spell object or parent item (if spell)
-        if (activity?.spell && typeof activity.spell === 'object' && !(activity.spell instanceof Item)) {
-            return activity.spell;
-        }
-
-        const origItem = sub.originalItem ?? parentItem;
-        if (origItem?.type === 'spell') {
-            return origItem;
-        }
-
-        return null;
-    }
-
-    /**
-     * Helper to test if a property container (Set, Array, or Object) contains any matching alias.
-     * @param {Set|Array|Object|null} container The property container
-     * @param {string[]} aliases List of property aliases (e.g. ['vocal', 'v'])
-     * @returns {boolean}
-     * @private
-     */
-    _containerHasAlias(container, aliases) {
-        if (!container) return false;
-        const target = container.value ?? container;
-        if (target instanceof Set) return aliases.some(a => target.has(a));
-        if (Array.isArray(target)) return aliases.some(a => target.includes(a));
-        if (typeof target === 'object') return aliases.some(a => !!target[a]);
-        return false;
-    }
-
-    /**
-     * Helper to check if a subaction, activity, linked spell, or item requires a given spell component ('vocal', 'somatic', 'material').
-     * Resolves the true root spell document first, avoiding stale parent activity property overrides.
-     * @param {Action|Object} sub Sub-action or spell document
-     * @param {string} component 'vocal' | 'somatic' | 'material'
-     * @returns {boolean}
-     * @private
-     */
-    _subRequiresComponent(sub, component) {
-        if (!sub) return false;
-
-        const rootDoc = this._resolveRootSpellDocument(sub);
-        if (!rootDoc) return false;
-
-        const aliases = Dnd5eSystemAdapter.COMPONENT_ALIASES?.[component] ?? [component];
-
-        if (this._containerHasAlias(rootDoc, aliases)) return true;
-
-        const props = rootDoc.system?.properties ?? rootDoc.properties;
-        if (this._containerHasAlias(props, aliases)) return true;
-
-        const comps = rootDoc.system?.components ?? rootDoc.components;
-        if (this._containerHasAlias(comps, aliases)) return true;
-
-        return false;
-    }
+    // #region Internal Filtering Logic
 
     /**
      * System-specific sub-action filtering for D&D 5e activities.
@@ -391,7 +306,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
 
         // Filter out subactions requiring banned spell components
         return baseFiltered.filter(sub => {
-            const hasPropertyMatch = activeCompSubs.some(comp => this._subRequiresComponent(sub, comp));
+            const hasPropertyMatch = activeCompSubs.some(comp => this.#subRequiresComponent(sub, comp));
             const hasTabMatch = sub.tabs?.some(tab => tab.root === 'components' && activeCompSubs.includes(tab.label));
             return !hasPropertyMatch && !hasTabMatch;
         });
@@ -401,10 +316,14 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         return parentId === 'components' ? 'difference' : 'union';
     }
 
+    // #endregion
+
+    // #region Localizations & UI Formatting
+
     /**
      * Determine the parent action tab based on DnD5e activation type.
      */
-    _getParentTab(type) {
+    #getParentTab(type) {
         // Everything (including times, actions, legendary, special, none)
         // now goes under 'economy' (Action Economy)
         return 'economy';
@@ -413,7 +332,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
     /**
      * Determine the sub-action tab based on DnD5e activation type.
      */
-    _getSubTab(type) {
+    #getSubTab(type) {
         return type ?? 'none';
     }
 
@@ -456,6 +375,10 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
             equipmentParent.updateOrder(Object.keys(SORT_ORDERS.tabs['equipment']));
         }
     }
+
+    // #endregion
+
+    // #region User Interaction Events & Helpers
 
     /**
      * Get D&D 5e-specific context menu items for spells (Prepare/Unprepare).
@@ -695,9 +618,100 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         return labels[subId] ?? super.getActionSubTabLabel(subId);
     }
 
-    /* ------------------------------------------------------------------------- */
-    /*  System Data Structure Accessors / Schema Extraction Helpers              */
-    /* ------------------------------------------------------------------------- */
+    // #endregion
+
+    // #region System Specific Data Extractors & Schema Helpers
+
+    /**
+     * Recursively resolve the true root spell / item document for an activity or item.
+     * Follows linkedActions, activity.spell.uuid, activity.item, activity.cachedSpell recursively.
+     * @param {Object} sub Sub-action or Activity Action instance
+     * @param {Object} [parentItem] Parent Item5e document
+     * @returns {Object|null} The resolved root Item5e document, spell data, or item properties
+     * @private
+     */
+    #resolveRootSpellDocument(sub, parentItem) {
+        if (!sub) return null;
+
+        // 1. Check direct linkedAction (if resolved from UUID)
+        let doc = sub.linkedAction;
+
+        // 2. Check activity linked sources if doc is not set
+        const activity = sub.originalActivity ?? sub;
+        if (!doc && activity) {
+            doc = activity.item ?? activity.cachedSpell ?? (activity.spell instanceof Item ? activity.spell : null);
+        }
+
+        // 3. Follow doc links recursively if doc itself has a linked spell / UUID
+        const maxDepth = 5;
+        let depth = 0;
+        while (doc && depth < maxDepth) {
+            const nextDoc = doc.linkedAction ?? doc.item ?? doc.cachedSpell ?? (doc.spell instanceof Item ? doc.spell : null);
+            if (nextDoc && nextDoc !== doc) {
+                doc = nextDoc;
+                depth++;
+            } else {
+                break;
+            }
+        }
+
+        if (doc) return doc;
+
+        // 4. Fallback if no linked spell document was found: check activity.spell object or parent item (if spell)
+        if (activity?.spell && typeof activity.spell === 'object' && !(activity.spell instanceof Item)) {
+            return activity.spell;
+        }
+
+        const origItem = sub.originalItem ?? parentItem;
+        if (origItem?.type === 'spell') {
+            return origItem;
+        }
+
+        return null;
+    }
+
+    /**
+     * Helper to test if a property container (Set, Array, or Object) contains any matching alias.
+     * @param {Set|Array|Object|null} container The property container
+     * @param {string[]} aliases List of property aliases (e.g. ['vocal', 'v'])
+     * @returns {boolean}
+     * @private
+     */
+    #containerHasAlias(container, aliases) {
+        if (!container) return false;
+        const target = container.value ?? container;
+        if (target instanceof Set) return aliases.some(a => target.has(a));
+        if (Array.isArray(target)) return aliases.some(a => target.includes(a));
+        if (typeof target === 'object') return aliases.some(a => !!target[a]);
+        return false;
+    }
+
+    /**
+     * Helper to check if a subaction, activity, linked spell, or item requires a given spell component ('vocal', 'somatic', 'material').
+     * Resolves the true root spell document first, avoiding stale parent activity property overrides.
+     * @param {Action|Object} sub Sub-action or spell document
+     * @param {string} component 'vocal' | 'somatic' | 'material'
+     * @returns {boolean}
+     * @private
+     */
+    #subRequiresComponent(sub, component) {
+        if (!sub) return false;
+
+        const rootDoc = this.#resolveRootSpellDocument(sub);
+        if (!rootDoc) return false;
+
+        const aliases = Dnd5eSystemAdapter.COMPONENT_ALIASES?.[component] ?? [component];
+
+        if (this.#containerHasAlias(rootDoc, aliases)) return true;
+
+        const props = rootDoc.system?.properties ?? rootDoc.properties;
+        if (this.#containerHasAlias(props, aliases)) return true;
+
+        const comps = rootDoc.system?.components ?? rootDoc.components;
+        if (this.#containerHasAlias(comps, aliases)) return true;
+
+        return false;
+    }
 
     /**
      * Check if a D&D 5e item is equipped.
@@ -720,7 +734,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
     /**
      * Calculate available and maximum uses for an item.
      */
-    _calculateUses(item) {
+    #calculateUses(item) {
         const system = item.system;
 
         // 1. Limited Uses (standard item charges/uses)
@@ -767,7 +781,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
      * @returns {boolean} True if the item has limited uses
      * @private
      */
-    _hasLimitedUses(item) {
+    #hasLimitedUses(item) {
         const system = item.system;
         
         // 1. Check item-level uses
@@ -794,7 +808,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
      * Parse and calculate limited uses configuration.
      * @private
      */
-    _calculateLimitedUses(uses) {
+    #calculateLimitedUses(uses) {
         if (uses && uses.max && uses.max !== "0") {
             let max = uses.max;
             if (typeof max === 'string') {
@@ -813,7 +827,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
      * Resolve target item reference using direct ID or relative UUID.
      * @private
      */
-    _resolveTargetItem(targetId, item, actor) {
+    #resolveTargetItem(targetId, item, actor) {
         if (!targetId) return null;
         return targetId.includes('.')
             ? (foundry.utils.fromUuidSync(targetId, { relative: item })
@@ -832,11 +846,11 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
      * @returns {{available: number|null, max: number|null}} The uses count
      * @private
      */
-    _calculateActivityUses(activity, item, actor, ammoQuantities, highestAvailableSlot) {
+    #calculateActivityUses(activity, item, actor, ammoQuantities, highestAvailableSlot) {
         const targets = activity.consumption?.targets ?? [];
         
         // 1. If the activity has its own explicit limited uses
-        const selfUses = this._calculateLimitedUses(activity.uses);
+        const selfUses = this.#calculateLimitedUses(activity.uses);
         if (selfUses) return selfUses;
         
         // 2. Resolve based on consumption targets
@@ -845,24 +859,24 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                 // Consumes another activity's uses (or self if target is empty)
                 const targetActivity = target.target ? item.system.activities.get(target.target) : activity;
                 if (targetActivity) {
-                    const actUses = this._calculateLimitedUses(targetActivity.uses);
+                    const actUses = this.#calculateLimitedUses(targetActivity.uses);
                     if (actUses) return actUses;
                 }
             } else if (target.type === 'itemUses') {
                 // Consumes the parent item's uses
-                return this._calculateUses(item);
+                return this.#calculateUses(item);
             } else if (target.type === 'spellSlots') {
                 // Consumes actor spell slots
                 const level = target.target ?? item.system.level; // Fallback to spell's base level if target is empty (dynamic slots)
-                return this._getSpellSlotUses(actor, level, highestAvailableSlot);
+                return this.#getSpellSlotUses(actor, level, highestAvailableSlot);
             } else if (target.type === 'item') {
                 // Consumes quantity of another item (e.g. ammunition) or charges of another item
-                const targetItem = this._resolveTargetItem(target.target, item, actor);
+                const targetItem = this.#resolveTargetItem(target.target, item, actor);
 
                 if (targetItem) {
                     const consumed = target.value || 1;
                     // If the target item has its own limited uses (like a wand), use those
-                    const uses = this._calculateUses(targetItem);
+                    const uses = this.#calculateUses(targetItem);
                     if (uses.available !== null) {
                         return {
                             available: Math.floor(uses.available / consumed),
@@ -878,7 +892,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                 }
             } else if (target.type === 'material') {
                 // Consumes quantity of another item (specifically spell components)
-                const targetItem = this._resolveTargetItem(target.target, item, actor);
+                const targetItem = this.#resolveTargetItem(target.target, item, actor);
 
                 if (targetItem) {
                     const qty = targetItem.system.quantity ?? 0;
@@ -893,12 +907,12 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         
         // Fallback for standard spells if no explicit spellSlots consumption target was resolved
         if (item.type === 'spell') {
-            return this._calculateSpellSlots(item, actor, highestAvailableSlot);
+            return this.#calculateSpellSlots(item, actor, highestAvailableSlot);
         }
 
         // Fallback for weapons requiring ammunition if no explicit consumption target was resolved
         if (item.type === 'weapon' && item.system.ammunition?.type) {
-            return this._calculateWeaponAmmunition(item, ammoQuantities);
+            return this.#calculateWeaponAmmunition(item, ammoQuantities);
         }
 
         return { available: null, max: null };
@@ -908,7 +922,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
      * Calculate spell slot uses (pact or standard) for a given slot level, including upcast logic.
      * @private
      */
-    _getSpellSlotUses(actor, level, highestAvailableSlot) {
+    #getSpellSlotUses(actor, level, highestAvailableSlot) {
         const actorSpells = actor.system.spells;
         
         if (level === 'pact') {
@@ -920,7 +934,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                 return { available, max };
             }
             
-            if (this._hasAvailableUpcastSlots(pact?.level ?? 0, highestAvailableSlot)) {
+            if (this.#hasAvailableUpcastSlots(pact?.level ?? 0, highestAvailableSlot)) {
                 return {
                     available: localize('BAD.dnd5e.upcast', 'Upcast'),
                     max: null,
@@ -940,7 +954,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                 return { available, max };
             }
             
-            if (this._hasAvailableUpcastSlots(lvl, highestAvailableSlot)) {
+            if (this.#hasAvailableUpcastSlots(lvl, highestAvailableSlot)) {
                 return {
                     available: localize('BAD.dnd5e.upcast', 'Upcast'),
                     max: null,
@@ -956,7 +970,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
      * Optimized to O(1) by comparing against the pre-calculated highest available slot.
      * @private
      */
-    _hasAvailableUpcastSlots(level, highestAvailableSlot) {
+    #hasAvailableUpcastSlots(level, highestAvailableSlot) {
         return highestAvailableSlot >= level;
     }
 
@@ -968,15 +982,15 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
      * @param {number} highestAvailableSlot The highest available spell slot level on the actor
      * @private
      */
-    _calculateSpellSlots(item, actor, highestAvailableSlot) {
+    #calculateSpellSlots(item, actor, highestAvailableSlot) {
         const system = item.system;
         const prepMode = system.method;
         const level = system.level ?? 0;
         
         if (prepMode === 'pact') {
-            return this._getSpellSlotUses(actor, 'pact', highestAvailableSlot);
+            return this.#getSpellSlotUses(actor, 'pact', highestAvailableSlot);
         } else if (!['innate', 'atwill'].includes(prepMode)) {
-            return this._getSpellSlotUses(actor, level, highestAvailableSlot);
+            return this.#getSpellSlotUses(actor, level, highestAvailableSlot);
         }
         return { available: null, max: null };
     }
@@ -986,7 +1000,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
      * Used when the Attack activity doesn't have a working item consumption target.
      * @private
      */
-    _calculateWeaponAmmunition(item, ammoQuantities) {
+    #calculateWeaponAmmunition(item, ammoQuantities) {
         const ammoType = item.system.ammunition?.type;
         const quantity = ammoQuantities.get(ammoType) ?? 0;
         return {
@@ -995,7 +1009,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         };
     }
 
-    _getAmmoQuantities(actor) {
+    #getAmmoQuantities(actor) {
         const ammoQuantities = new Map();
         for (const i of actor.items) {
             if (i.type === 'consumable' && i.system.type?.value === 'ammo') {
@@ -1009,7 +1023,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         return ammoQuantities;
     }
 
-    _getHighestAvailableSpellSlot(actor) {
+    #getHighestAvailableSpellSlot(actor) {
         let highestAvailableSlot = 0;
         const actorSpells = actor.system.spells;
         if (actorSpells) {
@@ -1025,4 +1039,6 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         }
         return highestAvailableSlot;
     }
+
+    // #endregion
 }

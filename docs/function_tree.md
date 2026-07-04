@@ -331,8 +331,9 @@ flowchart TD
 - [**`getSpellLevelLabel(level)`**](../src/adapters/system/base-system-adapter.js#L229-L231): Localizes spell level sub-tab labels.
 
 ### [`src/adapters/system/dnd5e-system-adapter.js`](../src/adapters/system/dnd5e-system-adapter.js) — D&D 5e System Adapter (`Dnd5eSystemAdapter`)
-- [**`shouldExtractItem(item)`**](../src/adapters/system/dnd5e-system-adapter.js#L49-L59): Filters out unallowed item types, helper items, and unequipped tools/consumables.
-- [**`modifyActions(actions, actor)`**](../src/adapters/system/dnd5e-system-adapter.js#L67-L266): Processes D&D 5e activities, spell preparation, equipment states, and subcategory itemTypes.
-- [**`modifyContext(context, app)`**](../src/adapters/system/dnd5e-system-adapter.js#L285-L323): Injects "All Spells", "All Weapons", and "All Equipment" sub-tabs and orders subcategory sub-tabs.
-- [**`getContextMenuItems(app)`**](../src/adapters/system/dnd5e-system-adapter.js#L330-L418): Spawns context menu options for spell preparation (`Prepare`/`Unprepare`) and equipment management (`Equip`/`Unequip`).
-- [**`onTabRightClick(app, el, event)`**](../src/adapters/system/dnd5e-system-adapter.js#L427-L445): Toggles unprepared spell visibility (`showUnprepared`) and unequipped weapon/equipment visibility (`showUnequipped_weapon`, `showUnequipped_equipment`).
+- [**`shouldExtractItem(item)`**](../src/adapters/system/dnd5e-system-adapter.js#L64-L74): Filters out unallowed item types, helper items, and unequipped tools/consumables.
+- [**`modifyActions(actions, actor)`**](../src/adapters/system/dnd5e-system-adapter.js#L82-L287): Processes D&D 5e activities, spell preparation, equipment states, and subcategory itemTypes.
+- [**`filterSubactions(subactions, filterContext)`**](../src/adapters/system/dnd5e-system-adapter.js#L299-L313): Filters out subactions requiring banned spell components.
+- [**`modifyContext(context, app)`**](../src/adapters/system/dnd5e-system-adapter.js#L339-L458): Injects "All Spells", "All Weapons", and "All Equipment" sub-tabs and orders subcategory sub-tabs.
+- [**`getContextMenuItems(app)`**](../src/adapters/system/dnd5e-system-adapter.js#L465-L585): Spawns context menu options for spell preparation (`Prepare`/`Unprepare`) and equipment management (`Equip`/`Unequip`).
+- [**`onTabRightClick(app, el, event)`**](../src/adapters/system/dnd5e-system-adapter.js#L594-L612): Toggles unprepared spell visibility (`showUnprepared`) and unequipped weapon/equipment visibility (`showUnequipped_weapon`, `showUnequipped_equipment`).
