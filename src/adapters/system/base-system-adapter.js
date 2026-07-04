@@ -73,6 +73,82 @@ export class BaseSystemAdapter {
     }
 
     /**
+     * Helper to test if a set of tab references matches active economy/time right-side filters.
+     * @param {TabRef|TabRef[]} tabRefs Action tab or array of tabs
+     * @param {Object} filterContext Current HUD filter context { activeParents, activeSubs, parentGroups }
+     * @returns {boolean} True if the tab(s) match the current economy filter selection
+     */
+    matchesEconomyTabs(tabRefs, filterContext) {
+        if (!tabRefs) return false;
+        const { activeParents, activeSubs, parentGroups } = filterContext;
+
+        const activeEconomyParents = Array.from(activeParents).filter(p => !this.isExclusionTab(p) && p !== 'all');
+        const showAllEconomy = activeParents.has('all') || activeEconomyParents.length === 0;
+
+        const tabs = Array.isArray(tabRefs) ? tabRefs : [tabRefs];
+
+        return tabs.some(tab => {
+            const actionParentId = tab.root;
+            const actionSubId = tab.parent ? tab.label : undefined;
+
+            if (this.isExclusionTab(actionParentId)) return false;
+
+            let matchesParent = false;
+            if (activeParents.has(actionParentId)) {
+                const parentGroup = parentGroups?.[actionParentId];
+                const validSubIds = toSet(parentGroup?.subTabs, t => t.id);
+                const activeSubsForParent = Array.from(activeSubs).filter(id => validSubIds.has(id));
+
+                if (activeSubsForParent.length === 0) {
+                    matchesParent = true;
+                } else {
+                    matchesParent = activeSubs.has(actionSubId);
+                }
+            }
+
+            if (!matchesParent && showAllEconomy) {
+                const isParentActive = activeParents.has(actionParentId);
+                if (!isParentActive) {
+                    matchesParent = true;
+                } else {
+                    const parentGroup = parentGroups?.[actionParentId];
+                    const validSubIds = toSet(parentGroup?.subTabs, t => t.id);
+                    const activeSubsForParent = Array.from(activeSubs).filter(id => validSubIds.has(id));
+                    if (activeSubsForParent.length === 0) {
+                        matchesParent = true;
+                    }
+                }
+            }
+
+            return matchesParent;
+        });
+    }
+
+    /**
+     * Helper to get active sub-type IDs under exclusion tabs (e.g. banned spell components).
+     * @param {Object} filterContext Current HUD filter context { activeParents, activeSubs, parentGroups }
+     * @returns {string[]} Array of active exclusion sub-type IDs
+     */
+    getActiveExclusionSubs(filterContext) {
+        const { activeParents, activeSubs, parentGroups } = filterContext;
+        const activeExclusionSubs = [];
+
+        for (const parentId of activeParents) {
+            if (this.isExclusionTab(parentId)) {
+                const group = parentGroups?.[parentId];
+                const validSubIds = toSet(group?.subTabs, t => t.id);
+                for (const subId of activeSubs) {
+                    if (validSubIds.size === 0 || validSubIds.has(subId)) {
+                        activeExclusionSubs.push(subId);
+                    }
+                }
+            }
+        }
+
+        return activeExclusionSubs;
+    }
+
+    /**
      * Filter a list of sub-actions (activities) for a dropdown menu based on current UI filter state.
      * @param {Action[]} subactions The array of child Action instances
      * @param {Object} filterContext Current HUD filter context { activeParents, activeSubs, parentGroups, filterNoResources }
@@ -80,51 +156,12 @@ export class BaseSystemAdapter {
      */
     filterSubactions(subactions, filterContext) {
         if (!subactions || subactions.length === 0) return [];
-        const { activeParents, activeSubs, parentGroups, filterNoResources } = filterContext;
-
-        const activeEconomyParents = Array.from(activeParents).filter(p => !this.isExclusionTab(p) && p !== 'all');
-        const showAllEconomy = activeParents.has('all') || activeEconomyParents.length === 0;
+        const { filterNoResources } = filterContext;
 
         return subactions.filter(sub => {
-            const tabs = Array.isArray(sub.tabs) ? sub.tabs : (sub.tabs ? [sub.tabs] : []);
-
-            let matchesEconomy = tabs.some(tab => {
-                const actionParentId = tab.root;
-                const actionSubId = tab.parent ? tab.label : undefined;
-
-                if (this.isExclusionTab(actionParentId)) return false;
-
-                let matchesParent = false;
-                if (activeParents.has(actionParentId)) {
-                    const parentGroup = parentGroups?.[actionParentId];
-                    const validSubIds = toSet(parentGroup?.subTabs, t => t.id);
-                    const activeSubsForParent = Array.from(activeSubs).filter(id => validSubIds.has(id));
-
-                    if (activeSubsForParent.length === 0) {
-                        matchesParent = true;
-                    } else {
-                        matchesParent = activeSubs.has(actionSubId);
-                    }
-                }
-
-                if (!matchesParent && showAllEconomy) {
-                    const isParentActive = activeParents.has(actionParentId);
-                    if (!isParentActive) {
-                        matchesParent = true;
-                    } else {
-                        const parentGroup = parentGroups?.[actionParentId];
-                        const validSubIds = toSet(parentGroup?.subTabs, t => t.id);
-                        const activeSubsForParent = Array.from(activeSubs).filter(id => validSubIds.has(id));
-                        if (activeSubsForParent.length === 0) {
-                            matchesParent = true;
-                        }
-                    }
-                }
-
-                return matchesParent;
-            });
-
-            if (!matchesEconomy) return false;
+            if (!this.matchesEconomyTabs(sub.tabs, filterContext)) {
+                return false;
+            }
 
             if (filterNoResources && sub.uses && sub.uses.available !== null && sub.uses.available <= 0) {
                 return false;

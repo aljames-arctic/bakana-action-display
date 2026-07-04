@@ -414,18 +414,8 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
      * Checks D&D 5e spell components (vocal, somatic, material) on linkedActions/originalActivities.
      */
     filterSubactions(subactions, filterContext) {
-        const { activeParents, activeSubs, parentGroups } = filterContext;
-        const isCompActive = activeParents.has('components');
-
-        let activeCompSubs = [];
-        if (isCompActive) {
-            const compGroup = parentGroups?.['components'];
-            const validSubIds = toSet(compGroup?.subTabs, t => t.id);
-            activeCompSubs = Array.from(activeSubs).filter(id => validSubIds.has(id));
-        }
-
-        // Base filtering by action/economy tab and resource depletion
         const baseFiltered = super.filterSubactions(subactions, filterContext);
+        const activeCompSubs = this.getActiveExclusionSubs(filterContext);
 
         if (activeCompSubs.length === 0) {
             return baseFiltered;
@@ -447,15 +437,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
      * System-specific components filter for D&D 5e parent action cards.
      */
     matchesComponentsFilter(action, filterContext) {
-        const { activeParents, activeSubs, parentGroups } = filterContext;
-        const isComponentsActive = activeParents.has('components');
-
-        if (!isComponentsActive) return true;
-
-        const parentGroup = parentGroups?.['components'];
-        const validSubIds = toSet(parentGroup?.subTabs, t => t.id);
-        const activeCompSubs = Array.from(activeSubs).filter(id => validSubIds.size === 0 || validSubIds.has(id));
-
+        const activeCompSubs = this.getActiveExclusionSubs(filterContext);
         if (activeCompSubs.length === 0) return true;
 
         // 1. For items with subactions (e.g. Elven Lineage): hide card ONLY if ALL subactions are filtered out

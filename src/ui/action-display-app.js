@@ -498,68 +498,23 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
 
         if (!matchesLeft) return false;
 
-        // Filter by Right Side (Action Type)
+        // Filter by Right Side (Action Type & Economy Tabs)
         if (!action.tabs) return false;
 
-        // Spell Components Filter (delegated to system adapter)
         const filterContext = {
             activeParents: this.rightTabs.activeParents,
             activeSubs: this.rightTabs.activeSubTypes,
             parentGroups: this.parentGroups
         };
         const adapter = actionDisplay.activeSystemAdapter;
+
+        // 1. System-specific component exclusion filtering
         if (!adapter.matchesComponentsFilter(action, filterContext)) {
             return false;
         }
 
-        // Check if we have any active economy/time parents
-        const activeEconomyParents = Array.from(this.rightTabs.activeParents).filter(p => !adapter.isExclusionTab(p) && p !== 'all');
-        const showAllEconomy = this.rightTabs.activeParents.has('all') || activeEconomyParents.length === 0;
-        
-        let matchesRight = true;
-        if (activeEconomyParents.length > 0 || showAllEconomy) {
-            matchesRight = action.tabs.some(tab => {
-                const actionParentId = tab.root;
-                const actionSubId = tab.parent ? tab.label : undefined;
-
-                // Ignore exclusion parent in the OR-filter
-                if (adapter.isExclusionTab(actionParentId)) return false;
-
-                let matchesParent = false;
-                
-                // 1. Specific parent match
-                if (this.rightTabs.activeParents.has(actionParentId)) {
-                    const parentGroup = this.parentGroups[actionParentId];
-                    const validSubIds = toSet(parentGroup?.subTabs, t => t.id);
-                    const activeSubsForParent = Array.from(this.rightTabs.activeSubTypes).filter(id => validSubIds.has(id));
-
-                    if (activeSubsForParent.length === 0) {
-                        matchesParent = true;
-                    } else {
-                        matchesParent = this.rightTabs.activeSubTypes.has(actionSubId);
-                    }
-                }
-                
-                // 2. 'all' parent match
-                if (!matchesParent && showAllEconomy) {
-                    const isParentActive = this.rightTabs.activeParents.has(actionParentId);
-                    if (!isParentActive) {
-                        matchesParent = true;
-                    } else {
-                        const parentGroup = this.parentGroups[actionParentId];
-                        const validSubIds = toSet(parentGroup?.subTabs, t => t.id);
-                        const activeSubsForParent = Array.from(this.rightTabs.activeSubTypes).filter(id => validSubIds.has(id));
-                        if (activeSubsForParent.length === 0) {
-                            matchesParent = true;
-                        }
-                    }
-                }
-
-                return matchesParent;
-            });
-        }
-        
-        return matchesRight;
+        // 2. Economy tab filtering
+        return adapter.matchesEconomyTabs(action.tabs, filterContext);
     }
 
     /* -------------------------------------------- */
