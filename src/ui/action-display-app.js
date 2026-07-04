@@ -1066,13 +1066,6 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
     }
 
     /**
-     * Create and bind the ContextMenu for the left-side tabs (specifically Spells).
-     * @returns {ContextMenu} The created ContextMenu instance
-     * @private
-     */
-
-
-    /**
      * Toggle the hidden state of an action.
      * @param {string} actionId The ID of the action to toggle
      * @param {boolean} shouldHide Whether the action should be hidden

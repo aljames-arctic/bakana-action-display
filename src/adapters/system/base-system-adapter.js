@@ -84,12 +84,6 @@ export class BaseSystemAdapter {
     // #region Internal Filtering Logic
 
     /**
-     * Helper to test if a set of tab references matches active economy/time right-side filters.
-     * @param {TabRef|TabRef[]} tabRefs Action tab or array of tabs
-     * @param {Object} filterContext Current HUD filter context { activeParents, activeSubs, parentGroups }
-     * @returns {boolean} True if the tab(s) match the current economy filter selection
-     */
-    /**
      * Set-algebraic filter tree evaluator.
      * Evaluates an Action instance against active UI filter groups using parent tab combinators:
      * - 'difference' (AND NOT): If action matches any active difference sub-tab, return false.
