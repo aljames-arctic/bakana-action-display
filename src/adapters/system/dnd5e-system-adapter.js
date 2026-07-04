@@ -429,8 +429,12 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         });
     }
 
+    getTabCombinator(parentId) {
+        return parentId === 'components' ? 'difference' : 'union';
+    }
+
     isExclusionTab(parentId) {
-        return parentId === 'components';
+        return this.getTabCombinator(parentId) === 'difference';
     }
 
     /**

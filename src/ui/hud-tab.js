@@ -14,6 +14,7 @@ export class HUDTab {
      * @param {boolean} [options.active=false] Whether this tab filter is active
      * @param {boolean} [options.expanded=false] Whether this tab accordion/branch is expanded
      * @param {boolean} [options.activeParent=false] Whether this parent has active subtabs
+     * @param {string} [options.combinator='union'] Set-algebraic combinator ('union', 'intersection', 'difference')
      * @param {boolean} [options.excluded=false] Excluded filter state (e.g. spell components)
      * @param {boolean} [options.showUnprepared=false] Special indicator state (e.g. D&D 5e unprepared spells)
      * @param {HUDTab[]} [options.subTabs=[]] Child sub-tab instances
@@ -25,6 +26,7 @@ export class HUDTab {
         label = '',
         icon = 'fas fa-question',
         level = 0,
+        combinator = 'union',
         active = false,
         expanded = false,
         activeParent = false,
@@ -38,6 +40,7 @@ export class HUDTab {
         this.label = label;
         this.icon = icon;
         this._level = level;
+        this.combinator = combinator;
         this._parent = null;
         this.rootParent = this;
         this.active = active;

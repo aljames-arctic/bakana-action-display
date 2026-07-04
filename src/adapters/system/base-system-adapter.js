@@ -79,49 +79,74 @@ export class BaseSystemAdapter {
      * @param {Object} filterContext Current HUD filter context { activeParents, activeSubs, parentGroups }
      * @returns {boolean} True if the tab(s) match the current economy filter selection
      */
-    matchesEconomyTabs(tabRefs, filterContext) {
-        if (!tabRefs) return false;
+    /**
+     * Set-algebraic filter tree evaluator.
+     * Evaluates an action's TabRef nodes against active UI filter groups using parent tab combinators:
+     * - 'difference' (AND NOT): If action matches any active difference sub-tab, return false.
+     * - 'union' (OR): Action must match at least one active union parent group.
+     * - 'intersection' (AND): Action must match all active intersection sub-tabs.
+     * 
+     * @param {Action|TabRef|TabRef[]} actionOrTabs Parent Action instance or tab references
+     * @param {Object} filterContext Current HUD filter context { activeParents, activeSubs, parentGroups }
+     * @returns {boolean} True if the action matches current filter selection
+     */
+    matchesEconomyTabs(actionOrTabs, filterContext) {
+        if (!actionOrTabs) return false;
         const { activeParents, activeSubs, parentGroups } = filterContext;
 
-        const activeEconomyParents = Array.from(activeParents).filter(p => !this.isExclusionTab(p) && p !== 'all');
-        const showAllEconomy = activeParents.has('all') || activeEconomyParents.length === 0;
+        // If an Action instance with subactions is passed, card passes if at least one subaction qualifies
+        if (actionOrTabs.subactions?.length > 0) {
+            const qualifyingSubactions = this.filterSubactions(actionOrTabs.subactions, filterContext);
+            return qualifyingSubactions.length > 0;
+        }
 
+        const tabRefs = actionOrTabs.tabs ?? actionOrTabs;
         const tabs = TabRef.normalize(tabRefs);
+
+        // 1. Evaluate DIFFERENCE (exclusion) parent groups first
+        for (const parentId of activeParents) {
+            const combinator = this.getTabCombinator(parentId);
+            if (combinator === 'difference') {
+                const group = parentGroups?.[parentId];
+                const validSubIds = toSet(group?.subTabs, t => t.id);
+                const activeSubsForParent = Array.from(activeSubs).filter(id => validSubIds.has(id));
+
+                if (activeSubsForParent.length > 0) {
+                    const hasExcludedTab = tabs.some(tab => tab.root === parentId && activeSubsForParent.includes(tab.label));
+                    if (hasExcludedTab) return false;
+                }
+            }
+        }
+
+        // 2. Evaluate UNION / INTERSECTION (category) parent groups
+        const activeCategoryParents = Array.from(activeParents).filter(p => this.getTabCombinator(p) !== 'difference' && p !== 'all');
+        const showAllCategory = activeParents.has('all') || activeCategoryParents.length === 0;
+
+        if (showAllCategory) return true;
 
         return tabs.some(tab => {
             const actionParentId = tab.root;
             const actionSubId = tab.parent ? tab.label : undefined;
 
-            if (this.isExclusionTab(actionParentId)) return false;
+            if (this.getTabCombinator(actionParentId) === 'difference') return false;
 
-            let matchesParent = false;
             if (activeParents.has(actionParentId)) {
+                const combinator = this.getTabCombinator(actionParentId);
                 const parentGroup = parentGroups?.[actionParentId];
                 const validSubIds = toSet(parentGroup?.subTabs, t => t.id);
                 const activeSubsForParent = Array.from(activeSubs).filter(id => validSubIds.has(id));
 
+                if (combinator === 'intersection' && activeSubsForParent.length > 0) {
+                    return activeSubsForParent.every(subId => tabs.some(t => t.root === actionParentId && t.label === subId));
+                }
+
                 if (activeSubsForParent.length === 0) {
-                    matchesParent = true;
-                } else {
-                    matchesParent = activeSubs.has(actionSubId);
+                    return true;
                 }
+                return activeSubs.has(actionSubId);
             }
 
-            if (!matchesParent && showAllEconomy) {
-                const isParentActive = activeParents.has(actionParentId);
-                if (!isParentActive) {
-                    matchesParent = true;
-                } else {
-                    const parentGroup = parentGroups?.[actionParentId];
-                    const validSubIds = toSet(parentGroup?.subTabs, t => t.id);
-                    const activeSubsForParent = Array.from(activeSubs).filter(id => validSubIds.has(id));
-                    if (activeSubsForParent.length === 0) {
-                        matchesParent = true;
-                    }
-                }
-            }
-
-            return matchesParent;
+            return false;
         });
     }
 
@@ -183,13 +208,26 @@ export class BaseSystemAdapter {
     }
 
     /**
+     * Get the set-algebraic combinator operator for a parent tab group.
+     * Options:
+     * - 'union': Action matches if it has ANY of the active sub-tabs (default OR behavior).
+     * - 'intersection': Action matches if it has ALL of the active sub-tabs (AND behavior).
+     * - 'difference': Action matches if it has NONE of the active sub-tabs (AND NOT / Exclusion behavior).
+     * @param {string} parentId
+     * @returns {string} 'union'|'intersection'|'difference'
+     */
+    getTabCombinator(parentId) {
+        return 'union';
+    }
+
+    /**
      * Determine if a parent tab acts as an exclusion/modifier filter (e.g. 'components').
      * Exclusion tabs operate alongside standard category tabs and should not clear default 'all' category selection.
      * @param {string} parentId
      * @returns {boolean}
      */
     isExclusionTab(parentId) {
-        return false;
+        return this.getTabCombinator(parentId) === 'difference';
     }
 
     /**
