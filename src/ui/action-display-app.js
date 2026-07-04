@@ -41,7 +41,6 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
 
         // HUD Attachment/Position Mode (persisted client-side)
         this.positionMode = game.settings.get(MODULE_ID, 'hudPositionMode');
-        this.isAttached = this.positionMode === 'attached';
         
         // Dragging state
         this._dragData = null;
@@ -52,6 +51,38 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         this._onDragStart = this._onDragStart.bind(this);
         this._onDragMove = this._onDragMove.bind(this);
         this._onDragEnd = this._onDragEnd.bind(this);
+    }
+
+    /**
+     * Is the HUD in detached (floating) mode?
+     * @type {boolean}
+     */
+    get isDetached() {
+        return this.positionMode === 'detached';
+    }
+
+    /**
+     * Is the HUD in attached (dynamic token tracking) mode?
+     * @type {boolean}
+     */
+    get isAttached() {
+        return this.positionMode === 'attached';
+    }
+
+    /**
+     * Is the HUD in pinned (fixed offset token tracking) mode?
+     * @type {boolean}
+     */
+    get isPinned() {
+        return this.positionMode === 'pinned';
+    }
+
+    /**
+     * Is the HUD tracking token position (either attached or pinned)?
+     * @type {boolean}
+     */
+    get isTracked() {
+        return this.positionMode !== 'detached';
     }
 
     /**
@@ -396,11 +427,12 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         context.itemTypes = itemTypes;
         context.actionTypes = actionTypes;
         context.items = visibleActions;
-        context.isAttached = this.positionMode === 'attached';
-        context.isPinned = this.positionMode === 'pinned';
-        context.anchorTooltip = context.isAttached 
+        context.isAttached = this.isAttached;
+        context.isPinned = this.isPinned;
+        context.isDetached = this.isDetached;
+        context.anchorTooltip = this.isAttached 
             ? "Attached (Dynamic Placement)" 
-            : (context.isPinned ? "Pinned (Fixed Offset to Token)" : "Detached (Floating Screen)");
+            : (this.isPinned ? "Pinned (Fixed Offset to Token)" : "Detached (Floating Screen)");
         context.filterNoResources = game.settings.get(MODULE_ID, 'filterNoResources');
 
         // Delegate to system adapter to allow system-specific context modifications
@@ -608,11 +640,9 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         event.preventDefault();
         const el = this.element;
 
-        if (this.positionMode === 'attached') {
+        if (this.isAttached) {
             // Attached -> Pinned
             this.positionMode = 'pinned';
-            this.isAttached = false;
-            this.isPinned = true;
 
             if (el && this.token) {
                 const tokenTransform = this.token.worldTransform;
@@ -623,11 +653,9 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                 };
                 await game.settings.set(MODULE_ID, 'hudPinnedOffset', offset);
             }
-        } else if (this.positionMode === 'pinned') {
+        } else if (this.isPinned) {
             // Pinned -> Detached
             this.positionMode = 'detached';
-            this.isAttached = false;
-            this.isPinned = false;
 
             if (el) {
                 const rect = el.getBoundingClientRect();
@@ -637,8 +665,6 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         } else {
             // Detached -> Attached
             this.positionMode = 'attached';
-            this.isAttached = true;
-            this.isPinned = false;
         }
 
         await game.settings.set(MODULE_ID, 'hudPositionMode', this.positionMode);
@@ -1164,7 +1190,6 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
 
         // Dragging while in Attached mode automatically switches to Pinned mode
         if (this.isAttached) {
-            this.isAttached = false;
             this.positionMode = 'pinned';
         }
     }
