@@ -82,47 +82,49 @@ export class BaseSystemAdapter {
         if (!subactions || subactions.length === 0) return [];
         const { activeParents, activeSubs, parentGroups, filterNoResources } = filterContext;
 
-        const activeEconomyParents = Array.from(activeParents).filter(p => p !== 'components' && p !== 'all');
+        const activeEconomyParents = Array.from(activeParents).filter(p => !this.isExclusionTab(p) && p !== 'all');
+        const showAllEconomy = activeParents.has('all') || activeEconomyParents.length === 0;
 
         return subactions.filter(sub => {
-            const tab = sub.tabs;
-            const actionParentId = tab?.root;
-            const actionSubId = tab?.parent ? tab.label : undefined;
+            const tabs = Array.isArray(sub.tabs) ? sub.tabs : (sub.tabs ? [sub.tabs] : []);
 
-            if (actionParentId === 'components') return false;
+            let matchesEconomy = tabs.some(tab => {
+                const actionParentId = tab.root;
+                const actionSubId = tab.parent ? tab.label : undefined;
 
-            if (activeEconomyParents.length === 0 && !activeParents.has('all')) {
-                return true;
-            }
+                if (this.isExclusionTab(actionParentId)) return false;
 
-            let matchesParent = false;
-            if (activeParents.has(actionParentId)) {
-                const parentGroup = parentGroups?.[actionParentId];
-                const validSubIds = toSet(parentGroup?.subTabs, t => t.id);
-                const activeSubsForParent = Array.from(activeSubs).filter(id => validSubIds.has(id));
-
-                if (activeSubsForParent.length === 0) {
-                    matchesParent = true;
-                } else {
-                    matchesParent = activeSubs.has(actionSubId);
-                }
-            }
-
-            if (!matchesParent && activeParents.has('all')) {
-                const isParentActive = activeParents.has(actionParentId);
-                if (!isParentActive) {
-                    matchesParent = true;
-                } else {
+                let matchesParent = false;
+                if (activeParents.has(actionParentId)) {
                     const parentGroup = parentGroups?.[actionParentId];
                     const validSubIds = toSet(parentGroup?.subTabs, t => t.id);
                     const activeSubsForParent = Array.from(activeSubs).filter(id => validSubIds.has(id));
+
                     if (activeSubsForParent.length === 0) {
                         matchesParent = true;
+                    } else {
+                        matchesParent = activeSubs.has(actionSubId);
                     }
                 }
-            }
 
-            if (!matchesParent) return false;
+                if (!matchesParent && showAllEconomy) {
+                    const isParentActive = activeParents.has(actionParentId);
+                    if (!isParentActive) {
+                        matchesParent = true;
+                    } else {
+                        const parentGroup = parentGroups?.[actionParentId];
+                        const validSubIds = toSet(parentGroup?.subTabs, t => t.id);
+                        const activeSubsForParent = Array.from(activeSubs).filter(id => validSubIds.has(id));
+                        if (activeSubsForParent.length === 0) {
+                            matchesParent = true;
+                        }
+                    }
+                }
+
+                return matchesParent;
+            });
+
+            if (!matchesEconomy) return false;
 
             if (filterNoResources && sub.uses && sub.uses.available !== null && sub.uses.available <= 0) {
                 return false;

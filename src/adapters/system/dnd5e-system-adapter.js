@@ -48,6 +48,11 @@ const ALLOWED_TYPES = new Set(['weapon', 'equipment', 'consumable', 'tool', 'bac
  * and spell preparation toggles.
  */
 export class Dnd5eSystemAdapter extends FantasySystemAdapter {
+    static COMPONENT_ALIASES = {
+        vocal: ['vocal', 'v'],
+        somatic: ['somatic', 's'],
+        material: ['material', 'm']
+    };
     constructor() {
         super('dnd5e');
     }
@@ -90,11 +95,11 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
             // Extract spell components if it's a spell (for the Spell Components tab)
             const props = item.system?.properties;
             const spellComponents = [];
-            if (item.type === 'spell' && props) {
+            if (item.type === 'spell') {
                 const compRoot = new TabRef({ label: 'components' });
-                if (props.has('vocal')) spellComponents.push(new TabRef({ label: 'vocal', parent: compRoot }));
-                if (props.has('somatic')) spellComponents.push(new TabRef({ label: 'somatic', parent: compRoot }));
-                if (props.has('material')) spellComponents.push(new TabRef({ label: 'material', parent: compRoot }));
+                if (this._subRequiresComponent(action, 'vocal')) spellComponents.push(new TabRef({ label: 'vocal', parent: compRoot }));
+                if (this._subRequiresComponent(action, 'somatic')) spellComponents.push(new TabRef({ label: 'somatic', parent: compRoot }));
+                if (this._subRequiresComponent(action, 'material')) spellComponents.push(new TabRef({ label: 'material', parent: compRoot }));
             }
 
             // Check if user has hidden this item
@@ -175,20 +180,22 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                     });
                 }));
 
-                // Extract spell components from linked spells on cast activities if present
-                for (const activity of mappedActivities) {
-                    const spellProps = activity.linkedAction?.system?.properties ?? activity.originalActivity?.spell?.properties;
-                    if (spellProps) {
-                        const isVocal = this._hasSpellProperty(spellProps, 'vocal');
-                        const isSomatic = this._hasSpellProperty(spellProps, 'somatic');
-                        const isMaterial = this._hasSpellProperty(spellProps, 'material');
+                // Extract spell components from linked spells on cast activities or item properties if present
+                for (const act of mappedActivities) {
+                    const isVocal = this._subRequiresComponent(act, 'vocal');
+                    const isSomatic = this._subRequiresComponent(act, 'somatic');
+                    const isMaterial = this._subRequiresComponent(act, 'material');
 
-                        if (isVocal || isSomatic || isMaterial) {
-                            const compRoot = new TabRef({ label: 'components' });
-                            if (isVocal) spellComponents.push(new TabRef({ label: 'vocal', parent: compRoot }));
-                            if (isSomatic) spellComponents.push(new TabRef({ label: 'somatic', parent: compRoot }));
-                            if (isMaterial) spellComponents.push(new TabRef({ label: 'material', parent: compRoot }));
-                        }
+                    if (isVocal || isSomatic || isMaterial) {
+                        const compRoot = new TabRef({ label: 'components' });
+                        const compTabs = [];
+                        if (isVocal) compTabs.push(new TabRef({ label: 'vocal', parent: compRoot }));
+                        if (isSomatic) compTabs.push(new TabRef({ label: 'somatic', parent: compRoot }));
+                        if (isMaterial) compTabs.push(new TabRef({ label: 'material', parent: compRoot }));
+
+                        spellComponents.push(...compTabs);
+                        const existingTabs = Array.isArray(act.tabs) ? act.tabs : [act.tabs];
+                        act.tabs = [...existingTabs, ...compTabs];
                     }
                 }
 
@@ -283,11 +290,123 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
      * @returns {boolean}
      * @private
      */
-    _hasSpellProperty(spellProps, prop) {
-        if (!spellProps) return false;
-        if (spellProps instanceof Set) return spellProps.has(prop);
-        if (Array.isArray(spellProps)) return spellProps.includes(prop);
-        throw new Error(`DnD5eSystemAdapter | Unexpected spell properties type: expected Set or Array, received ${typeof spellProps}`);
+    /**
+     * Recursively resolve the true root spell / item document for an activity or item.
+     * Follows linkedActions, activity.spell.uuid, activity.item, activity.cachedSpell recursively.
+     * @param {Object} sub Sub-action or Activity Action instance
+     * @param {Object} [parentItem] Parent Item5e document
+     * @returns {Object|null} The resolved root Item5e document, spell data, or item properties
+     * @private
+     */
+    _resolveRootSpellDocument(sub, parentItem) {
+        if (!sub) return null;
+
+        // 1. Check direct linkedAction (if resolved from UUID)
+        let doc = sub.linkedAction;
+
+        // 2. Check activity linked sources if doc is not set
+        const activity = sub.originalActivity ?? sub;
+        if (!doc && activity) {
+            doc = activity.item ?? activity.cachedSpell ?? (activity.spell instanceof Item ? activity.spell : null);
+        }
+
+        // 3. Follow doc links recursively if doc itself has a linked spell / UUID
+        const maxDepth = 5;
+        let depth = 0;
+        while (doc && depth < maxDepth) {
+            const nextDoc = doc.linkedAction ?? doc.item ?? doc.cachedSpell ?? (doc.spell instanceof Item ? doc.spell : null);
+            if (nextDoc && nextDoc !== doc) {
+                doc = nextDoc;
+                depth++;
+            } else {
+                break;
+            }
+        }
+
+        if (doc) return doc;
+
+        // 4. Fallback if no linked spell document was found: check activity.spell object or parent item (if spell)
+        if (activity?.spell && typeof activity.spell === 'object' && !(activity.spell instanceof Item)) {
+            return activity.spell;
+        }
+
+        const origItem = sub.originalItem ?? parentItem;
+        if (origItem?.type === 'spell') {
+            return origItem;
+        }
+
+        return null;
+    }
+
+    /**
+     * Helper to check if a subaction, activity, linked spell, or item requires a given spell component ('vocal', 'somatic', 'material').
+     * Resolves the true root spell document first, avoiding stale parent activity property overrides.
+     * @param {Object} sub Subaction / Activity Action / Item / Activity
+     * @param {string} component 'vocal' | 'somatic' | 'material'
+     * @returns {boolean}
+     * @private
+     */
+    _subRequiresComponent(sub, component) {
+        if (!sub) return false;
+
+        const rootDoc = this._resolveRootSpellDocument(sub);
+        if (!rootDoc) return false;
+
+        const aliases = Dnd5eSystemAdapter.COMPONENT_ALIASES?.[component] ?? [component];
+
+        // 1. Direct Set check on rootDoc
+        if (rootDoc instanceof Set) {
+            return aliases.some(a => rootDoc.has(a));
+        }
+
+        // 2. Direct Array check on rootDoc
+        if (Array.isArray(rootDoc)) {
+            return aliases.some(a => rootDoc.includes(a));
+        }
+
+        // 3. Object check on rootDoc (Item document, System data, or properties/components)
+        if (typeof rootDoc === 'object') {
+            // Check system.properties / properties
+            const props = rootDoc.system?.properties ?? rootDoc.properties ?? (rootDoc.system ? null : rootDoc);
+            if (props) {
+                if (props instanceof Set) {
+                    if (aliases.some(a => props.has(a))) return true;
+                } else if (Array.isArray(props)) {
+                    if (aliases.some(a => props.includes(a))) return true;
+                } else if (typeof props === 'object') {
+                    if (aliases.some(a => !!props[a])) return true;
+                }
+            }
+
+            // Check system.components / components
+            const comps = rootDoc.system?.components ?? rootDoc.components;
+            if (comps) {
+                if (comps instanceof Set) {
+                    if (aliases.some(a => comps.has(a))) return true;
+                } else if (Array.isArray(comps)) {
+                    if (aliases.some(a => comps.includes(a))) return true;
+                } else if (comps.value instanceof Set) {
+                    if (aliases.some(a => comps.value.has(a))) return true;
+                } else if (Array.isArray(comps.value)) {
+                    if (aliases.some(a => comps.value.includes(a))) return true;
+                } else if (typeof comps === 'object') {
+                    if (aliases.some(a => !!comps[a])) return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if a spell property is present. Delegates to _subRequiresComponent.
+     * @param {Object} itemOrProps
+     * @param {string} prop
+     * @returns {boolean}
+     * @private
+     */
+    _hasSpellProperty(itemOrProps, prop) {
+        return this._subRequiresComponent(itemOrProps, prop);
     }
 
     /**
@@ -314,8 +433,9 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
 
         // Filter out subactions requiring banned spell components
         return baseFiltered.filter(sub => {
-            const spellProps = sub.linkedAction?.system?.properties ?? sub.originalActivity?.spell?.properties;
-            return !activeCompSubs.some(comp => this._hasSpellProperty(spellProps, comp));
+            const hasPropertyMatch = activeCompSubs.some(comp => this._subRequiresComponent(sub, comp));
+            const hasTabMatch = sub.tabs?.some(tab => tab.root === 'components' && activeCompSubs.includes(tab.label));
+            return !hasPropertyMatch && !hasTabMatch;
         });
     }
 
@@ -334,22 +454,23 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
 
         const parentGroup = parentGroups?.['components'];
         const validSubIds = toSet(parentGroup?.subTabs, t => t.id);
-        const activeCompSubs = Array.from(activeSubs).filter(id => validSubIds.has(id));
+        const activeCompSubs = Array.from(activeSubs).filter(id => validSubIds.size === 0 || validSubIds.has(id));
 
         if (activeCompSubs.length === 0) return true;
 
+        // 1. For items with subactions (e.g. Elven Lineage): hide card ONLY if ALL subactions are filtered out
         if (action.subactions?.length > 0) {
-            // For items with subactions: hide card ONLY if ALL subactions are banned by components filter
-            const allSubactionsBanned = action.subactions.every(sub => {
-                const spellProps = sub.linkedAction?.system?.properties ?? sub.originalActivity?.spell?.properties;
-                return activeCompSubs.some(comp => this._hasSpellProperty(spellProps, comp));
-            });
-            if (allSubactionsBanned) return false;
-        } else {
-            // For single-action items: check tabs for component matches
-            const hasBannedComponent = action.tabs.some(tab => (tab.root === 'components') && (activeCompSubs.includes(tab.label)));
-            if (hasBannedComponent) return false;
+            const qualifyingSubactions = this.filterSubactions(action.subactions, filterContext);
+            return qualifyingSubactions.length > 0;
         }
+
+        // 2. Direct tab match on single-action parent card's tabs
+        const hasCardBannedComponent = action.tabs?.some(tab => tab.root === 'components' && activeCompSubs.includes(tab.label));
+        if (hasCardBannedComponent) return false;
+
+        // 3. Direct property match on parent item's system properties
+        const hasItemPropertyMatch = activeCompSubs.some(comp => this._subRequiresComponent(action, comp));
+        if (hasItemPropertyMatch) return false;
 
         return true;
     }
