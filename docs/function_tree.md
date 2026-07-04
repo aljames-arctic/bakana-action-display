@@ -315,15 +315,20 @@ flowchart TD
 
 ### [`src/ui/tab-ref.js`](../src/ui/tab-ref.js) — Structured Tab Data Reference (`TabRef`)
 - [**`constructor({ label, parent })`**](../src/ui/tab-ref.js#L11-L18): Instantiates a pre-computed tab data node linked to parent nodes, caching `.root` and `.path` string (`'economy/action'`).
-- [**`get parentId`**](../src/ui/tab-ref.js#L26-L28): Returns direct parent ID or root ID.
+- [**`static from(rootLabel, subLabel)`**](../src/ui/tab-ref.js#L26-L31): Helper to instantiate a nested parent/child `TabRef` node.
+- [**`static normalize(tabs)`**](../src/ui/tab-ref.js#L38-L43): Flattens nested arrays (`tabs.flat(Infinity)`) and returns a clean 1D `TabRef[]` array.
 
 ### [`src/adapters/system/base-system-adapter.js`](../src/adapters/system/base-system-adapter.js) — System Adapter Interface (`BaseSystemAdapter`)
 - [**`_createRollEvent(event)`**](../src/adapters/system/base-system-adapter.js#L23-L42): Creates a proxy around a roll event to inject keyboard modifiers (`Alt`, `Control`, `Shift`).
 - [**`shouldExtractItem(item, actor)`**](../src/adapters/system/base-system-adapter.js#L51-L53): Performance filter to bypass unneeded item allocations.
 - [**`modifyActions(actions, actor)`**](../src/adapters/system/base-system-adapter.js#L61-L73): Modifies base actions with system-specific calculations.
-- [**`modifyContext(context)`**](../src/adapters/system/base-system-adapter.js#L162-L164): Customizes tab layout context and sub-tab ordering.
-- [**`getItemTypeLabel(parentId)`**](../src/adapters/system/base-system-adapter.js#L80-L87) / [**`getItemTypeIcon(parentId)`**](../src/adapters/system/base-system-adapter.js#L94-L101): Returns tab labels and font-awesome icons.
-- [**`getSpellLevelLabel(level)`**](../src/adapters/system/base-system-adapter.js#L109-L111): Localizes spell level sub-tab labels.
+- [**`matchesEconomyTabs(tabRefs, filterContext)`**](../src/adapters/system/base-system-adapter.js#L81-L130): Evaluates if an action's tab references match active right-side economy filters.
+- [**`getActiveExclusionSubs(filterContext)`**](../src/adapters/system/base-system-adapter.js#L137-L150): Returns active sub-type IDs under system-specific exclusion tabs.
+- [**`filterSubactions(subactions, filterContext)`**](../src/adapters/system/base-system-adapter.js#L158-L172): Filters dropdown sub-actions against right-side tab filters and resource depletion.
+- [**`isExclusionTab(parentId)`**](../src/adapters/system/base-system-adapter.js#L182-L184): Returns whether a parent tab acts as an exclusion/modifier filter (defaults to `false`).
+- [**`modifyContext(context)`**](../src/adapters/system/base-system-adapter.js#L190-L192): Customizes tab layout context and sub-tab ordering.
+- [**`getItemTypeLabel(parentId)`**](../src/adapters/system/base-system-adapter.js#L200-L207) / [**`getItemTypeIcon(parentId)`**](../src/adapters/system/base-system-adapter.js#L214-L221): Returns tab labels and font-awesome icons.
+- [**`getSpellLevelLabel(level)`**](../src/adapters/system/base-system-adapter.js#L229-L231): Localizes spell level sub-tab labels.
 
 ### [`src/adapters/system/dnd5e-system-adapter.js`](../src/adapters/system/dnd5e-system-adapter.js) — D&D 5e System Adapter (`Dnd5eSystemAdapter`)
 - [**`shouldExtractItem(item)`**](../src/adapters/system/dnd5e-system-adapter.js#L49-L59): Filters out unallowed item types, helper items, and unequipped tools/consumables.
