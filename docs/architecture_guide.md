@@ -283,13 +283,17 @@ sequenceDiagram
 
 ---
 
-## 4. TabRef Architecture & Data Transformation Flow
+## 4. TabRef Architecture & Set-Algebraic Filter Tree Evaluation
 
 `TabRef` (`src/ui/tab-ref.js`) is the structured data bridge between game-system items (like Foundry `Item5e` documents or `Activity5e` objects) and the HUD's UI filtering engine.
 
-### Data Flow Graph
+### Data Flow Graph & Set Combinators
 
-The following diagram illustrates how a raw Foundry Item (such as a *Detect Magic* spell) is mapped by system adapters into `TabRef` nodes, attached to an `Action` model, evaluated by the filtering engine, and rendered in the HUD:
+The HUD evaluates active filters using a generalized **Set-Algebraic Filter Tree** (Boolean Expression Tree). Each parent tab declares its set combinator operator (`union`, `intersection`, `difference`):
+
+*   **`union` (`OR`)**: Default for standard category tabs (Action Economy, Weapons, Spells). An action matches if it belongs to *at least one* active sub-tab.
+*   **`difference` (`AND NOT`)**: Used for exclusion/modifier tabs (Spell Components). An action matches if it does *not* possess any active banned sub-tabs.
+*   **`intersection` (`AND`)**: Used for strict multi-requirement tabs. An action matches only if it satisfies *all* active sub-tabs.
 
 ```mermaid
 flowchart TD
@@ -300,14 +304,14 @@ flowchart TD
     end
 
     subgraph SystemAdapter ["2. System Adapter Processing (Dnd5eSystemAdapter)"]
-        TabRefGen["TabRef.from('economy', 'action')\nTabRef.from('components', 'vocal')\nTabRef.from('components', 'somatic')"]
+        TabRefGen["TabRef.from('economy', 'action', 'union')\nTabRef.from('components', 'vocal', 'difference')\nTabRef.from('components', 'somatic', 'difference')"]
         FoundryActivity -->|transforms via modifyActions| TabRefGen
     end
 
     subgraph InternalModel ["3. Internal HUD Action Model (Action.tabs)"]
-        TabRefNode1["TabRef Node 1\n• label: 'action'\n• root: 'economy'\n• path: 'economy/action'"]
-        TabRefNode2["TabRef Node 2\n• label: 'vocal'\n• root: 'components'\n• path: 'components/vocal'"]
-        TabRefNode3["TabRef Node 3\n• label: 'somatic'\n• root: 'components'\n• path: 'components/somatic'"]
+        TabRefNode1["TabRef Node 1 (Economy)\n• label: 'action', root: 'economy'\n• combinator: 'union'"]
+        TabRefNode2["TabRef Node 2 (Vocal)\n• label: 'vocal', root: 'components'\n• combinator: 'difference'"]
+        TabRefNode3["TabRef Node 3 (Somatic)\n• label: 'somatic', root: 'components'\n• combinator: 'difference'"]
         
         TabRefGen -->|TabRef.normalize| ActionObj["Action Instance\n(id, name, uses, subactions)\ntabs: [TabRef Node 1, TabRef Node 2, TabRef Node 3]"]
         TabRefNode1 --> ActionObj
@@ -315,22 +319,20 @@ flowchart TD
         TabRefNode3 --> ActionObj
     end
 
-    subgraph FilteringEngine ["4. Filtering Engine (BaseSystemAdapter / ActionDisplayApp)"]
-        EconomyCheck["matchesEconomyTabs(tabs, filterContext)\n• Checks tab.root === 'economy'\n• Checks activeSubTypes.has('action')"]
-        ComponentCheck["matchesComponentsFilter(action, filterContext)\n• Checks tab.root === 'components'\n• Banning 'material' -> KEEP\n• Banning 'vocal' -> FILTER OUT"]
-        ActionObj --> EconomyCheck
-        ActionObj --> ComponentCheck
+    subgraph FilteringEngine ["4. Filtering Engine (BaseSystemAdapter.matchesEconomyTabs)"]
+        DiffCheck["1. Evaluate DIFFERENCE Groups (AND NOT)\n• Banning 'material' -> PASS\n• Banning 'vocal' -> FAIL"]
+        UnionCheck["2. Evaluate UNION Groups (OR)\n• Active: 'action' -> PASS"]
+        ActionObj --> DiffCheck
+        DiffCheck -->|Passes| UnionCheck
     end
 
     subgraph HUDRender ["5. HUD UI Output (ActionDisplayApp & HUDTab)"]
-        LeftColumn["Left Column (Item Types)\n• Spells -> 1st Level"]
-        RightColumn["Right Column (Action Economy)\n• Economy -> Action"]
-        ExclusionColumn["Exclusion Tabs (Spell Components)\n• Components -> Vocal, Somatic"]
+        RightColumn["Right Column (Action Economy)\n• Economy -> Action (UNION)"]
+        ExclusionColumn["Exclusion Tabs (Spell Components)\n• Components -> Vocal, Somatic (DIFFERENCE)"]
         ActionCard["Rendered HUD Action Card\n'Detect Magic'"]
         
-        EconomyCheck -->|Matches| RightColumn
-        ComponentCheck -->|Passes| ExclusionColumn
-        LeftColumn --> ActionCard
+        UnionCheck -->|Matches| RightColumn
+        UnionCheck -->|Passes| ExclusionColumn
         RightColumn --> ActionCard
         ExclusionColumn --> ActionCard
     end
@@ -342,15 +344,18 @@ flowchart TD
    - When instantiated, `TabRef` computes its `.root` (e.g. `'economy'`) and `.path` string (e.g. `'economy/action'`).
    - UI filtering loops query `tab.root` and `tab.path` directly, eliminating runtime string splitting and regex matching during render passes.
 
-2. **Multi-Category Mapping**:
+2. **Set-Algebraic Combinators (`combinator`)**:
+   - `TabRef` instances store a `combinator` property (`'union'`, `'intersection'`, `'difference'`) to dictate how their tree branch combines during set evaluation.
+
+3. **Multi-Category Mapping**:
    - A single `Action` can belong to multiple tab paths simultaneously by storing an array of `TabRef` nodes (e.g., Action Economy tab + Spell Component exclusion tabs).
 
-3. **Defensive Normalization (`TabRef.normalize`)**:
+4. **Defensive Normalization (`TabRef.normalize`)**:
    - `TabRef.normalize(tabs)` flattens deeply nested arrays (`tabs.flat(Infinity)`) and filters invalid inputs into a guaranteed 1D `TabRef[]` array. Integrated directly into `Action`'s constructor.
 
-4. **Factory Instantiation (`TabRef.from`)**:
-   - System adapters use `TabRef.from(rootLabel, subLabel)` to instantiate parent/child tab nodes without writing verbose constructor boilerplate:
+5. **Factory Instantiation (`TabRef.from`)**:
+   - System adapters use `TabRef.from(rootLabel, subLabel, combinator)` to instantiate parent/child tab nodes without writing verbose constructor boilerplate:
      ```javascript
-     const tabRef = TabRef.from('economy', 'bonus');
-     // Instantiates TabRef(label: 'bonus', parent: TabRef(label: 'economy'))
+     const tabRef = TabRef.from('components', 'vocal', 'difference');
+     // Instantiates TabRef(label: 'vocal', parent: TabRef(label: 'components', combinator: 'difference'))
      ```

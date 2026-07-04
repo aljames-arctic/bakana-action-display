@@ -322,10 +322,11 @@ flowchart TD
 - [**`_createRollEvent(event)`**](../src/adapters/system/base-system-adapter.js#L23-L42): Creates a proxy around a roll event to inject keyboard modifiers (`Alt`, `Control`, `Shift`).
 - [**`shouldExtractItem(item, actor)`**](../src/adapters/system/base-system-adapter.js#L51-L53): Performance filter to bypass unneeded item allocations.
 - [**`modifyActions(actions, actor)`**](../src/adapters/system/base-system-adapter.js#L61-L73): Modifies base actions with system-specific calculations.
-- [**`matchesEconomyTabs(tabRefs, filterContext)`**](../src/adapters/system/base-system-adapter.js#L81-L130): Evaluates if an action's tab references match active right-side economy filters.
-- [**`getActiveExclusionSubs(filterContext)`**](../src/adapters/system/base-system-adapter.js#L137-L150): Returns active sub-type IDs under system-specific exclusion tabs.
-- [**`filterSubactions(subactions, filterContext)`**](../src/adapters/system/base-system-adapter.js#L158-L172): Filters dropdown sub-actions against right-side tab filters and resource depletion.
-- [**`isExclusionTab(parentId)`**](../src/adapters/system/base-system-adapter.js#L182-L184): Returns whether a parent tab acts as an exclusion/modifier filter (defaults to `false`).
+- [**`matchesEconomyTabs(tabRefs, filterContext)`**](../src/adapters/system/base-system-adapter.js#L81-L130): Evaluates set-algebraic tab filter tree (`union`, `intersection`, `difference`) for an action's TabRef nodes.
+- [**`getActiveExclusionSubs(filterContext)`**](../src/adapters/system/base-system-adapter.js#L137-L150): Returns active sub-type IDs under difference/exclusion parent tabs.
+- [**`filterSubactions(subactions, filterContext)`**](../src/adapters/system/base-system-adapter.js#L158-L172): Filters dropdown sub-actions against set-algebraic tab filters and resource depletion.
+- [**`getTabCombinator(parentId)`**](../src/adapters/system/base-system-adapter.js#L182-L184): Returns the set-algebraic combinator (`'union'`, `'intersection'`, `'difference'`) for a parent tab.
+- [**`isExclusionTab(parentId)`**](../src/adapters/system/base-system-adapter.js#L190-L192): Delegates to `getTabCombinator(parentId) === 'difference'`.
 - [**`modifyContext(context)`**](../src/adapters/system/base-system-adapter.js#L190-L192): Customizes tab layout context and sub-tab ordering.
 - [**`getItemTypeLabel(parentId)`**](../src/adapters/system/base-system-adapter.js#L200-L207) / [**`getItemTypeIcon(parentId)`**](../src/adapters/system/base-system-adapter.js#L214-L221): Returns tab labels and font-awesome icons.
 - [**`getSpellLevelLabel(level)`**](../src/adapters/system/base-system-adapter.js#L229-L231): Localizes spell level sub-tab labels.
