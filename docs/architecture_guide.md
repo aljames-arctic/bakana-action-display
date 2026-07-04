@@ -280,3 +280,77 @@ sequenceDiagram
     UI->>UI: Renders HTML (templates/action-display.html)
     UI->>User: Displays HUD on screen!
 ```
+
+---
+
+## 4. TabRef Architecture & Data Transformation Flow
+
+`TabRef` (`src/ui/tab-ref.js`) is the structured data bridge between game-system items (like Foundry `Item5e` documents or `Activity5e` objects) and the HUD's UI filtering engine.
+
+### Data Flow Graph
+
+The following diagram illustrates how a raw Foundry Item (such as a *Detect Magic* spell) is mapped by system adapters into `TabRef` nodes, attached to an `Action` model, evaluated by the filtering engine, and rendered in the HUD:
+
+```mermaid
+flowchart TD
+    subgraph Foundry ["1. Foundry VTT Domain Model"]
+        FoundryItem["Item5e / ItemPF2e / ItemPF1\n(e.g., Spell: Detect Magic)"]
+        FoundryActivity["Activity5e\n(activation: 'action', components: ['vocal', 'somatic'])"]
+        FoundryItem -->|contains| FoundryActivity
+    end
+
+    subgraph SystemAdapter ["2. System Adapter Processing (Dnd5eSystemAdapter)"]
+        TabRefGen["TabRef.from('economy', 'action')\nTabRef.from('components', 'vocal')\nTabRef.from('components', 'somatic')"]
+        FoundryActivity -->|transforms via modifyActions| TabRefGen
+    end
+
+    subgraph InternalModel ["3. Internal HUD Action Model (Action.tabs)"]
+        TabRefNode1["TabRef Node 1\n• label: 'action'\n• root: 'economy'\n• path: 'economy/action'"]
+        TabRefNode2["TabRef Node 2\n• label: 'vocal'\n• root: 'components'\n• path: 'components/vocal'"]
+        TabRefNode3["TabRef Node 3\n• label: 'somatic'\n• root: 'components'\n• path: 'components/somatic'"]
+        
+        TabRefGen -->|TabRef.normalize| ActionObj["Action Instance\n(id, name, uses, subactions)\ntabs: [TabRef Node 1, TabRef Node 2, TabRef Node 3]"]
+        TabRefNode1 --> ActionObj
+        TabRefNode2 --> ActionObj
+        TabRefNode3 --> ActionObj
+    end
+
+    subgraph FilteringEngine ["4. Filtering Engine (BaseSystemAdapter / ActionDisplayApp)"]
+        EconomyCheck["matchesEconomyTabs(tabs, filterContext)\n• Checks tab.root === 'economy'\n• Checks activeSubTypes.has('action')"]
+        ComponentCheck["matchesComponentsFilter(action, filterContext)\n• Checks tab.root === 'components'\n• Banning 'material' -> KEEP\n• Banning 'vocal' -> FILTER OUT"]
+        ActionObj --> EconomyCheck
+        ActionObj --> ComponentCheck
+    end
+
+    subgraph HUDRender ["5. HUD UI Output (ActionDisplayApp & HUDTab)"]
+        LeftColumn["Left Column (Item Types)\n• Spells -> 1st Level"]
+        RightColumn["Right Column (Action Economy)\n• Economy -> Action"]
+        ExclusionColumn["Exclusion Tabs (Spell Components)\n• Components -> Vocal, Somatic"]
+        ActionCard["Rendered HUD Action Card\n'Detect Magic'"]
+        
+        EconomyCheck -->|Matches| RightColumn
+        ComponentCheck -->|Passes| ExclusionColumn
+        LeftColumn --> ActionCard
+        RightColumn --> ActionCard
+        ExclusionColumn --> ActionCard
+    end
+```
+
+### Key Responsibilities of `TabRef`
+
+1. **Pre-computed Hierarchies ($O(1)$ Performance)**:
+   - When instantiated, `TabRef` computes its `.root` (e.g. `'economy'`) and `.path` string (e.g. `'economy/action'`).
+   - UI filtering loops query `tab.root` and `tab.path` directly, eliminating runtime string splitting and regex matching during render passes.
+
+2. **Multi-Category Mapping**:
+   - A single `Action` can belong to multiple tab paths simultaneously by storing an array of `TabRef` nodes (e.g., Action Economy tab + Spell Component exclusion tabs).
+
+3. **Defensive Normalization (`TabRef.normalize`)**:
+   - `TabRef.normalize(tabs)` flattens deeply nested arrays (`tabs.flat(Infinity)`) and filters invalid inputs into a guaranteed 1D `TabRef[]` array. Integrated directly into `Action`'s constructor.
+
+4. **Factory Instantiation (`TabRef.from`)**:
+   - System adapters use `TabRef.from(rootLabel, subLabel)` to instantiate parent/child tab nodes without writing verbose constructor boilerplate:
+     ```javascript
+     const tabRef = TabRef.from('economy', 'bonus');
+     // Instantiates TabRef(label: 'bonus', parent: TabRef(label: 'economy'))
+     ```
