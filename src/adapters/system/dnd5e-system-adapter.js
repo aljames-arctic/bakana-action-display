@@ -168,7 +168,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                         name: activityName,
                         img: activityImg,
                         uses: this._calculateActivityUses(activity, item, actor, ammoQuantities, highestAvailableSlot),
-                        tabs: tabRef,
+                        tabs: [tabRef],
                         roll: async (event) => {
                             const proxiedEvent = this._createRollEvent(event);
                             return activity.use({ event: proxiedEvent }, { event: proxiedEvent });
