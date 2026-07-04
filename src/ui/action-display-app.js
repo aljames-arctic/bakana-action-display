@@ -65,6 +65,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
 
     /**
      * Save active tab states for this actor to in-memory cache and client setting if enabled.
+     * Capped to at most 25 most-recently-used actors using LRU pruning.
      */
     _saveTabState() {
         const actorKey = this.actor?.uuid || this.actor?.id;
@@ -82,11 +83,25 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         // Always update in-memory cache for fast session lookups
         activeTabCache.set(actorKey, serialized);
 
-        // Persist client-side across refreshes if enabled
+        // Persist client-side across refreshes if enabled (capped at 25 actors)
         if (game.settings.get(MODULE_ID, 'persistTabState')) {
             try {
+                const MAX_PERSISTED_ACTORS = 25;
                 const allStates = foundry.utils.duplicate(game.settings.get(MODULE_ID, 'hudTabStates') ?? {});
+                
+                // Re-insert key to refresh its LRU position (most recent at end)
+                delete allStates[actorKey];
                 allStates[actorKey] = serialized;
+
+                // Enforce LRU cap of 25 actors by pruning oldest entries from front
+                const keys = Object.keys(allStates);
+                if (keys.length > MAX_PERSISTED_ACTORS) {
+                    const toPrune = keys.slice(0, keys.length - MAX_PERSISTED_ACTORS);
+                    for (const key of toPrune) {
+                        delete allStates[key];
+                    }
+                }
+
                 game.settings.set(MODULE_ID, 'hudTabStates', allStates);
             } catch (err) {
                 log.error("Failed to save persisted tab state:", err);
