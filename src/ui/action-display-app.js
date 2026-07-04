@@ -507,14 +507,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             parentGroups: this.parentGroups
         };
         const adapter = actionDisplay.activeSystemAdapter;
-
-        // 1. System-specific component exclusion filtering
-        if (!adapter.matchesComponentsFilter(action, filterContext)) {
-            return false;
-        }
-
-        // 2. Economy tab filtering
-        return adapter.matchesEconomyTabs(action.tabs, filterContext);
+        return adapter.matchesEconomyTabs(action, filterContext);
     }
 
     /* -------------------------------------------- */
