@@ -360,12 +360,12 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             if (subId) {
                 const isActive = this.rightTabs.activeParents.has(parentId);
                 const isSubActive = this.rightTabs.activeSubTypes.has(subId);
-                const isComponents = parentId === 'components';
+                const isExclusion = adapter.isExclusionTab(parentId);
                 parentGroups[parentId].addSubTab({
                     id: subId,
                     label: adapter.getActionSubTabLabel(subId),
-                    active: !isComponents && isActive && isSubActive,
-                    excluded: isComponents && isActive && isSubActive
+                    active: !isExclusion && isActive && isSubActive,
+                    excluded: isExclusion && isActive && isSubActive
                 });
             }
         }
@@ -376,7 +376,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
 
         // Sort sub-tabs within each parent using system adapter order
         for (const parent of actionTypes) {
-            const skipAll = ['components'].includes(parent.id);
+            const skipAll = adapter.isExclusionTab(parent.id);
             
             if (parent.subTabs.length > 0 && !skipAll) {
                 const isActive = parent.id === this.rightTabs.focusedParent;
@@ -394,7 +394,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
 
         // Post-process parentGroups to set active, expanded, and activeParent
         for (const parent of actionTypes) {
-            if (parent.id === 'components') continue; // Exclude components from activeParent calculation
+            if (adapter.isExclusionTab(parent.id)) continue; // Exclude exclusion tabs from activeParent calculation
             const validSubIds = toSet(parent.subTabs, t => t.id);
             const activeSubsForParent = Array.from(this.rightTabs.activeSubTypes).filter(id => validSubIds.has(id));
             
@@ -409,7 +409,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         this.parentGroups = parentGroups;
 
         // Prune active sub-tabs that are no longer available in any active parent
-        this.rightTabs.prune(parentGroups);
+        this.rightTabs.prune(parentGroups, id => adapter.isExclusionTab(id));
 
         // If no active parent type is available, default to 'all'
         if (actionTypes.length && !actionTypes.some(p => this.rightTabs.activeParents.has(p.id))) {
@@ -513,25 +513,26 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         }
 
         // Check if we have any active economy/time parents
-        const activeEconomyParents = Array.from(this.rightTabs.activeParents).filter(p => p !== 'components' && p !== 'all');
+        const activeEconomyParents = Array.from(this.rightTabs.activeParents).filter(p => !adapter.isExclusionTab(p) && p !== 'all');
+        const showAllEconomy = this.rightTabs.activeParents.has('all') || activeEconomyParents.length === 0;
         
         let matchesRight = true;
-        if (activeEconomyParents.length > 0 || this.rightTabs.activeParents.has('all')) {
+        if (activeEconomyParents.length > 0 || showAllEconomy) {
             matchesRight = action.tabs.some(tab => {
                 const actionParentId = tab.root;
                 const actionSubId = tab.parent ? tab.label : undefined;
 
-                // Ignore components parent in the OR-filter
-                if (actionParentId === 'components') return false;
+                // Ignore exclusion parent in the OR-filter
+                if (adapter.isExclusionTab(actionParentId)) return false;
 
                 let matchesParent = false;
                 
-                // 1. Direct parent match
+                // 1. Specific parent match
                 if (this.rightTabs.activeParents.has(actionParentId)) {
-                    const parentGroup = this.parentGroups?.[actionParentId];
+                    const parentGroup = this.parentGroups[actionParentId];
                     const validSubIds = toSet(parentGroup?.subTabs, t => t.id);
                     const activeSubsForParent = Array.from(this.rightTabs.activeSubTypes).filter(id => validSubIds.has(id));
-                    
+
                     if (activeSubsForParent.length === 0) {
                         matchesParent = true;
                     } else {
@@ -540,12 +541,12 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                 }
                 
                 // 2. 'all' parent match
-                if (!matchesParent && this.rightTabs.activeParents.has('all')) {
+                if (!matchesParent && showAllEconomy) {
                     const isParentActive = this.rightTabs.activeParents.has(actionParentId);
                     if (!isParentActive) {
                         matchesParent = true;
                     } else {
-                        const parentGroup = this.parentGroups?.[actionParentId];
+                        const parentGroup = this.parentGroups[actionParentId];
                         const validSubIds = toSet(parentGroup?.subTabs, t => t.id);
                         const activeSubsForParent = Array.from(this.rightTabs.activeSubTypes).filter(id => validSubIds.has(id));
                         if (activeSubsForParent.length === 0) {
@@ -553,7 +554,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                         }
                     }
                 }
-                
+
                 return matchesParent;
             });
         }

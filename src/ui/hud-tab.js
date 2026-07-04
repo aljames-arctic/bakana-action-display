@@ -1,3 +1,5 @@
+import { actionDisplay } from '../action-display.js';
+
 /**
  * Unified tab model for parent tabs, sub-tabs, and deeply nested sub-tabs in the HUD.
  * Every node in the tab hierarchy is a HUDTab instance with a level indicator (0 = top-level parent).
@@ -166,7 +168,8 @@ export class HUDTab {
         if (this.isTopLevel) {
             tabColumn.selectParent(this.id, groups);
         } else {
-            tabColumn.selectSub(this.rootParent.id, this.id, groups);
+            const isExclusion = actionDisplay.activeSystemAdapter?.isExclusionTab(this.rootParent.id) ?? false;
+            tabColumn.selectSub(this.rootParent.id, this.id, groups, isExclusion);
         }
     }
 
@@ -185,7 +188,8 @@ export class HUDTab {
         if (this.isTopLevel) {
             tabColumn.toggleParent(this.id, groups);
         } else {
-            tabColumn.toggleSub(this.rootParent.id, this.id, groups);
+            const isExclusion = actionDisplay.activeSystemAdapter?.isExclusionTab(this.rootParent.id) ?? false;
+            tabColumn.toggleSub(this.rootParent.id, this.id, groups, isExclusion);
         }
     }
 }

@@ -141,10 +141,19 @@ export class HUDTabColumn {
      * @param {string} type Sub-tab ID
      * @param {Object} groups Available tab groups
      */
-    selectSub(parentId, type, groups) {
+    /**
+     * Handle left-click selection of a sub-tab.
+     * @param {string|undefined} parentId Parent group ID
+     * @param {string} type Sub-tab ID
+     * @param {Object} groups Available tab groups
+     * @param {boolean} [isExclusion=false] Whether this parent tab is an exclusion filter
+     */
+    selectSub(parentId, type, groups, isExclusion = false) {
         if (parentId) {
             this.activeParents.add(parentId);
-            this.activeParents.delete('all');
+            if (!isExclusion) {
+                this.activeParents.delete('all');
+            }
             this.focusedParent = parentId;
         }
 
@@ -194,11 +203,14 @@ export class HUDTabColumn {
      * @param {string|undefined} parentId Parent group ID
      * @param {string} type Sub-tab ID
      * @param {Object} groups Available tab groups
+     * @param {boolean} [isExclusion=false] Whether this parent tab is an exclusion filter
      */
-    toggleSub(parentId, type, groups) {
+    toggleSub(parentId, type, groups, isExclusion = false) {
         if (parentId) {
             this.activeParents.add(parentId);
-            this.activeParents.delete('all');
+            if (!isExclusion) {
+                this.activeParents.delete('all');
+            }
             this.focusedParent = parentId;
         }
 
@@ -226,14 +238,17 @@ export class HUDTabColumn {
     /**
      * Prune sub-types that are no longer available in any active parent.
      * @param {Object} groups Available tab groups
+     * @param {Function} [isExclusionFn] Function returning true if a parentId is an exclusion filter
      */
-    prune(groups) {
+    prune(groups, isExclusionFn = () => false) {
         const allAvailableSubs = new Set();
-        for (const parentId of this.activeParents) {
-            const group = groups[parentId];
-            if (group && group.subTabs.length > 0) {
-                for (const sub of group.subTabs) {
-                    allAvailableSubs.add(sub.id);
+        for (const parentId in groups) {
+            if (isExclusionFn(parentId) || this.activeParents.has(parentId)) {
+                const group = groups[parentId];
+                if (group && group.subTabs.length > 0) {
+                    for (const sub of group.subTabs) {
+                        allAvailableSubs.add(sub.id);
+                    }
                 }
             }
         }

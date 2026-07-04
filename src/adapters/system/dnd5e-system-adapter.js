@@ -319,6 +319,10 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         });
     }
 
+    isExclusionTab(parentId) {
+        return parentId === 'components';
+    }
+
     /**
      * System-specific components filter for D&D 5e parent action cards.
      */

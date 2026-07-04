@@ -143,6 +143,16 @@ export class BaseSystemAdapter {
     }
 
     /**
+     * Determine if a parent tab acts as an exclusion/modifier filter (e.g. 'components').
+     * Exclusion tabs operate alongside standard category tabs and should not clear default 'all' category selection.
+     * @param {string} parentId
+     * @returns {boolean}
+     */
+    isExclusionTab(parentId) {
+        return false;
+    }
+
+    /**
      * Get the localized label for a left-side item type (parent tab).
      * @param {string} parentId 
      * @returns {string}
