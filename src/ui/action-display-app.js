@@ -665,8 +665,6 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
 
             if (itemActivities && itemActivities.length > 0) {
                 // Filter sub-actions to only those that match the currently active right-side tabs
-                const activeParents = this.rightTabs.activeParents;
-                const activeSubs = this.rightTabs.activeSubTypes;
                 const filterContext = {
                     left: {
                         activeParents: this.leftTabs.activeParents,
@@ -678,10 +676,6 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                         activeSubTypes: this.rightTabs.activeSubTypes,
                         groups: this.parentGroups
                     },
-                    activeParents: this.rightTabs.activeParents,
-                    activeSubTypes: this.rightTabs.activeSubTypes,
-                    activeSubs: this.rightTabs.activeSubTypes,
-                    parentGroups: this.parentGroups,
                     filterNoResources: game.settings.get(MODULE_ID, 'filterNoResources')
                 };
 

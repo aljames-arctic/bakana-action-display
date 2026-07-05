@@ -96,7 +96,10 @@ export class BaseSystemAdapter {
      */
     matchesEconomyTabs(action, filterContext) {
         if (!action) return false;
-        const { activeParents, activeSubs, parentGroups } = filterContext;
+        const rightContext = filterContext?.right ?? filterContext ?? {};
+        const activeParents = rightContext.activeParents ?? new Set();
+        const activeSubs = rightContext.activeSubTypes ?? rightContext.activeSubs ?? new Set();
+        const parentGroups = rightContext.groups ?? rightContext.parentGroups;
 
         // If an Action instance with subactions is passed, card passes if at least one subaction qualifies
         if (action.subactions?.length > 0) {
@@ -160,7 +163,10 @@ export class BaseSystemAdapter {
      * @returns {string[]} Array of active exclusion sub-type IDs
      */
     getActiveExclusionSubs(filterContext) {
-        const { activeParents, activeSubs, parentGroups } = filterContext;
+        const rightContext = filterContext?.right ?? filterContext ?? {};
+        const activeParents = rightContext.activeParents ?? new Set();
+        const activeSubs = rightContext.activeSubTypes ?? rightContext.activeSubs ?? new Set();
+        const parentGroups = rightContext.groups ?? rightContext.parentGroups;
         const activeExclusionSubs = [];
 
         for (const parentId of activeParents) {
