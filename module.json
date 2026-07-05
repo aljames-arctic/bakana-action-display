@@ -1,6 +1,6 @@
 {
   "id": "bakana-action-display",
-  "title": "Bakana Action Display",
+  "title": "Bakana's Action Display",
   "description": "<p>An elegant action display overlay for tokens in Foundry VTT.</p>",
   "version": "#{VERSION}#",
   "authors": [

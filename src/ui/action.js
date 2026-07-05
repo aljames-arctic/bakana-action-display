@@ -1,7 +1,7 @@
 import { TabRef } from './tab-ref.js';
 
 /**
- * Encapsulates a top-level action or sub-action displayed in the Bakana Action Display HUD.
+ * Encapsulates a top-level action or sub-action displayed in the Bakana's Action Display HUD.
  */
 export class Action {
     /**
