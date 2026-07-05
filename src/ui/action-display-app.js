@@ -512,9 +512,16 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         if (!action.tabs) return false;
 
         const filterContext = {
-            activeParents: this.rightTabs.activeParents,
-            activeSubs: this.rightTabs.activeSubTypes,
-            parentGroups: this.parentGroups
+            left: {
+                activeParents: this.leftTabs.activeParents,
+                activeSubTypes: this.leftTabs.activeSubTypes,
+                groups: this.leftGroups
+            },
+            right: {
+                activeParents: this.rightTabs.activeParents,
+                activeSubTypes: this.rightTabs.activeSubTypes,
+                groups: this.parentGroups
+            }
         };
         const adapter = actionDisplay.activeSystemAdapter;
         return adapter.matchesEconomyTabs(action, filterContext);
