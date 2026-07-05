@@ -1,5 +1,6 @@
 import { MODULE_ID } from "./constants.js";
 import { log } from "./lib/logger.js";
+import { actionDisplay } from "./action-display.js";
 
 Hooks.once('init', () => {
     // Register Log Verbosity Setting
@@ -104,6 +105,26 @@ Hooks.once('init', () => {
         config: true,
         type: Boolean,
         default: true
+    });
+
+    // Register HUD Grid Offset Setting (Slider in grid units)
+    game.settings.register(MODULE_ID, 'hudGridOffset', {
+        name: game.i18n.localize('BAD.settings.hudGridOffset.name'),
+        hint: game.i18n.localize('BAD.settings.hudGridOffset.hint'),
+        scope: 'client',
+        config: true,
+        type: Number,
+        range: {
+            min: 0,
+            max: 10,
+            step: 0.5
+        },
+        default: 0,
+        onChange: () => {
+            if (actionDisplay.activeApp && actionDisplay.activeApp.rendered) {
+                actionDisplay.activeApp.setPosition();
+            }
+        }
     });
 
     // Register HUD Tab States (persisted actor tab selections object)

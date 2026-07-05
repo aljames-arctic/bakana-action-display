@@ -1208,15 +1208,33 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             // --- ATTACHED MODE (Dynamic Token Placement) ---
             const tokenTransform = this.token.worldTransform;
             const canvasScale = game.canvas.stage?.scale?.x ?? 1;
+            const gridSize = game.canvas.grid?.size ?? 100;
+            const gridOffset = game.settings.get(MODULE_ID, 'hudGridOffset') ?? 0;
+            const pixelOffset = gridOffset * gridSize * canvasScale;
+
             const tokenWidth = this.token.w * canvasScale;
             const tokenHeight = this.token.h * canvasScale;
 
             const tokenLeft = tokenTransform.tx;
             const tokenTop = tokenTransform.ty;
 
-            const spaceAbove = tokenTop;
-            const spaceBelow = window.innerHeight - (tokenTop + tokenHeight);
-            const positionSide = spaceAbove > spaceBelow ? 'above' : 'below';
+            // Check screen bounds for above vs below placement with grid offset
+            const fitsAbove = (tokenTop - pixelOffset - appHeight) >= 0;
+            const fitsBelow = (tokenTop + tokenHeight + pixelOffset + appHeight) <= window.innerHeight;
+
+            let positionSide;
+            if (fitsBelow && !fitsAbove) {
+                positionSide = 'below';
+            } else if (fitsAbove && !fitsBelow) {
+                positionSide = 'above';
+            } else if (fitsAbove && fitsBelow) {
+                const roomAbove = tokenTop - pixelOffset - appHeight;
+                const roomBelow = window.innerHeight - (tokenTop + tokenHeight + pixelOffset + appHeight);
+                positionSide = roomAbove >= roomBelow ? 'above' : 'below';
+            } else {
+                positionSide = 'below';
+                log.error(`HUD position with grid offset ${gridOffset} exceeds screen bounds on both top and bottom.`);
+            }
 
             const safetyMargin = 10;
             const minLeft = Math.max(safetyMargin, tabExtension);
@@ -1229,9 +1247,9 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             let topPos = '';
 
             if (positionSide === 'above') {
-                bottomOffset = window.innerHeight - tokenTop + safetyMargin;
+                bottomOffset = window.innerHeight - tokenTop + pixelOffset;
             } else {
-                topPos = tokenTop + tokenHeight + safetyMargin;
+                topPos = tokenTop + tokenHeight + pixelOffset;
             }
 
             const targetPosition = foundry.utils.mergeObject(position, {
