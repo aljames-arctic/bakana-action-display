@@ -668,7 +668,18 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                 const activeParents = this.rightTabs.activeParents;
                 const activeSubs = this.rightTabs.activeSubTypes;
                 const filterContext = {
+                    left: {
+                        activeParents: this.leftTabs.activeParents,
+                        activeSubTypes: this.leftTabs.activeSubTypes,
+                        groups: this.leftGroups
+                    },
+                    right: {
+                        activeParents: this.rightTabs.activeParents,
+                        activeSubTypes: this.rightTabs.activeSubTypes,
+                        groups: this.parentGroups
+                    },
                     activeParents: this.rightTabs.activeParents,
+                    activeSubTypes: this.rightTabs.activeSubTypes,
                     activeSubs: this.rightTabs.activeSubTypes,
                     parentGroups: this.parentGroups,
                     filterNoResources: game.settings.get(MODULE_ID, 'filterNoResources')
@@ -677,9 +688,9 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                 log.debug(`_onRollAction | Right-side Tab Filters - activeParents:`, Array.from(this.rightTabs.activeParents), `activeSubs:`, Array.from(this.rightTabs.activeSubTypes));
 
                 const adapter = actionDisplay.activeSystemAdapter;
-                const qualifyingSubActions = adapter.filterSubactions(itemActivities, filterContext);
+                const qualifyingSubActions = adapter.filterSubactions(itemActivities, filterContext, action.itemTypes);
 
-                log.debug(`_onRollAction | activeParents: ${Array.from(activeParents).join(', ')}, activeSubs: ${Array.from(activeSubs).join(', ')}, qualifying: ${qualifyingSubActions.length}`, qualifyingSubActions);
+                log.debug(`_onRollAction | activeParents: ${Array.from(this.rightTabs.activeParents).join(', ')}, activeSubs: ${Array.from(this.rightTabs.activeSubTypes).join(', ')}, qualifying: ${qualifyingSubActions.length}`, qualifyingSubActions);
 
                 const showDropdown = qualifyingSubActions.length > 1 || (itemActivities.length > 1 && qualifyingSubActions.length === 1);
 

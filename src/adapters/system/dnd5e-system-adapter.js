@@ -140,12 +140,15 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
 
             // 4. Process activities if they exist (D&D 5e v4+)
             const activities = this.getItemActivities(item);
-            const activeActivities = activities.filter(a => a.activation?.type && a.activation.type !== 'none');
+            const activeActivities = activities.filter(a => {
+                const type = this.#getActivityActivationType(a, item);
+                return type && type !== 'none';
+            });
 
             if (activeActivities.length > 0) {
                 // Map D&D 5e Activities to sub-actions for the generic HUD item model
                 const mappedActivities = await Promise.all(activeActivities.map(async (activity) => {
-                    const activationType = activity.activation.type;
+                    const activationType = this.#getActivityActivationType(activity, item);
                     const parentId = this.#getParentTab(activationType);
                     const subId = this.#getSubTab(activationType);
                     const tabRef = TabRef.from(parentId, subId);
@@ -162,7 +165,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                         }
                     }
 
-                    const activityName = activity.name || linkedAction?.name || activity.type.toUpperCase();
+                    const activityName = activity.name ?? linkedAction?.name ?? activity.type.toUpperCase();
                     const activityImg = activity.img || linkedAction?.img || item.img;
 
                     return new Action({
@@ -333,7 +336,8 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
      * Determine the sub-action tab based on DnD5e activation type.
      */
     #getSubTab(type) {
-        return type ?? 'none';
+        if (!type) return 'none';
+        return String(type).toLowerCase();
     }
 
     modifyContext(context, app) {
@@ -1038,6 +1042,23 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
             }
         }
         return highestAvailableSlot;
+    }
+
+    /**
+     * Resolve the effective lowercased activation type for a D&D 5e activity.
+     * Checks activity-level activation override before falling back to the parent item activation.
+     * @param {Object} activity The D&D 5e activity object instance
+     * @param {Object} item The parent D&D 5e item document
+     * @returns {string} The lowercased activation type string
+     * @private
+     */
+    #getActivityActivationType(activity, item) {
+        const activation = activity.activation ?? activity.system?.activation;
+        if (activation?.override && activation?.type && activation.type !== 'none' && activation.type !== '') {
+            return String(activation.type).toLowerCase();
+        }
+        const raw = item.system?.activation?.type || activation?.type || 'none';
+        return String(raw || 'none').toLowerCase();
     }
 
     // #endregion

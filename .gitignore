@@ -3,6 +3,9 @@
 **/*LOG
 **/*LOG.old
 
+# Local agent customizations
+.agents/
+
 # Actor examples (local testing)
 docs/actor-examples/
 scratch/
