@@ -280,60 +280,60 @@ flowchart TD
 ## 5. Class & Module Method Reference
 
 ### [`src/action-display.js`](../src/action-display.js) — Coordinator (`ActionDisplay`)
-- [**`init()`**](../src/action-display.js#L20-L27): Initializes the coordinator instance.
-- [**`registerSystemAdapter(adapter)`**](../src/action-display.js#L33-L39): Registers the active system adapter.
-- [**`registerModuleAdapter(adapter)`**](../src/action-display.js#L45-L51): Registers an active module adapter.
-- [**`getActions(actor)`**](../src/action-display.js#L59-L104): Executes the main 4-stage action processing pipeline for an actor.
-- [**`_extractBaseActions(actor)`**](../src/action-display.js#L111-L141): Extracts system-agnostic base actions from an actor's item inventory.
+- [**`init()`**](../src/action-display.js#L21-L28): Initializes the coordinator instance.
+- [**`registerSystemAdapter(adapter)`**](../src/action-display.js#L34-L40): Registers the active system adapter.
+- [**`registerModuleAdapter(adapter)`**](../src/action-display.js#L46-L52): Registers an active module adapter.
+- [**`getActions(actor)`**](../src/action-display.js#L60-L105): Executes the main 4-stage action processing pipeline for an actor.
+- [**`_extractBaseActions(actor)`**](../src/action-display.js#L64-L94): Extracts system-agnostic base actions from an actor's item inventory.
 
 ### [`src/ui/action-display-app.js`](../src/ui/action-display-app.js) — UI Window (`ActionDisplayApp`)
-- [**`_prepareContext(options)`**](../src/ui/action-display-app.js#L119-L330): Prepares context data, triggers coordinator pipeline, and builds tab trees.
-- [**`_onRender(context, options)`**](../src/ui/action-display-app.js#L846-L1038): Attaches DOM event listeners and scroll position listeners.
-- [**`setPosition(positionMode, options)`**](../src/ui/action-display-app.js#L1145-L1225): Calculates 60fps HUD positioning relative to token or detached coordinates.
-- [**`_onRollAction(event)`**](../src/ui/action-display-app.js#L644-L845): Triggers action rolls or toggles multi-option dropdowns.
-- [**`_createContextMenu()`**](../src/ui/action-display-app.js#L1043-L1114): Spawns custom right-click context menu for action cards.
-- [**`_toggleActionHidden(actionId, shouldHide)`**](../src/ui/action-display-app.js#L1117-L1143): Flags an action card as hidden/unhidden and re-renders.
+- [**`_prepareContext(options)`**](../src/ui/action-display-app.js#L221-L432): Prepares context data, triggers coordinator pipeline, and builds tab trees.
+- [**`_onRender(context, options)`**](../src/ui/action-display-app.js#L834-L1026): Attaches DOM event listeners and scroll position listeners.
+- [**`setPosition(positionMode, options)`**](../src/ui/action-display-app.js#L1201-L1281): Calculates 60fps HUD positioning relative to token or detached coordinates.
+- [**`_onRollAction(event)`**](../src/ui/action-display-app.js#L660-L861): Triggers action rolls or toggles multi-option dropdowns.
+- [**`_createContextMenu()`**](../src/ui/action-display-app.js#L828-L899): Spawns custom right-click context menu for action cards.
+- [**`_toggleActionHidden(actionId, shouldHide)`**](../src/ui/action-display-app.js#L1030-L1056): Flags an action card as hidden/unhidden and re-renders.
 
 ### [`src/ui/hud-tab-column.js`](../src/ui/hud-tab-column.js) — Tab Column Manager (`HUDTabColumn`)
-- [**`constructor({ side, cached, getDefaultSubTypes })`**](../src/ui/hud-tab-column.js#L14-L33): Initializes left or right tab column state.
-- [**`resetToDefault()`**](../src/ui/hud-tab-column.js#L38-L48): Resets column to `'all'` parent and default sub-types.
-- [**`selectParent(parentId, groups)`**](../src/ui/hud-tab-column.js#L60-L90): Handles exclusive left-click parent selection.
-- [**`toggleParent(parentId, groups)`**](../src/ui/hud-tab-column.js#L97-L135): Handles multi-stage right-click parent toggling.
-- [**`selectSub(parentId, type, groups)`**](../src/ui/hud-tab-column.js#L143-L189): Handles left-click sub-tab isolation/toggling.
-- [**`toggleSub(parentId, type, groups)`**](../src/ui/hud-tab-column.js#L197-L223): Handles right-click sub-tab multi-select toggles.
-- [**`prune(groups)`**](../src/ui/hud-tab-column.js#L229-L244): Removes sub-types that are no longer present in active parent tabs.
-- [**`serialize()`**](../src/ui/hud-tab-column.js#L250-L256): Exports tab state for per-actor persistence.
+- [**`constructor({ side, cached, getDefaultSubTypes })`**](../src/ui/hud-tab-column.js#L15-L34): Initializes left or right tab column state.
+- [**`resetToDefault()`**](../src/ui/hud-tab-column.js#L39-L49): Resets column to `'all'` parent and default sub-types.
+- [**`selectParent(parentId, groups)`**](../src/ui/hud-tab-column.js#L61-L91): Handles exclusive left-click parent selection.
+- [**`toggleParent(parentId, groups)`**](../src/ui/hud-tab-column.js#L98-L136): Handles multi-stage right-click parent toggling.
+- [**`selectSub(parentId, type, groups)`**](../src/ui/hud-tab-column.js#L145-L191): Handles left-click sub-tab isolation/toggling.
+- [**`toggleSub(parentId, type, groups)`**](../src/ui/hud-tab-column.js#L202-L228): Handles right-click sub-tab multi-select toggles.
+- [**`prune(groups)`**](../src/ui/hud-tab-column.js#L237-L252): Removes sub-types that are no longer present in active parent tabs.
+- [**`serialize()`**](../src/ui/hud-tab-column.js#L260-L266): Exports tab state for per-actor persistence.
 
 ### [`src/ui/hud-tab.js`](../src/ui/hud-tab.js) — Unified Tab Node (`HUDTab`)
-- [**`constructor(options)`**](../src/ui/hud-tab.js#L23-L55): Instantiates a tab node with depth `level`, `rootParent`, and child `subTabs`.
-- [**`addSubTab(subTabConfig)`**](../src/ui/hud-tab.js#L115-L122): Appends a child sub-tab, updating parent and level references.
-- [**`getOrder()`**](../src/ui/hud-tab.js#L128-L130): Returns array of child sub-tab IDs in display order.
-- [**`updateOrder(orderArray)`**](../src/ui/hud-tab.js#L136-L140): Re-orders child sub-tabs matching an ordered ID array.
-- [**`getSubTab(subId)`**](../src/ui/hud-tab.js#L146-L154): Recursively searches for a sub-tab node by ID.
-- [**`onLeftClick(app, tabColumn, groups, event)`**](../src/ui/hud-tab.js#L163-L173): Executes left-click selection logic.
-- [**`onRightClick(app, tabColumn, groups, event)`**](../src/ui/hud-tab.js#L182-L192): Executes right-click toggle logic.
+- [**`constructor(options)`**](../src/ui/hud-tab.js#L24-L56): Instantiates a tab node with depth `level`, `rootParent`, and child `subTabs`.
+- [**`addSubTab(subTabConfig)`**](../src/ui/hud-tab.js#L118-L125): Appends a child sub-tab, updating parent and level references.
+- [**`getOrder()`**](../src/ui/hud-tab.js#L131-L133): Returns array of child sub-tab IDs in display order.
+- [**`updateOrder(orderArray)`**](../src/ui/hud-tab.js#L139-L143): Re-orders child sub-tabs matching an ordered ID array.
+- [**`getSubTab(subId)`**](../src/ui/hud-tab.js#L150-L158): Recursively searches for a sub-tab node by ID.
+- [**`onLeftClick(app, tabColumn, groups, event)`**](../src/ui/hud-tab.js#L166-L176): Executes left-click selection logic.
+- [**`onRightClick(app, tabColumn, groups, event)`**](../src/ui/hud-tab.js#L186-L196): Executes right-click toggle logic.
 
 ### [`src/ui/tab-ref.js`](../src/ui/tab-ref.js) — Structured Tab Data Reference (`TabRef`)
 - [**`constructor({ label, parent })`**](../src/ui/tab-ref.js#L11-L18): Instantiates a pre-computed tab data node linked to parent nodes, caching `.root` and `.path` string (`'economy/action'`).
 - [**`static from(rootLabel, subLabel)`**](../src/ui/tab-ref.js#L26-L31): Helper to instantiate a nested parent/child `TabRef` node.
 
 ### [`src/adapters/system/base-system-adapter.js`](../src/adapters/system/base-system-adapter.js) — System Adapter Interface (`BaseSystemAdapter`)
-- [**`_createRollEvent(event)`**](../src/adapters/system/base-system-adapter.js#L23-L42): Creates a proxy around a roll event to inject keyboard modifiers (`Alt`, `Control`, `Shift`).
-- [**`shouldExtractItem(item, actor)`**](../src/adapters/system/base-system-adapter.js#L51-L53): Performance filter to bypass unneeded item allocations.
-- [**`modifyActions(actions, actor)`**](../src/adapters/system/base-system-adapter.js#L61-L73): Modifies base actions with system-specific calculations.
-- [**`matchesEconomyTabs(tabRefs, filterContext)`**](../src/adapters/system/base-system-adapter.js#L81-L130): Evaluates set-algebraic tab filter tree (`union`, `intersection`, `difference`) for an action's TabRef nodes.
-- [**`getActiveExclusionSubs(filterContext)`**](../src/adapters/system/base-system-adapter.js#L137-L150): Returns active sub-type IDs under difference/exclusion parent tabs.
-- [**`filterSubactions(subactions, filterContext)`**](../src/adapters/system/base-system-adapter.js#L158-L172): Filters dropdown sub-actions against set-algebraic tab filters and resource depletion.
-- [**`getTabCombinator(parentId)`**](../src/adapters/system/base-system-adapter.js#L182-L184): Returns the set-algebraic combinator (`'union'`, `'intersection'`, `'difference'`) for a parent tab.
-- [**`isExclusionTab(parentId)`**](../src/adapters/system/base-system-adapter.js#L190-L192): Delegates to `getTabCombinator(parentId) === 'difference'`.
-- [**`modifyContext(context)`**](../src/adapters/system/base-system-adapter.js#L190-L192): Customizes tab layout context and sub-tab ordering.
-- [**`getItemTypeLabel(parentId)`**](../src/adapters/system/base-system-adapter.js#L200-L207) / [**`getItemTypeIcon(parentId)`**](../src/adapters/system/base-system-adapter.js#L214-L221): Returns tab labels and font-awesome icons.
+- [**`_createRollEvent(event)`**](../src/adapters/system/base-system-adapter.js#L26-L45): Creates a proxy around a roll event to inject keyboard modifiers (`Alt`, `Control`, `Shift`).
+- [**`shouldExtractItem(item, actor)`**](../src/adapters/system/base-system-adapter.js#L58-L60): Performance filter to bypass unneeded item allocations.
+- [**`modifyActions(actions, actor)`**](../src/adapters/system/base-system-adapter.js#L68-L80): Modifies base actions with system-specific calculations.
+- [**`matchesEconomyTabs(tabRefs, filterContext)`**](../src/adapters/system/base-system-adapter.js#L97-L146): Evaluates set-algebraic tab filter tree (`union`, `intersection`, `difference`) for an action's TabRef nodes.
+- [**`getActiveExclusionSubs(filterContext)`**](../src/adapters/system/base-system-adapter.js#L165-L178): Returns active sub-type IDs under difference/exclusion parent tabs.
+- [**`filterSubactions(subactions, filterContext)`**](../src/adapters/system/base-system-adapter.js#L193-L207): Filters dropdown sub-actions against set-algebraic tab filters and resource depletion.
+- [**`getTabCombinator(parentId)`**](../src/adapters/system/base-system-adapter.js#L219-L221): Returns the set-algebraic combinator (`'union'`, `'intersection'`, `'difference'`) for a parent tab.
+- [**`isExclusionTab(parentId)`**](../src/adapters/system/base-system-adapter.js#L229-L231): Delegates to `getTabCombinator(parentId) === 'difference'`.
+- [**`modifyContext(context)`**](../src/adapters/system/base-system-adapter.js#L324-L326): Customizes tab layout context and sub-tab ordering.
+- [**`getItemTypeLabel(parentId)`**](../src/adapters/system/base-system-adapter.js#L242-L249) / [**`getItemTypeIcon(parentId)`**](../src/adapters/system/base-system-adapter.js#L256-L263): Returns tab labels and font-awesome icons.
 - [**`getSpellLevelLabel(level)`**](../src/adapters/system/base-system-adapter.js#L229-L231): Localizes spell level sub-tab labels.
 
 ### [`src/adapters/system/dnd5e-system-adapter.js`](../src/adapters/system/dnd5e-system-adapter.js) — D&D 5e System Adapter (`Dnd5eSystemAdapter`)
-- [**`shouldExtractItem(item)`**](../src/adapters/system/dnd5e-system-adapter.js#L64-L74): Filters out unallowed item types, helper items, and unequipped tools/consumables.
-- [**`modifyActions(actions, actor)`**](../src/adapters/system/dnd5e-system-adapter.js#L82-L287): Processes D&D 5e activities, spell preparation, equipment states, and subcategory itemTypes.
-- [**`filterSubactions(subactions, filterContext)`**](../src/adapters/system/dnd5e-system-adapter.js#L299-L313): Filters out subactions requiring banned spell components.
-- [**`modifyContext(context, app)`**](../src/adapters/system/dnd5e-system-adapter.js#L339-L458): Injects "All Spells", "All Weapons", and "All Equipment" sub-tabs and orders subcategory sub-tabs.
-- [**`getContextMenuItems(app)`**](../src/adapters/system/dnd5e-system-adapter.js#L465-L585): Spawns context menu options for spell preparation (`Prepare`/`Unprepare`) and equipment management (`Equip`/`Unequip`).
-- [**`onTabRightClick(app, el, event)`**](../src/adapters/system/dnd5e-system-adapter.js#L594-L612): Toggles unprepared spell visibility (`showUnprepared`) and unequipped weapon/equipment visibility (`showUnequipped_weapon`, `showUnequipped_equipment`).
+- [**`shouldExtractItem(item)`**](../src/adapters/system/dnd5e-system-adapter.js#L66-L76): Filters out unallowed item types, helper items, and unequipped tools/consumables.
+- [**`modifyActions(actions, actor)`**](../src/adapters/system/dnd5e-system-adapter.js#L84-L289): Processes D&D 5e activities, spell preparation, equipment states, and subcategory itemTypes.
+- [**`filterSubactions(subactions, filterContext)`**](../src/adapters/system/dnd5e-system-adapter.js#L302-L316): Filters out subactions requiring banned spell components.
+- [**`modifyContext(context, app)`**](../src/adapters/system/dnd5e-system-adapter.js#L343-L462): Injects "All Spells", "All Weapons", and "All Equipment" sub-tabs and orders subcategory sub-tabs.
+- [**`getContextMenuItems(app)`**](../src/adapters/system/dnd5e-system-adapter.js#L392-L512): Spawns context menu options for spell preparation (`Prepare`/`Unprepare`) and equipment management (`Equip`/`Unequip`).
+- [**`onTabRightClick(app, el, event)`**](../src/adapters/system/dnd5e-system-adapter.js#L489-L507): Toggles unprepared spell visibility (`showUnprepared`) and unequipped weapon/equipment visibility (`showUnequipped_weapon`, `showUnequipped_equipment`).
