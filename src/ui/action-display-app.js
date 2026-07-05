@@ -436,9 +436,6 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         context.isAttached = this.isAttached;
         context.isPinned = this.isPinned;
         context.isDetached = this.isDetached;
-        context.anchorTooltip = this.isAttached 
-            ? "Attached (Dynamic Placement)" 
-            : (this.isPinned ? "Pinned (Fixed Offset to Token)" : "Detached (Floating Screen)");
         context.filterNoResources = game.settings.get(MODULE_ID, 'filterNoResources');
 
         // Delegate to system adapter to allow system-specific context modifications
