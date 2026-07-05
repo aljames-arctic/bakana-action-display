@@ -1209,69 +1209,123 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             const tokenTransform = this.token.worldTransform;
             const canvasScale = game.canvas.stage?.scale?.x ?? 1;
             const gridSize = game.canvas.grid?.size ?? 100;
-            const gridOffset = game.settings.get(MODULE_ID, 'hudGridOffset') ?? 0.5;
-            const pixelOffset = gridOffset * gridSize * canvasScale;
+            const anchorSide = game.settings.get(MODULE_ID, 'hudAnchorSide') ?? 'vertical';
 
             const tokenWidth = this.token.w * canvasScale;
             const tokenHeight = this.token.h * canvasScale;
 
             const tokenLeft = tokenTransform.tx;
             const tokenTop = tokenTransform.ty;
+            const tokenCenterY = tokenTop + (tokenHeight / 2);
 
-            // Check screen bounds for above vs below placement with grid offset
-            const fitsAbove = (tokenTop - pixelOffset - appHeight) >= 0;
-            const fitsBelow = (tokenTop + tokenHeight + pixelOffset + appHeight) <= window.innerHeight;
+            if (anchorSide === 'horizontal') {
+                // --- HORIZONTAL ATTACHMENT (Left / Right of Token) ---
+                const gridOffsetH = game.settings.get(MODULE_ID, 'hudGridOffsetHorizontal') ?? 0.5;
+                const pixelOffsetH = gridOffsetH * gridSize * canvasScale;
 
-            let positionSide;
-            if (fitsBelow && !fitsAbove) {
-                positionSide = 'below';
-            } else if (fitsAbove && !fitsBelow) {
-                positionSide = 'above';
-            } else if (fitsAbove && fitsBelow) {
-                const roomAbove = tokenTop - pixelOffset - appHeight;
-                const roomBelow = window.innerHeight - (tokenTop + tokenHeight + pixelOffset + appHeight);
-                positionSide = roomAbove >= roomBelow ? 'above' : 'below';
-            } else {
-                positionSide = 'below';
-                log.error(`HUD position with grid offset ${gridOffset} exceeds screen bounds on both top and bottom.`);
-            }
+                const fitsLeft = (tokenLeft - pixelOffsetH - appWidth - tabExtension) >= 0;
+                const fitsRight = (tokenLeft + tokenWidth + pixelOffsetH + appWidth + tabExtension) <= window.innerWidth;
 
-            const safetyMargin = 10;
-            const minLeft = Math.max(safetyMargin, tabExtension);
-            const maxLeft = Math.min(window.innerWidth - appWidth - safetyMargin, window.innerWidth - appWidth - tabExtension);
+                let positionSide;
+                if (fitsRight && !fitsLeft) {
+                    positionSide = 'right';
+                } else if (fitsLeft && !fitsRight) {
+                    positionSide = 'left';
+                } else if (fitsLeft && fitsRight) {
+                    const roomLeft = tokenLeft - pixelOffsetH - appWidth - tabExtension;
+                    const roomRight = window.innerWidth - (tokenLeft + tokenWidth + pixelOffsetH + appWidth + tabExtension);
+                    positionSide = roomLeft >= roomRight ? 'left' : 'right';
+                } else {
+                    positionSide = 'right';
+                    log.error(`HUD position with horizontal grid offset ${gridOffsetH} exceeds screen bounds on both left and right.`);
+                }
 
-            let left = tokenLeft + (tokenWidth / 2) - (appWidth / 2);
-            left = Math.max(minLeft, Math.min(maxLeft, left));
+                let top = tokenCenterY - (appHeight / 2);
+                top = Math.max(10, Math.min(window.innerHeight - appHeight - 10, top));
 
-            let bottomOffset = '';
-            let topPos = '';
+                const targetPosition = foundry.utils.mergeObject(position, {
+                    top,
+                    width: 'auto',
+                    height: 'auto'
+                });
 
-            if (positionSide === 'above') {
-                bottomOffset = window.innerHeight - tokenTop + pixelOffset;
-            } else {
-                topPos = tokenTop + tokenHeight + pixelOffset;
-            }
-
-            const targetPosition = foundry.utils.mergeObject(position, {
-                left,
-                width: 'auto',
-                height: 'auto'
-            });
-
-            const result = super.setPosition(targetPosition);
-            el.style.height = 'auto';
-            el.style.left = `${left}px`;
-            el.style.right = '';
-
-            if (positionSide === 'above') {
-                el.style.bottom = `${bottomOffset}px`;
-                el.style.top = '';
-            } else {
-                el.style.top = `${topPos}px`;
+                const result = super.setPosition(targetPosition);
+                el.style.height = 'auto';
+                el.style.top = `${top}px`;
                 el.style.bottom = '';
-            }
 
-            return result;
+                if (positionSide === 'left') {
+                    const rightPos = window.innerWidth - tokenLeft + pixelOffsetH;
+                    el.style.right = `${rightPos}px`;
+                    el.style.left = '';
+                } else {
+                    const leftPos = tokenLeft + tokenWidth + pixelOffsetH;
+                    el.style.left = `${leftPos}px`;
+                    el.style.right = '';
+                }
+
+                return result;
+
+            } else {
+                // --- VERTICAL ATTACHMENT (Above / Below Token) ---
+                const gridOffsetV = game.settings.get(MODULE_ID, 'hudGridOffset') ?? 0.5;
+                const pixelOffsetV = gridOffsetV * gridSize * canvasScale;
+
+                // Check screen bounds for above vs below placement with grid offset
+                const fitsAbove = (tokenTop - pixelOffsetV - appHeight) >= 0;
+                const fitsBelow = (tokenTop + tokenHeight + pixelOffsetV + appHeight) <= window.innerHeight;
+
+                let positionSide;
+                if (fitsBelow && !fitsAbove) {
+                    positionSide = 'below';
+                } else if (fitsAbove && !fitsBelow) {
+                    positionSide = 'above';
+                } else if (fitsAbove && fitsBelow) {
+                    const roomAbove = tokenTop - pixelOffsetV - appHeight;
+                    const roomBelow = window.innerHeight - (tokenTop + tokenHeight + pixelOffsetV + appHeight);
+                    positionSide = roomAbove >= roomBelow ? 'above' : 'below';
+                } else {
+                    positionSide = 'below';
+                    log.error(`HUD position with grid offset ${gridOffsetV} exceeds screen bounds on both top and bottom.`);
+                }
+
+                const safetyMargin = 10;
+                const minLeft = Math.max(safetyMargin, tabExtension);
+                const maxLeft = Math.min(window.innerWidth - appWidth - safetyMargin, window.innerWidth - appWidth - tabExtension);
+
+                let left = tokenLeft + (tokenWidth / 2) - (appWidth / 2);
+                left = Math.max(minLeft, Math.min(maxLeft, left));
+
+                let bottomOffset = '';
+                let topPos = '';
+
+                if (positionSide === 'above') {
+                    bottomOffset = window.innerHeight - tokenTop + pixelOffsetV;
+                } else {
+                    topPos = tokenTop + tokenHeight + pixelOffsetV;
+                }
+
+                const targetPosition = foundry.utils.mergeObject(position, {
+                    left,
+                    width: 'auto',
+                    height: 'auto'
+                });
+
+                const result = super.setPosition(targetPosition);
+                el.style.height = 'auto';
+                el.style.left = `${left}px`;
+                el.style.right = '';
+
+                if (positionSide === 'above') {
+                    el.style.bottom = `${bottomOffset}px`;
+                    el.style.top = '';
+                } else {
+                    el.style.top = `${topPos}px`;
+                    el.style.bottom = '';
+                }
+
+                return result;
+            }
 
         } else if (this.positionMode === 'pinned' && this.token) {
             // --- PINNED MODE (Fixed Offset to Token Top-Left, Clamped to Page) ---

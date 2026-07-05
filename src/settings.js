@@ -107,10 +107,49 @@ Hooks.once('init', () => {
         default: true
     });
 
-    // Register HUD Grid Offset Setting (Slider in grid units)
+    // Register HUD Attachment Side Setting (Vertical vs Horizontal)
+    game.settings.register(MODULE_ID, 'hudAnchorSide', {
+        name: game.i18n.localize('BAD.settings.hudAnchorSide.name'),
+        hint: game.i18n.localize('BAD.settings.hudAnchorSide.hint'),
+        scope: 'client',
+        config: true,
+        type: String,
+        default: 'vertical',
+        choices: {
+            'vertical': game.i18n.localize('BAD.settings.hudAnchorSide.choices.vertical'),
+            'horizontal': game.i18n.localize('BAD.settings.hudAnchorSide.choices.horizontal')
+        },
+        onChange: () => {
+            if (actionDisplay.activeApp && actionDisplay.activeApp.rendered) {
+                actionDisplay.activeApp.setPosition();
+            }
+        }
+    });
+
+    // Register HUD Grid Offset Setting (Vertical)
     game.settings.register(MODULE_ID, 'hudGridOffset', {
         name: game.i18n.localize('BAD.settings.hudGridOffset.name'),
         hint: game.i18n.localize('BAD.settings.hudGridOffset.hint'),
+        scope: 'client',
+        config: true,
+        type: Number,
+        range: {
+            min: 0,
+            max: 1,
+            step: 0.1
+        },
+        default: 0.5,
+        onChange: () => {
+            if (actionDisplay.activeApp && actionDisplay.activeApp.rendered) {
+                actionDisplay.activeApp.setPosition();
+            }
+        }
+    });
+
+    // Register HUD Grid Offset Setting (Horizontal)
+    game.settings.register(MODULE_ID, 'hudGridOffsetHorizontal', {
+        name: game.i18n.localize('BAD.settings.hudGridOffsetHorizontal.name'),
+        hint: game.i18n.localize('BAD.settings.hudGridOffsetHorizontal.hint'),
         scope: 'client',
         config: true,
         type: Number,
