@@ -116,10 +116,10 @@ Hooks.once('init', () => {
         type: Number,
         range: {
             min: 0,
-            max: 10,
-            step: 0.5
+            max: 1,
+            step: 0.1
         },
-        default: 0,
+        default: 0.5,
         onChange: () => {
             if (actionDisplay.activeApp && actionDisplay.activeApp.rendered) {
                 actionDisplay.activeApp.setPosition();

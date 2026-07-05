@@ -1209,7 +1209,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             const tokenTransform = this.token.worldTransform;
             const canvasScale = game.canvas.stage?.scale?.x ?? 1;
             const gridSize = game.canvas.grid?.size ?? 100;
-            const gridOffset = game.settings.get(MODULE_ID, 'hudGridOffset') ?? 0;
+            const gridOffset = game.settings.get(MODULE_ID, 'hudGridOffset') ?? 0.5;
             const pixelOffset = gridOffset * gridSize * canvasScale;
 
             const tokenWidth = this.token.w * canvasScale;
