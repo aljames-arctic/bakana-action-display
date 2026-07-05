@@ -832,12 +832,14 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         super._onRender(context, options);
         log.debug(`_onRender | token: ${this.token?.name}, state: ${this.state}, isAttached: ${this.isAttached}`);
         
-        // Measure and cache the fresh dimensions after rendering to prevent layout thrashing at 60fps
-        this._width = this.element.offsetWidth;
-        this._height = this.element.offsetHeight;
+        // Adjust min-height first so container dimensions reflect the full expanded layout
+        this._adjustMinHeight();
+
+        const container = this.element?.querySelector('.bakana-action-display-container');
+        this._width = container?.offsetWidth || this.element.offsetWidth;
+        this._height = container?.offsetHeight || this.element.offsetHeight;
 
         this.setPosition();
-        this._adjustMinHeight();
     }
 
     _clearMenuState() {
@@ -1200,8 +1202,9 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         if (!el) return super.setPosition(position);
 
         const scale = game.settings.get(MODULE_ID, 'hudScale') ?? 1.0;
-        const appWidth = this._width ?? (el.offsetWidth || 320 * scale);
-        const appHeight = this._height ?? (el.offsetHeight || 200 * scale);
+        const container = el.querySelector('.bakana-action-display-container');
+        const appWidth = container?.offsetWidth || this._width || (el.offsetWidth || 320 * scale);
+        const appHeight = container?.offsetHeight || this._height || (el.offsetHeight || 200 * scale);
         const tabExtension = 150 * scale;
 
         if (this.positionMode === 'attached' && this.token) {
