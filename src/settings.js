@@ -155,7 +155,7 @@ Hooks.once('init', () => {
         type: Number,
         range: {
             min: 0,
-            max: 1,
+            max: 3,
             step: 0.1
         },
         default: 0.5,
