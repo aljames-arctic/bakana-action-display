@@ -4,7 +4,7 @@ A sleek, high-performance, and highly customizable **Action HUD** for **Foundry 
 
 **Bakana's Action Display** dynamically tracks your selected token on the canvas, instantly extracting and displaying their available attacks, spells, feats, and consumables. Designed with a premium, modern aesthetic, it helps players and GMs speed up combat by placing all their tactical options just one (or two) clicks away.
 
-https://github.com/user-attachments/assets/c842ee1e-783c-4d7e-b55d-de86e5cb0b44
+<img width="1201" height="971" alt="hud_demo" src="https://github.com/user-attachments/assets/95a30db7-608e-4323-a655-1ab3841ab9cb" />
 
 ---
 
@@ -35,16 +35,8 @@ https://github.com/user-attachments/assets/c842ee1e-783c-4d7e-b55d-de86e5cb0b44
 *   **Customizable Visibility**: Right-click any action card in the HUD to hide it. Unhide it anytime via the context menu.
 *   **Left-Click Smart Dropdowns**: For items with multiple options (like a spell with multiple casting levels or a weapon with multiple activities), left-clicking opens a sleek dropdown to let you choose your option. Even if active filters limit a multi-option item down to a single qualifying choice, the dropdown is still shown to provide clear feedback on what is being cast.
 
----
+---<img width="1211" height="1091" alt="drag_hide_demo mp4" src="https://github.com/user-attachments/assets/9bc95595-debc-42a3-acef-47518a6d1faa" />
 
-## What's New in 0.3.0
-
-*   **Top-Left Token Pinning Mode**: Pin the HUD to the token's top-left corner at a fixed offset. The HUD moves with the token and scales with canvas pan/zoom while remaining 100% on screen.
-*   **Persisted Tab Selections**: Save active tab selections across HUD close/open, actor switches, and page refreshes.
-*   **Dynamic Sub-Action Filtering**: Dropdown menus for multi-option items (like D&D 5e activities and PF1 linked attacks) now dynamically react to active HUD tab filters.
-*   **Modular Component Filtering Layer**: Extracted spell component exclusion checks into system adapter methods (`matchesComponentsFilter`) with strict, cross-realm type validation.
-*   **Zero-Allocation Performance (`toSet`)**: Introduced a high-performance `toSet(input, mapFn)` utility function to eliminate intermediate `.map()` array heap allocations across UI rendering passes.
-*   **Refactored i18n Namespaces**: Renamed the `BAD.hud` localization block to `BAD.core`, and centralized generic system terms into `BAD.common` for easy cross-system reuse.
 
 ## How to Use
 
@@ -61,7 +53,7 @@ https://github.com/user-attachments/assets/c842ee1e-783c-4d7e-b55d-de86e5cb0b44
     *   `<i class="fas fa-unlink"></i>` **Detached**: Floating at your last dragged screen coordinates.
 *   **Click the Checkbox ⚙️**: Toggles the **Hide Depleted Resources** filter.
 
-https://github.com/user-attachments/assets/d7d23743-82ed-4427-836c-dc426ee1be8a
+<img width="1211" height="1091" alt="drag_hide_demo mp4" src="https://github.com/user-attachments/assets/245bb464-95c1-431b-b2b4-fc467975987e" />
 
 ---
 
@@ -74,7 +66,8 @@ The module is built on a modular adapter pattern, allowing it to hook deeply int
 #### 4.0 Activity System
 Full support for D&D 5e's 4.0 Activity architecture. Items with multiple activities (e.g. a spell with an attack and a saving throw, or a sword with a cleave and a slash) are presented as a single card. Left-clicking the card expands it into a dropdown showing all its active activities, allowing you to choose which one to roll.
 
-![D&D 5e Activity Dropdown](docs/readme-assets/blind_defened.png)
+![D&D 5e Activity Dropdown](docs/readme-assets/activity_select<img width="1086" height="844" alt="unprepare_unequip" src="https://github.com/user-attachments/assets/a7bbfe91-5db5-4be1-ac1a-3b45b765e28e" />
+.png)
 
 #### Equipment & Weapon Tabs with Subcategories
 The HUD includes dedicated left-side parent tabs for **Weapons** and **Equipment**:
@@ -85,13 +78,15 @@ The HUD includes dedicated left-side parent tabs for **Weapons** and **Equipment
 #### Prepared Spells Toggle
 You can choose whether to show or hide unprepared spells in the HUD. A quick **right-click shortcut on the "All Spells" tab** allows you to toggle the visibility of unprepared spells instantly without opening the settings menu.
 
-![D&D 5e Activity Dropdown](docs/readme-assets/unprepared_spells.png)
+<img width="1049" height="837" alt="unprepared_spells" src="https://github.com/user-attachments/assets/02aa7f06-13a4-4c3a-a77f-649678e551b4" />
 
 #### Spell Properties Filter
 A dedicated, collapsible **Spell Components** section appears at the bottom of the right-side tabs (exclusive to the D&D 5e system). Unlike other filters, it operates as a **negative/exclusion filter** to help you quickly identify what you can cast under constraints (such as being silenced, bound, or stripped of materials):
 *   **Grey (Default)**: Allowed. The component is permitted, and spells requiring it are shown.
 *   **Red Outline + Diagonal (Banned)**: Banned. Toggling a component (Verbal, Somatic, or Material) bans it. Any spells requiring that component will be instantly hidden from the HUD.
 *   **Persistent Expansion**: While any component is banned, the *Spell Components* tab will remain expanded on your screen even if you left-click to focus the *Action Economy* tab, allowing you to combine filters.
+
+<img width="845" height="733" alt="activity_hiding" src="https://github.com/user-attachments/assets/9fd904fd-6af2-4d40-bd29-b0bb897528ea" />
 
 #### Midi-QOL Integration (Module)
 When the `midi-qol` module is active, the Action Display HUD integrates automatically:
