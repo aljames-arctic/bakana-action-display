@@ -511,7 +511,18 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         // Filter by Right Side (Action Type & Economy Tabs)
         if (!action.tabs) return false;
 
-        const filterContext = {
+        const filterContext = this._getFilterContext();
+        const adapter = actionDisplay.activeSystemAdapter;
+        return adapter.matchesEconomyTabs(action, filterContext);
+    }
+
+    /**
+     * Build the standard HUD filter context object containing active left/right tab states and settings.
+     * @returns {Object} Structured filter context { left, right, filterNoResources }
+     * @private
+     */
+    _getFilterContext() {
+        return {
             left: {
                 activeParents: this.leftTabs.activeParents,
                 activeSubTypes: this.leftTabs.activeSubTypes,
@@ -521,10 +532,9 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                 activeParents: this.rightTabs.activeParents,
                 activeSubTypes: this.rightTabs.activeSubTypes,
                 groups: this.parentGroups
-            }
+            },
+            filterNoResources: game.settings.get(MODULE_ID, 'filterNoResources')
         };
-        const adapter = actionDisplay.activeSystemAdapter;
-        return adapter.matchesEconomyTabs(action, filterContext);
     }
 
     // #endregion
@@ -672,19 +682,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
 
             if (itemActivities && itemActivities.length > 0) {
                 // Filter sub-actions to only those that match the currently active right-side tabs
-                const filterContext = {
-                    left: {
-                        activeParents: this.leftTabs.activeParents,
-                        activeSubTypes: this.leftTabs.activeSubTypes,
-                        groups: this.leftGroups
-                    },
-                    right: {
-                        activeParents: this.rightTabs.activeParents,
-                        activeSubTypes: this.rightTabs.activeSubTypes,
-                        groups: this.parentGroups
-                    },
-                    filterNoResources: game.settings.get(MODULE_ID, 'filterNoResources')
-                };
+                const filterContext = this._getFilterContext();
 
                 log.debug(`_onRollAction | Right-side Tab Filters - activeParents:`, Array.from(this.rightTabs.activeParents), `activeSubs:`, Array.from(this.rightTabs.activeSubTypes));
 

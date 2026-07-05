@@ -91,7 +91,7 @@ export class BaseSystemAdapter {
      * - 'intersection' (AND): Action must match all active intersection sub-tabs.
      * 
      * @param {Action} action Action instance to evaluate
-     * @param {Object} filterContext Current HUD filter context { activeParents, activeSubs, parentGroups }
+     * @param {Object} filterContext Current HUD filter context { left, right, filterNoResources }
      * @returns {boolean} True if the action matches current filter selection
      */
     matchesEconomyTabs(action, filterContext) {
@@ -159,7 +159,7 @@ export class BaseSystemAdapter {
 
     /**
      * Helper to get active sub-type IDs under exclusion tabs (e.g. banned spell components).
-     * @param {Object} filterContext Current HUD filter context { activeParents, activeSubs, parentGroups }
+     * @param {Object} filterContext Current HUD filter context { left, right, filterNoResources }
      * @returns {string[]} Array of active exclusion sub-type IDs
      */
     getActiveExclusionSubs(filterContext) {
@@ -187,7 +187,7 @@ export class BaseSystemAdapter {
     /**
      * Filter a list of sub-actions (activities) for a dropdown menu based on current UI filter state.
      * @param {Action[]} subactions The array of child Action instances
-     * @param {Object} filterContext Current HUD filter context { activeParents, activeSubs, parentGroups, filterNoResources }
+     * @param {Object} filterContext Current HUD filter context { left, right, filterNoResources }
      * @returns {Action[]} Qualifying sub-actions to show in the dropdown menu
      */
     filterSubactions(subactions, filterContext) {
