@@ -88,8 +88,6 @@ A dedicated, collapsible **Spell Components** section appears at the bottom of t
 *   **Red Outline + Diagonal (Banned)**: Banned. Toggling a component (Verbal, Somatic, or Material) bans it. Any spells requiring that component will be instantly hidden from the HUD.
 *   **Persistent Expansion**: While any component is banned, the *Spell Components* tab will remain expanded on your screen even if you left-click to focus the *Action Economy* tab, allowing you to combine filters.
 
-<img width="845" height="733" alt="activity_hiding" src="https://github.com/user-attachments/assets/9fd904fd-6af2-4d40-bd29-b0bb897528ea" />
-
 #### Midi-QOL Integration (Module)
 When the `midi-qol` module is active, the Action Display HUD integrates automatically:
 *   **Automation Filtering**: The HUD automatically scans activities and filters out any that are marked as **`automationOnly`** in their Midi-QOL properties. This prevents internal utility activities from cluttering your HUD.
