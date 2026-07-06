@@ -48,11 +48,6 @@ const ALLOWED_TYPES = new Set(['weapon', 'equipment', 'consumable', 'tool', 'bac
  * and spell preparation toggles.
  */
 export class Dnd5eSystemAdapter extends FantasySystemAdapter {
-    static COMPONENT_ALIASES = {
-        vocal: ['vocal', 'v'],
-        somatic: ['somatic', 's'],
-        material: ['material', 'm']
-    };
     constructor() {
         super('dnd5e');
     }
@@ -675,18 +670,18 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
     }
 
     /**
-     * Helper to test if a property container (Set, Array, or Object) contains any matching alias.
+     * Helper to test if a property container (Set, Array, or Object) contains the specified component.
      * @param {Set|Array|Object|null} container The property container
-     * @param {string[]} aliases List of property aliases (e.g. ['vocal', 'v'])
+     * @param {string} component The component to check for (e.g. 'vocal', 'somatic', 'material')
      * @returns {boolean}
      * @private
      */
-    #containerHasAlias(container, aliases) {
+    #containerHasComponent(container, component) {
         if (!container) return false;
         const target = container.value ?? container;
-        if (target instanceof Set) return aliases.some(a => target.has(a));
-        if (Array.isArray(target)) return aliases.some(a => target.includes(a));
-        if (typeof target === 'object') return aliases.some(a => !!target[a]);
+        if (target instanceof Set) return target.has(component);
+        if (Array.isArray(target)) return target.includes(component);
+        if (typeof target === 'object') return !!target[component];
         return false;
     }
 
@@ -704,15 +699,13 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         const rootDoc = this.#resolveRootSpellDocument(sub);
         if (!rootDoc) return false;
 
-        const aliases = Dnd5eSystemAdapter.COMPONENT_ALIASES?.[component] ?? [component];
-
-        if (this.#containerHasAlias(rootDoc, aliases)) return true;
+        if (this.#containerHasComponent(rootDoc, component)) return true;
 
         const props = rootDoc.system?.properties ?? rootDoc.properties;
-        if (this.#containerHasAlias(props, aliases)) return true;
+        if (this.#containerHasComponent(props, component)) return true;
 
         const comps = rootDoc.system?.components ?? rootDoc.components;
-        if (this.#containerHasAlias(comps, aliases)) return true;
+        if (this.#containerHasComponent(comps, component)) return true;
 
         return false;
     }
