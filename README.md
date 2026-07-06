@@ -1,5 +1,7 @@
 # Bakana's Action Display
 
+[![Latest Module Downloads](https://img.shields.io/github/downloads/aljames-arctic/bakana-action-display/latest/module.zip?style=flat-square&label=latest%20downloads&color=blue)](https://github.com/aljames-arctic/bakana-action-display/releases) [![Total Module Downloads](https://img.shields.io/github/downloads-pre/aljames-arctic/bakana-action-display/module.zip?style=flat-square&label=total%20downloads&color=success)](https://github.com/aljames-arctic/bakana-action-display/releases)
+
 A sleek, high-performance, and highly customizable **Action HUD** for **Foundry VTT (V12+)**.
 
 **Bakana's Action Display** dynamically tracks your selected token on the canvas, instantly extracting and displaying their available attacks, spells, feats, and consumables. Designed with a premium, modern aesthetic, it helps players and GMs speed up combat by placing all their tactical options just one (or two) clicks away.
