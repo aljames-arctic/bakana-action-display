@@ -624,7 +624,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
     /**
      * Recursively resolve the true root spell / item document for an activity or item.
      * Follows linkedActions, activity.spell.uuid, activity.item, activity.cachedSpell recursively.
-     * @param {Object} sub Sub-action or Activity Action instance
+     * @param {Action} sub Sub-action or Activity Action instance
      * @param {Object} [parentItem] Parent Item5e document
      * @returns {Object|null} The resolved root Item5e document, spell data, or item properties
      * @private
@@ -636,7 +636,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         let doc = sub.linkedAction;
 
         // 2. Check activity linked sources if doc is not set
-        const activity = sub.originalActivity ?? sub;
+        const activity = sub.originalActivity;
         if (!doc && activity) {
             doc = activity.item ?? activity.cachedSpell ?? (activity.spell instanceof Item ? activity.spell : null);
         }
@@ -688,7 +688,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
     /**
      * Helper to check if a subaction, activity, linked spell, or item requires a given spell component ('vocal', 'somatic', 'material').
      * Resolves the true root spell document first, avoiding stale parent activity property overrides.
-     * @param {Action|Object} sub Sub-action or spell document
+     * @param {Action} sub Sub-action
      * @param {string} component 'vocal' | 'somatic' | 'material'
      * @returns {boolean}
      * @private
