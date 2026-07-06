@@ -107,6 +107,16 @@ Hooks.once('init', () => {
         default: true
     });
 
+    // Register Toggle Tab Selection Setting
+    game.settings.register(MODULE_ID, 'toggleTabSelection', {
+        name: game.i18n.localize('BAD.settings.toggleTabSelection.name'),
+        hint: game.i18n.localize('BAD.settings.toggleTabSelection.hint'),
+        scope: 'client',
+        config: true,
+        type: Boolean,
+        default: false
+    });
+
     // Register HUD Attachment Side Setting (Vertical vs Horizontal)
     game.settings.register(MODULE_ID, 'hudAnchorSide', {
         name: game.i18n.localize('BAD.settings.hudAnchorSide.name'),

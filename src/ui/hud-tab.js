@@ -1,4 +1,5 @@
 import { actionDisplay } from '../action-display.js';
+import { MODULE_ID } from '../constants.js';
 
 /**
  * Unified tab model for parent tabs, sub-tabs, and deeply nested sub-tabs in the HUD.
@@ -167,6 +168,10 @@ export class HUDTab {
         if (this.customOnLeftClick) {
             const handled = this.customOnLeftClick(app, tabColumn, groups, event);
             if (handled) return;
+        }
+        if (game.settings.get(MODULE_ID, 'toggleTabSelection')) {
+            this.onRightClick(app, tabColumn, groups, event);
+            return;
         }
         if (this.isTopLevel) {
             tabColumn.selectParent(this.id, groups);
