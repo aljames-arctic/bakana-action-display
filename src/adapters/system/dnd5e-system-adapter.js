@@ -566,6 +566,11 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
 
     // #region System Specific Data Extractors & Schema Helpers
 
+    #extractItemSpell(obj) {
+        if (!obj) return null;
+        return obj.linkedAction ?? obj.cachedSpell ?? (obj.spell instanceof Item ? obj.spell : null);
+    }
+
     /**
      * Recursively resolve the true root spell / item document for an activity or item.
      * Follows linkedActions, activity.spell.uuid, activity.item, activity.cachedSpell recursively.
@@ -583,7 +588,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         // 2. Check activity linked sources if doc is not set
         const activity = sub.originalActivity;
         if (!doc && activity) {
-            doc = activity.cachedSpell ?? (activity.spell instanceof Item ? activity.spell : null);
+            doc = this.#extractItemSpell(activity);
             if (!doc && activity.spell?.uuid && typeof fromUuidSync === 'function') {
                 try {
                     doc = fromUuidSync(activity.spell.uuid);
@@ -597,7 +602,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         const maxDepth = 5;
         let depth = 0;
         while (doc && depth < maxDepth) {
-            const nextDoc = doc.linkedAction ?? doc.cachedSpell ?? (doc.spell instanceof Item ? doc.spell : null);
+            const nextDoc = this.#extractItemSpell(doc);
             if (nextDoc && nextDoc !== doc) {
                 doc = nextDoc;
                 depth++;
