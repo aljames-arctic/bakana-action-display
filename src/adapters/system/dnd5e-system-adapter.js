@@ -269,16 +269,6 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                     actionUses = this.#calculateUses(item);
                 }
 
-                // Collect all unique tabs from the remaining non-depleted activities
-                const uniqueTabsMap = new Map();
-                for (const activity of filteredActivities) {
-                    for (const tab of activity.tabs) {
-                        if (tab && tab.path && !uniqueTabsMap.has(tab.path)) {
-                            uniqueTabsMap.set(tab.path, tab);
-                        }
-                    }
-                }
-
                 // Create a SINGLE Action instance for the item
                 const activityAction = new Action({
                     ...action,
@@ -286,7 +276,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                     img: item.img, // Use the parent item's icon
                     available: !(isSpellUnprepared || isUnequipped),
                     subactions: filteredActivities,
-                    tabs: Array.from(uniqueTabsMap.values()),
+                    tabs: this.#collectUniqueTabs(filteredActivities),
                     itemTypes: itemTypes,
                     uses: actionUses,
                     roll: async (event) => {
@@ -709,6 +699,18 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         return ['vocal', 'somatic', 'material']
             .filter(comp => this.#requiresComponent(doc, comp))
             .map(comp => TabRef.from('components', comp));
+    }
+
+    #collectUniqueTabs(activities) {
+        const uniqueTabsMap = new Map();
+        for (const activity of activities) {
+            for (const tab of activity.tabs ?? []) {
+                if (tab?.path && !uniqueTabsMap.has(tab.path)) {
+                    uniqueTabsMap.set(tab.path, tab);
+                }
+            }
+        }
+        return Array.from(uniqueTabsMap.values());
     }
 
     /**
