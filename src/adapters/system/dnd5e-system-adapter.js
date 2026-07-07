@@ -211,7 +211,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                         },
                         originalItem: item,
                         originalActivity: activity,
-                        linkedAction: linkedAction
+                        linkedAction
                     });
                 }));
 
@@ -261,7 +261,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                     available: !(isSpellUnprepared || isUnequipped),
                     subactions: filteredActivities,
                     tabs: this.#collectUniqueTabs(filteredActivities),
-                    itemTypes: itemTypes,
+                    itemTypes,
                     uses: actionUses,
                     roll: async (event) => {
                         // Roll the first active activity directly
