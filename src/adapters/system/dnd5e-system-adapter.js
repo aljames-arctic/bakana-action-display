@@ -135,19 +135,10 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
 
             // 4. Process activities if they exist (D&D 5e v4+)
             const activities = this.getItemActivities(item);
-            const activeActivities = activities.filter(a => {
-                const type = this.#getActivityActivationType(a, item);
-                return type && type !== 'none';
-            });
 
-            if (activeActivities.length > 0) {
+            if (activities.length > 0) {
                 // Map D&D 5e Activities to sub-actions for the generic HUD item model
-                const mappedActivities = await Promise.all(activeActivities.map(async (activity) => {
-                    const activationType = this.#getActivityActivationType(activity, item);
-                    const parentId = this.#getParentTab(activationType);
-                    const subId = this.#getSubTab(activationType);
-                    const tabRef = TabRef.from(parentId, subId);
-                    
+                const rawActivities = await Promise.all(activities.map(async (activity) => {
                     let linkedAction = null;
                     if (activity.type === 'cast' && activity.spell?.uuid) {
                         try {
@@ -155,12 +146,22 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                         } catch (e) {
                             log.debug(`Failed to resolve compendium spell UUID ${activity.spell.uuid}:`, e);
                         }
-                        if (!linkedAction) {
-                            linkedAction = activity.item ?? activity.cachedSpell ?? null;
-                        }
+                    }
+                    if (!linkedAction && actor) {
+                        linkedAction = actor.items?.find(i => i.flags?.dnd5e?.cachedFor?.endsWith(activity.id));
+                    }
+                    if (!linkedAction) {
+                        linkedAction = activity.cachedSpell ?? activity.spell ?? activity;
                     }
 
-                    const activityName = activity.name ?? linkedAction?.name ?? activity.type.toUpperCase();
+                    const activationType = this.#getActivityActivationType(activity, item, linkedAction);
+                    if (!activationType || activationType === 'none') return null;
+
+                    const parentId = this.#getParentTab(activationType);
+                    const subId = this.#getSubTab(activationType);
+                    const tabRef = TabRef.from(parentId, subId);
+
+                    const activityName = activity.name || linkedAction?.name || activity.type.toUpperCase();
                     const activityImg = activity.img || linkedAction?.img || item.img;
 
                     return new Action({
@@ -173,10 +174,14 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                             const proxiedEvent = this._createRollEvent(event);
                             return activity.use({ event: proxiedEvent }, { event: proxiedEvent });
                         },
+                        originalItem: item,
                         originalActivity: activity,
                         linkedAction: linkedAction
                     });
                 }));
+
+                const mappedActivities = rawActivities.filter(Boolean);
+                if (mappedActivities.length === 0) continue;
 
                 // Extract spell components from linked spells on cast activities or item properties if present
                 for (const act of mappedActivities) {
@@ -204,6 +209,11 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                     if (filteredActivities.length === 0) {
                         continue;
                     }
+                }
+
+                log.debug(`[BAD Debug] Item "${item.name}" (${item.id}) activities: totalMapped=${mappedActivities.length}, afterResourceFilter=${filteredActivities.length} (filterNoResources=${filterNoResources})`);
+                if (item.id === 'mmSpellcasting00' || item.name === 'Spellcasting') {
+                    log.debug(`[BAD Debug] Spellcasting activities (${filteredActivities.length}/${mappedActivities.length}):`, mappedActivities.map(a => ({ name: a.name, uses: a.uses, isDepleted: a.isDepleted, tabs: a.tabs?.map(t => t.path) })));
                 }
 
                 // Assign to hierarchical item types: [parentType, subType] (for left-side tabs)
@@ -638,14 +648,21 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         // 2. Check activity linked sources if doc is not set
         const activity = sub.originalActivity;
         if (!doc && activity) {
-            doc = activity.item ?? activity.cachedSpell ?? (activity.spell instanceof Item ? activity.spell : null);
+            doc = activity.cachedSpell ?? (activity.spell instanceof Item ? activity.spell : null);
+            if (!doc && activity.spell?.uuid && typeof fromUuidSync === 'function') {
+                try {
+                    doc = fromUuidSync(activity.spell.uuid);
+                } catch (e) {
+                    // ignore sync resolution errors
+                }
+            }
         }
 
         // 3. Follow doc links recursively if doc itself has a linked spell / UUID
         const maxDepth = 5;
         let depth = 0;
         while (doc && depth < maxDepth) {
-            const nextDoc = doc.linkedAction ?? doc.item ?? doc.cachedSpell ?? (doc.spell instanceof Item ? doc.spell : null);
+            const nextDoc = doc.linkedAction ?? doc.cachedSpell ?? (doc.spell instanceof Item ? doc.spell : null);
             if (nextDoc && nextDoc !== doc) {
                 doc = nextDoc;
                 depth++;
@@ -659,6 +676,10 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         // 4. Fallback if no linked spell document was found: check activity.spell object or parent item (if spell)
         if (activity?.spell && typeof activity.spell === 'object' && !(activity.spell instanceof Item)) {
             return activity.spell;
+        }
+
+        if (activity?.type === 'cast') {
+            return activity.spell || activity;
         }
 
         const origItem = sub.originalItem ?? parentItem;
@@ -725,7 +746,18 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
      * @returns {Activities[]}
      */
     getItemActivities(item) {
-        return Array.from(item.system.activities?.values() ?? []);
+        const activities = item.system?.activities;
+        if (!activities) return [];
+        if (typeof activities.values === 'function') {
+            return Array.from(activities.values());
+        }
+        if (Array.isArray(activities)) {
+            return activities;
+        }
+        if (typeof activities === 'object') {
+            return Object.values(activities);
+        }
+        return [];
     }
 
     /**
@@ -742,7 +774,10 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
             }
 
             if (max > 0) {
-                let available = system.uses.value ?? 0;
+                const spent = system.uses.spent;
+                let available = (spent !== undefined && spent !== null)
+                    ? Math.max(0, max - spent)
+                    : (system.uses.value ?? 0);
                 // Scale by quantity for consumables
                 const quantity = system.quantity ?? 1;
                 if (quantity > 1 && item.type === 'consumable') {
@@ -812,8 +847,10 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                 max = parseInt(max, 10) || 0;
             }
             if (max > 0) {
-                const spent = uses.spent ?? 0;
-                const available = uses.value ?? (max - spent);
+                const spent = uses.spent;
+                const available = (spent !== undefined && spent !== null)
+                    ? Math.max(0, max - spent)
+                    : (uses.value ?? max);
                 return { available, max };
             }
         }
@@ -1045,13 +1082,30 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
      * @returns {string} The lowercased activation type string
      * @private
      */
-    #getActivityActivationType(activity, item) {
-        const activation = activity.activation ?? activity.system?.activation;
-        if (activation?.override && activation?.type && activation.type !== 'none' && activation.type !== '') {
-            return String(activation.type).toLowerCase();
+    #getActivityActivationType(activity, item, linkedAction = null) {
+        const actType = activity.activation?.type ?? activity.system?.activation?.type;
+        const actOverride = activity.activation?.override ?? activity.system?.activation?.override;
+
+        if (actOverride && actType && actType !== 'none' && actType !== '') {
+            return String(actType).toLowerCase();
         }
-        const raw = item.system?.activation?.type || activation?.type || 'none';
-        return String(raw || 'none').toLowerCase();
+
+        const spellDoc = linkedAction ?? this.#resolveRootSpellDocument({ originalActivity: activity, linkedAction: activity.spell });
+        const spellType = spellDoc?.system?.activation?.type ?? spellDoc?.activation?.type;
+        if (spellType && spellType !== 'none' && spellType !== '') {
+            return String(spellType).toLowerCase();
+        }
+
+        const itemType = item.system?.activation?.type;
+        if (itemType && itemType !== 'none' && itemType !== '') {
+            return String(itemType).toLowerCase();
+        }
+
+        if (actType && actType !== 'none' && actType !== '') {
+            return String(actType).toLowerCase();
+        }
+
+        return 'none';
     }
 
     // #endregion
