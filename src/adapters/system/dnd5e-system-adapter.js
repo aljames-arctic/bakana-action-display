@@ -60,7 +60,12 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         return this.#actor;
     }
 
-    set actor(actor) {
+    /**
+     * Initialize adapter context for an actor.
+     * Pre-calculates ammo quantities and highest available spell slot for O(1) lookups during action modification.
+     * @param {Actor} actor
+     */
+    init(actor) {
         this.#actor = actor;
         this.#highestAvailableSlot = actor ? this.#getHighestAvailableSpellSlot(actor) : 0;
         this.#ammoQuantities = actor ? this.#getAmmoQuantities(actor) : new Map();
@@ -89,7 +94,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
      * @returns {Object[]} The modified actions list
      */
     async modifyActions(actions, actor) {
-        this.actor = actor;
+        this.init(actor);
         const modified = [];
         const filterNoResources = game.settings.get(MODULE_ID, 'filterNoResources');
 
