@@ -819,23 +819,26 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
 
                 const rect = target.getBoundingClientRect();
                 const spaceBelow = window.innerHeight - rect.bottom - 15;
-                const spaceAbove = rect.top - 15;
                 const neededHeight = subactions.length * 36 + 15;
-
-                menuEl.style.setProperty('position', 'fixed', 'important');
-                menuEl.style.setProperty('left', `${rect.left}px`, 'important');
-                menuEl.style.setProperty('width', `${rect.width}px`, 'important');
-                menuEl.style.setProperty('min-width', `${rect.width}px`, 'important');
-                menuEl.style.setProperty('box-sizing', 'border-box', 'important');
-                menuEl.style.setProperty('z-index', '999999', 'important');
-                menuEl.style.setProperty('display', 'block', 'important');
-                menuEl.style.setProperty('visibility', 'visible', 'important');
-                menuEl.style.setProperty('opacity', '1', 'important');
-
-                menuEl.style.setProperty('top', `${rect.bottom}px`, 'important');
-                menuEl.style.setProperty('bottom', 'auto', 'important');
                 const maxHeight = Math.max(150, Math.min(neededHeight, spaceBelow));
-                menuEl.style.setProperty('max-height', `${maxHeight}px`, 'important');
+
+                const styles = {
+                    position: 'fixed',
+                    left: `${rect.left}px`,
+                    top: `${rect.bottom}px`,
+                    bottom: 'auto',
+                    width: `${rect.width}px`,
+                    'min-width': `${rect.width}px`,
+                    'box-sizing': 'border-box',
+                    'z-index': '999999',
+                    display: 'block',
+                    visibility: 'visible',
+                    opacity: '1',
+                    'max-height': `${maxHeight}px`
+                };
+                for (const [prop, val] of Object.entries(styles)) {
+                    menuEl.style.setProperty(prop, val, 'important');
+                }
                 Array.from(menuEl.children).forEach(child => {
                     child.style.setProperty('max-height', `${maxHeight}px`, 'important');
                     child.style.setProperty('overflow-y', 'auto', 'important');
@@ -851,7 +854,6 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                     menuTop: menuEl.style.top,
                     menuBottom: menuEl.style.bottom,
                     spaceBelow,
-                    spaceAbove,
                     neededHeight
                 });
             }

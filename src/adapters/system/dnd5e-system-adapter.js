@@ -139,21 +139,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
             if (activities.length > 0) {
                 // Map D&D 5e Activities to sub-actions for the generic HUD item model
                 const rawActivities = await Promise.all(activities.map(async (activity) => {
-                    let linkedAction = null;
-                    if (activity.type === 'cast' && activity.spell?.uuid) {
-                        try {
-                            linkedAction = await fromUuid(activity.spell.uuid);
-                        } catch (e) {
-                            log.debug(`Failed to resolve compendium spell UUID ${activity.spell.uuid}:`, e);
-                        }
-                    }
-                    if (!linkedAction && actor) {
-                        linkedAction = actor.items?.find(i => i.flags?.dnd5e?.cachedFor?.endsWith(activity.id));
-                    }
-                    if (!linkedAction) {
-                        linkedAction = activity.cachedSpell ?? activity.spell ?? activity;
-                    }
-
+                    const linkedAction = await this.#resolveActivityLinkedAction(activity, actor);
                     const activationType = this.#getActivityActivationType(activity, item, linkedAction);
                     if (!activationType || activationType === 'none') return null;
 
@@ -161,13 +147,10 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                     const subId = this.#getSubTab(activationType);
                     const tabRef = TabRef.from(parentId, subId);
 
-                    const activityName = activity.name || linkedAction?.name || activity.type.toUpperCase();
-                    const activityImg = activity.img || linkedAction?.img || item.img;
-
                     return new Action({
                         id: activity.id,
-                        name: activityName,
-                        img: activityImg,
+                        name: activity.name || linkedAction?.name || activity.type.toUpperCase(),
+                        img: activity.img || linkedAction?.img || item.img,
                         uses: this.#calculateActivityUses(activity, item, actor, ammoQuantities, highestAvailableSlot),
                         tabs: [tabRef],
                         roll: async (event) => {
@@ -688,6 +671,29 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         }
 
         return null;
+    }
+
+    /**
+     * Resolve the linked spell document for a D&D 5e activity.
+     * @param {object} activity
+     * @param {Actor} actor
+     * @returns {Promise<object>}
+     * @private
+     */
+    async #resolveActivityLinkedAction(activity, actor) {
+        if (activity.type === 'cast' && activity.spell?.uuid) {
+            try {
+                const doc = await fromUuid(activity.spell.uuid);
+                if (doc) return doc;
+            } catch (e) {
+                log.debug(`Failed to resolve compendium spell UUID ${activity.spell.uuid}:`, e);
+            }
+        }
+        if (actor) {
+            const cached = actor.items?.find(i => i.flags?.dnd5e?.cachedFor?.endsWith(activity.id));
+            if (cached) return cached;
+        }
+        return activity.cachedSpell ?? activity.spell ?? activity;
     }
 
     /**
