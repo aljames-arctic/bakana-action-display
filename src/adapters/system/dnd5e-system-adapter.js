@@ -48,8 +48,26 @@ const ALLOWED_TYPES = new Set(['weapon', 'equipment', 'consumable', 'tool', 'bac
  * and spell preparation toggles.
  */
 export class Dnd5eSystemAdapter extends FantasySystemAdapter {
+    #actor = null;
+    #highestAvailableSlot = 0;
+    #ammoQuantities = new Map();
+
     constructor() {
         super('dnd5e');
+    }
+
+    get actor() {
+        return this.#actor;
+    }
+
+    set actor(actor) {
+        this.#actor = actor;
+        this.#highestAvailableSlot = actor ? this.#getHighestAvailableSpellSlot(actor) : 0;
+        this.#ammoQuantities = actor ? this.#getAmmoQuantities(actor) : new Map();
+    }
+
+    get highestAvailableSlot() {
+        return this.#highestAvailableSlot;
     }
 
     // #region Core Action Modification
@@ -71,14 +89,9 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
      * @returns {Object[]} The modified actions list
      */
     async modifyActions(actions, actor) {
+        this.actor = actor;
         const modified = [];
         const filterNoResources = game.settings.get(MODULE_ID, 'filterNoResources');
-
-        // Pre-calculate ammunition quantities by subtype in a single pass to avoid nested loops (O(I) complexity)
-        const ammoQuantities = this.#getAmmoQuantities(actor);
-
-        // Pre-calculate the highest available spell slot level in a single pass (O(1) upcast checks later)
-        let highestAvailableSlot = this.#getHighestAvailableSpellSlot(actor);
 
         for (const action of actions) {
             const item = action.originalItem;
@@ -135,7 +148,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                         id: activity.id,
                         name: activity.name || linkedAction?.name || activity.type.toUpperCase(),
                         img: activity.img || linkedAction?.img || item.img,
-                        uses: this.#calculateActivityUses(activity, item, actor, ammoQuantities, highestAvailableSlot),
+                        uses: this.#calculateActivityUses(activity, item),
                         tabs: [tabRef],
                         roll: async (event) => {
                             const proxiedEvent = this._createRollEvent(event);
@@ -198,11 +211,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                 if (filteredActivities.length === 1) {
                     actionUses = filteredActivities[0].uses;
                 } else {
-                    if (type === 'spell') {
-                        actionUses = this.#calculateSpellSlots(item, actor, highestAvailableSlot);
-                    } else {
-                        actionUses = this.#calculateUses(item);
-                    }
+                    actionUses = this.#calculateUses(item);
                 }
 
                 // Collect all unique tabs from the remaining non-depleted activities
@@ -765,6 +774,10 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
      * Calculate available and maximum uses for an item.
      */
     #calculateUses(item) {
+        if (item.type === 'spell') {
+            return this.#calculateSpellSlots(item);
+        }
+
         const system = item.system;
 
         // 1. Limited Uses (standard item charges/uses)
@@ -881,7 +894,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
      * @returns {{available: number|null, max: number|null}} The uses count
      * @private
      */
-    #calculateActivityUses(activity, item, actor, ammoQuantities, highestAvailableSlot) {
+    #calculateActivityUses(activity, item, actor = this.#actor, ammoQuantities = this.#ammoQuantities, highestAvailableSlot = this.#highestAvailableSlot) {
         const targets = activity.consumption?.targets ?? [];
         
         // 1. If the activity has its own explicit limited uses
@@ -942,7 +955,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         
         // Fallback for standard spells if no explicit spellSlots consumption target was resolved
         if (item.type === 'spell') {
-            return this.#calculateSpellSlots(item, actor, highestAvailableSlot);
+            return this.#calculateUses(item);
         }
 
         // Fallback for weapons requiring ammunition if no explicit consumption target was resolved
@@ -1017,7 +1030,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
      * @param {number} highestAvailableSlot The highest available spell slot level on the actor
      * @private
      */
-    #calculateSpellSlots(item, actor, highestAvailableSlot) {
+    #calculateSpellSlots(item, actor = this.#actor, highestAvailableSlot = this.#highestAvailableSlot) {
         const system = item.system;
         const prepMode = system.method;
         const level = system.level ?? 0;
