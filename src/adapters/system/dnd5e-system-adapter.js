@@ -249,12 +249,9 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                 const itemTypes = this.#getItemTabTypes(item, type, filteredActivities);
 
                 // Calculate main action uses
-                let actionUses;
-                if (filteredActivities.length === 1) {
-                    actionUses = filteredActivities[0].uses;
-                } else {
-                    actionUses = this.#calculateUses(item);
-                }
+                const actionUses = filteredActivities.length === 1
+                    ? filteredActivities[0].uses
+                    : this.#calculateUses(item);
 
                 // Create a SINGLE Action instance for the item
                 const activityAction = new Action({
