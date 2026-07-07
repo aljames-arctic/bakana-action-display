@@ -429,24 +429,22 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
      * @returns {boolean} True if handled
      */
     onTabRightClick(app, el, event) {
-        if (el.dataset.type === 'all') {
-            const parentGroup = el.closest('.bad-left-tab-group');
-            const parentTab = parentGroup?.querySelector('.bad-left-tab');
-            const parentType = parentTab?.dataset.type;
+        if (el.dataset.type !== 'all' || !app.actor?.isOwner) return false;
 
-            if (parentType === 'spell' && app.actor?.isOwner) {
-                const showUnprepared = app.actor.getFlag(MODULE_ID, 'showUnprepared') ?? false;
-                app.actor.setFlag(MODULE_ID, 'showUnprepared', !showUnprepared);
-                return true;
-            }
+        const parentType = el.closest('.bad-left-tab-group')?.querySelector('.bad-left-tab')?.dataset.type;
+        const flagMap = {
+            spell: 'showUnprepared',
+            weapon: 'showUnequipped_weapon',
+            equipment: 'showUnequipped_equipment'
+        };
 
-            if (['weapon', 'equipment'].includes(parentType) && app.actor?.isOwner) {
-                const flagKey = `showUnequipped_${parentType}`;
-                const showUnequipped = app.actor.getFlag(MODULE_ID, flagKey) ?? false;
-                app.actor.setFlag(MODULE_ID, flagKey, !showUnequipped);
-                return true;
-            }
+        const flagKey = flagMap[parentType];
+        if (flagKey) {
+            const current = app.actor.getFlag(MODULE_ID, flagKey) ?? false;
+            app.actor.setFlag(MODULE_ID, flagKey, !current);
+            return true;
         }
+
         return false;
     }
 
