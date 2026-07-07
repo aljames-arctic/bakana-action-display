@@ -1014,6 +1014,17 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
     }
 
     /**
+     * Normalize an activation type string to lowercase, returning null if invalid or 'none'.
+     * @param {string} type
+     * @returns {string|null}
+     * @private
+     */
+    #normalizeActivationType(type) {
+        if (!type || type === 'none' || type === '') return null;
+        return String(type).toLowerCase();
+    }
+
+    /**
      * Resolve the effective lowercased activation type for a D&D 5e activity.
      * Checks activity-level activation override before falling back to the parent item activation.
      * @param {Object} activity The D&D 5e activity object instance
@@ -1022,29 +1033,19 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
      * @private
      */
     #getActivityActivationType(activity, item, linkedAction = null) {
-        const actType = activity.activation?.type ?? activity.system?.activation?.type;
         const actOverride = activity.activation?.override ?? activity.system?.activation?.override;
-
-        if (actOverride && actType && actType !== 'none' && actType !== '') {
-            return String(actType).toLowerCase();
+        if (actOverride) {
+            const overrideType = this.#normalizeActivationType(activity.activation?.type ?? activity.system?.activation?.type);
+            if (overrideType) return overrideType;
         }
 
         const spellDoc = linkedAction ?? this.#resolveRootSpellDocument({ originalActivity: activity, linkedAction: activity.spell });
-        const spellType = spellDoc?.system?.activation?.type ?? spellDoc?.activation?.type;
-        if (spellType && spellType !== 'none' && spellType !== '') {
-            return String(spellType).toLowerCase();
-        }
+        const spellType = this.#normalizeActivationType(spellDoc?.system?.activation?.type ?? spellDoc?.activation?.type);
+        if (spellType) return spellType;
 
-        const itemType = item.system?.activation?.type;
-        if (itemType && itemType !== 'none' && itemType !== '') {
-            return String(itemType).toLowerCase();
-        }
-
-        if (actType && actType !== 'none' && actType !== '') {
-            return String(actType).toLowerCase();
-        }
-
-        return 'none';
+        return this.#normalizeActivationType(item.system?.activation?.type)
+            ?? this.#normalizeActivationType(activity.activation?.type ?? activity.system?.activation?.type)
+            ?? 'none';
     }
 
     // #endregion
