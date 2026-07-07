@@ -37,7 +37,9 @@ A sleek, high-performance, and highly customizable **Action HUD** for **Foundry 
 *   **Customizable Visibility**: Right-click any action card in the HUD to hide it. Unhide it anytime via the context menu.
 *   **Left-Click Smart Dropdowns**: For items with multiple options (like a spell with multiple casting levels or a weapon with multiple activities), left-clicking opens a sleek dropdown to let you choose your option. Even if active filters limit a multi-option item down to a single qualifying choice, the dropdown is still shown to provide clear feedback on what is being cast.
 
----<img width="1211" height="1091" alt="drag_hide_demo mp4" src="https://github.com/user-attachments/assets/9bc95595-debc-42a3-acef-47518a6d1faa" />
+---
+
+<img width="1211" height="1091" alt="drag_hide_demo mp4" src="https://github.com/user-attachments/assets/9bc95595-debc-42a3-acef-47518a6d1faa" />
 
 
 ## How to Use
@@ -66,10 +68,9 @@ The module is built on a modular adapter pattern, allowing it to hook deeply int
 ### D&D 5e Exclusives
 
 #### 4.0 Activity System
-Full support for D&D 5e's 4.0 Activity architecture. Items with multiple activities (e.g. a spell with an attack and a saving throw, or a sword with a cleave and a slash) are presented as a single card. Left-clicking the card expands it into a dropdown showing all its active activities, allowing you to choose which one to roll.
+Full support for D&D 5e's 4.0 Activity architecture. Items or features with multiple activities (such as `Spellcasting` features containing cast activities, or weapons with multiple attack modes) are presented as a single card. Left-clicking opens a responsive dropdown menu formatted on a single line showing the spell icon, left-aligned name, and right-aligned remaining uses (`2 / 2`). Dropdowns intelligently position below the item row and adjust their scrollable height to the viewport.
 
-![D&D 5e Activity Dropdown](docs/readme-assets/activity_select<img width="1086" height="844" alt="unprepare_unequip" src="https://github.com/user-attachments/assets/a7bbfe91-5db5-4be1-ac1a-3b45b765e28e" />
-.png)
+![D&D 5e Activity Dropdown](docs/readme-assets/activity_select.png)
 
 #### Equipment & Weapon Tabs with Subcategories
 The HUD includes dedicated left-side parent tabs for **Weapons** and **Equipment**:
