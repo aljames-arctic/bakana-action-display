@@ -24,7 +24,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         this.token = token;
         this.actor = token.actor;
         this.actions = [];
-        
+
         const actorKey = this.actor?.uuid || this.actor?.id;
         const cached = this.retrieveActorTabCache(actorKey);
 
@@ -43,7 +43,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
 
         // HUD Attachment/Position Mode (persisted client-side)
         this.positionMode = game.settings.get(MODULE_ID, 'hudPositionMode');
-        
+
         // Dragging state
         this._dragData = null;
 
@@ -97,7 +97,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
      */
     _saveTabState() {
         const actorKey = this.actor?.uuid || this.actor?.id;
-        
+
         const serialized = {
             left: this.leftTabs.serialize(),
             right: this.rightTabs.serialize()
@@ -116,7 +116,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             try {
                 const MAX_PERSISTED_ACTORS = 25;
                 const allStates = foundry.utils.duplicate(game.settings.get(MODULE_ID, 'hudTabStates') ?? {});
-                
+
                 // Re-insert key to refresh its LRU position (most recent at end)
                 delete allStates[actorKey];
                 allStates[actorKey] = serialized;
@@ -164,12 +164,15 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         if (this.element) {
             this.element.style.display = 'none';
         }
-        
+
         // Clean up menu states and close any open dropdowns/context menus to prevent visual leaks
         this._clearMenuState();
+        if (this._boundOutsidePointerDown) {
+            window.removeEventListener('pointerdown', this._boundOutsidePointerDown, { capture: true });
+        }
         this._contextMenu = null;
         this.actions = []; // Reset actions array to release references
-        
+
         const result = await super.close(options);
         log.debug(`ActionDisplayApp.close() completed, new state: ${this.state}`);
         return result;
@@ -248,7 +251,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
 
         // 2. Build the left-side hierarchy dynamically using the adapter
         const leftGroups = {};
-        
+
         // Always ensure 'all' parent is present if we have actions
         if (rawActions.length > 0) {
             leftGroups['all'] = new HUDTab({
@@ -300,13 +303,13 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         for (const parent of itemTypes) {
             const validSubIds = toSet(parent.subTabs, t => t.id);
             const activeSubsForParent = Array.from(this.leftTabs.activeSubTypes).filter(id => validSubIds.has(id));
-            
+
             parent.active = this.leftTabs.activeParents.has(parent.id);
             if (parent.subTabs.length > 0 && parent.active && activeSubsForParent.length > 0) {
                 parent.activeParent = true;
             }
             parent.expanded = parent.id === this.leftTabs.focusedParent || activeSubsForParent.length > 0;
-            
+
             if (parent.subTabs.length > 0) {
                 parent.subTabs.sort((a, b) => adapter.getItemSubTabSortOrder(parent.id, a.id) - adapter.getItemSubTabSortOrder(parent.id, b.id));
             }
@@ -330,7 +333,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
 
         // 3. Build the right-side hierarchy dynamically using the adapter
         const parentGroups = {};
-        
+
         // Always ensure 'all' parent is present if we have actions
         if (rawActions.length > 0) {
             parentGroups['all'] = new HUDTab({
@@ -383,7 +386,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         // Sort sub-tabs within each parent using system adapter order
         for (const parent of actionTypes) {
             const skipAll = adapter.isExclusionTab(parent.id);
-            
+
             if (parent.subTabs.length > 0 && !skipAll) {
                 const isActive = parent.id === this.rightTabs.focusedParent;
                 const validSubIds = toSet(parent.subTabs, t => t.id);
@@ -403,7 +406,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             if (adapter.isExclusionTab(parent.id)) continue; // Exclude exclusion tabs from activeParent calculation
             const validSubIds = toSet(parent.subTabs, t => t.id);
             const activeSubsForParent = Array.from(this.rightTabs.activeSubTypes).filter(id => validSubIds.has(id));
-            
+
             parent.active = this.rightTabs.activeParents.has(parent.id);
             if (parent.subTabs.length > 0 && parent.active && activeSubsForParent.length > 0) {
                 parent.activeParent = true;
@@ -471,13 +474,13 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
 
         // Filter by Left Side (Item Type)
         if (!action.itemTypes || action.itemTypes.length === 0) return false;
-        
+
         const matchesLeft = action.itemTypes.some(type => {
             if (this.leftTabs.activeParents.has(type)) {
                 const parentGroup = this.leftGroups?.[type];
                 const validSubIds = toSet(parentGroup?.subTabs, t => t.id);
                 const activeSubsForParent = Array.from(this.leftTabs.activeSubTypes).filter(id => validSubIds.has(id));
-                
+
                 if (activeSubsForParent.length === 0) {
                     return true;
                 } else {
@@ -485,7 +488,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                     return this.leftTabs.activeSubTypes.has(actionSubId);
                 }
             }
-            
+
             if (this.leftTabs.activeParents.has('all')) {
                 const isParentActive = this.leftTabs.activeParents.has(type);
                 if (!isParentActive) {
@@ -499,7 +502,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                     }
                 }
             }
-            
+
             return false;
         });
 
@@ -656,7 +659,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
      */
     async _onRollAction(event, target) {
         event.preventDefault();
-        
+
         if (this._preventReopen) {
             log.debug("_onRollAction | preventReopen is true, toggling off and closing menu");
             this._preventReopen = false;
@@ -671,7 +674,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
 
         const actionId = target.dataset.actionId;
         const action = this.actions?.find(a => a.id === actionId);
-        
+
         if (action) {
             log.debug(`_onRollAction | Left-clicked action "${action.name}" (${action.id}):`, action);
             const itemActivities = action.subactions;
@@ -686,19 +689,28 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                 const adapter = actionDisplay.activeSystemAdapter;
                 const qualifyingSubActions = adapter.filterSubactions(itemActivities, filterContext, action.itemTypes);
 
+                log.debug(`[BAD Debug] _onRollAction "${action.name}" (${action.id})`, {
+                    totalSubactions: itemActivities.length,
+                    activeExclusions: adapter.getActiveExclusionSubs?.(filterContext) ?? [],
+                    qualifyingCount: qualifyingSubActions.length,
+                    qualifyingNames: qualifyingSubActions.map(s => s.name),
+                    allNames: itemActivities.map(s => s.name)
+                });
+
                 log.debug(`_onRollAction | activeParents: ${Array.from(this.rightTabs.activeParents).join(', ')}, activeSubs: ${Array.from(this.rightTabs.activeSubTypes).join(', ')}, qualifying: ${qualifyingSubActions.length}`, qualifyingSubActions);
 
-                const showDropdown = qualifyingSubActions.length > 1 || (itemActivities.length > 1 && qualifyingSubActions.length === 1);
+                const subsToShow = qualifyingSubActions.length > 0 ? qualifyingSubActions : itemActivities;
+                const showDropdown = subsToShow.length > 1 || (itemActivities.length > 1 && subsToShow.length === 1);
 
                 if (showDropdown) {
-                    this._showActivityDropdown(target, qualifyingSubActions, event);
-                } else if (qualifyingSubActions.length === 1) {
-                    // Natively only 1 option, and it qualifies: roll directly!
-                    qualifyingSubActions[0].roll(event);
+                    this._showActivityDropdown(target, subsToShow, event);
+                } else if (subsToShow.length === 1) {
+                    subsToShow[0].roll(event);
                 } else {
-                    throw new Error(`_onRollAction | Unexpected | No qualifying sub-actions found for action "${action.name}" (${action.id}) with current right-side tab filters.`);
+                    action.roll(event);
                 }
             } else {
+                log.debug(`[BAD Debug] _onRollAction "${action.name}" (${action.id}) has no subactions (length 0)`);
                 // No sub-actions: roll directly
                 action.roll(event);
             }
@@ -706,32 +718,30 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
     }
 
     /**
-     * Build a ContextMenu item configuration for a sub-action.
-     * @param {Action} sub The sub-action instance
-     * @param {Event} event The trigger click event
-     * @returns {Object} ContextMenu item definition
+     * Build the context menu item object for a sub-action.
+     * @param {Action} sub 
+     * @param {Event} event 
+     * @returns {Object} Context menu item specification
      * @private
      */
     _buildSubactionMenuItem(sub, event) {
         const uses = sub.uses;
-        const iconHtml = sub.img 
-            ? `<img class="bad-menu-icon" src="${sub.img}" />` 
+        const iconHtml = sub.img
+            ? `<img class="bad-menu-icon" src="${sub.img}" />`
             : '<i class="fas fa-play bad-menu-icon"></i>';
 
         let usesHtml = "";
-        if (uses?.available != null) {
-            const isDepleted = uses.available <= 0 && !uses.isUpcast;
-            const depletedClass = isDepleted ? ' depleted' : '';
-            const upcastClass = uses.isUpcast ? ' upcast' : '';
-            const usesText = uses.max ? `${uses.available}/${uses.max}` : `${uses.available}`;
+        if (uses && uses.available !== null) {
+            const usesText = `${uses.available}${uses.max ? ' / ' + uses.max : ''}`;
+            const depletedClass = uses.available === 0 ? " depleted" : "";
+            const upcastClass = uses.isUpcast ? " upcast" : "";
             usesHtml = `<span class="bad-menu-uses${depletedClass}${upcastClass}">${usesText}</span>`;
         }
 
-        // Workaround: Foundry escapes 'name' but renders 'icon' as unescaped HTML.
-        // We pack the entire HTML (icon + name + uses) into 'icon' and leave 'name' empty!
         return {
-            name: "",
-            icon: `${iconHtml}<span class="bad-menu-name">${sub.name}</span>${usesHtml}`,
+            name: sub.name || "Action",
+            icon: `<span class="bad-menu-icon-wrap">${iconHtml}</span>`,
+            usesHtml: usesHtml,
             callback: () => {
                 log.debug(`Rolling sub-action: ${sub.name} via dropdown`);
                 sub.roll(event);
@@ -740,13 +750,16 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
     }
 
     /**
-     * Show a left-click dropdown context menu displaying qualifying sub-actions / activities.
+     * Display the ContextMenu for item activities (sub-actions) on left-click.
      * @param {HTMLElement} target The row element clicked
      * @param {Action[]} subactions The qualifying sub-actions to display
      * @param {Event} event The trigger click event
      * @private
      */
     _showActivityDropdown(target, subactions, event) {
+        event?.preventDefault?.();
+        event?.stopPropagation?.();
+        log.debug(`[BAD Debug] _showActivityDropdown for "${target.dataset.actionId}" with ${subactions.length} items:`, subactions.map(s => s.name));
         const menuItems = subactions.map(sub => this._buildSubactionMenuItem(sub, event));
         log.debug(`_showActivityDropdown | Creating menu for: ${target.dataset.actionId}`, target);
 
@@ -769,12 +782,9 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             }
         };
 
-        const container = this.element.querySelector('.bakana-action-display-container') ?? this.element;
-        menu = new ContextMenu.implementation(container, null, menuItems, options);
+        menu = new ContextMenu.implementation(document.body, ".bad-action-item", menuItems, options);
         this._activeMenuTarget = target;
         this._activeLeftClickMenu = menu;
-        log.debug(`_showActivityDropdown | Rendering menu for: ${target.dataset.actionId}`);
-        menu.render(target);
 
         target.classList.add('bad-menu-active');
         this.element.querySelectorAll('.bad-action-item').forEach(el => {
@@ -783,6 +793,69 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             }
         });
         this.element.querySelector('.bakana-action-display-container')?.classList.add('has-context-menu');
+
+        setTimeout(async () => {
+            log.debug(`_showActivityDropdown | Rendering menu for: ${target.dataset.actionId}`);
+            try {
+                await menu.render(target);
+            } catch (e) {
+                log.debug(`_showActivityDropdown | menu.render error:`, e);
+            }
+
+            const menuEl = document.querySelector('#context-menu');
+            log.debug(`_showActivityDropdown | After await render menuEl:`, menuEl);
+            if (menuEl) {
+                if (menuEl.parentElement !== document.body) {
+                    document.body.appendChild(menuEl);
+                }
+
+                const lis = menuEl.querySelectorAll('.context-item');
+                lis.forEach((li, idx) => {
+                    const itemData = menuItems[idx];
+                    if (itemData && itemData.usesHtml && !li.querySelector('.bad-menu-uses')) {
+                        li.insertAdjacentHTML('beforeend', itemData.usesHtml);
+                    }
+                });
+
+                const rect = target.getBoundingClientRect();
+                const spaceBelow = window.innerHeight - rect.bottom - 15;
+                const spaceAbove = rect.top - 15;
+                const neededHeight = subactions.length * 36 + 15;
+
+                menuEl.style.setProperty('position', 'fixed', 'important');
+                menuEl.style.setProperty('left', `${rect.left}px`, 'important');
+                menuEl.style.setProperty('width', `${rect.width}px`, 'important');
+                menuEl.style.setProperty('min-width', `${rect.width}px`, 'important');
+                menuEl.style.setProperty('box-sizing', 'border-box', 'important');
+                menuEl.style.setProperty('z-index', '999999', 'important');
+                menuEl.style.setProperty('display', 'block', 'important');
+                menuEl.style.setProperty('visibility', 'visible', 'important');
+                menuEl.style.setProperty('opacity', '1', 'important');
+
+                menuEl.style.setProperty('top', `${rect.bottom}px`, 'important');
+                menuEl.style.setProperty('bottom', 'auto', 'important');
+                const maxHeight = Math.max(150, Math.min(neededHeight, spaceBelow));
+                menuEl.style.setProperty('max-height', `${maxHeight}px`, 'important');
+                Array.from(menuEl.children).forEach(child => {
+                    child.style.setProperty('max-height', `${maxHeight}px`, 'important');
+                    child.style.setProperty('overflow-y', 'auto', 'important');
+                });
+
+                log.debug(`[BAD Debug] _showActivityDropdown DOM check:`, {
+                    menuItemsCount: menuItems.length,
+                    renderedLisCount: menuEl.querySelectorAll('.context-item').length,
+                    renderedNames: Array.from(menuEl.querySelectorAll('.context-item')).map(el => el.textContent.trim()),
+                    menuClientHeight: menuEl.clientHeight,
+                    menuScrollHeight: menuEl.scrollHeight,
+                    menuComputedMaxHeight: window.getComputedStyle(menuEl).maxHeight,
+                    menuTop: menuEl.style.top,
+                    menuBottom: menuEl.style.bottom,
+                    spaceBelow,
+                    spaceAbove,
+                    neededHeight
+                });
+            }
+        }, 10);
     }
 
     /**
@@ -821,6 +894,14 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             if (handle) this._onDragStart(event);
         });
 
+        // Close dropdown when dragging or clicking outside the active menu/item
+        this._boundOutsidePointerDown = (event) => {
+            if (this._activeLeftClickMenu && !event.target.closest('#context-menu, .context-menu, .bad-action-item')) {
+                this._clearMenuState();
+            }
+        };
+        window.addEventListener('pointerdown', this._boundOutsidePointerDown, { capture: true });
+
         // Initialize the context menu for action items once
         this._contextMenu = this._createContextMenu();
     }
@@ -831,7 +912,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
     _onRender(context, options) {
         super._onRender(context, options);
         log.debug(`_onRender | token: ${this.token?.name}, state: ${this.state}, isAttached: ${this.isAttached}`);
-        
+
         // Adjust min-height first so container dimensions reflect the full expanded layout
         this._adjustMinHeight();
 
@@ -844,7 +925,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
 
     _clearMenuState() {
         log.debug("_clearMenuState | Clearing menu state and closing open menus");
-        
+
         // Close any open context menus if we have an active target
         if (this._activeMenuTarget) {
             if (this._contextMenu) {
@@ -883,7 +964,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         const leftBottom = (leftTabs && leftTabs.children.length > 0) ? (leftTabs.offsetTop + leftTabs.offsetHeight) : 0;
         const rightBottom = (rightTabs && rightTabs.children.length > 0) ? (rightTabs.offsetTop + rightTabs.offsetHeight) : 0;
         const maxTabBottom = Math.max(leftBottom, rightBottom);
-        
+
         log.debug(`_adjustMinHeight | leftBottom: ${leftBottom}px, rightBottom: ${rightBottom}px, maxTabBottom: ${maxTabBottom}px`);
 
         if (maxTabBottom > 0) {
@@ -892,7 +973,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                 const containerStyle = window.getComputedStyle(container);
                 this._containerPaddingBottom = parseFloat(containerStyle.paddingBottom) || 0;
             }
-            
+
             const targetMinHeight = maxTabBottom + this._containerPaddingBottom;
             log.debug(`_adjustMinHeight | Applying min-height: ${targetMinHeight}px to container (paddingBottom: ${this._containerPaddingBottom}px)`);
             container.style.minHeight = `${targetMinHeight}px`;
@@ -907,12 +988,12 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
      */
     _onPointerDownCapture(event) {
         if (event.button !== 2 && event.button !== 0) return; // Only care about right-clicks (2) or left-clicks (0)
-        
+
         const targetItem = event.target.closest('.bad-action-item, .bad-left-sub-tab, .bad-left-tab');
         const activeItem = this._activeMenuTarget?.closest('.bad-action-item, .bad-left-sub-tab, .bad-left-tab') ?? this._activeMenuTarget;
-        
+
         log.debug(`_onPointerDownCapture | button: ${event.button}, targetItem:`, targetItem, `activeItem:`, activeItem);
-        
+
         if (targetItem && activeItem === targetItem) {
             log.debug("Pointerdown click on active target, preparing to prevent reopen");
             this._preventReopen = true;
@@ -930,10 +1011,10 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         if (this._preventReopen) {
             log.debug("Preventing context menu from reopening (toggled off)");
             this._preventReopen = false;
-            
+
             // Safe close in capture phase (catch promise rejections)
-            this._contextMenu?.close()?.catch?.(err => {});
-            
+            this._contextMenu?.close()?.catch?.(err => { });
+
             event.preventDefault();
             event.stopPropagation();
             event.stopImmediatePropagation();
@@ -966,7 +1047,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             event.preventDefault();
             event.stopPropagation();
             event.stopImmediatePropagation();
-            
+
             // Delegate to system adapter for custom right-click behavior (e.g. toggling unprepared spells in dnd5e)
             const handled = actionDisplay.activeSystemAdapter?.onTabRightClick?.(this, leftSubTarget, event) ?? false;
             if (!handled) {
@@ -992,16 +1073,16 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
 
         const targetItem = event.target.closest('.bad-action-item, .bad-left-sub-tab, .bad-left-tab');
         const activeItem = this._activeMenuTarget?.closest('.bad-action-item, .bad-left-sub-tab, .bad-left-tab') ?? this._activeMenuTarget;
-        
+
         log.debug(`_onContextMenuCapture | targetItem:`, targetItem, `activeItem:`, activeItem);
 
         if (targetItem && activeItem === targetItem) {
             log.debug("Right-clicked the same item, toggling context menu off (fallback)");
-            
+
             this._contextMenu?.close()?.catch?.(err => {
                 log.debug("ContextMenu.close promise rejected in fallback:", err);
             });
-            
+
             event.preventDefault();
             event.stopPropagation();
             event.stopImmediatePropagation();
@@ -1088,7 +1169,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
 
         const itemId = action.originalItem?.id ?? action.id;
         const hiddenItems = this.actor.getFlag(MODULE_ID, 'hiddenItems') ?? [];
-        
+
         let newHiddenItems = [...hiddenItems];
         if (shouldHide) {
             if (!newHiddenItems.includes(itemId)) {
@@ -1111,6 +1192,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
 
     _onDragStart(event) {
         event.preventDefault();
+        this._clearMenuState();
         const el = this.element;
         if (!el) return;
 
@@ -1124,7 +1206,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
 
         document.addEventListener('mousemove', this._onDragMove);
         document.addEventListener('mouseup', this._onDragEnd);
-        
+
         log.debug("Drag started");
     }
 
@@ -1198,6 +1280,9 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
      * In Detached mode, places it at the user's last dragged screen coordinates.
      */
     setPosition(position = {}) {
+        if (this._activeLeftClickMenu) {
+            this._clearMenuState();
+        }
         const el = this.element;
         if (!el) return super.setPosition(position);
 
