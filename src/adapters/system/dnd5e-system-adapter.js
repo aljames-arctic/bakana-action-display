@@ -350,25 +350,23 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
      * @param {ApplicationV2} app The ActionDisplayApp instance
      * @returns {Object[]} An array of context menu item configurations
      */
+    #getContextItem(app, el) {
+        if (!app.actor?.isOwner) return null;
+        const action = app.actions.find(a => a.id === el.dataset.actionId);
+        return action?.originalItem ?? null;
+    }
+
     getContextMenuItems(app) {
         return [
             {
                 name: "BAD.common.prepareSpell",
                 icon: '<i class="fas fa-book"></i>',
                 condition: el => {
-                    if (!app.actor?.isOwner) return false;
-                    const action = app.actions.find(a => a.id === el.dataset.actionId);
-                    if (!action) return false;
-                    const item = action.originalItem;
-                    if (item?.type !== 'spell') return false;
-                    
-                    const prepMode = item.system.method;
-                    const isPrepared = !!item.system.prepared;
-                    return !['innate', 'atwill', 'pact'].includes(prepMode) && !isPrepared;
+                    const item = this.#getContextItem(app, el);
+                    return item?.type === 'spell' && !['innate', 'atwill', 'pact'].includes(item.system.method) && !item.system.prepared;
                 },
                 callback: async el => {
-                    const action = app.actions.find(a => a.id === el.dataset.actionId);
-                    const item = action?.originalItem;
+                    const item = this.#getContextItem(app, el);
                     if (item) {
                         log.debug(`Preparing spell: ${item.name}`);
                         await item.update({ "system.prepared": 1 });
@@ -379,18 +377,11 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                 name: "BAD.common.unprepareSpell",
                 icon: '<i class="fas fa-book-dead"></i>',
                 condition: el => {
-                    if (!app.actor?.isOwner) return false;
-                    const action = app.actions.find(a => a.id === el.dataset.actionId);
-                    if (!action) return false;
-                    const item = action.originalItem;
-                    if (item?.type !== 'spell') return false;
-                    
-                    const prepMode = item.system.method;
-                    return !['innate', 'atwill', 'pact'].includes(prepMode) && item.system.prepared === 1;
+                    const item = this.#getContextItem(app, el);
+                    return item?.type === 'spell' && !['innate', 'atwill', 'pact'].includes(item.system.method) && !!item.system.prepared;
                 },
                 callback: async el => {
-                    const action = app.actions.find(a => a.id === el.dataset.actionId);
-                    const item = action?.originalItem;
+                    const item = this.#getContextItem(app, el);
                     if (item) {
                         log.debug(`Unpreparing spell: ${item.name}`);
                         await item.update({ "system.prepared": 0 });
@@ -401,16 +392,11 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                 name: "BAD.common.equipItem",
                 icon: '<i class="fas fa-shield-halved"></i>',
                 condition: el => {
-                    if (!app.actor?.isOwner) return false;
-                    const action = app.actions.find(a => a.id === el.dataset.actionId);
-                    if (!action) return false;
-                    const item = action.originalItem;
-                    if (!item || !['weapon', 'equipment'].includes(item.type)) return false;
-                    return !this.getItemEquipped(item);
+                    const item = this.#getContextItem(app, el);
+                    return item && ['weapon', 'equipment'].includes(item.type) && !this.getItemEquipped(item);
                 },
                 callback: async el => {
-                    const action = app.actions.find(a => a.id === el.dataset.actionId);
-                    const item = action?.originalItem;
+                    const item = this.#getContextItem(app, el);
                     if (item) {
                         log.debug(`Equipping item: ${item.name}`);
                         await item.update({ "system.equipped": true });
@@ -421,16 +407,11 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                 name: "BAD.common.unequipItem",
                 icon: '<i class="fas fa-shield-slash"></i>',
                 condition: el => {
-                    if (!app.actor?.isOwner) return false;
-                    const action = app.actions.find(a => a.id === el.dataset.actionId);
-                    if (!action) return false;
-                    const item = action.originalItem;
-                    if (!item || !['weapon', 'equipment'].includes(item.type)) return false;
-                    return this.getItemEquipped(item);
+                    const item = this.#getContextItem(app, el);
+                    return item && ['weapon', 'equipment'].includes(item.type) && this.getItemEquipped(item);
                 },
                 callback: async el => {
-                    const action = app.actions.find(a => a.id === el.dataset.actionId);
-                    const item = action?.originalItem;
+                    const item = this.#getContextItem(app, el);
                     if (item) {
                         log.debug(`Unequipping item: ${item.name}`);
                         await item.update({ "system.equipped": false });
