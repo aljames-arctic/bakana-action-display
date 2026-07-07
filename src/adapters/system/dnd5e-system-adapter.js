@@ -793,26 +793,9 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
      * @private
      */
     #hasLimitedUses(item) {
-        const system = item.system;
-        
-        // 1. Check item-level uses
-        if (system.uses && system.uses.max && system.uses.max !== "0") {
-            const max = parseInt(system.uses.max, 10) || 0;
-            if (max > 0) return true;
-        }
-        
-        // 2. Check activity-level uses
-        const activities = system.activities;
-        if (activities) {
-            for (const activity of activities.values()) {
-                if (activity.uses && activity.uses.max && activity.uses.max !== "0") {
-                    const max = parseInt(activity.uses.max, 10) || 0;
-                    if (max > 0) return true;
-                }
-            }
-        }
-        
-        return false;
+        if (this.#calculateLimitedUses(item.system?.uses)) return true;
+        return Array.from(item.system?.activities?.values() ?? [])
+            .some(activity => this.#calculateLimitedUses(activity.uses));
     }
 
     /**
