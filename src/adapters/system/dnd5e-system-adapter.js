@@ -287,14 +287,6 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         return modified;
     }
 
-    /**
-     * Check if a spell's properties contain a specific property label (e.g. 'vocal', 'somatic', 'material').
-     * Enforces strict type validation (must be Set or Array if present).
-     * @param {Set<string>|Array<string>|null} spellProps
-     * @param {string} prop
-     * @returns {boolean}
-     * @private
-     */
     // #endregion
 
     // #region Internal Filtering Logic
