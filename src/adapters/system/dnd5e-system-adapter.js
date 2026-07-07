@@ -106,13 +106,9 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
             let isSpellUnprepared = false;
             if (type === 'spell') {
                 const prepMode = item.system.method;
-                const isPrepared = !!item.system.prepared;
+                isSpellUnprepared = !['innate', 'atwill', 'pact'].includes(prepMode) && !item.system.prepared;
                 const showUnprepared = actor.getFlag(MODULE_ID, 'showUnprepared');
-                
-                if (!['innate', 'atwill', 'pact'].includes(prepMode) && !isPrepared) {
-                    isSpellUnprepared = true;
-                }
-                
+
                 if (!showUnprepared && isSpellUnprepared && !isUserHidden) {
                     continue;
                 }
