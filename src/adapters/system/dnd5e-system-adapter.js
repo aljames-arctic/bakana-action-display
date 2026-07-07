@@ -664,6 +664,13 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         return false;
     }
 
+    #docHasComponent(doc, component) {
+        if (!doc) return false;
+        return this.#containerHasComponent(doc, component) ||
+               this.#containerHasComponent(doc.system?.properties ?? doc.properties, component) ||
+               this.#containerHasComponent(doc.system?.components ?? doc.components, component);
+    }
+
     /**
      * Helper to check if a subaction, activity, linked spell, or item requires a given spell component ('vocal', 'somatic', 'material').
      * Checks the action/activity/item directly and via root spell doc resolution.
@@ -674,24 +681,8 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
      */
     #requiresComponent(sub, component) {
         if (!sub) return false;
-
-        const docsToCheck = new Set([
-            sub,
-            sub.linkedAction,
-            sub.originalActivity,
-            sub.originalItem,
-            this.#resolveRootSpellDocument(sub)
-        ].filter(Boolean));
-
-        for (const doc of docsToCheck) {
-            if (this.#containerHasComponent(doc, component)) return true;
-            const props = doc.system?.properties ?? doc.properties;
-            if (this.#containerHasComponent(props, component)) return true;
-            const comps = doc.system?.components ?? doc.components;
-            if (this.#containerHasComponent(comps, component)) return true;
-        }
-
-        return false;
+        const docsToCheck = [sub, sub.linkedAction, sub.originalActivity, sub.originalItem, this.#resolveRootSpellDocument(sub)];
+        return docsToCheck.some(doc => this.#docHasComponent(doc, component));
     }
 
     /**
