@@ -916,45 +916,26 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
      */
     #getSpellSlotUses(actor, level, highestAvailableSlot) {
         const actorSpells = actor.system.spells;
-        
-        if (level === 'pact') {
-            const pact = actorSpells?.pact;
-            const available = pact?.value ?? 0;
-            const max = pact?.max ?? 0;
-            
-            if (available > 0) {
-                return { available, max };
-            }
-            
-            if (this.#hasAvailableUpcastSlots(pact?.level ?? 0, highestAvailableSlot)) {
-                return {
-                    available: localize('BAD.dnd5e.upcast', 'Upcast'),
-                    max: null,
-                    isUpcast: true
-                };
-            }
-            return { available: 0, max };
-        } else {
-            const lvl = Number(level) || 0;
-            if (lvl <= 0) return { available: null, max: null };
-            
-            const spellSlot = actorSpells?.[`spell${lvl}`];
-            const available = spellSlot?.value ?? 0;
-            const max = spellSlot?.max ?? 0;
-            
-            if (available > 0) {
-                return { available, max };
-            }
-            
-            if (this.#hasAvailableUpcastSlots(lvl, highestAvailableSlot)) {
-                return {
-                    available: localize('BAD.dnd5e.upcast', 'Upcast'),
-                    max: null,
-                    isUpcast: true
-                };
-            }
-            return { available: 0, max };
+        const isPact = level === 'pact';
+        const lvl = isPact ? (actorSpells?.pact?.level ?? 0) : (Number(level) || 0);
+
+        if (!isPact && lvl <= 0) return { available: null, max: null };
+
+        const slot = isPact ? actorSpells?.pact : actorSpells?.[`spell${lvl}`];
+        const available = slot?.value ?? 0;
+        const max = slot?.max ?? 0;
+
+        if (available > 0) {
+            return { available, max };
         }
+        if (highestAvailableSlot >= lvl) {
+            return {
+                available: localize('BAD.dnd5e.upcast', 'Upcast'),
+                max: null,
+                isUpcast: true
+            };
+        }
+        return { available: 0, max };
     }
 
     /**
