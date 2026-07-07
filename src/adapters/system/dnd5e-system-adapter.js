@@ -322,42 +322,23 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
 
     modifyContext(context, app) {
         super.modifyContext(context, app);
-        
-        const spellParent = context.itemTypes.find(t => t.id === 'spell');
-        if (spellParent && spellParent.subTabs.length > 0) {
-            const showUnprepared = app.actor.getFlag(MODULE_ID, 'showUnprepared') ?? false;
-            spellParent.addSubTab({
-                id: 'all',
-                label: localize('BAD.common.allSpells', 'All Spells'),
-                active: app.leftTabs.activeParents.has('spell') && app.leftTabs.activeSubTypes.size === 0,
-                showUnprepared: showUnprepared
-            });
-            spellParent.updateOrder(Object.keys(SORT_ORDERS.tabs['spell']));
-        }
+        const findParent = id => context.itemTypes.find(t => t.id === id);
 
-        const weaponParent = context.itemTypes.find(t => t.id === 'weapon');
-        if (weaponParent) {
-            const showUnequipped = app.actor.getFlag(MODULE_ID, 'showUnequipped_weapon') ?? false;
-            weaponParent.addSubTab({
-                id: 'all',
-                label: localize('BAD.common.allWeapons', 'All Weapons'),
-                active: app.leftTabs.activeParents.has('weapon') && app.leftTabs.activeSubTypes.size === 0,
-                showUnprepared: showUnequipped
-            });
-            weaponParent.updateOrder(Object.keys(SORT_ORDERS.tabs['weapon']));
-        }
+        this.#ensureAllSubTab(findParent('spell'), app, localize('BAD.common.allSpells', 'All Spells'), 'showUnprepared', true);
+        this.#ensureAllSubTab(findParent('weapon'), app, localize('BAD.common.allWeapons', 'All Weapons'), 'showUnequipped_weapon');
+        this.#ensureAllSubTab(findParent('equipment'), app, localize('BAD.common.allEquipment', 'All Equipment'), 'showUnequipped_equipment');
+    }
 
-        const equipmentParent = context.itemTypes.find(t => t.id === 'equipment');
-        if (equipmentParent) {
-            const showUnequipped = app.actor.getFlag(MODULE_ID, 'showUnequipped_equipment') ?? false;
-            equipmentParent.addSubTab({
-                id: 'all',
-                label: localize('BAD.common.allEquipment', 'All Equipment'),
-                active: app.leftTabs.activeParents.has('equipment') && app.leftTabs.activeSubTypes.size === 0,
-                showUnprepared: showUnequipped
-            });
-            equipmentParent.updateOrder(Object.keys(SORT_ORDERS.tabs['equipment']));
-        }
+    #ensureAllSubTab(parent, app, label, flagKey, requireSubTabs = false) {
+        if (!parent || (requireSubTabs && parent.subTabs.length === 0)) return;
+        const showUnprepared = app.actor.getFlag(MODULE_ID, flagKey) ?? false;
+        parent.addSubTab({
+            id: 'all',
+            label,
+            active: app.leftTabs.activeParents.has(parent.id) && app.leftTabs.activeSubTypes.size === 0,
+            showUnprepared
+        });
+        parent.updateOrder(Object.keys(SORT_ORDERS.tabs[parent.id]));
     }
 
     // #endregion
