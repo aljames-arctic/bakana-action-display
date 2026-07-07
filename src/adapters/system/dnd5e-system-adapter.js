@@ -984,7 +984,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
 
     #getAmmoQuantities(actor) {
         const ammoQuantities = new Map();
-        for (const i of actor.items) {
+        for (const i of actor?.items ?? []) {
             if (i.type === 'consumable' && i.system.type?.value === 'ammo') {
                 const subtype = i.system.type.subtype;
                 if (subtype) {
