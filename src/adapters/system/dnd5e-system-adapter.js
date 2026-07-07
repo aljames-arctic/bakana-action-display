@@ -54,6 +54,44 @@ const ACTION_TYPE_ICONS = {
     'components': 'fas fa-magic'
 };
 
+const ITEM_TYPE_LABEL_KEYS = {
+    'all': ['BAD.core.allItems', 'All Items'],
+    'weapon': ['DND5E.ItemTypeWeapon', 'Weapon'],
+    'equipment': ['DND5E.ItemTypeEquipment', 'Equipment'],
+    'consumable': ['DND5E.ItemTypeConsumable', 'Consumable'],
+    'tool': ['DND5E.ItemTypeTool', 'Tool'],
+    'backpack': ['DND5E.ItemTypeContainer', 'Container'],
+    'loot': ['DND5E.ItemTypeLoot', 'Loot'],
+    'feat': ['DND5E.ItemTypeFeat', 'Feature'],
+    'spell': ['DND5E.ItemTypeSpell', 'Spell'],
+    'other': ['DND5E.ActionOther', 'Other'],
+    'hidden': ['BAD.core.hidden', 'Hidden']
+};
+
+const ACTION_TYPE_LABEL_KEYS = {
+    'economy': ['BAD.common.actionEconomy', 'Action Economy'],
+    'components': ['BAD.common.spellComponents', 'Spell Components']
+};
+
+const ACTION_SUBTAB_LABEL_KEYS = {
+    'all': ['BAD.core.allActions', 'All Actions'],
+    'action': ['DND5E.Action', 'Action'],
+    'bonus': ['DND5E.BonusAction', 'Bonus Action'],
+    'reaction': ['DND5E.Reaction', 'Reaction'],
+    'minute': ['DND5E.TimeMinute', 'Minute'],
+    'hour': ['DND5E.TimeHour', 'Hour'],
+    'day': ['DND5E.TimeDay', 'Day'],
+    'legendary': ['DND5E.LegendaryAction', 'Legendary'],
+    'mythic': ['DND5E.MythicAction', 'Mythic'],
+    'lair': ['DND5E.LairAction', 'Lair'],
+    'crew': ['DND5E.CrewAction', 'Crew'],
+    'special': ['DND5E.Special', 'Special'],
+    'none': ['DND5E.None', 'None'],
+    'vocal': ['DND5E.ComponentVerbal', 'Verbal'],
+    'somatic': ['DND5E.ComponentSomatic', 'Somatic'],
+    'material': ['DND5E.ComponentMaterial', 'Material']
+};
+
 /**
  * System adapter for D&D 5th Edition.
  * Handles D&D 5e's specific item types, action categories, spell slot calculations,
@@ -471,20 +509,8 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
 
 
     getItemTypeLabel(parentId) {
-        const labels = {
-            'all': localize('BAD.core.allItems', 'All Items'),
-            'weapon': localize('DND5E.ItemTypeWeapon', 'Weapon'),
-            'equipment': localize('DND5E.ItemTypeEquipment', 'Equipment'),
-            'consumable': localize('DND5E.ItemTypeConsumable', 'Consumable'),
-            'tool': localize('DND5E.ItemTypeTool', 'Tool'),
-            'backpack': localize('DND5E.ItemTypeContainer', 'Container'),
-            'loot': localize('DND5E.ItemTypeLoot', 'Loot'),
-            'feat': localize('DND5E.ItemTypeFeat', 'Feature'),
-            'spell': localize('DND5E.ItemTypeSpell', 'Spell'),
-            'other': localize('DND5E.ActionOther', 'Other'),
-            'hidden': localize('BAD.core.hidden', 'Hidden')
-        };
-        return labels[parentId] ?? super.getItemTypeLabel(parentId);
+        const config = ITEM_TYPE_LABEL_KEYS[parentId];
+        return config ? localize(config[0], config[1]) : super.getItemTypeLabel(parentId);
     }
 
     getItemTypeIcon(parentId) {
@@ -529,11 +555,8 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
      * Get the localized label for a right-side action type (parent tab) for DnD5e.
      */
     getActionTypeLabel(parentId) {
-        const labels = {
-            'economy': localize('BAD.common.actionEconomy', 'Action Economy'),
-            'components': localize('BAD.common.spellComponents', 'Spell Components')
-        };
-        return labels[parentId] ?? super.getActionTypeLabel(parentId);
+        const config = ACTION_TYPE_LABEL_KEYS[parentId];
+        return config ? localize(config[0], config[1]) : super.getActionTypeLabel(parentId);
     }
 
     /**
@@ -544,25 +567,8 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
     }
 
     getActionSubTabLabel(subId) {
-        const labels = {
-            'all': localize('BAD.core.allActions', 'All Actions'),
-            'action': localize('DND5E.Action', 'Action'),
-            'bonus': localize('DND5E.BonusAction', 'Bonus Action'),
-            'reaction': localize('DND5E.Reaction', 'Reaction'),
-            'minute': localize('DND5E.TimeMinute', 'Minute'),
-            'hour': localize('DND5E.TimeHour', 'Hour'),
-            'day': localize('DND5E.TimeDay', 'Day'),
-            'legendary': localize('DND5E.LegendaryAction', 'Legendary'),
-            'mythic': localize('DND5E.MythicAction', 'Mythic'),
-            'lair': localize('DND5E.LairAction', 'Lair'),
-            'crew': localize('DND5E.CrewAction', 'Crew'),
-            'special': localize('DND5E.Special', 'Special'),
-            'none': localize('DND5E.None', 'None'),
-            'vocal': localize('DND5E.ComponentVerbal', 'Verbal'),
-            'somatic': localize('DND5E.ComponentSomatic', 'Somatic'),
-            'material': localize('DND5E.ComponentMaterial', 'Material')
-        };
-        return labels[subId] ?? super.getActionSubTabLabel(subId);
+        const config = ACTION_SUBTAB_LABEL_KEYS[subId];
+        return config ? localize(config[0], config[1]) : super.getActionSubTabLabel(subId);
     }
 
     // #endregion
