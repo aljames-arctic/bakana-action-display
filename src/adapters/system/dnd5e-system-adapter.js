@@ -93,9 +93,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
             const props = item.system?.properties;
             const spellComponents = [];
             if (item.type === 'spell') {
-                if (this.#requiresComponent(action, 'vocal')) spellComponents.push(TabRef.from('components', 'vocal'));
-                if (this.#requiresComponent(action, 'somatic')) spellComponents.push(TabRef.from('components', 'somatic'));
-                if (this.#requiresComponent(action, 'material')) spellComponents.push(TabRef.from('components', 'material'));
+                spellComponents.push(...this.#getComponentTabs(action));
             }
 
             // Check if user has hidden this item
@@ -160,16 +158,8 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
 
                 // Extract spell components from linked spells on cast activities or item properties if present
                 for (const act of mappedActivities) {
-                    const isVocal = this.#requiresComponent(act, 'vocal');
-                    const isSomatic = this.#requiresComponent(act, 'somatic');
-                    const isMaterial = this.#requiresComponent(act, 'material');
-
-                    if (isVocal || isSomatic || isMaterial) {
-                        const compTabs = [];
-                        if (isVocal) compTabs.push(TabRef.from('components', 'vocal'));
-                        if (isSomatic) compTabs.push(TabRef.from('components', 'somatic'));
-                        if (isMaterial) compTabs.push(TabRef.from('components', 'material'));
-
+                    const compTabs = this.#getComponentTabs(act);
+                    if (compTabs.length > 0) {
                         spellComponents.push(...compTabs);
                         act.tabs = [...act.tabs, ...compTabs];
                     }
@@ -734,6 +724,18 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         }
 
         return false;
+    }
+
+    /**
+     * Get component TabRefs required by an action, activity, or item.
+     * @param {Action|Object} doc
+     * @returns {TabRef[]}
+     * @private
+     */
+    #getComponentTabs(doc) {
+        return ['vocal', 'somatic', 'material']
+            .filter(comp => this.#requiresComponent(doc, comp))
+            .map(comp => TabRef.from('components', comp));
     }
 
     /**
