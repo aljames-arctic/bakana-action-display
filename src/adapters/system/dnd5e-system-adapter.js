@@ -194,10 +194,12 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                     }
                 }
 
-                log.debug(`[BAD Debug] Item "${item.name}" (${item.id}) activities: totalMapped=${mappedActivities.length}, afterResourceFilter=${filteredActivities.length} (filterNoResources=${filterNoResources})`);
-                if (item.id === 'mmSpellcasting00' || item.name === 'Spellcasting') {
-                    log.debug(`[BAD Debug] Spellcasting activities (${filteredActivities.length}/${mappedActivities.length}):`, mappedActivities.map(a => ({ name: a.name, uses: a.uses, isDepleted: a.isDepleted, tabs: a.tabs?.map(t => t.path) })));
-                }
+                log.debug(`Item "${item.name}" (${item.id}) activities (${filteredActivities.length}/${mappedActivities.length}):`, mappedActivities.map(a => ({
+                    name: a.name,
+                    uses: a.uses,
+                    isDepleted: a.isDepleted,
+                    tabs: a.tabs?.map(t => t.path)
+                })));
 
                 // Assign to hierarchical item types: [parentType, subType] (for left-side tabs)
                 const hasCastActivity = filteredActivities.some(act => act.originalActivity?.type === 'cast');

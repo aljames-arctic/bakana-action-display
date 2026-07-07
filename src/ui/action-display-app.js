@@ -689,7 +689,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                 const adapter = actionDisplay.activeSystemAdapter;
                 const qualifyingSubActions = adapter.filterSubactions(itemActivities, filterContext, action.itemTypes);
 
-                log.debug(`[BAD Debug] _onRollAction "${action.name}" (${action.id})`, {
+                log.debug(`_onRollAction | "${action.name}" (${action.id})`, {
                     totalSubactions: itemActivities.length,
                     activeExclusions: adapter.getActiveExclusionSubs?.(filterContext) ?? [],
                     qualifyingCount: qualifyingSubActions.length,
@@ -710,7 +710,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                     action.roll(event);
                 }
             } else {
-                log.debug(`[BAD Debug] _onRollAction "${action.name}" (${action.id}) has no subactions (length 0)`);
+                log.debug(`_onRollAction | "${action.name}" (${action.id}) has no subactions (length 0)`);
                 // No sub-actions: roll directly
                 action.roll(event);
             }
@@ -759,7 +759,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
     _showActivityDropdown(target, subactions, event) {
         event?.preventDefault?.();
         event?.stopPropagation?.();
-        log.debug(`[BAD Debug] _showActivityDropdown for "${target.dataset.actionId}" with ${subactions.length} items:`, subactions.map(s => s.name));
+        log.debug(`_showActivityDropdown | "${target.dataset.actionId}" with ${subactions.length} items:`, subactions.map(s => s.name));
         const menuItems = subactions.map(sub => this._buildSubactionMenuItem(sub, event));
         log.debug(`_showActivityDropdown | Creating menu for: ${target.dataset.actionId}`, target);
 
@@ -844,7 +844,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                     child.style.setProperty('overflow-y', 'auto', 'important');
                 });
 
-                log.debug(`[BAD Debug] _showActivityDropdown DOM check:`, {
+                log.debug(`_showActivityDropdown | DOM check:`, {
                     menuItemsCount: menuItems.length,
                     renderedLisCount: menuEl.querySelectorAll('.context-item').length,
                     renderedNames: Array.from(menuEl.querySelectorAll('.context-item')).map(el => el.textContent.trim()),
