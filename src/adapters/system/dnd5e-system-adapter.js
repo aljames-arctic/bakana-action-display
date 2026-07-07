@@ -246,20 +246,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                 })));
 
                 // Assign to hierarchical item types: [parentType, subType] (for left-side tabs)
-                const hasCastActivity = filteredActivities.some(act => act.originalActivity?.type === 'cast');
-                const isItemCharges = (type === 'equipment' && this.#hasLimitedUses(item))
-                    || (['feat', 'weapon', 'consumable', 'tool'].includes(type) && this.#hasLimitedUses(item) && hasCastActivity);
-
-                let itemTypes = [type];
-                if (type === 'spell') {
-                    const level = item.system.level ?? 0;
-                    itemTypes = ['spell', `level_${level}`];
-                } else if (isItemCharges) {
-                    itemTypes = ['spell', 'itemCharges'];
-                } else if (type === 'weapon' || type === 'equipment') {
-                    const subType = item.system.type?.value;
-                    itemTypes = subType ? [type, subType] : [type];
-                }
+                const itemTypes = this.#getItemTabTypes(item, type, filteredActivities);
 
                 // Calculate main action uses
                 let actionUses;
@@ -711,6 +698,26 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
             }
         }
         return Array.from(uniqueTabsMap.values());
+    }
+
+    #getItemTabTypes(item, type, filteredActivities) {
+        if (type === 'spell') {
+            return ['spell', `level_${item.system.level ?? 0}`];
+        }
+
+        const hasLimited = this.#hasLimitedUses(item);
+        const hasCastActivity = filteredActivities.some(act => act.originalActivity?.type === 'cast');
+        const isItemCharges = (type === 'equipment' && hasLimited)
+            || (['feat', 'weapon', 'consumable', 'tool'].includes(type) && hasLimited && hasCastActivity);
+
+        if (isItemCharges) {
+            return ['spell', 'itemCharges'];
+        }
+        if (type === 'weapon' || type === 'equipment') {
+            const subType = item.system.type?.value;
+            return subType ? [type, subType] : [type];
+        }
+        return [type];
     }
 
     /**
