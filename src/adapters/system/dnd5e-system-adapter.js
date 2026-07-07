@@ -93,9 +93,9 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
             const props = item.system?.properties;
             const spellComponents = [];
             if (item.type === 'spell') {
-                if (this.#subRequiresComponent(action, 'vocal')) spellComponents.push(TabRef.from('components', 'vocal'));
-                if (this.#subRequiresComponent(action, 'somatic')) spellComponents.push(TabRef.from('components', 'somatic'));
-                if (this.#subRequiresComponent(action, 'material')) spellComponents.push(TabRef.from('components', 'material'));
+                if (this.#requiresComponent(action, 'vocal')) spellComponents.push(TabRef.from('components', 'vocal'));
+                if (this.#requiresComponent(action, 'somatic')) spellComponents.push(TabRef.from('components', 'somatic'));
+                if (this.#requiresComponent(action, 'material')) spellComponents.push(TabRef.from('components', 'material'));
             }
 
             // Check if user has hidden this item
@@ -164,9 +164,9 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
 
                 // Extract spell components from linked spells on cast activities or item properties if present
                 for (const act of mappedActivities) {
-                    const isVocal = this.#subRequiresComponent(act, 'vocal');
-                    const isSomatic = this.#subRequiresComponent(act, 'somatic');
-                    const isMaterial = this.#subRequiresComponent(act, 'material');
+                    const isVocal = this.#requiresComponent(act, 'vocal');
+                    const isSomatic = this.#requiresComponent(act, 'somatic');
+                    const isMaterial = this.#requiresComponent(act, 'material');
 
                     if (isVocal || isSomatic || isMaterial) {
                         const compTabs = [];
@@ -295,7 +295,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
 
         // Filter out subactions requiring banned spell components
         return baseFiltered.filter(sub => {
-            const hasPropertyMatch = activeCompSubs.some(comp => this.#subRequiresComponent(sub, comp));
+            const hasPropertyMatch = activeCompSubs.some(comp => this.#requiresComponent(sub, comp));
             const hasTabMatch = sub.tabs?.some(tab => tab.root === 'components' && activeCompSubs.includes(tab.label));
             return !hasPropertyMatch && !hasTabMatch;
         });
@@ -718,7 +718,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
      * @returns {boolean}
      * @private
      */
-    #subRequiresComponent(sub, component) {
+    #requiresComponent(sub, component) {
         if (!sub) return false;
 
         const docsToCheck = new Set([
