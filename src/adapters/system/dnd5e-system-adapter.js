@@ -60,14 +60,8 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
      */
     shouldExtractItem(item) {
         const type = item.type;
-        if (!ALLOWED_TYPES.has(type)) return false;
-        if (item.getFlag('dnd5e', 'cachedFor')) return false;
-
-        const isEquipped = this.getItemEquipped(item);
-        if (['consumable', 'tool'].includes(type) && !isEquipped) {
-            return false;
-        }
-        return true;
+        if (!ALLOWED_TYPES.has(type) || item.getFlag('dnd5e', 'cachedFor')) return false;
+        return !(['consumable', 'tool'].includes(type) && !this.getItemEquipped(item));
     }
 
     /**
