@@ -997,20 +997,20 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
     }
 
     #getHighestAvailableSpellSlot(actor) {
-        let highestAvailableSlot = 0;
-        const actorSpells = actor.system.spells;
-        if (actorSpells) {
-            for (let i = 1; i <= 9; i++) {
-                if (actorSpells[`spell${i}`]?.value > 0) {
-                    highestAvailableSlot = i; // Since we loop 1 to 9, this naturally finds the highest
-                }
-            }
-            const pact = actorSpells.pact;
-            if (pact?.value > 0) {
-                highestAvailableSlot = Math.max(highestAvailableSlot, pact.level ?? 0);
+        const actorSpells = actor?.system?.spells;
+        if (!actorSpells) return 0;
+
+        let highest = 0;
+        for (let i = 9; i >= 1; i--) {
+            if (actorSpells[`spell${i}`]?.value > 0) {
+                highest = i;
+                break;
             }
         }
-        return highestAvailableSlot;
+        if (actorSpells.pact?.value > 0) {
+            highest = Math.max(highest, actorSpells.pact.level ?? 0);
+        }
+        return highest;
     }
 
     /**
