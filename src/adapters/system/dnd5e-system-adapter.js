@@ -121,13 +121,9 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
             // 2. Filter out unequipped weapons and equipment (unless showUnequipped is enabled or item is user-hidden)
             let isUnequipped = false;
             if (['weapon', 'equipment'].includes(type)) {
-                const isEquipped = this.getItemEquipped(item);
+                isUnequipped = !this.getItemEquipped(item);
                 const showUnequipped = actor.getFlag(MODULE_ID, `showUnequipped_${type}`);
-                
-                if (!isEquipped) {
-                    isUnequipped = true;
-                }
-                
+
                 if (!showUnequipped && isUnequipped && !isUserHidden) {
                     continue;
                 }
