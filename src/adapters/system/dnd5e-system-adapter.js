@@ -505,15 +505,16 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                 return localize(key, `${ord} Level`);
             }
         }
-        if (parentId === 'weapon') {
-            if (subId === 'all') return localize('BAD.common.allWeapons', 'All Weapons');
-            const key = `DND5E.Weapon${subId.charAt(0).toUpperCase() + subId.slice(1)}`;
-            return localize(key, CONFIG?.DND5E?.weaponTypes?.[subId] ?? subId);
-        }
-        if (parentId === 'equipment') {
-            if (subId === 'all') return localize('BAD.common.allEquipment', 'All Equipment');
-            const key = `DND5E.Equipment${subId.charAt(0).toUpperCase() + subId.slice(1)}`;
-            return localize(key, CONFIG?.DND5E?.equipmentTypes?.[subId] ?? subId);
+        if (parentId === 'weapon' || parentId === 'equipment') {
+            if (subId === 'all') {
+                const labelKey = parentId === 'weapon' ? 'allWeapons' : 'allEquipment';
+                const fallback = parentId === 'weapon' ? 'All Weapons' : 'All Equipment';
+                return localize(`BAD.common.${labelKey}`, fallback);
+            }
+            const prefix = parentId.charAt(0).toUpperCase() + parentId.slice(1);
+            const subTitle = subId.charAt(0).toUpperCase() + subId.slice(1);
+            const configMap = parentId === 'weapon' ? CONFIG?.DND5E?.weaponTypes : CONFIG?.DND5E?.equipmentTypes;
+            return localize(`DND5E.${prefix}${subTitle}`, configMap?.[subId] ?? subId);
         }
         return super.getItemSubTabLabel(parentId, subId);
     }
