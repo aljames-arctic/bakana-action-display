@@ -376,3 +376,20 @@ flowchart TD
      const tabRef = TabRef.from('components', 'vocal');
      // Instantiates TabRef(label: 'vocal', parent: TabRef(label: 'components'))
      ```
+
+---
+
+## 6. Testing & Development
+
+The repository includes a zero-dependency native Node.js unit test suite (`node --test`) covering adapter initialization, filtering rules, and item transformation pipelines.
+
+### Running Tests Locally
+Ensure you have Node.js 18+ installed and run:
+```bash
+npm test
+```
+
+### Test Suite Architecture
+- **Global Foundry VTT Mocks (`tests/setup.js`)**: Shims global Foundry objects (`game`, `foundry`, `Item`, `Actor`, `fromUuidSync`) so system adapters can execute offline without requiring a live Foundry server or browser environment.
+- **System Adapter Coverage (`tests/**`)**: Comprehensive unit tests covering `BaseSystemAdapter`, `Dnd5eSystemAdapter`, `Pf1SystemAdapter`, and `Pf2eSystemAdapter`.
+

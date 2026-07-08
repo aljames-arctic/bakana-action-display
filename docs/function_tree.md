@@ -332,6 +332,7 @@ flowchart TD
 
 ### [`src/adapters/system/dnd5e-system-adapter.js`](../src/adapters/system/dnd5e-system-adapter.js) — D&D 5e System Adapter (`Dnd5eSystemAdapter`)
 - [**`shouldExtractItem(item)`**](../src/adapters/system/dnd5e-system-adapter.js#L66-L76): Filters out unallowed item types, helper items, and unequipped tools/consumables.
+- [**`calculateUses(item)`**](../src/adapters/system/dnd5e-system-adapter.js#L743-L745): Public wrapper calculating available and maximum uses for items, activities, and spell slots.
 - [**`modifyActions(actions, actor)`**](../src/adapters/system/dnd5e-system-adapter.js#L84-L289): Processes D&D 5e activities, spell preparation, equipment states, and subcategory itemTypes.
 - [**`filterSubactions(subactions, filterContext)`**](../src/adapters/system/dnd5e-system-adapter.js#L302-L316): Filters out subactions requiring banned spell components.
 - [**`modifyContext(context, app)`**](../src/adapters/system/dnd5e-system-adapter.js#L343-L462): Injects "All Spells", "All Weapons", and "All Equipment" sub-tabs and orders subcategory sub-tabs.
