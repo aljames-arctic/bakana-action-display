@@ -116,17 +116,13 @@ export class BaseSystemAdapter {
      * @returns {Object[]} The modified/filtered/sorted actions list
      */
     async modifyActions(actions, actor) {
-        // Default system-agnostic resource filtering
-        const filterNoResources = game.settings.get(MODULE_ID, 'filterNoResources');
-        if (filterNoResources) {
-            return actions.filter(action => {
-                // Never hide weapons, even if they are out of ammo or charges
-                if (action.originalItem?.type === 'weapon') return true;
+        if (!game.settings.get(MODULE_ID, 'filterNoResources')) return actions;
 
-                return !this._isResourceDepleted(action);
-            });
-        }
-        return actions;
+        return actions.filter(action => {
+            // Never hide weapons, even if they are out of ammo or charges
+            if (action.originalItem?.type === 'weapon') return true;
+            return !this._isResourceDepleted(action);
+        });
     }
 
     // #endregion
@@ -240,18 +236,12 @@ export class BaseSystemAdapter {
      * @returns {Action[]} Qualifying sub-actions to show in the dropdown menu
      */
     filterSubactions(subactions, filterContext) {
-        if (!subactions || subactions.length === 0) return [];
+        if (!subactions?.length) return [];
         const { filterNoResources } = filterContext;
 
         return subactions.filter(sub => {
-            if (!this.matchesEconomyTabs(sub, filterContext)) {
-                return false;
-            }
-
-            if (filterNoResources && this._isResourceDepleted(sub)) {
-                return false;
-            }
-
+            if (!this.matchesEconomyTabs(sub, filterContext)) return false;
+            if (filterNoResources && this._isResourceDepleted(sub)) return false;
             return true;
         });
     }
