@@ -106,25 +106,8 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
         }
 
         // 2. Inject Strikes (attacks)
-        // Strikes are dynamically calculated on the actor and are not standard inventory items
-        const strikes = this.#getActorStrikes(actor);
-        for (const strike of strikes) {
-            const uses = this.#getStrikeAmmoUses(strike, ammoQuantities);
-
-            modified.push({
-                id: `strike-${strike.slug ?? strike.name}`,
-                name: strike.label ?? strike.name,
-                type: 'weapon',
-                img: strike.item?.img ?? strike.img ?? strike.imageUrl ?? 'systems/pf2e/icons/default-icons/melee.svg',
-                activationType: 'action', // Strikes cost 1 action
-                tabs: [TabRef.from('economy', 'action')],
-                itemTypes: ['weapon'],
-                hidden: false,
-                uses: uses, // Display remaining ammunition
-                roll: (event) => this.#executeStrikeRoll(strike, event),
-                originalItem: strike.item, // Reference to the weapon item if available
-                extra: { pf2eStrike: strike }
-            });
+        for (const strike of this.#getActorStrikes(actor)) {
+            modified.push(this.#createStrikeAction(strike, ammoQuantities));
         }
 
         // 3. Apply default resource filtering (e.g. hiding depleted actions)
@@ -312,6 +295,23 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
         } else if (typeof strike.roll === 'function') {
             strike.roll({ event: proxiedEvent });
         }
+    }
+
+    #createStrikeAction(strike, ammoQuantities) {
+        return {
+            id: `strike-${strike.slug ?? strike.name}`,
+            name: strike.label ?? strike.name,
+            type: 'weapon',
+            img: strike.item?.img ?? strike.img ?? strike.imageUrl ?? 'systems/pf2e/icons/default-icons/melee.svg',
+            activationType: 'action',
+            tabs: [TabRef.from('economy', 'action')],
+            itemTypes: ['weapon'],
+            hidden: false,
+            uses: this.#getStrikeAmmoUses(strike, ammoQuantities),
+            roll: (event) => this.#executeStrikeRoll(strike, event),
+            originalItem: strike.item,
+            extra: { pf2eStrike: strike }
+        };
     }
 
     /**
