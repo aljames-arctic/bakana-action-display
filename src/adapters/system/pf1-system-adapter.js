@@ -19,6 +19,8 @@ const SORT_ORDERS = {
     }
 };
 
+const EXTRACTABLE_TYPES = new Set(['spell', 'attack', 'weapon', 'consumable', 'feat', 'buff']);
+
 /**
  * System adapter for Pathfinder 1st Edition (PF1e).
  * Handles PF1e's multi-action items, prepared/spontaneous spellcasting, and toggleable buffs.
@@ -35,8 +37,7 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
      * Prevents allocating objects for unhandled item types (like equipment/containers).
      */
     shouldExtractItem(item) {
-        const type = item.type;
-        return ['spell', 'attack', 'weapon', 'consumable', 'feat', 'buff'].includes(type);
+        return EXTRACTABLE_TYPES.has(item.type);
     }
 
     /**
