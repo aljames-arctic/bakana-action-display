@@ -181,27 +181,28 @@ export class BaseSystemAdapter {
 
         return tabs.some(tab => {
             const actionParentId = tab.root;
-            const actionSubId = tab.parent ? tab.label : undefined;
+            if (!activeParents.has(actionParentId)) return false;
 
-            if (this.getTabCombinator(actionParentId) === 'difference') return false;
+            const combinator = this.getTabCombinator(actionParentId);
+            if (combinator === 'difference') return false;
 
-            if (activeParents.has(actionParentId)) {
-                const combinator = this.getTabCombinator(actionParentId);
-                const parentGroup = parentGroups?.[actionParentId];
-                const validSubIds = toSet(parentGroup?.subTabs, t => t.id);
-                const activeSubsForParent = Array.from(activeSubs).filter(id => validSubIds.has(id));
+            const parentGroup = parentGroups?.[actionParentId];
+            const validSubIds = toSet(parentGroup?.subTabs, t => t.id);
+            const activeSubsForParent = Array.from(activeSubs).filter(id => validSubIds.has(id));
 
-                if (combinator === 'intersection' && activeSubsForParent.length > 0) {
-                    return activeSubsForParent.every(subId => tabs.some(t => t.root === actionParentId && t.label === subId));
-                }
+            // If no sub-tabs are active under this parent, matching the parent tab matches all its items
+            if (activeSubsForParent.length === 0) return true;
 
-                if (activeSubsForParent.length === 0) {
-                    return true;
-                }
-                return activeSubs.has(actionSubId);
+            // Intersection (AND): item must match every active sub-tab for this parent
+            if (combinator === 'intersection') {
+                return activeSubsForParent.every(subId =>
+                    tabs.some(t => t.root === actionParentId && t.label === subId)
+                );
             }
 
-            return false;
+            // Union (OR): item matches if its sub-tab is currently active
+            const actionSubId = tab.parent ? tab.label : undefined;
+            return activeSubs.has(actionSubId);
         });
     }
 
@@ -218,13 +219,13 @@ export class BaseSystemAdapter {
         const activeExclusionSubs = [];
 
         for (const parentId of activeParents) {
-            if (this.isExclusionTab(parentId)) {
-                const group = parentGroups?.[parentId];
-                const validSubIds = toSet(group?.subTabs, t => t.id);
-                for (const subId of activeSubs) {
-                    if (validSubIds.size === 0 || validSubIds.has(subId)) {
-                        activeExclusionSubs.push(subId);
-                    }
+            if (!this.isExclusionTab(parentId)) continue;
+
+            const group = parentGroups?.[parentId];
+            const validSubIds = toSet(group?.subTabs, t => t.id);
+            for (const subId of activeSubs) {
+                if (validSubIds.size === 0 || validSubIds.has(subId)) {
+                    activeExclusionSubs.push(subId);
                 }
             }
         }
