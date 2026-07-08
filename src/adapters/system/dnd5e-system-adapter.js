@@ -5,9 +5,7 @@ import { MODULE_ID } from '../../constants.js';
 import { TabRef } from '../../ui/tab-ref.js';
 import { Action } from '../../ui/action.js';
 
-import { SORT_ORDERS, ALLOWED_TYPES, ICONS, LABEL_KEYS } from './dnd5e/constants.js';
-import { getSpellSlotUses, hasAvailableUpcastSlots, calculateSpellSlots, getHighestAvailableSpellSlot, calculateWeaponAmmunition, getAmmoQuantities } from './dnd5e/spells.js';
-import { normalizeActivationType, extractItemSpell, resolveRootSpellDocument, getActivityActivationType, requiresComponent, getComponentTabs } from './dnd5e/activities.js';
+import { SORT_ORDERS, ALLOWED_TYPES, ICONS, LABEL_KEYS } from './constants/dnd5e-constants.js';
 import { Dnd5eSystemContextMenuManager } from './context-menu/dnd5e-system-context-menu-manager.js';
 import { Dnd5eSystemTabFilterManager } from './filter/dnd5e-system-tab-filter-manager.js';
 import { Dnd5eSystemContextModifier } from './context-modifier/dnd5e-system-context-modifier.js';
@@ -241,11 +239,59 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
     // #region System Specific Data Extractors & Schema Helpers
 
     #extractItemSpell(obj) {
-        return extractItemSpell(obj);
+        if (!obj) return null;
+        const isItemInstance = typeof Item !== 'undefined' && obj.spell instanceof Item;
+        return obj.linkedAction ?? obj.cachedSpell ?? (isItemInstance || obj.spell?.type === 'spell' ? obj.spell : null);
+    }
+
+    resolveRootSpellDocument(sub, parentItem) {
+        if (!sub) return null;
+
+        let doc = sub.linkedAction;
+        const activity = sub.originalActivity;
+        if (!doc && activity) {
+            doc = this.#extractItemSpell(activity);
+            if (!doc && activity.spell?.uuid && typeof fromUuidSync === 'function') {
+                try {
+                    doc = fromUuidSync(activity.spell.uuid);
+                } catch (e) {
+                    // ignore sync resolution errors
+                }
+            }
+        }
+
+        const maxDepth = 5;
+        let depth = 0;
+        while (doc && depth < maxDepth) {
+            const nextDoc = this.#extractItemSpell(doc);
+            if (nextDoc && nextDoc !== doc) {
+                doc = nextDoc;
+                depth++;
+            } else {
+                break;
+            }
+        }
+
+        if (doc) return doc;
+
+        if (activity?.spell && typeof activity.spell === 'object' && (typeof Item === 'undefined' || !(activity.spell instanceof Item))) {
+            return activity.spell;
+        }
+
+        if (activity?.type === 'cast') {
+            return activity.spell || activity;
+        }
+
+        const origItem = sub.originalItem ?? parentItem;
+        if (origItem?.type === 'spell') {
+            return origItem;
+        }
+
+        return null;
     }
 
     #resolveRootSpellDocument(sub, parentItem) {
-        return resolveRootSpellDocument(sub, parentItem);
+        return this.resolveRootSpellDocument(sub, parentItem);
     }
 
     async #resolveActivityLinkedAction(activity, actor) {
@@ -265,11 +311,11 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
     }
 
     #requiresComponent(sub, component) {
-        return requiresComponent(sub, component);
+        return this.filterManager.requiresComponent(sub, component);
     }
 
     #getComponentTabs(doc) {
-        return getComponentTabs(doc);
+        return this.filterManager.getComponentTabs(doc);
     }
 
     #collectUniqueTabs(activities) {
@@ -521,35 +567,105 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
      * @private
      */
     #getSpellSlotUses(actor, level, highestAvailableSlot) {
-        return getSpellSlotUses(actor, level, highestAvailableSlot);
+        const actorSpells = actor?.system?.spells;
+        const isPact = level === 'pact';
+        const lvl = isPact ? (actorSpells?.pact?.level ?? 0) : (Number(level) || 0);
+
+        if (!isPact && lvl <= 0) return { available: null, max: null };
+
+        const slot = isPact ? actorSpells?.pact : actorSpells?.[`spell${lvl}`];
+        const available = slot?.value ?? 0;
+        const max = slot?.max ?? 0;
+
+        if (available > 0) {
+            return { available, max };
+        }
+        if (highestAvailableSlot >= lvl) {
+            return {
+                available: localize('BAD.dnd5e.upcast', 'Upcast'),
+                max: null,
+                isUpcast: true
+            };
+        }
+        return { available: 0, max };
     }
 
     #hasAvailableUpcastSlots(level, highestAvailableSlot) {
-        return hasAvailableUpcastSlots(level, highestAvailableSlot);
+        return highestAvailableSlot >= level;
     }
 
     #calculateSpellSlots(item, actor = this.#actor, highestAvailableSlot = this.#highestAvailableSlot) {
-        return calculateSpellSlots(item, actor, highestAvailableSlot);
+        const system = item.system;
+        const prepMode = system.method;
+        const level = system.level ?? 0;
+        
+        if (prepMode === 'pact') {
+            return this.#getSpellSlotUses(actor, 'pact', highestAvailableSlot);
+        } else if (!['innate', 'atwill'].includes(prepMode)) {
+            return this.#getSpellSlotUses(actor, level, highestAvailableSlot);
+        }
+        return { available: null, max: null };
     }
 
     #calculateWeaponAmmunition(item, ammoQuantities) {
-        return calculateWeaponAmmunition(item, ammoQuantities);
+        const ammoType = item.system.ammunition?.type;
+        const quantity = ammoQuantities.get(ammoType) ?? 0;
+        return {
+            available: quantity,
+            max: null
+        };
     }
 
     #getAmmoQuantities(actor) {
-        return getAmmoQuantities(actor);
+        const ammoQuantities = new Map();
+        for (const i of actor?.items ?? []) {
+            if (i.type === 'consumable' && i.system.type?.value === 'ammo') {
+                const subtype = i.system.type.subtype;
+                if (subtype) {
+                    const qty = i.system.quantity ?? 0;
+                    ammoQuantities.set(subtype, (ammoQuantities.get(subtype) ?? 0) + qty);
+                }
+            }
+        }
+        return ammoQuantities;
     }
 
     #getHighestAvailableSpellSlot(actor) {
-        return getHighestAvailableSpellSlot(actor);
+        const actorSpells = actor?.system?.spells;
+        if (!actorSpells) return 0;
+
+        let highest = 0;
+        for (let i = 9; i >= 1; i--) {
+            if (actorSpells[`spell${i}`]?.value > 0) {
+                highest = i;
+                break;
+            }
+        }
+        if (actorSpells.pact?.value > 0) {
+            highest = Math.max(highest, actorSpells.pact.level ?? 0);
+        }
+        return highest;
     }
 
     #normalizeActivationType(type) {
-        return normalizeActivationType(type);
+        if (!type || type === 'none' || type === '') return null;
+        return String(type).toLowerCase();
     }
 
     #getActivityActivationType(activity, item, linkedAction = null) {
-        return getActivityActivationType(activity, item, linkedAction);
+        const actOverride = activity.activation?.override ?? activity.system?.activation?.override;
+        if (actOverride) {
+            const overrideType = this.#normalizeActivationType(activity.activation?.type ?? activity.system?.activation?.type);
+            if (overrideType) return overrideType;
+        }
+
+        const spellDoc = linkedAction ?? this.resolveRootSpellDocument({ originalActivity: activity, linkedAction: activity.spell });
+        const spellType = this.#normalizeActivationType(spellDoc?.system?.activation?.type ?? spellDoc?.activation?.type);
+        if (spellType) return spellType;
+
+        return this.#normalizeActivationType(item.system?.activation?.type)
+            ?? this.#normalizeActivationType(activity.activation?.type ?? activity.system?.activation?.type)
+            ?? 'none';
     }
 
     // #endregion

@@ -1,7 +1,7 @@
 import { BaseSystemContextModifier } from './base-system-context-modifier.js';
 import { localize } from '../../../lib/utils.js';
 import { MODULE_ID } from '../../../constants.js';
-import { SORT_ORDERS, ICONS, LABEL_KEYS } from '../dnd5e/constants.js';
+import { SORT_ORDERS, ICONS, LABEL_KEYS } from '../constants/dnd5e-constants.js';
 
 export class Dnd5eSystemContextModifier extends BaseSystemContextModifier {
     constructor(adapter) {
