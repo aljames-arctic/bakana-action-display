@@ -74,21 +74,7 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
             if (['action', 'feat'].includes(type)) {
                 if (this.#formatFeatAction(action, item)) modified.push(action);
             } else if (item.type === 'spell') {
-                // Find the spellcasting entry this spell belongs to (O(1) lookup)
-                const entry = spellToEntryMap.get(item.id);
-                if (!entry) continue;
-
-                const spellLevel = item.rank ?? 0;
-                const subTab = this.#getSpellSubTab(entry, spellLevel);
-
-                action.tabs = [TabRef.from('economy', 'action')];
-                action.activationType = 'action';
-                action.itemTypes = ['spell', subTab];
-                action.roll = (event) => this.#executeSpellRoll(entry, item, event);
-                action.uses = this.#getSpellUses(entry, item);
-                action.name = `${item.name} (${entry.name})`;
-
-                modified.push(action);
+                if (this.#formatSpellAction(action, item, spellToEntryMap.get(item.id))) modified.push(action);
             }
         }
 
@@ -310,6 +296,19 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
         action.itemTypes = [item.type === 'action' ? 'feat' : item.type];
         action.uses = this.#getUses(item);
         action.roll = (event) => this.#executeFeatRoll(item, event);
+        return true;
+    }
+
+    #formatSpellAction(action, item, entry) {
+        if (!entry) return false;
+
+        const spellLevel = item.rank ?? 0;
+        action.tabs = [TabRef.from('economy', 'action')];
+        action.activationType = 'action';
+        action.itemTypes = ['spell', this.#getSpellSubTab(entry, spellLevel)];
+        action.roll = (event) => this.#executeSpellRoll(entry, item, event);
+        action.uses = this.#getSpellUses(entry, item);
+        action.name = `${item.name} (${entry.name})`;
         return true;
     }
 
