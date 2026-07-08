@@ -187,8 +187,7 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
 
     #buildSpellToEntryMap(actor) {
         const spellToEntryMap = new Map();
-        const entries = this.#getSpellcastingEntries(actor);
-        for (const entry of entries) {
+        for (const entry of this.#getSpellcastingEntries(actor)) {
             for (const spell of entry.spells ?? []) {
                 spellToEntryMap.set(spell.id, entry);
             }
@@ -202,11 +201,9 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
      * @returns {{ baseItem: string|undefined, quantity: number }}
      */
     #getAmmoInfo(item) {
-        if (item.type !== 'ammo') return { baseItem: undefined, quantity: 0 };
-        return {
-            baseItem: item.system.baseItem,
-            quantity: item.system.quantity ?? 0
-        };
+        return item.type === 'ammo'
+            ? { baseItem: item.system.baseItem, quantity: item.system.quantity ?? 0 }
+            : { baseItem: undefined, quantity: 0 };
     }
 
     /**
