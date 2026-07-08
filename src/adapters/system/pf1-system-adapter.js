@@ -50,46 +50,7 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
         log.debug(`Pf1SystemAdapter.modifyActions | Starting for actor: ${actor.name}`);
         const modified = [];
 
-        // 1. Build a map of weapon children to their parent weapons
-        const attackToWeaponMap = new Map();
-        const weaponLinkedAttacks = new Map();
-        
-        const weapons = actor.items.filter(i => i.type === 'weapon');
-        log.debug(`Pf1SystemAdapter.modifyActions | Found ${weapons.length} weapons on actor`);
-
-        for (const weapon of weapons) {
-            const children = this.#getWeaponLinkChildren(weapon);
-            if (children.length > 0) {
-                log.debug(`Pf1SystemAdapter.modifyActions | Weapon "${weapon.name}" (${weapon.id}) has ${children.length} children in links:`, children);
-            }
-            const linked = [];
-            for (const child of children) {
-                if (!child.uuid) continue;
-                
-                let childItem = null;
-                try {
-                    childItem = foundry.utils.fromUuidSync(child.uuid, { relative: actor });
-                    if (childItem) {
-                        log.debug(`Pf1SystemAdapter.modifyActions | Resolved child via fromUuidSync: "${childItem.name}" (${childItem.id})`);
-                    }
-                } catch (e) {
-                    log.error(`Pf1SystemAdapter.modifyActions | Failed to resolve child UUID ${child.uuid}:`, e);
-                }
-
-                if (childItem && childItem.type === 'attack') {
-                    attackToWeaponMap.set(childItem.id, weapon);
-                    linked.push(childItem);
-                } else if (childItem) {
-                    log.debug(`Pf1SystemAdapter.modifyActions | Resolved child "${childItem.name}" is not of type 'attack' (type: ${childItem.type})`);
-                }
-            }
-            if (linked.length > 0) {
-                weaponLinkedAttacks.set(weapon.id, linked);
-                log.debug(`Pf1SystemAdapter.modifyActions | Weapon "${weapon.name}" successfully linked to attacks: ${linked.map(i => i.name).join(', ')}`);
-            }
-        }
-
-        log.debug(`Pf1SystemAdapter.modifyActions | Final attackToWeaponMap keys (IDs to skip):`, Array.from(attackToWeaponMap.keys()));
+        const { attackToWeaponMap, weaponLinkedAttacks } = this.#buildWeaponAttackLinks(actor);
 
         for (const action of actions) {
             const item = action.originalItem;
@@ -412,6 +373,49 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
         if (['free', 'nonaction'].includes(type)) return 'other'; // Map Free/Non-action to 'other'
         
         return null; // Passive or other unhandled types are ignored
+    }
+
+    #buildWeaponAttackLinks(actor) {
+        const attackToWeaponMap = new Map();
+        const weaponLinkedAttacks = new Map();
+
+        const weapons = actor.items.filter(i => i.type === 'weapon');
+        log.debug(`Pf1SystemAdapter.modifyActions | Found ${weapons.length} weapons on actor`);
+
+        for (const weapon of weapons) {
+            const children = this.#getWeaponLinkChildren(weapon);
+            if (children.length > 0) {
+                log.debug(`Pf1SystemAdapter.modifyActions | Weapon "${weapon.name}" (${weapon.id}) has ${children.length} children in links:`, children);
+            }
+            const linked = [];
+            for (const child of children) {
+                if (!child.uuid) continue;
+
+                let childItem = null;
+                try {
+                    childItem = foundry.utils.fromUuidSync(child.uuid, { relative: actor });
+                    if (childItem) {
+                        log.debug(`Pf1SystemAdapter.modifyActions | Resolved child via fromUuidSync: "${childItem.name}" (${childItem.id})`);
+                    }
+                } catch (e) {
+                    log.error(`Pf1SystemAdapter.modifyActions | Failed to resolve child UUID ${child.uuid}:`, e);
+                }
+
+                if (childItem && childItem.type === 'attack') {
+                    attackToWeaponMap.set(childItem.id, weapon);
+                    linked.push(childItem);
+                } else if (childItem) {
+                    log.debug(`Pf1SystemAdapter.modifyActions | Resolved child "${childItem.name}" is not of type 'attack' (type: ${childItem.type})`);
+                }
+            }
+            if (linked.length > 0) {
+                weaponLinkedAttacks.set(weapon.id, linked);
+                log.debug(`Pf1SystemAdapter.modifyActions | Weapon "${weapon.name}" successfully linked to attacks: ${linked.map(i => i.name).join(', ')}`);
+            }
+        }
+
+        log.debug(`Pf1SystemAdapter.modifyActions | Final attackToWeaponMap keys (IDs to skip):`, Array.from(attackToWeaponMap.keys()));
+        return { attackToWeaponMap, weaponLinkedAttacks };
     }
 
     /**
