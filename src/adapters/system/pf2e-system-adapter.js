@@ -63,24 +63,8 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
     async modifyActions(actions, actor) {
         const modified = [];
 
-        // Pre-calculate ammunition quantities by baseItem in a single pass to avoid nested loops (O(I) complexity)
-        const ammoQuantities = new Map();
-        for (const i of actor.items) {
-            const { baseItem, quantity } = this.#getAmmoInfo(i);
-            if (baseItem) {
-                ammoQuantities.set(baseItem, (ammoQuantities.get(baseItem) ?? 0) + quantity);
-            }
-        }
-
-        // Pre-calculate a map of spell ID to spellcasting entry to avoid nested searches in the loop (O(1) lookups)
-        const spellToEntryMap = new Map();
-        const entries = this.#getSpellcastingEntries(actor);
-        for (const entry of entries) {
-            const spells = entry.spells ?? [];
-            for (const spell of spells) {
-                spellToEntryMap.set(spell.id, entry);
-            }
-        }
+        const ammoQuantities = this.#buildAmmoQuantitiesMap(actor);
+        const spellToEntryMap = this.#buildSpellToEntryMap(actor);
 
         // 1. Process existing items (Feats, Actions, Spells)
         for (const action of actions) {
@@ -271,6 +255,28 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
     // #endregion
 
     // #region System Specific Data Extractors & Schema Helpers
+
+    #buildAmmoQuantitiesMap(actor) {
+        const ammoQuantities = new Map();
+        for (const i of actor.items) {
+            const { baseItem, quantity } = this.#getAmmoInfo(i);
+            if (baseItem) {
+                ammoQuantities.set(baseItem, (ammoQuantities.get(baseItem) ?? 0) + quantity);
+            }
+        }
+        return ammoQuantities;
+    }
+
+    #buildSpellToEntryMap(actor) {
+        const spellToEntryMap = new Map();
+        const entries = this.#getSpellcastingEntries(actor);
+        for (const entry of entries) {
+            for (const spell of entry.spells ?? []) {
+                spellToEntryMap.set(spell.id, entry);
+            }
+        }
+        return spellToEntryMap;
+    }
 
     /**
      * Extract ammunition quantity and base item ID from a PF2e item.
