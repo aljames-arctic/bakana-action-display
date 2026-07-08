@@ -16,8 +16,8 @@ test('Pf1SystemAdapter label lookups and spell sub-tab labels', () => {
     const adapter = new Pf1SystemAdapter();
 
     assert.equal(adapter.getItemSubTabLabel('spell', 'cantrip'), 'PF1.Cantrip');
-    assert.equal(adapter.getItemSubTabLabel('spell', '1'), 'PF1.SpellLevel1');
-    assert.equal(adapter.getItemSubTabLabel('spell', 'sla'), 'PF1.SpellLike');
+    assert.equal(adapter.getItemSubTabLabel('spell', '1'), 'PF1.SpellLevels.1');
+    assert.equal(adapter.getItemSubTabLabel('spell', 'sla'), 'PF1.SpellBookSpelllike');
 
     assert.equal(adapter.getActionSubTabLabel('action'), 'PF1.Activation.action.Plural');
     assert.equal(adapter.getActionSubTabLabel('bonus'), 'PF1.Activation.swift.Single');

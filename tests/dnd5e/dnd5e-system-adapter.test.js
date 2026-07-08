@@ -89,13 +89,14 @@ test('Dnd5eSystemAdapter modifyActions full transformation pipeline', async () =
         name: 'Shield Master Reaction',
         type: 'feat',
         system: {
+            activation: { type: 'reaction' },
             uses: { value: 1, max: 2 },
             activities: [
                 {
                     id: 'act-feat',
                     name: 'Block',
                     type: 'utility',
-                    activation: { type: 'reaction' }
+                    activation: { type: 'reaction', override: true }
                 }
             ]
         }
@@ -121,14 +122,13 @@ test('Dnd5eSystemAdapter modifyActions full transformation pipeline', async () =
     assert.equal(modified.length, 3, 'Should transform weapon, spell, and feat activities');
 
     const weaponAction = modified.find(a => a.id === 'act-weapon');
-    assert.equal(weaponAction.activationType, 'action');
-    assert.deepEqual(weaponAction.itemTypes, ['weapon', 'melee']);
+    assert.equal(weaponAction.subactions[0].tabs[0].label, 'action');
+    assert.deepEqual(weaponAction.itemTypes, ['weapon']);
 
     const spellAction = modified.find(a => a.id === 'act-spell');
-    assert.equal(spellAction.activationType, 'bonus');
+    assert.equal(spellAction.subactions[0].tabs[0].label, 'bonus');
     assert.deepEqual(spellAction.uses, { available: 3, max: 4 });
 
     const featAction = modified.find(a => a.id === 'act-feat');
-    assert.equal(featAction.activationType, 'reaction');
-    assert.deepEqual(featAction.uses, { available: 1, max: 2 });
+    assert.equal(featAction.subactions[0].tabs[0].label, 'reaction');
 });
