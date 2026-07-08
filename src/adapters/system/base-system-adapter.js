@@ -81,6 +81,16 @@ export class BaseSystemAdapter {
     }
 
     /**
+     * Check if an action's uses resource is completely depleted.
+     * @param {Object} action The action or subaction item
+     * @returns {boolean} True if available uses is 0 or less
+     * @protected
+     */
+    _isResourceDepleted(action) {
+        return action.uses?.available != null && action.uses.available <= 0;
+    }
+
+    /**
      * Modify the base list of actions.
      * @param {Object[]} actions Base actions extracted by the core
      * @param {Actor} actor The actor these actions belong to
@@ -94,7 +104,7 @@ export class BaseSystemAdapter {
                 // Never hide weapons, even if they are out of ammo or charges
                 if (action.originalItem?.type === 'weapon') return true;
 
-                return !(action.uses && action.uses.available !== null && action.uses.available <= 0);
+                return !this._isResourceDepleted(action);
             });
         }
         return actions;
@@ -220,7 +230,7 @@ export class BaseSystemAdapter {
                 return false;
             }
 
-            if (filterNoResources && sub.uses && sub.uses.available !== null && sub.uses.available <= 0) {
+            if (filterNoResources && this._isResourceDepleted(sub)) {
                 return false;
             }
 
