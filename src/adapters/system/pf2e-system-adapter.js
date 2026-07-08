@@ -18,6 +18,12 @@ const SORT_ORDERS = {
     }
 };
 
+const EXTRACTABLE_TYPES = new Set(['action', 'feat', 'spell']);
+
+const PF2E_SPELL_SUB_TAB_ORDER = new Map(
+    ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'focus', 'innate', 'ritual'].map((id, i) => [id, i])
+);
+
 /**
  * System adapter for Pathfinder 2nd Edition (PF2e).
  * Modifies the base actions list by mapping feats and spells, and injecting Strikes (attacks).
@@ -34,7 +40,7 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
      * Prevents allocating objects for unhandled item types (like equipment/consumables).
      */
     shouldExtractItem(item) {
-        return item.type === 'action' || item.type === 'feat' || item.type === 'spell';
+        return EXTRACTABLE_TYPES.has(item.type);
     }
 
     /**
@@ -246,11 +252,12 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
      */
     modifyContext(context, app) {
         super.modifyContext?.(context, app);
-        
+
         const spellGroup = context.itemTypes?.find(g => g.id === 'spell');
-        if (spellGroup && spellGroup.subTabs.length > 0) {
-            const orderMap = new Map(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'focus', 'innate', 'ritual'].map((id, i) => [id, i]));
-            spellGroup.subTabs.sort((a, b) => (orderMap.get(a.id) ?? 999) - (orderMap.get(b.id) ?? 999));
+        if (spellGroup?.subTabs?.length) {
+            spellGroup.subTabs.sort((a, b) =>
+                (PF2E_SPELL_SUB_TAB_ORDER.get(a.id) ?? 999) - (PF2E_SPELL_SUB_TAB_ORDER.get(b.id) ?? 999)
+            );
         }
     }
 
