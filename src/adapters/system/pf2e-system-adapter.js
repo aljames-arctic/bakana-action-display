@@ -374,20 +374,10 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
      * @returns {{ available: number|null, max: number|null }}
      */
     #getStrikeAmmoUses(strike, ammoQuantities) {
-        const weapon = strike.item;
-        if (!weapon || weapon.type !== 'weapon') return { available: null, max: null };
-
-        const ammoConfig = weapon.system.ammo;
-        if (ammoConfig && ammoConfig.baseType) {
-            const baseType = ammoConfig.baseType;
-            const quantity = ammoQuantities.get(baseType) ?? 0;
-
-            return {
-                available: quantity,
-                max: null
-            };
+        const baseType = strike.item?.type === 'weapon' && strike.item.system.ammo?.baseType;
+        if (baseType) {
+            return { available: ammoQuantities.get(baseType) ?? 0, max: null };
         }
-
         return { available: null, max: null };
     }
 
