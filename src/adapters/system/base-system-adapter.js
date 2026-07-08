@@ -66,22 +66,21 @@ export class BaseSystemAdapter {
      */
     _createRollEvent(event) {
         if (!event) return {};
+
+        const modifierKeys = {
+            altKey: KeyboardManager.MODIFIER_KEYS.ALT,
+            ctrlKey: KeyboardManager.MODIFIER_KEYS.CONTROL,
+            shiftKey: KeyboardManager.MODIFIER_KEYS.SHIFT
+        };
+
         return new Proxy(event, {
             get: (target, prop) => {
-                if (prop === 'altKey') {
-                    return event.altKey || game.keyboard?.isModifierActive(KeyboardManager.MODIFIER_KEYS.ALT);
-                }
-                if (prop === 'ctrlKey') {
-                    return event.ctrlKey || game.keyboard?.isModifierActive(KeyboardManager.MODIFIER_KEYS.CONTROL);
-                }
-                if (prop === 'shiftKey') {
-                    return event.shiftKey || game.keyboard?.isModifierActive(KeyboardManager.MODIFIER_KEYS.SHIFT);
+                if (prop in modifierKeys) {
+                    const modifier = modifierKeys[prop];
+                    return Boolean(event[prop] || game.keyboard?.isModifierActive(modifier));
                 }
                 const val = Reflect.get(target, prop);
-                if (typeof val === 'function') {
-                    return val.bind(target);
-                }
-                return val;
+                return typeof val === 'function' ? val.bind(target) : val;
             }
         });
     }
