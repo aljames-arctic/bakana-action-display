@@ -320,14 +320,10 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
      * @returns {{ available: number|null, max: number|null }}
      */
     #getUses(item) {
-        const frequency = item.system.frequency;
-        if (frequency) {
-            return {
-                available: frequency.value ?? 0,
-                max: frequency.max ?? 0
-            };
-        }
-        return { available: null, max: null };
+        const freq = item.system.frequency;
+        return freq
+            ? { available: freq.value ?? 0, max: freq.max ?? 0 }
+            : { available: null, max: null };
     }
 
     /**
@@ -339,19 +335,13 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
     #getSpellUses(entry, spell) {
         if (entry.isFocusPool) {
             const focus = entry.actor?.system?.resources?.focus;
-            return {
-                available: focus?.value ?? 0,
-                max: focus?.max ?? 0
-            };
+            return { available: focus?.value ?? 0, max: focus?.max ?? 0 };
         }
 
         const level = spell.rank ?? 0;
         if (entry.isSpontaneous && level > 0) {
             const slot = entry.system.slots?.[`slot${level}`];
-            return {
-                available: slot?.value ?? 0,
-                max: slot?.max ?? 0
-            };
+            return { available: slot?.value ?? 0, max: slot?.max ?? 0 };
         }
 
         return { available: null, max: null };
@@ -365,10 +355,9 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
      */
     #getStrikeAmmoUses(strike, ammoQuantities) {
         const baseType = strike.item?.type === 'weapon' && strike.item.system.ammo?.baseType;
-        if (baseType) {
-            return { available: ammoQuantities.get(baseType) ?? 0, max: null };
-        }
-        return { available: null, max: null };
+        return baseType
+            ? { available: ammoQuantities.get(baseType) ?? 0, max: null }
+            : { available: null, max: null };
     }
 
     // #endregion
