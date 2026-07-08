@@ -35,6 +35,8 @@ const PF2E_ACTION_TYPE_MAP = {
     'action': 'action'
 };
 
+const PF2E_DEFAULT_STRIKE_ICON = 'systems/pf2e/icons/default-icons/melee.svg';
+
 /**
  * System adapter for Pathfinder 2nd Edition (PF2e).
  * Modifies the base actions list by mapping feats and spells, and injecting Strikes (attacks).
@@ -272,7 +274,7 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
             id: `strike-${strike.slug ?? strike.name}`,
             name: strike.label ?? strike.name,
             type: 'weapon',
-            img: strike.item?.img ?? strike.img ?? strike.imageUrl ?? 'systems/pf2e/icons/default-icons/melee.svg',
+            img: strike.item?.img ?? strike.img ?? strike.imageUrl ?? PF2E_DEFAULT_STRIKE_ICON,
             activationType: 'action',
             tabs: [TabRef.from('economy', 'action')],
             itemTypes: ['weapon'],
