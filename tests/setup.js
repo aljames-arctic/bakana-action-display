@@ -15,10 +15,24 @@ function getProperty(obj, path) {
 }
 
 globalThis.foundry = {
+    helpers: {
+        interaction: {
+            KeyboardManager: class KeyboardManager {}
+        }
+    },
+    applications: {
+        ux: {
+            ContextMenu: class ContextMenu {}
+        }
+    },
+    canvas: {
+        placeables: {
+            Token: class Token {}
+        }
+    },
     utils: {
         getProperty,
         fromUuidSync(uuid, options = {}) {
-            // Mock resolver: if options.relative has items matching UUID, return it
             if (options.relative?.items) {
                 return options.relative.items.find(i => i.uuid === uuid || i.id === uuid) ?? null;
             }
