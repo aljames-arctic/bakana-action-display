@@ -289,12 +289,12 @@ export class BaseSystemAdapter {
      * @returns {string}
      */
     getItemTypeLabel(parentId) {
-        const labels = {
-            'all': localize('BAD.core.allItems', 'All Items'),
-            'other': localize('BAD.core.other', 'Other'),
-            'hidden': localize('BAD.core.hidden', 'Hidden')
-        };
-        return labels[parentId] ?? parentId.toUpperCase();
+        switch (parentId) {
+            case 'all': return localize('BAD.core.allItems', 'All Items');
+            case 'other': return localize('BAD.core.other', 'Other');
+            case 'hidden': return localize('BAD.core.hidden', 'Hidden');
+            default: return parentId.toUpperCase();
+        }
     }
 
     /**
@@ -322,11 +322,11 @@ export class BaseSystemAdapter {
      * @returns {string}
      */
     getActionTypeLabel(parentId) {
-        const labels = {
-            'all': localize('BAD.core.allActions', 'All Actions'),
-            'none': localize('BAD.core.none', 'None')
-        };
-        return labels[parentId] ?? parentId.toUpperCase();
+        switch (parentId) {
+            case 'all': return localize('BAD.core.allActions', 'All Actions');
+            case 'none': return localize('BAD.core.none', 'None');
+            default: return parentId.toUpperCase();
+        }
     }
 
     /**
