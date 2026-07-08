@@ -67,3 +67,34 @@ test('BaseSystemAdapter matchesEconomyTabs matching logic', () => {
         }
     }), false);
 });
+
+test('BaseSystemAdapter modifyActions base filtering pipeline', async () => {
+    const adapter = new BaseSystemAdapter('test-system');
+
+    const visibleAction = { id: 'act-1', hidden: false };
+    const hiddenAction = { id: 'act-2', hidden: true };
+
+    const modified = await adapter.modifyActions([visibleAction, hiddenAction], {});
+    assert.equal(modified.length, 1);
+    assert.equal(modified[0].id, 'act-1');
+});
+
+test('BaseSystemAdapter filterSubactions subaction promotion and sorting', () => {
+    const adapter = new BaseSystemAdapter('test-system');
+
+    const action = {
+        id: 'parent',
+        name: 'Parent Action',
+        activationType: 'action',
+        subactions: [
+            { id: 'sub-2', name: 'Second Strike', activationType: 'action', sort: 2 },
+            { id: 'sub-1', name: 'First Strike', activationType: 'action', sort: 1 }
+        ]
+    };
+
+    const filtered = adapter.filterSubactions(action, { all: { active: true } });
+
+    assert.equal(filtered.subactions.length, 2);
+    assert.equal(filtered.subactions[0].id, 'sub-1', 'Should sort subactions ascending by sort');
+    assert.equal(filtered.name, 'First Strike', 'Should promote first subaction name when activationType matches');
+});
