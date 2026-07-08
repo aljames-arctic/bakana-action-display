@@ -24,9 +24,12 @@ const PF2E_SPELL_SUB_TAB_ORDER = new Map(
     ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'focus', 'innate', 'ritual'].map((id, i) => [id, i])
 );
 
-const PF2E_ACTION_TYPE_ICONS = {
-    'all': 'fas fa-border-all',
-    'economy': 'fas fa-stopwatch'
+const ICONS = {
+    action_type: {
+        'all': 'fas fa-border-all',
+        'economy': 'fas fa-stopwatch'
+    },
+    default_strike: 'systems/pf2e/icons/default-icons/melee.svg'
 };
 
 const PF2E_ACTION_TYPE_MAP = {
@@ -34,8 +37,6 @@ const PF2E_ACTION_TYPE_MAP = {
     'free': 'other',
     'action': 'action'
 };
-
-const PF2E_DEFAULT_STRIKE_ICON = 'systems/pf2e/icons/default-icons/melee.svg';
 
 /**
  * System adapter for Pathfinder 2nd Edition (PF2e).
@@ -137,7 +138,7 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
      * Get the CSS icon class for a right-side action type (parent tab) in PF2e.
      */
     getActionTypeIcon(parentId) {
-        return PF2E_ACTION_TYPE_ICONS[parentId] ?? super.getActionTypeIcon(parentId);
+        return ICONS.action_type[parentId] ?? super.getActionTypeIcon(parentId);
     }
 
     /**
@@ -270,7 +271,7 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
             id: `strike-${strike.slug ?? strike.name}`,
             name: strike.label ?? strike.name,
             type: 'weapon',
-            img: strike.item?.img ?? strike.img ?? strike.imageUrl ?? PF2E_DEFAULT_STRIKE_ICON,
+            img: strike.item?.img ?? strike.img ?? strike.imageUrl ?? ICONS.default_strike,
             activationType: 'action',
             tabs: [TabRef.from('economy', 'action')],
             itemTypes: ['weapon'],
