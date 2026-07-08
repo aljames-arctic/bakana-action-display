@@ -87,3 +87,160 @@ test('BaseSystemAdapter filterSubactions filtering and sorting', () => {
     assert.equal(filtered.length, 2);
     assert.equal(filtered[0].id, 'sub-2'); // filterSubactions filters array of subactions matching context
 });
+
+import { HUDTabColumn } from '../../src/ui/hud-tab-column.js';
+
+test('BaseSystemAdapter default active sub-types and HUDTabColumn initialization', () => {
+    const adapter = new BaseSystemAdapter('test-system');
+    assert.deepEqual(adapter.getDefaultActiveLeftSubTypes(), []);
+    assert.deepEqual(adapter.getDefaultActiveSubTypes(), []);
+
+    globalThis.actionDisplay = { activeSystemAdapter: adapter };
+    const leftTabs = new HUDTabColumn({
+        side: 'left',
+        getDefaultSubTypes: () => actionDisplay.activeSystemAdapter.getDefaultActiveLeftSubTypes()
+    });
+    const rightTabs = new HUDTabColumn({
+        side: 'right',
+        getDefaultSubTypes: () => actionDisplay.activeSystemAdapter.getDefaultActiveSubTypes()
+    });
+    assert.equal(leftTabs.side, 'left');
+    assert.equal(rightTabs.side, 'right');
+    assert.deepEqual([...leftTabs.activeSubTypes], []);
+    assert.deepEqual([...rightTabs.activeSubTypes], []);
+
+    const page2Column = new HUDTabColumn({ side: 'left', defaultParent: 'all' });
+    assert.equal(page2Column.focusedParent, 'all');
+    assert.equal(page2Column.activeParents.has('all'), true);
+});
+
+test('BaseSystemAdapter formatFlatLayout and formatSplitLayout templates', () => {
+    const adapter = new BaseSystemAdapter('test-system');
+    const items = [
+        { id: 'b', name: 'B-Skill', section: 'other' },
+        { id: 'a', name: 'A-Core', section: 'core' },
+        { id: 'c', name: 'C-Core', section: 'core' }
+    ];
+
+    const flatContext = { items };
+    adapter.formatFlatLayout(flatContext);
+    assert.equal(flatContext.layout, 'flat');
+
+    const splitContext = { items };
+    adapter.formatSplitLayout(splitContext);
+    assert.equal(splitContext.layout, 'split');
+    assert.equal(splitContext.coreItems.length, 2);
+    assert.equal(splitContext.coreItems[0].id, 'a'); // Sorted alphabetically
+    assert.equal(splitContext.otherItems.length, 1);
+    assert.equal(splitContext.showSeparator, true);
+});
+
+test('BaseSystemAdapter modifyContext triggers split layout for string "2" or numeric 2 activePage', () => {
+    const adapter = new BaseSystemAdapter('test-system');
+    const items = [
+        { id: 'b', name: 'B-Skill', section: 'other' },
+        { id: 'a', name: 'A-Core', section: 'core' }
+    ];
+
+    const ctxStr = { items };
+    adapter.modifyContext(ctxStr, { activePage: '2' });
+    assert.equal(ctxStr.layout, 'split');
+    assert.equal(ctxStr.coreItems.length, 1);
+    assert.equal(ctxStr.otherItems.length, 1);
+
+    const ctxNum = { items };
+    adapter.modifyContext(ctxNum, { activePage: 1 });
+    assert.equal(ctxNum.layout, 'flat');
+});
+
+test('HUDTabColumn resets to default "all" when all main parent tabs are multi-selected or sole parent is deselected', async () => {
+    const { HUDTabColumn } = await import('../../src/ui/hud-tab-column.js');
+    const col = new HUDTabColumn({ side: 'left', defaultParent: 'all' });
+    const groups = {
+        all: { id: 'all', subTabs: [] },
+        savingThrow: { id: 'savingThrow', subTabs: [] },
+        abilityCheck: { id: 'abilityCheck', subTabs: [] }
+    };
+
+    col.selectParent('savingThrow', groups);
+    assert.ok(col.activeParents.has('savingThrow'));
+
+    // Selecting all main parent tabs reverts to 'all'
+    col.toggleParent('abilityCheck', groups);
+    assert.ok(col.activeParents.has('all'));
+    assert.equal(col.activeParents.size, 1);
+
+    // Deselecting the sole active parent reverts to 'all'
+    col.selectParent('savingThrow', groups);
+    assert.ok(col.activeParents.has('savingThrow'));
+    col.toggleParent('savingThrow', groups);
+    assert.ok(col.activeParents.has('all'));
+});
+
+test('ActionDisplayApp _onRollAction bypasses activity dropdown when only one subaction qualifies and collapseDropdownIfSingle is true', async () => {
+    const { ActionDisplayApp } = await import('../../src/ui/action-display-app.js');
+    const { actionDisplay } = await import('../../src/action-display.js');
+    let rolled = false;
+    const action = {
+        id: 'ability-str',
+        name: 'Strength',
+        collapseDropdownIfSingle: true,
+        subactions: [
+            { id: 'save-str', itemTypes: ['savingThrow'], roll: () => { rolled = true; } },
+            { id: 'check-str', itemTypes: ['abilityCheck'], roll: () => {} }
+        ]
+    };
+
+    actionDisplay.activeSystemAdapter = {
+        filterSubactions: () => [action.subactions[0]],
+        getActiveExclusionSubs: () => [],
+        getDefaultActiveLeftSubTypes: () => [],
+        getDefaultActiveSubTypes: () => []
+    };
+
+    const app = new ActionDisplayApp({ actor: {} });
+    app.displayedActions = [action];
+    app._getFilterContext = () => ({});
+
+    let dropdownCalled = false;
+    app._showActivityDropdown = () => { dropdownCalled = true; };
+
+    const fakeTarget = { dataset: { actionId: 'ability-str' } };
+    await app._onRollAction({ preventDefault: () => {} }, fakeTarget);
+
+    assert.equal(dropdownCalled, false);
+    assert.equal(rolled, true);
+});
+
+test('ActionDisplayApp _onRollAction preserves dropdown on regular items when collapseDropdownIfSingle is false', async () => {
+    const { ActionDisplayApp } = await import('../../src/ui/action-display-app.js');
+    const { actionDisplay } = await import('../../src/action-display.js');
+    const action = {
+        id: 'item-spell',
+        name: 'Fireball',
+        collapseDropdownIfSingle: false,
+        subactions: [
+            { id: 'sub-1', name: 'Cast', roll: () => {} },
+            { id: 'sub-2', name: 'Versatile', roll: () => {} }
+        ]
+    };
+
+    actionDisplay.activeSystemAdapter = {
+        filterSubactions: () => [action.subactions[0]],
+        getActiveExclusionSubs: () => [],
+        getDefaultActiveLeftSubTypes: () => [],
+        getDefaultActiveSubTypes: () => []
+    };
+
+    const app = new ActionDisplayApp({ actor: {} });
+    app.displayedActions = [action];
+    app._getFilterContext = () => ({});
+
+    let dropdownCalled = false;
+    app._showActivityDropdown = () => { dropdownCalled = true; };
+
+    const fakeTarget = { dataset: { actionId: 'item-spell' } };
+    await app._onRollAction({ preventDefault: () => {} }, fakeTarget);
+
+    assert.equal(dropdownCalled, true);
+});

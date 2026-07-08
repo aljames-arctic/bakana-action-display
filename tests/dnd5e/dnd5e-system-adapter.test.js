@@ -119,17 +119,56 @@ test('Dnd5eSystemAdapter modifyActions full transformation pipeline', async () =
     ];
 
     const modified = await adapter.modifyActions(rawActions, actor);
+    const page1Actions = modified.filter(a => a.page === 1);
+    const page2Actions = modified.filter(a => a.page === 2);
 
-    assert.equal(modified.length, 3, 'Should transform weapon, spell, and feat activities');
+    assert.equal(page1Actions.length, 3, 'Should transform weapon, spell, and feat activities on Page 1');
+    assert.equal(page2Actions.length, 6, 'Should extract 6 core ability items on Page 2');
 
-    const weaponAction = modified.find(a => a.id === 'act-weapon');
+    const weaponAction = page1Actions.find(a => a.id === 'act-weapon');
     assert.equal(weaponAction.subactions[0].tabs[0].label, 'action');
     assert.deepEqual(weaponAction.itemTypes, ['weapon']);
 
-    const spellAction = modified.find(a => a.id === 'act-spell');
+    const spellAction = page1Actions.find(a => a.id === 'act-spell');
     assert.equal(spellAction.subactions[0].tabs[0].label, 'bonus');
     assert.deepEqual(spellAction.uses, { available: 3, max: 4 });
 
-    const featAction = modified.find(a => a.id === 'act-feat');
+    const featAction = page1Actions.find(a => a.id === 'act-feat');
     assert.equal(featAction.subactions[0].tabs[0].label, 'reaction');
+
+    const dexAbility = page2Actions.find(a => a.id === 'ability-dex');
+    assert.equal(dexAbility.type, 'ability');
+    assert.equal(dexAbility.section, 'core');
+    assert.deepEqual(dexAbility.itemTypes, ['savingThrow']);
+    assert.deepEqual(dexAbility.itemCategories, [['savingThrow'], ['abilityCheck']]);
+    assert.equal(dexAbility.subactions.length, 2);
+    assert.equal(dexAbility.collapseDropdownIfSingle, true);
+});
+
+test('Dnd5eSystemAdapter extractCheckActions generates core saves, core checks, and skills', () => {
+    const adapter = new Dnd5eSystemAdapter('dnd5e');
+    const mockActor = {
+        system: {
+            skills: {
+                acr: { ability: 'dex', label: 'Acrobatics' },
+                ath: { ability: 'str', label: 'Athletics' }
+            }
+        }
+    };
+
+    const checks = adapter.extractCheckActions(mockActor);
+    // 6 core ability items (each with 2 activities) + 2 skills = 8 items
+    assert.equal(checks.length, 8);
+
+    const coreAbilities = checks.filter(c => c.type === 'ability');
+    assert.equal(coreAbilities.length, 6);
+    assert.ok(coreAbilities.every(c => c.section === 'core' && c.page === 2 && c.subactions.length === 2));
+
+    const skills = checks.filter(c => c.type === 'skill');
+    assert.equal(skills.length, 2);
+    assert.ok(skills.every(s => s.section === 'other' && s.page === 2));
+
+    const acrSkill = skills.find(s => s.id === 'skill-acr');
+    assert.equal(acrSkill.name, 'Acrobatics');
+    assert.equal(acrSkill.tabs[0].label, 'dex');
 });
