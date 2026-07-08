@@ -238,28 +238,28 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
      * Get the localized label for a right-side action sub-tab in PF1e.
      */
     getActionSubTabLabel(subId) {
-        const labels = {
-            'all': localize('BAD.core.allActions', 'All Actions'),
-            'action': localize('PF1.Activation.action.Plural', 'Actions'),
-            'bonus': localize('PF1.Activation.swift.Single', 'Swift'),
-            'reaction': localize('PF1.Activation.immediate.Single', 'Immediate'),
-            'other': localize('PF1.Activation.free.Single', 'Free')
-        };
-        return labels[subId] ?? super.getActionSubTabLabel(subId);
+        switch (subId) {
+            case 'all': return localize('BAD.core.allActions', 'All Actions');
+            case 'action': return localize('PF1.Activation.action.Plural', 'Actions');
+            case 'bonus': return localize('PF1.Activation.swift.Single', 'Swift');
+            case 'reaction': return localize('PF1.Activation.immediate.Single', 'Immediate');
+            case 'other': return localize('PF1.Activation.free.Single', 'Free');
+            default: return super.getActionSubTabLabel(subId);
+        }
     }
 
     /**
      * Get the localized label for a left-side item type (parent tab) in PF1e.
      */
     getItemTypeLabel(parentId) {
-        const labels = {
-            'weapon': localize('PF1.InventoryWeapons', 'Weapons'),
-            'spell': localize('PF1.Spells', 'Spells'),
-            'feat': localize('PF1.Feats', 'Feats'),
-            'buff': localize('PF1.Buffs', 'Buffs'),
-            'consumable': localize('PF1.InventoryConsumables', 'Consumables')
-        };
-        return labels[parentId] ?? super.getItemTypeLabel(parentId);
+        switch (parentId) {
+            case 'weapon': return localize('PF1.InventoryWeapons', 'Weapons');
+            case 'spell': return localize('PF1.Spells', 'Spells');
+            case 'feat': return localize('PF1.Feats', 'Feats');
+            case 'buff': return localize('PF1.Buffs', 'Buffs');
+            case 'consumable': return localize('PF1.InventoryConsumables', 'Consumables');
+            default: return super.getItemTypeLabel(parentId);
+        }
     }
 
     /**
