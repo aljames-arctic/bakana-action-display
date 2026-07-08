@@ -187,7 +187,7 @@ export class BaseSystemAdapter {
             if (activeSubsForParent.length === 0) return true;
 
             // Intersection (AND): item must match every active sub-tab for this parent
-            if (combinator === 'intersection') {
+            if (this.isIntersectionTab(actionParentId)) {
                 return activeSubsForParent.every(subId =>
                     tabs.some(t => t.root === actionParentId && t.label === subId)
                 );
@@ -239,11 +239,10 @@ export class BaseSystemAdapter {
         if (!subactions?.length) return [];
         const { filterNoResources } = filterContext;
 
-        return subactions.filter(sub => {
-            if (!this.matchesEconomyTabs(sub, filterContext)) return false;
-            if (filterNoResources && this._isResourceDepleted(sub)) return false;
-            return true;
-        });
+        return subactions.filter(sub =>
+            this.matchesEconomyTabs(sub, filterContext) &&
+            (!filterNoResources || !this._isResourceDepleted(sub))
+        );
     }
 
     /**
@@ -267,6 +266,15 @@ export class BaseSystemAdapter {
      */
     isExclusionTab(parentId) {
         return this.getTabCombinator(parentId) === 'difference';
+    }
+
+    /**
+     * Determine if a parent tab requires matching all active sub-tabs ('intersection').
+     * @param {string} parentId
+     * @returns {boolean}
+     */
+    isIntersectionTab(parentId) {
+        return this.getTabCombinator(parentId) === 'intersection';
     }
 
     // #endregion
