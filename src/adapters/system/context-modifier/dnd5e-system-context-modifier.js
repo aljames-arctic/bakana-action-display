@@ -23,17 +23,20 @@ const SORT_ORDERS = {
             'special': 5, 'legendary': 6, 'mythic': 7, 'crew': 8, 'lair': 9,
             'minute': 10, 'hour': 11, 'day': 12, 'none': 13
         },
-        'components': { 'vocal': 0, 'somatic': 1, 'material': 2 }
+        'components': { 'vocal': 0, 'somatic': 1, 'material': 2 },
+        'ability': { 'all': 0, 'str': 1, 'dex': 2, 'con': 3, 'int': 4, 'wis': 5, 'cha': 6 }
     },
     item_type: {
-        'weapon': 1,
-        'equipment': 2,
-        'spell': 3,
-        'consumable': 4,
-        'tool': 5,
-        'backpack': 6,
-        'loot': 7,
-        'feat': 8
+        'savingThrow': 1,
+        'abilityCheck': 2,
+        'weapon': 3,
+        'equipment': 4,
+        'spell': 5,
+        'consumable': 6,
+        'tool': 7,
+        'backpack': 8,
+        'loot': 9,
+        'feat': 10
     }
 };
 

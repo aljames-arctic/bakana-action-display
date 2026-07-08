@@ -207,7 +207,134 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
             }
         }
 
+        for (const act of modified) {
+            act.page = 1;
+        }
+
+        modified.push(...this.extractCheckActions(actor));
+
         return modified;
+    }
+
+    extractCheckActions(actor) {
+        if (!actor) return [];
+        const checkActions = [];
+        const abilities = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
+        const abilityNames = {
+            str: ['DND5E.AbilityStr', 'Strength'],
+            dex: ['DND5E.AbilityDex', 'Dexterity'],
+            con: ['DND5E.AbilityCon', 'Constitution'],
+            int: ['DND5E.AbilityInt', 'Intelligence'],
+            wis: ['DND5E.AbilityWis', 'Wisdom'],
+            cha: ['DND5E.AbilityCha', 'Charisma']
+        };
+        const abilityIcons = {
+            str: 'icons/svg/sword.svg',
+            dex: 'icons/svg/wing.svg',
+            con: 'icons/svg/shield.svg',
+            int: 'icons/svg/book.svg',
+            wis: 'icons/svg/eye.svg',
+            cha: 'icons/svg/paralysis.svg'
+        };
+
+        for (const abl of abilities) {
+            const labelKey = abilityNames[abl];
+            const name = localize(labelKey[0], labelKey[1]);
+            const img = abilityIcons[abl];
+
+            const saveSub = new Action({
+                id: `save-${abl}`,
+                name: localize('BAD.page2.savingThrow', 'Saving Throw'),
+                type: 'savingThrow',
+                img,
+                tabs: [TabRef.from('ability', abl)],
+                itemTypes: ['savingThrow'],
+                available: true,
+                roll: async (event) => {
+                    const rollEvent = this._createRollEvent(event);
+                    if (typeof actor.rollSavingThrow === 'function') {
+                        return actor.rollSavingThrow({ ability: abl, event: rollEvent });
+                    } else if (typeof actor.rollAbilitySave === 'function') {
+                        return actor.rollAbilitySave(abl, { event: rollEvent });
+                    }
+                }
+            });
+
+            const checkSub = new Action({
+                id: `check-${abl}`,
+                name: localize('BAD.page2.abilityCheck', 'Ability Check'),
+                type: 'abilityCheck',
+                img,
+                tabs: [TabRef.from('ability', abl)],
+                itemTypes: ['abilityCheck'],
+                available: true,
+                roll: async (event) => {
+                    const rollEvent = this._createRollEvent(event);
+                    if (typeof actor.rollAbilityTest === 'function') {
+                        try {
+                            return await actor.rollAbilityTest({ ability: abl, event: rollEvent });
+                        } catch {
+                            return actor.rollAbilityTest(abl, { event: rollEvent });
+                        }
+                    } else if (typeof actor.rollAbilityCheck === 'function') {
+                        try {
+                            return await actor.rollAbilityCheck({ ability: abl, event: rollEvent });
+                        } catch {
+                            return actor.rollAbilityCheck(abl, { event: rollEvent });
+                        }
+                    }
+                }
+            });
+
+            const coreAction = new Action({
+                id: `ability-${abl}`,
+                name,
+                type: 'ability',
+                img,
+                tabs: [TabRef.from('ability', abl)],
+                itemTypes: ['savingThrow'],
+                itemCategories: [['savingThrow'], ['abilityCheck']],
+                available: true,
+                uses: { available: null, max: null },
+                subactions: [saveSub, checkSub],
+                collapseDropdownIfSingle: true,
+                extra: { section: 'core', page: 2, ability: abl }
+            });
+            coreAction.section = 'core';
+            coreAction.page = 2;
+            checkActions.push(coreAction);
+        }
+
+        // 3. Skill Checks
+        const cfg = globalThis.CONFIG?.DND5E;
+        const skills = actor.system?.skills ?? {};
+        for (const [skillId, skill] of Object.entries(skills)) {
+            const abl = skill.ability || 'dex';
+            const label = skill.label || cfg?.skills?.[skillId]?.label || skillId;
+            const skillImg = abilityIcons[abl] || 'icons/svg/d20.svg';
+            const skillAction = new Action({
+                id: `skill-${skillId}`,
+                name: label,
+                type: 'skill',
+                img: skillImg,
+                tabs: [TabRef.from('ability', abl)],
+                itemTypes: ['abilityCheck'],
+                available: true,
+                uses: { available: null, max: null },
+                roll: async (event) => {
+                    const rollEvent = this._createRollEvent(event);
+                    if (typeof actor.rollSkill === 'function') {
+                        return actor.rollSkill({ skill: skillId, event: rollEvent }) ?? actor.rollSkill(skillId, { event: rollEvent });
+                    }
+                },
+                extra: { section: 'other', page: 2, ability: abl }
+            });
+            skillAction.section = 'other';
+            skillAction.page = 2;
+            checkActions.push(skillAction);
+        }
+
+        return checkActions;
     }
 
     // #endregion
@@ -233,6 +360,10 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
     #getSubTab(type) {
         if (!type) return 'none';
         return String(type).toLowerCase();
+    }
+
+    modifyContext(context, app) {
+        return super.modifyContext(context, app);
     }
 
     // #endregion

@@ -69,11 +69,15 @@ export class BaseSystemContextModifier {
             case 'all': return localize('BAD.core.allItems', 'All Items');
             case 'other': return localize('BAD.core.other', 'Other');
             case 'hidden': return localize('BAD.core.hidden', 'Hidden');
+            case 'savingThrow': return localize('BAD.page2.savingThrow', 'Saving Throw');
+            case 'abilityCheck': return localize('BAD.page2.abilityCheck', 'Ability Check');
             default: return parentId.toUpperCase();
         }
     }
 
     getItemTypeIcon(parentId) {
+        if (parentId === 'savingThrow') return 'fas fa-shield-alt';
+        if (parentId === 'abilityCheck') return 'fas fa-dice-d20';
         return ICONS.item_type[parentId] ?? 'fas fa-question';
     }
 
@@ -85,15 +89,26 @@ export class BaseSystemContextModifier {
         switch (parentId) {
             case 'all': return localize('BAD.core.allActions', 'All Actions');
             case 'none': return localize('BAD.core.none', 'None');
+            case 'ability': return localize('BAD.page2.ability', 'Ability');
             default: return parentId.toUpperCase();
         }
     }
 
     getActionTypeIcon(parentId) {
+        if (parentId === 'ability') return 'fas fa-fist-raised';
         return ICONS.action_type[parentId] ?? 'fas fa-question';
     }
 
     getActionSubTabLabel(subId) {
-        return subId.toUpperCase();
+        const abilityLabels = {
+            all: localize('BAD.core.allActions', 'All'),
+            str: localize('DND5E.AbilityStr', 'Strength'),
+            dex: localize('DND5E.AbilityDex', 'Dexterity'),
+            con: localize('DND5E.AbilityCon', 'Constitution'),
+            int: localize('DND5E.AbilityInt', 'Intelligence'),
+            wis: localize('DND5E.AbilityWis', 'Wisdom'),
+            cha: localize('DND5E.AbilityCha', 'Charisma')
+        };
+        return abilityLabels[subId] ?? subId.toUpperCase();
     }
 }
