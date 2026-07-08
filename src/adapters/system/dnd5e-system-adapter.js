@@ -5,10 +5,11 @@ import { MODULE_ID } from '../../constants.js';
 import { TabRef } from '../../ui/tab-ref.js';
 import { Action } from '../../ui/action.js';
 
-import { SORT_ORDERS, ALLOWED_TYPES, ICONS, LABEL_KEYS } from './constants/dnd5e-constants.js';
 import { Dnd5eSystemContextMenuManager } from './context-menu/dnd5e-system-context-menu-manager.js';
 import { Dnd5eSystemTabFilterManager } from './filter/dnd5e-system-tab-filter-manager.js';
 import { Dnd5eSystemContextModifier } from './context-modifier/dnd5e-system-context-modifier.js';
+
+const ALLOWED_TYPES = new Set(['weapon', 'equipment', 'consumable', 'tool', 'backpack', 'loot', 'feat', 'spell']);
 
 /**
  * System adapter for D&D 5th Edition.
