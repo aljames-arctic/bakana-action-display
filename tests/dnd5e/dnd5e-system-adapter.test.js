@@ -34,15 +34,15 @@ test('Dnd5eSystemAdapter spell slot calculation', () => {
     adapter.init(actor);
 
     // Cantrip -> no slots
-    const cantrip = { type: 'spell', system: { level: 0, preparation: { mode: 'prepared' } } };
+    const cantrip = { type: 'spell', system: { level: 0, method: 'prepared', prepared: true } };
     assert.deepEqual(adapter.calculateUses(cantrip), { available: null, max: null });
 
     // Level 1 spell
-    const spell1 = { type: 'spell', system: { level: 1, preparation: { mode: 'prepared' } } };
+    const spell1 = { type: 'spell', system: { level: 1, method: 'prepared', prepared: true } };
     assert.deepEqual(adapter.calculateUses(spell1), { available: 3, max: 4 });
 
     // Pact spell
-    const pactSpell = { type: 'spell', system: { level: 2, preparation: { mode: 'pact' } } };
+    const pactSpell = { type: 'spell', system: { level: 2, method: 'pact', prepared: true } };
     assert.deepEqual(adapter.calculateUses(pactSpell), { available: 2, max: 2 });
 });
 
@@ -72,7 +72,8 @@ test('Dnd5eSystemAdapter modifyActions full transformation pipeline', async () =
         type: 'spell',
         system: {
             level: 1,
-            preparation: { mode: 'prepared', prepared: true },
+            method: 'prepared',
+            prepared: true,
             activities: [
                 {
                     id: 'act-spell',

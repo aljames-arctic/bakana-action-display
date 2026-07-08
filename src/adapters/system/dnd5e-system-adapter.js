@@ -166,8 +166,8 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
             // 1. Filter out unprepared spells (unless innate/at-will/pact, showUnprepared is enabled, or item is user-hidden)
             let isSpellUnprepared = false;
             if (type === 'spell') {
-                const prepMode = item.system.method ?? item.system.preparation?.mode;
-                const isPrepared = Boolean(item.system.prepared || item.system.preparation?.prepared);
+                const prepMode = item.system.method;
+                const isPrepared = Boolean(item.system.prepared);
                 isSpellUnprepared = !['innate', 'atwill', 'pact'].includes(prepMode) && !isPrepared;
                 const showUnprepared = actor?.getFlag?.(MODULE_ID, 'showUnprepared');
 
@@ -971,7 +971,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
      */
     #calculateSpellSlots(item, actor = this.#actor, highestAvailableSlot = this.#highestAvailableSlot) {
         const system = item.system;
-        const prepMode = system.method ?? system.preparation?.mode;
+        const prepMode = system.method;
         const level = system.level ?? 0;
         
         if (prepMode === 'pact') {
