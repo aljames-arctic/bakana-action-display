@@ -43,12 +43,15 @@ The module is built using a clean **pipes-and-filters / adapter** architecture, 
     *   Performs the **Core Extraction**: iterates over all items on an actor and extracts a basic, system-agnostic list of actions (name, image, item ID, and roll functions). Before extracting full item data, queries `shouldExtractItem` on the active system adapter to bypass unneeded allocations.
     *   Runs the pipeline: `Core Extraction ──► System Adapter ──► Module Adapters ──► Core Post-Processing (User-Hidden Filters)`.
 
-### 2. System Adapter Layer (`BaseSystemAdapter` & `FantasySystemAdapter`)
-*   **Role**: Handles system-specific rules, resource calculations, and terminology.
+### 2. System Adapter Layer (`BaseSystemAdapter`, `FantasySystemAdapter`, & System Managers)
+*   **Role**: Handles system-specific rules, resource calculations, UI context formatting, tab filtering, and right-click context menu options.
 *   **Responsibilities**:
-    *   **`BaseSystemAdapter`**: The core, genre-agnostic base class. It defines the interface for all adapters, provides item filtering hooks (`shouldExtractItem`), and fallback localizations for generic HUD tabs (like "All Items", "Other").
-    *   **`FantasySystemAdapter`**: An intermediate class extending the base adapter. It houses shared defaults for fantasy RPG systems, such as default icon mappings for weapons, spells, feats, and consumables, as well as the numerical spell-level sorting algorithm and tab context modification (`modifyContext`).
-    *   **Concrete Adapters** (e.g., `Dnd5eSystemAdapter`, `Pf1SystemAdapter`, `Pf2eSystemAdapter`): Inherit from `FantasySystemAdapter` to leverage shared fantasy defaults, while implementing system-specific resource calculations (like spell slots, activities, or ammunition) and custom tab mappings.
+    *   **`BaseSystemAdapter`**: The core, genre-agnostic base class. It composes three specialized manager instances:
+        *   **`BaseSystemContextMenuManager`** (`src/adapters/system/context-menu/`): Manages action card context menu items and tab right-click shortcuts.
+        *   **`BaseSystemContextModifier`** (`src/adapters/system/context-modifier/`): Manages UI context modifications, tab label/icon localization, and sort orders.
+        *   **`BaseSystemTabFilterManager`** (`src/adapters/system/filter/`): Evaluates set-algebraic tab filter trees (`union`, `intersection`, `difference`) and checks resource depletion.
+    *   **`FantasySystemAdapter`**: An intermediate class extending the base adapter. It houses shared defaults for fantasy RPG systems, such as default icon mappings for weapons, spells, feats, and consumables, as well as the numerical spell-level sorting algorithm.
+    *   **Concrete Adapters** (e.g., `Dnd5eSystemAdapter`, `Pf1SystemAdapter`, `Pf2eSystemAdapter`): Inherit from `FantasySystemAdapter` and instantiate system-specific managers (`Dnd5eSystemContextMenuManager`, `Dnd5eSystemContextModifier`, `Dnd5eSystemTabFilterManager`) to implement system rules without cluttering the adapter.
     *   Maps system-native entities into the generic HUD model (`item` = Item Card, `activities` = Sub-options/Activities):
         *   **D&D 5e**: `item` ──► `Item5e`, `activities` ──► `Activity5e` instances.
         *   **Pathfinder 2e**: `item` ──► `ItemPF2e` / `Strike`, `activities` ──► Strike options / weapon modes.
@@ -60,10 +63,11 @@ The module is built using a clean **pipes-and-filters / adapter** architecture, 
 *   **Responsibilities**:
     *   Inspects active module flags on actions and modifies them (e.g., filtering out Midi-QOL "automation-only" activities from the player-facing HUD).
 
-### 4. UI Layer (`ActionDisplayApp`, `HUDTabColumn`, `HUDTab`, & `TabRef`)
+### 4. UI Layer (`ActionDisplayApp`, `HUDTabColumn`, `HUDTab`, `TabRef`, & `ContextMenuManager`)
 *   **Role**: The rendering engine and state management system, built on Foundry VTT's modern `ApplicationV2` (`HandlebarsApplication`) framework.
 *   **Responsibilities**:
     *   **`ActionDisplayApp`**: Listens to Foundry hooks (like token selection) to position and render the HUD. Manages positioning modes (`attached` dynamic token tracking, `pinned` fixed token offset, and `detached` floating screen position), tab state persistence across close/open and actor switches (`_saveTabState`), scroll position preservation (`scrollable` selector), and context rendering.
+    *   **`ContextMenuManager`** (`src/ui/app/context-menu-manager.js`): Manages UI right-click context menu creation for action cards, combining core actions (`Hide Action`, `Unhide Action`) with system-provided items.
     *   **`HUDTabColumn`**: Encapsulates left and right column tab states (active parents, focused parent, active sub-types) and enforces click interaction rules (exclusive left-click parent selection, multi-stage right-click toggles, sub-tab isolation).
     *   **`HUDTab`**: A unified, recursive tab UI model representing top-level parent tabs, sub-tabs, and deeply nested sub-tabs with depth levels (`level` 0, 1, 2+), parent/rootParent pointers, and click event handlers (`onLeftClick`, `onRightClick`).
     *   **`TabRef`**: A structured tab data reference class (`src/ui/tab-ref.js`) attached to item activities (`item.tabs`, `activity.tabs`). Pre-computes `.root` parent IDs and `.path` hierarchy strings (e.g. `'economy/action'`) at construction.
@@ -90,24 +94,34 @@ classDiagram
 
     class BaseSystemAdapter {
         +string systemId
+        +BaseSystemContextMenuManager contextMenuManager
+        +BaseSystemContextModifier contextModifier
+        +BaseSystemTabFilterManager filterManager
         +shouldExtractItem(item, actor)
         +modifyActions(actions, actor)
-        +modifyContext(context)
-        +filterSubactions(subactions, filterContext)
-        +isExclusionTab(parentId)
-        +matchesEconomyTabs(action, filterContext)
-        +getActiveExclusionSubs(filterContext)
+        +modifyContext(context, app)
+    }
+
+    class BaseSystemContextMenuManager {
+        +getContextMenuItems(app)
+        +onTabRightClick(app, el, event)
+    }
+
+    class BaseSystemContextModifier {
+        +modifyContext(context, app)
         +getItemTypeLabel(parentId)
         +getItemTypeIcon(parentId)
-        +getSpellLevelLabel(level)
-        +getActionTypeLabel(parentId)
-        +getActionTypeIcon(parentId)
-        +getActionSubTabLabel(subId)
+    }
+
+    class BaseSystemTabFilterManager {
+        +matchesEconomyTabs(action, filterContext)
+        +filterSubactions(subactions, filterContext)
+        +isResourceDepleted(action)
     }
 
     class FantasySystemAdapter {
         +getItemTypeIcon(parentId)
-        +modifyContext(context)
+        +getItemSubTabSortOrder(parentId, subId)
     }
 
     class Dnd5eSystemAdapter {

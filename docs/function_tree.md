@@ -318,23 +318,20 @@ flowchart TD
 - [**`static from(rootLabel, subLabel)`**](../src/ui/tab-ref.js#L26-L31): Helper to instantiate a nested parent/child `TabRef` node.
 
 ### [`src/adapters/system/base-system-adapter.js`](../src/adapters/system/base-system-adapter.js) — System Adapter Interface (`BaseSystemAdapter`)
-- [**`_createRollEvent(event)`**](../src/adapters/system/base-system-adapter.js#L26-L45): Creates a proxy around a roll event to inject keyboard modifiers (`Alt`, `Control`, `Shift`).
-- [**`shouldExtractItem(item, actor)`**](../src/adapters/system/base-system-adapter.js#L58-L60): Performance filter to bypass unneeded item allocations.
-- [**`modifyActions(actions, actor)`**](../src/adapters/system/base-system-adapter.js#L68-L80): Modifies base actions with system-specific calculations.
-- [**`matchesEconomyTabs(tabRefs, filterContext)`**](../src/adapters/system/base-system-adapter.js#L97-L146): Evaluates set-algebraic tab filter tree (`union`, `intersection`, `difference`) for an action's TabRef nodes.
-- [**`getActiveExclusionSubs(filterContext)`**](../src/adapters/system/base-system-adapter.js#L165-L178): Returns active sub-type IDs under difference/exclusion parent tabs.
-- [**`filterSubactions(subactions, filterContext)`**](../src/adapters/system/base-system-adapter.js#L193-L207): Filters dropdown sub-actions against set-algebraic tab filters and resource depletion.
-- [**`getTabCombinator(parentId)`**](../src/adapters/system/base-system-adapter.js#L219-L221): Returns the set-algebraic combinator (`'union'`, `'intersection'`, `'difference'`) for a parent tab.
-- [**`isExclusionTab(parentId)`**](../src/adapters/system/base-system-adapter.js#L229-L231): Delegates to `getTabCombinator(parentId) === 'difference'`.
-- [**`modifyContext(context)`**](../src/adapters/system/base-system-adapter.js#L324-L326): Customizes tab layout context and sub-tab ordering.
-- [**`getItemTypeLabel(parentId)`**](../src/adapters/system/base-system-adapter.js#L242-L249) / [**`getItemTypeIcon(parentId)`**](../src/adapters/system/base-system-adapter.js#L256-L263): Returns tab labels and font-awesome icons.
-- [**`getSpellLevelLabel(level)`**](../src/adapters/system/base-system-adapter.js#L229-L231): Localizes spell level sub-tab labels.
+- [**`_createRollEvent(event)`**](../src/adapters/system/base-system-adapter.js#L73-L92): Creates a proxy around a roll event to inject keyboard modifiers (`Alt`, `Control`, `Shift`).
+- [**`shouldExtractItem(item, actor)`**](../src/adapters/system/base-system-adapter.js#L102-L104): Performance filter to bypass unneeded item allocations.
+- [**`modifyActions(actions, actor)`**](../src/adapters/system/base-system-adapter.js#L122-L130): Modifies base actions with system-specific calculations.
+- [**`matchesEconomyTabs(action, filterContext)`**](../src/adapters/system/base-system-adapter.js#L149-L151): Delegates set-algebraic tab filter evaluation to `filterManager`.
+- [**`filterSubactions(subactions, filterContext)`**](../src/adapters/system/base-system-adapter.js#L157-L159): Delegates dropdown subaction filtering to `filterManager`.
+- [**`modifyContext(context, app)`**](../src/adapters/system/base-system-adapter.js#L175-L177): Delegates tab layout customization to `contextModifier`.
 
 ### [`src/adapters/system/dnd5e-system-adapter.js`](../src/adapters/system/dnd5e-system-adapter.js) — D&D 5e System Adapter (`Dnd5eSystemAdapter`)
-- [**`shouldExtractItem(item)`**](../src/adapters/system/dnd5e-system-adapter.js#L66-L76): Filters out unallowed item types, helper items, and unequipped tools/consumables.
-- [**`calculateUses(item)`**](../src/adapters/system/dnd5e-system-adapter.js#L743-L745): Public wrapper calculating available and maximum uses for items, activities, and spell slots.
-- [**`modifyActions(actions, actor)`**](../src/adapters/system/dnd5e-system-adapter.js#L84-L289): Processes D&D 5e activities, spell preparation, equipment states, and subcategory itemTypes.
-- [**`filterSubactions(subactions, filterContext)`**](../src/adapters/system/dnd5e-system-adapter.js#L302-L316): Filters out subactions requiring banned spell components.
-- [**`modifyContext(context, app)`**](../src/adapters/system/dnd5e-system-adapter.js#L343-L462): Injects "All Spells", "All Weapons", and "All Equipment" sub-tabs and orders subcategory sub-tabs.
-- [**`getContextMenuItems(app)`**](../src/adapters/system/dnd5e-system-adapter.js#L392-L512): Spawns context menu options for spell preparation (`Prepare`/`Unprepare`) and equipment management (`Equip`/`Unequip`).
-- [**`onTabRightClick(app, el, event)`**](../src/adapters/system/dnd5e-system-adapter.js#L489-L507): Toggles unprepared spell visibility (`showUnprepared`) and unequipped weapon/equipment visibility (`showUnequipped_weapon`, `showUnequipped_equipment`).
+- [**`shouldExtractItem(item)`**](../src/adapters/system/dnd5e-system-adapter.js#L35-L48): Filters out unallowed item types, helper items, and unequipped tools/consumables.
+- [**`calculateUses(item)`**](../src/adapters/system/dnd5e-system-adapter.js#L327-L329): Public wrapper calculating available and maximum uses for items, activities, and spell slots.
+- [**`modifyActions(actions, actor)`**](../src/adapters/system/dnd5e-system-adapter.js#L57-L200): Processes D&D 5e activities, spell preparation, equipment states, and subcategory itemTypes.
+- [**`resolveRootSpellDocument(sub, parentItem)`**](../src/adapters/system/dnd5e-system-adapter.js#L236-L279): Recursively resolves the original root spell document for activities and suboptions.
+
+### System Manager Sub-Modules
+- [**`BaseSystemContextMenuManager`**](../src/adapters/system/context-menu/base-system-context-menu-manager.js) / [**`Dnd5eSystemContextMenuManager`**](../src/adapters/system/context-menu/dnd5e-system-context-menu-manager.js): Encapsulates action card right-click options (`Prepare`/`Unprepare`, `Equip`/`Unequip`) and sub-tab right-click shortcuts.
+- [**`BaseSystemContextModifier`**](../src/adapters/system/context-modifier/base-system-context-modifier.js) / [**`Dnd5eSystemContextModifier`**](../src/adapters/system/context-modifier/dnd5e-system-context-modifier.js): Encapsulates UI context modification (`modifyContext`), synthetic tab injection (`All Spells`, `All Weapons`, `All Equipment`), labels, and sort orders.
+- [**`BaseSystemTabFilterManager`**](../src/adapters/system/filter/base-system-tab-filter-manager.js) / [**`Dnd5eSystemTabFilterManager`**](../src/adapters/system/filter/dnd5e-system-tab-filter-manager.js): Encapsulates set-algebraic tab matching (`union`, `intersection`, `difference`) and D&D 5e spell component exclusion filtering.
