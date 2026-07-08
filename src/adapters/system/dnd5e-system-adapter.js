@@ -291,10 +291,6 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         return null;
     }
 
-    #resolveRootSpellDocument(sub, parentItem) {
-        return this.resolveRootSpellDocument(sub, parentItem);
-    }
-
     async #resolveActivityLinkedAction(activity, actor) {
         if (activity.type === 'cast' && activity.spell?.uuid) {
             try {
@@ -589,10 +585,6 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
             };
         }
         return { available: 0, max };
-    }
-
-    #hasAvailableUpcastSlots(level, highestAvailableSlot) {
-        return highestAvailableSlot >= level;
     }
 
     #calculateSpellSlots(item, actor = this.#actor, highestAvailableSlot = this.#highestAvailableSlot) {

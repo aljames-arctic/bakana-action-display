@@ -229,16 +229,5 @@ export class BaseSystemAdapter {
         return this.contextModifier.getActionSubTabLabel(subId);
     }
 
-    /**
-     * Handle right-click on a tab.
-     * @param {ApplicationV2} app The ActionDisplayApp instance
-     * @param {HTMLElement} el The tab element that was right-clicked
-     * @param {Event} event The event
-     * @returns {boolean} True if the event was handled and default behavior should be prevented
-     */
-    onTabRightClick(app, el, event) {
-        return false;
-    }
-
     // #endregion
 }
