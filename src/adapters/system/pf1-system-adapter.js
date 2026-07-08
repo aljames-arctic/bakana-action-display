@@ -122,13 +122,7 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
                 action.uses = this.#calculateSpellUses(spellbook, item);
                 
                 // Roll function
-                action.roll = (event) => {
-                    if (typeof item.use === 'function') {
-                        item.use({ event });
-                    } else if (typeof item.roll === 'function') {
-                        item.roll({ event });
-                    }
-                };
+                action.roll = (event) => this.#executeItemRoll(item, null, event);
 
                 modified.push(action);
             } else if (item.type === 'attack') {
@@ -155,13 +149,7 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
                         activationType: activationType,
                         tabs: [TabRef.from('economy', activationType)],
                         uses: uses,
-                        roll: (event) => {
-                            if (typeof item.use === 'function') {
-                                item.use({ actionId: itemAction._id, event });
-                            } else if (typeof item.roll === 'function') {
-                                item.roll({ actionId: itemAction._id, event });
-                            }
-                        }
+                        roll: (event) => this.#executeItemRoll(item, itemAction._id, event)
                     };
                 });
 
@@ -202,14 +190,7 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
                                 activationType: activationType,
                                 tabs: [TabRef.from('economy', activationType)],
                                 uses: uses, // Shares weapon's ammunition/charges
-                                roll: (event) => {
-                                    const proxiedEvent = this._createRollEvent(event);
-                                    if (typeof attackItem.use === 'function') {
-                                        attackItem.use({ actionId: itemAction._id, event: proxiedEvent });
-                                    } else if (typeof attackItem.roll === 'function') {
-                                        attackItem.roll({ actionId: itemAction._id, event: proxiedEvent });
-                                    }
-                                }
+                                roll: (event) => this.#executeItemRoll(attackItem, itemAction._id, event)
                             });
                         }
                     }
@@ -230,13 +211,7 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
                             activationType: activationType,
                             tabs: [TabRef.from('economy', activationType)],
                             uses: uses,
-                            roll: (event) => {
-                                if (typeof item.use === 'function') {
-                                    item.use({ actionId: itemAction._id, event });
-                                } else if (typeof item.roll === 'function') {
-                                    item.roll({ actionId: itemAction._id, event });
-                                }
-                            }
+                            roll: (event) => this.#executeItemRoll(item, itemAction._id, event)
                         });
                     }
                 }
@@ -270,13 +245,7 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
                         activationType: activationType,
                         tabs: [TabRef.from('economy', activationType)],
                         uses: uses,
-                        roll: (event) => {
-                            if (typeof item.use === 'function') {
-                                item.use({ actionId: itemAction._id, event });
-                            } else if (typeof item.roll === 'function') {
-                                item.roll({ actionId: itemAction._id, event });
-                            }
-                        }
+                        roll: (event) => this.#executeItemRoll(item, itemAction._id, event)
                     };
                 });
 
@@ -431,6 +400,16 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
     // #endregion
 
     // #region System Specific Data Extractors & Schema Helpers
+
+    #executeItemRoll(item, actionId, event) {
+        const proxiedEvent = this._createRollEvent(event);
+        const options = actionId ? { actionId, event: proxiedEvent } : { event: proxiedEvent };
+        if (typeof item.use === 'function') {
+            item.use(options);
+        } else if (typeof item.roll === 'function') {
+            item.roll(options);
+        }
+    }
 
     #parseActivationType(actType) {
         if (!actType) return null;
