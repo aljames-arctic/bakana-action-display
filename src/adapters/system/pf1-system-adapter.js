@@ -109,55 +109,11 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
                 const uses = this.#calculateUses(item, actor);
                 const linkedAttacks = weaponLinkedAttacks.get(item.id) ?? [];
 
-                let itemActionsList = [];
+                const itemActionsList = linkedAttacks.length > 0
+                    ? this.#buildLinkedAttackSubactions(linkedAttacks, item, uses)
+                    : this.#buildSubactions(item, this.#getItemActions(item), uses);
 
-                if (linkedAttacks.length > 0) {
-                    // Merge actions from all linked attack items
-                    for (const attackItem of linkedAttacks) {
-                        const attackActions = this.#getItemActions(attackItem);
-                        for (const itemAction of attackActions) {
-                            const actionType = itemAction.activation?.type;
-                            const activationType = this.#parseActivationType(actionType);
-                            if (!activationType) continue;
-
-                            const actionName = linkedAttacks.length > 1 
-                                ? `${attackItem.name}: ${itemAction.name ?? localize('PF1.Attack', 'Attack')}` 
-                                : (itemAction.name ?? attackItem.name);
-
-                            itemActionsList.push({
-                                id: itemAction._id,
-                                name: actionName,
-                                img: attackItem.img ?? item.img,
-                                activationType: activationType,
-                                tabs: [TabRef.from('economy', activationType)],
-                                uses: uses, // Shares weapon's ammunition/charges
-                                roll: (event) => this.#executeItemRoll(attackItem, itemAction._id, event)
-                            });
-                        }
-                    }
-                } else {
-                    // Fallback to the weapon's own actions if no attacks are linked
-                    const itemActions = this.#getItemActions(item);
-                    for (const itemAction of itemActions) {
-                        const actionType = itemAction.activation?.type;
-                        const activationType = this.#parseActivationType(actionType);
-                        if (!activationType) continue;
-
-                        const actionName = itemAction.name ?? item.name;
-
-                        itemActionsList.push({
-                            id: itemAction._id,
-                            name: actionName,
-                            img: item.img,
-                            activationType: activationType,
-                            tabs: [TabRef.from('economy', activationType)],
-                            uses: uses,
-                            roll: (event) => this.#executeItemRoll(item, itemAction._id, event)
-                        });
-                    }
-                }
-
-                if (itemActionsList.length === 0) continue; // Skip if no active actions
+                if (itemActionsList.length === 0) continue;
 
                 this.#promoteFirstSubaction(action, itemActionsList, ['weapon'], uses);
                 modified.push(action);
@@ -334,6 +290,31 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
                 uses,
                 roll: (event) => this.#executeItemRoll(item, itemAction._id, event)
             });
+        }
+        return subactions;
+    }
+
+    #buildLinkedAttackSubactions(linkedAttacks, weapon, uses) {
+        const subactions = [];
+        for (const attackItem of linkedAttacks) {
+            for (const itemAction of this.#getItemActions(attackItem)) {
+                const activationType = this.#parseActivationType(itemAction.activation?.type);
+                if (!activationType) continue;
+
+                const name = linkedAttacks.length > 1
+                    ? `${attackItem.name}: ${itemAction.name ?? localize('PF1.Attack', 'Attack')}`
+                    : (itemAction.name ?? attackItem.name);
+
+                subactions.push({
+                    id: itemAction._id,
+                    name,
+                    img: attackItem.img ?? weapon.img,
+                    activationType,
+                    tabs: [TabRef.from('economy', activationType)],
+                    uses,
+                    roll: (event) => this.#executeItemRoll(attackItem, itemAction._id, event)
+                });
+            }
         }
         return subactions;
     }
