@@ -127,7 +127,7 @@ export class BaseSystemAdapter {
      */
     matchesEconomyTabs(action, filterContext) {
         if (!action) return false;
-        const rightContext = filterContext.right;
+        const rightContext = filterContext?.right ?? {};
         const activeParents = rightContext.activeParents ?? new Set();
         const activeSubs = rightContext.activeSubTypes ?? new Set();
         const parentGroups = rightContext.groups;
@@ -143,22 +143,20 @@ export class BaseSystemAdapter {
 
         // 1. Evaluate DIFFERENCE (exclusion) parent groups first
         for (const parentId of activeParents) {
-            const combinator = this.getTabCombinator(parentId);
-            if (combinator === 'difference') {
+            if (this.getTabCombinator(parentId) === 'difference') {
                 const group = parentGroups?.[parentId];
                 const validSubIds = toSet(group?.subTabs, t => t.id);
-                const activeSubsForParent = Array.from(activeSubs).filter(id => validSubIds.has(id));
 
-                if (activeSubsForParent.length > 0) {
-                    const hasExcludedTab = tabs.some(tab => tab.root === parentId && activeSubsForParent.includes(tab.label));
-                    if (hasExcludedTab) return false;
-                }
+                const hasExcludedTab = tabs.some(
+                    tab => tab.root === parentId && activeSubs.has(tab.label) && validSubIds.has(tab.label)
+                );
+                if (hasExcludedTab) return false;
             }
         }
 
         // 2. Evaluate UNION / INTERSECTION (category) parent groups
-        const activeCategoryParents = Array.from(activeParents).filter(p => this.getTabCombinator(p) !== 'difference' && p !== 'all');
-        const showAllCategory = activeParents.has('all') || activeCategoryParents.length === 0;
+        const showAllCategory = activeParents.has('all') ||
+            Array.from(activeParents).every(p => p === 'all' || this.getTabCombinator(p) === 'difference');
 
         if (showAllCategory) return true;
 
@@ -194,7 +192,7 @@ export class BaseSystemAdapter {
      * @returns {string[]} Array of active exclusion sub-type IDs
      */
     getActiveExclusionSubs(filterContext) {
-        const rightContext = filterContext.right;
+        const rightContext = filterContext?.right ?? {};
         const activeParents = rightContext.activeParents ?? new Set();
         const activeSubs = rightContext.activeSubTypes ?? new Set();
         const parentGroups = rightContext.groups;
