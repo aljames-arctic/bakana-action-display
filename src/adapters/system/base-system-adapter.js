@@ -379,8 +379,8 @@ export class BaseSystemAdapter {
     getItemSubTabSortOrder(parentId, subId) {
         if (subId === 'all') return 0;
         if (subId === 'itemCharges') return 99;
-        const num = parseInt(subId, 10);
-        return isNaN(num) ? 999 : num + 1;
+        const num = Number.parseInt(subId, 10);
+        return Number.isNaN(num) ? 999 : num + 1;
     }
 
     /**
