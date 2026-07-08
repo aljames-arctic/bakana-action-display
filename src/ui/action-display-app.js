@@ -5,6 +5,8 @@ import { MODULE_ID } from '../constants.js';
 import { HUDTabColumn } from './hud-tab-column.js';
 import { HUDTab } from './hud-tab.js';
 import { ContextMenu } from '../lib/compat.js';
+import { createActionContextMenu } from './app/context-menu-manager.js';
+import { showActivityDropdown } from './app/dropdown-manager.js';
 
 // Cache to persist tab states per actor across HUD rebuilds
 const activeTabCache = new Map();
@@ -724,140 +726,8 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
      * @returns {Object} Context menu item specification
      * @private
      */
-    _buildSubactionMenuItem(sub, event) {
-        const uses = sub.uses;
-        const iconHtml = sub.img
-            ? `<img class="bad-menu-icon" src="${sub.img}" />`
-            : '<i class="fas fa-play bad-menu-icon"></i>';
-
-        let usesHtml = "";
-        if (uses && uses.available !== null) {
-            const usesText = `${uses.available}${uses.max ? ' / ' + uses.max : ''}`;
-            const depletedClass = uses.available === 0 ? " depleted" : "";
-            const upcastClass = uses.isUpcast ? " upcast" : "";
-            usesHtml = `<span class="bad-menu-uses${depletedClass}${upcastClass}">${usesText}</span>`;
-        }
-
-        return {
-            name: sub.name || "Action",
-            icon: `<span class="bad-menu-icon-wrap">${iconHtml}</span>`,
-            usesHtml: usesHtml,
-            callback: () => {
-                log.debug(`Rolling sub-action: ${sub.name} via dropdown`);
-                sub.roll(event);
-            }
-        };
-    }
-
-    /**
-     * Display the ContextMenu for item activities (sub-actions) on left-click.
-     * @param {HTMLElement} target The row element clicked
-     * @param {Action[]} subactions The qualifying sub-actions to display
-     * @param {Event} event The trigger click event
-     * @private
-     */
     _showActivityDropdown(target, subactions, event) {
-        event?.preventDefault?.();
-        event?.stopPropagation?.();
-        log.debug(`_showActivityDropdown | "${target.dataset.actionId}" with ${subactions.length} items:`, subactions.map(s => s.name));
-        const menuItems = subactions.map(sub => this._buildSubactionMenuItem(sub, event));
-        log.debug(`_showActivityDropdown | Creating menu for: ${target.dataset.actionId}`, target);
-
-        let menu;
-        const options = {
-            jQuery: false,
-            onClose: () => {
-                log.debug(`onClose | Target: ${target.dataset.actionId}`, target);
-                target.classList.remove('bad-menu-active');
-
-                if (this._activeLeftClickMenu === menu) {
-                    log.debug(`onClose | Clearing global active menu reference`);
-                    this._activeLeftClickMenu = null;
-                    this.element.querySelector('.bakana-action-display-container')?.classList.remove('has-context-menu');
-                }
-                if (this._activeMenuTarget === target) {
-                    log.debug(`onClose | Clearing global active target reference`);
-                    this._activeMenuTarget = null;
-                }
-            }
-        };
-
-        menu = new ContextMenu.implementation(document.body, ".bad-action-item", menuItems, options);
-        this._activeMenuTarget = target;
-        this._activeLeftClickMenu = menu;
-
-        target.classList.add('bad-menu-active');
-        this.element.querySelectorAll('.bad-action-item').forEach(el => {
-            if (el !== target) {
-                el.classList.remove('bad-menu-active');
-            }
-        });
-        this.element.querySelector('.bakana-action-display-container')?.classList.add('has-context-menu');
-
-        setTimeout(async () => {
-            log.debug(`_showActivityDropdown | Rendering menu for: ${target.dataset.actionId}`);
-            try {
-                await menu.render(target);
-            } catch (e) {
-                log.debug(`_showActivityDropdown | menu.render error:`, e);
-            }
-
-            const menuEl = document.querySelector('#context-menu');
-            log.debug(`_showActivityDropdown | After await render menuEl:`, menuEl);
-            if (menuEl) {
-                if (menuEl.parentElement !== document.body) {
-                    document.body.appendChild(menuEl);
-                }
-
-                const lis = menuEl.querySelectorAll('.context-item');
-                lis.forEach((li, idx) => {
-                    const itemData = menuItems[idx];
-                    if (itemData && itemData.usesHtml && !li.querySelector('.bad-menu-uses')) {
-                        li.insertAdjacentHTML('beforeend', itemData.usesHtml);
-                    }
-                });
-
-                const rect = target.getBoundingClientRect();
-                const spaceBelow = window.innerHeight - rect.bottom - 15;
-                const neededHeight = subactions.length * 36 + 15;
-                const maxHeight = Math.max(150, Math.min(neededHeight, spaceBelow));
-
-                const styles = {
-                    position: 'fixed',
-                    left: `${rect.left}px`,
-                    top: `${rect.bottom}px`,
-                    bottom: 'auto',
-                    width: `${rect.width}px`,
-                    'min-width': `${rect.width}px`,
-                    'box-sizing': 'border-box',
-                    'z-index': '999999',
-                    display: 'block',
-                    visibility: 'visible',
-                    opacity: '1',
-                    'max-height': `${maxHeight}px`
-                };
-                for (const [prop, val] of Object.entries(styles)) {
-                    menuEl.style.setProperty(prop, val, 'important');
-                }
-                Array.from(menuEl.children).forEach(child => {
-                    child.style.setProperty('max-height', `${maxHeight}px`, 'important');
-                    child.style.setProperty('overflow-y', 'auto', 'important');
-                });
-
-                log.debug(`_showActivityDropdown | DOM check:`, {
-                    menuItemsCount: menuItems.length,
-                    renderedLisCount: menuEl.querySelectorAll('.context-item').length,
-                    renderedNames: Array.from(menuEl.querySelectorAll('.context-item')).map(el => el.textContent.trim()),
-                    menuClientHeight: menuEl.clientHeight,
-                    menuScrollHeight: menuEl.scrollHeight,
-                    menuComputedMaxHeight: window.getComputedStyle(menuEl).maxHeight,
-                    menuTop: menuEl.style.top,
-                    menuBottom: menuEl.style.bottom,
-                    spaceBelow,
-                    neededHeight
-                });
-            }
-        }, 10);
+        showActivityDropdown(this, target, subactions, event);
     }
 
     /**
@@ -1099,62 +969,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
      * @private
      */
     _createContextMenu() {
-        const menuItems = [
-            {
-                name: "BAD.core.hideAction",
-                icon: '<i class="fas fa-eye-slash"></i>',
-                condition: el => {
-                    if (!this.actor?.isOwner) return false;
-                    const action = this.actions?.find(a => a.id === el.dataset.actionId);
-                    return action && !action.isHidden;
-                },
-                callback: el => {
-                    this._toggleActionHidden(el.dataset.actionId, true);
-                }
-            },
-            {
-                name: "BAD.core.unhideAction",
-                icon: '<i class="fas fa-eye"></i>',
-                condition: el => {
-                    if (!this.actor?.isOwner) return false;
-                    const action = this.actions?.find(a => a.id === el.dataset.actionId);
-                    return action && action.isHidden;
-                },
-                callback: el => {
-                    this._toggleActionHidden(el.dataset.actionId, false);
-                }
-            },
-        ];
-
-        // Delegate to system adapter to add system-specific context menu items
-        if (actionDisplay.activeSystemAdapter?.getContextMenuItems) {
-            const systemItems = actionDisplay.activeSystemAdapter.getContextMenuItems(this);
-            menuItems.push(...systemItems);
-        }
-
-        const options = {
-            jQuery: false,
-            onOpen: (target) => {
-                log.debug("Context menu opened on target:", target);
-                this._activeContextMenuTarget = target; // Use separate property to prevent race conditions
-                // Fail-safe: Ensure no other item has the active menu class
-                this.element.querySelectorAll('.bad-action-item').forEach(el => {
-                    if (el !== target) el.classList.remove('bad-menu-active');
-                });
-                target.classList.add('bad-menu-active'); // Add active class to lift z-index
-                this.element.querySelector('.bakana-action-display-container')?.classList.add('has-context-menu');
-            },
-            onClose: () => {
-                log.debug("Context menu closed");
-                if (this._activeContextMenuTarget) {
-                    this._activeContextMenuTarget.classList.remove('bad-menu-active'); // Remove active class
-                }
-                this._activeContextMenuTarget = null;
-                this.element.querySelector('.bakana-action-display-container')?.classList.remove('has-context-menu');
-            }
-        };
-
-        return new ContextMenu.implementation(this.element, ".bad-action-item", menuItems, options);
+        return createActionContextMenu(this, this.element);
     }
 
     /**
