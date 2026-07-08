@@ -30,6 +30,7 @@ export class Action {
         img = '',
         tabs = [TabRef.from('all')],
         itemTypes = [],
+        itemCategories = null,
         hidden = false,
         isHidden = false,
         available = true,
@@ -39,6 +40,7 @@ export class Action {
         subactions = [],
         originalActivity = null,
         linkedAction = null,
+        collapseDropdownIfSingle = false,
         extra = {}
     } = {}) {
         this.id = id;
@@ -47,6 +49,7 @@ export class Action {
         this.img = img;
         this.tabs = tabs;
         this.itemTypes = itemTypes;
+        this.itemCategories = itemCategories;
         this.hidden = hidden;
         this.isHidden = isHidden;
         this.available = available;
@@ -56,6 +59,7 @@ export class Action {
         this.subactions = subactions;
         this.originalActivity = originalActivity;
         this.linkedAction = linkedAction;
+        this.collapseDropdownIfSingle = collapseDropdownIfSingle;
         this.extra = extra;
     }
 

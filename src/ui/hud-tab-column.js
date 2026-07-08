@@ -12,14 +12,15 @@ export class HUDTabColumn {
      * @param {Object} [options.cached] Persisted tab state from cache
      * @param {Function} [options.getDefaultSubTypes] Function returning default active sub-types from system adapter
      */
-    constructor({ side, cached, getDefaultSubTypes = () => [] } = {}) {
+    constructor({ side, cached, defaultParent = 'all', getDefaultSubTypes = () => [] } = {}) {
         this.side = side;
+        this.defaultParent = defaultParent;
         this.getDefaultSubTypes = getDefaultSubTypes;
 
-        const initialParents = cached?.parents ?? ['all'];
+        const initialParents = cached?.parents ?? [defaultParent];
         this.activeParents = new Set(initialParents);
 
-        this.focusedParent = cached?.focusedParent ?? (initialParents.includes('all') ? 'all' : initialParents[0]);
+        this.focusedParent = cached?.focusedParent ?? (initialParents.includes(defaultParent) ? defaultParent : initialParents[0]);
 
         const initialSubs = cached?.subTypes ?? [];
         this.activeSubTypes = new Set(initialSubs);
@@ -37,15 +38,15 @@ export class HUDTabColumn {
      * Reset parent tabs and sub-tabs on this column to default state ('all' and default sub-types).
      */
     resetToDefault() {
-        this.focusedParent = 'all';
+        this.focusedParent = this.defaultParent;
         this.activeParents.clear();
-        this.activeParents.add('all');
+        this.activeParents.add(this.defaultParent);
         this.activeSubTypes.clear();
         const defaults = this.getDefaultSubTypes();
         for (const sub of defaults) {
             this.activeSubTypes.add(sub);
         }
-        log.debug(`Reset ${this.side} side column tabs to default state ('all')`);
+        log.debug(`Reset ${this.side} side column tabs to default state ('${this.defaultParent}')`);
     }
 
     /**
@@ -132,6 +133,15 @@ export class HUDTabColumn {
 
         if (this.activeParents.size === 0) {
             this.resetToDefault();
+            return;
+        }
+
+        if (groups) {
+            const mainParents = Object.keys(groups).filter(k => k !== 'all' && k !== 'hidden' && k !== 'other');
+            if (mainParents.length > 1 && mainParents.every(k => this.activeParents.has(k))) {
+                this.resetToDefault();
+                return;
+            }
         }
     }
 

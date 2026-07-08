@@ -115,11 +115,19 @@ export class BaseSystemTabFilterManager {
 
     filterSubactions(subactions, filterContext) {
         if (!subactions?.length) return [];
-        const { filterNoResources } = filterContext;
+        const { filterNoResources, left } = filterContext;
 
-        return subactions.filter(sub =>
-            this.matchesEconomyTabs(sub, filterContext) &&
-            (!filterNoResources || !this.isResourceDepleted(sub))
-        );
+        return subactions.filter(sub => {
+            if (left && sub.itemTypes?.length > 0) {
+                const activeLeft = left.activeParents;
+                if (activeLeft && !activeLeft.has('all')) {
+                    if (!sub.itemTypes.some(type => activeLeft.has(type))) {
+                        return false;
+                    }
+                }
+            }
+            return this.matchesEconomyTabs(sub, filterContext) &&
+                (!filterNoResources || !this.isResourceDepleted(sub));
+        });
     }
 }
