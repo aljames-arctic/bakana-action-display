@@ -104,15 +104,16 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
      * Get the localized label for a left-side item sub-tab (spell rank) in PF2e.
      */
     getItemSubTabLabel(parentId, subId) {
-        if (parentId !== 'spell') return super.getItemSubTabLabel(parentId, subId);
-
-        switch (subId) {
-            case 'focus': return localize('PF2E.Focus.Spells', 'Focus Spells');
-            case 'innate': return localize('PF2E.PreparationTypeInnate', 'Innate Spells');
-            case 'ritual': return localize('PF2E.Actor.Character.Spellcasting.Tab.Rituals', 'Rituals');
-            case '0': return localize('PF2E.TraitCantrip', 'Cantrip');
-            default: return localize(`PF2E.Item.Spell.Rank.${subId}`, `${subId} Rank`);
+        if (parentId === 'spell') {
+            switch (subId) {
+                case 'focus': return localize('PF2E.Focus.Spells', 'Focus Spells');
+                case 'innate': return localize('PF2E.PreparationTypeInnate', 'Innate Spells');
+                case 'ritual': return localize('PF2E.Actor.Character.Spellcasting.Tab.Rituals', 'Rituals');
+                case '0': return localize('PF2E.TraitCantrip', 'Cantrip');
+                default: return localize(`PF2E.Item.Spell.Rank.${subId}`, `${subId} Rank`);
+            }
         }
+        return super.getItemSubTabLabel(parentId, subId);
     }
 
     /**
