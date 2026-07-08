@@ -277,18 +277,18 @@ The following diagram illustrates how raw item data is tagged with `TabRef` refe
 
 ```mermaid
 flowchart TB
-    subgraph EXTRACTION ["1. Extraction & Tagging (System Adapter Layer)"]
+    subgraph ADAPTER ["1. Dnd5eSystemAdapter / BaseSystemAdapter (Extraction & Tagging)"]
         A["Actor Items & Activities"] --> B["Dnd5eSystemAdapter / PF1 / PF2e"]
         B --> C["Tag Action with itemTypes & TabRef nodes"]
         C --> D["Action Instance<br/>itemTypes: ['spell']<br/>tabs: [TabRef('economy/action'), TabRef('components/vocal')]"]
     end
 
-    subgraph STATE ["2. Button State Management (UI Layer)"]
+    subgraph COLUMN ["2. HUDTabColumn (Button State Management)"]
         E["Left Column State (HUDTabColumn)<br/>activeParents: Set{'spell'}<br/>activeSubTypes: Set{'level_1'}"]
         F["Right Column State (HUDTabColumn)<br/>activeParents: Set{'economy'}<br/>activeSubTypes: Set{'action'}"]
     end
 
-    subgraph GRAPH ["3. Display Graph Construction (ActionDisplayApp._prepareContext)"]
+    subgraph APP ["3. ActionDisplayApp & HUDTab (Display Graph Construction)"]
         D --> G["Flatten unique TabRef.root & itemTypes across all Actor Actions"]
         E --> H["Inject active / focused / excluded state into Left HUDTab Tree"]
         F --> I["Inject active / focused / excluded state into Right HUDTab Tree"]
@@ -298,7 +298,7 @@ flowchart TB
         I --> K["Right Tab Bar Display Graph (HUDTab Nodes)"]
     end
 
-    subgraph CONSUMPTION ["4. Action Filtering & Rendering"]
+    subgraph FILTER ["4. BaseSystemTabFilterManager (Action Filtering & Consumption)"]
         D --> L["matchesEconomyTabs(action, filterContext)"]
         E --> L
         F --> L
