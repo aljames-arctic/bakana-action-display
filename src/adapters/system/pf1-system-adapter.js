@@ -25,6 +25,11 @@ const SPELL_SUB_TAB_ORDER = new Map(
     ['cantrip', 'orison', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'sla'].map((id, i) => [id, i])
 );
 
+const PF1_ACTION_TYPE_ICONS = {
+    'all': 'fas fa-border-all',
+    'economy': 'fas fa-stopwatch'
+};
+
 /**
  * System adapter for Pathfinder 1st Edition (PF1e).
  * Handles PF1e's multi-action items, prepared/spontaneous spellcasting, and toggleable buffs.
@@ -226,11 +231,7 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
      * Get the CSS icon class for a right-side action type (parent tab) in PF1e.
      */
     getActionTypeIcon(parentId) {
-        const icons = {
-            'all': 'fas fa-border-all',
-            'economy': 'fas fa-stopwatch'
-        };
-        return icons[parentId] ?? super.getActionTypeIcon(parentId);
+        return PF1_ACTION_TYPE_ICONS[parentId] ?? super.getActionTypeIcon(parentId);
     }
 
     /**
@@ -283,10 +284,7 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
      * Get the CSS icon class for a left-side item type (parent tab) in PF1e.
      */
     getItemTypeIcon(parentId) {
-        const icons = {
-            'buff': 'fas fa-sparkles'
-        };
-        return icons[parentId] ?? super.getItemTypeIcon(parentId);
+        return parentId === 'buff' ? 'fas fa-sparkles' : super.getItemTypeIcon(parentId);
     }
 
     getItemTypeSortOrder(parentId) {
