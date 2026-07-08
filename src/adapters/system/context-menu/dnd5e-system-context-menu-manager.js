@@ -1,8 +1,8 @@
-import { BaseSystemContextMenuManager } from '../context-menu/base-system-context-menu-manager.js';
+import { BaseSystemContextMenuManager } from './base-system-context-menu-manager.js';
 import { log } from '../../../lib/logger.js';
 import { MODULE_ID } from '../../../constants.js';
 
-export class Dnd5eContextMenuManager extends BaseSystemContextMenuManager {
+export class Dnd5eSystemContextMenuManager extends BaseSystemContextMenuManager {
     constructor(adapter) {
         super(adapter);
     }

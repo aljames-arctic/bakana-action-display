@@ -8,7 +8,7 @@ import { Action } from '../../ui/action.js';
 import { SORT_ORDERS, ALLOWED_TYPES, ICONS, LABEL_KEYS } from './dnd5e/constants.js';
 import { getSpellSlotUses, hasAvailableUpcastSlots, calculateSpellSlots, getHighestAvailableSpellSlot, calculateWeaponAmmunition, getAmmoQuantities } from './dnd5e/spells.js';
 import { normalizeActivationType, extractItemSpell, resolveRootSpellDocument, getActivityActivationType, requiresComponent, getComponentTabs } from './dnd5e/activities.js';
-import { Dnd5eContextMenuManager } from './dnd5e/dnd5e-context-menu-manager.js';
+import { Dnd5eSystemContextMenuManager } from './context-menu/dnd5e-system-context-menu-manager.js';
 
 /**
  * System adapter for D&D 5th Edition.
@@ -22,7 +22,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
 
     constructor() {
         super('dnd5e');
-        this.contextMenuManager = new Dnd5eContextMenuManager(this);
+        this.contextMenuManager = new Dnd5eSystemContextMenuManager(this);
     }
 
     get actor() {
