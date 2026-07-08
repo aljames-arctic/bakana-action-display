@@ -465,21 +465,13 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
         }
 
         // 2. Standard charges/uses
-        const uses = item.system.uses;
-        
-        // Check if it has actual charges/uses (max > 0 or value > 0)
-        const hasMax = (uses?.max ?? 0) > 0;
-        const hasValue = (uses?.value ?? 0) > 0;
-        
-        if (hasMax || hasValue) {
-            // If value is null but max is defined, it means the item is fully charged (available = max)
-            const max = uses.max ?? 0;
-            return {
-                available: uses.value ?? max,
-                max: max
-            };
+        const max = item.system.uses?.max ?? 0;
+        const value = item.system.uses?.value;
+
+        if (max > 0 || (value ?? 0) > 0) {
+            return { available: value ?? max, max };
         }
-        
+
         // Fallback for consumables: use quantity if uses are not defined
         if (item.type === 'consumable' && item.system.quantity !== undefined) {
             return {
@@ -496,22 +488,13 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
      */
     #calculateSpellUses(spellbook, spell) {
         const level = spell.system.level ?? 0;
-        
-        // Cantrips (level 0) have infinite uses
-        if (level === 0) {
-            return { available: null, max: null };
-        }
+        if (level === 0) return { available: null, max: null }; // Cantrips have infinite uses
 
         // 1. Prepared Spellcasting (Wizard, Cleric, Alchemist, etc.)
-        // In PF1e, prepared spells track their remaining casts directly on the spell item!
         if (spellbook.spellPreparationMode === 'prepared') {
             const prep = spell.system.preparation;
-            if (prep && prep.max > 0) {
-                // If value is null, fall back to max (fully prepared)
-                return {
-                    available: prep.value ?? prep.max,
-                    max: prep.max
-                };
+            if (prep?.max > 0) {
+                return { available: prep.value ?? prep.max, max: prep.max };
             }
             return { available: 0, max: 0 }; // Not prepared
         }
