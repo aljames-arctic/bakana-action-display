@@ -1,0 +1,17 @@
+{
+  "name": "bakana-action-display",
+  "version": "1.0.0",
+  "description": "Bakana's Action Display module for Foundry VTT",
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/**/*.test.js"
+  },
+  "keywords": [
+    "foundryvtt",
+    "dnd5e",
+    "pf2e",
+    "pf1e"
+  ],
+  "author": "Bakana",
+  "license": "MIT"
+}
