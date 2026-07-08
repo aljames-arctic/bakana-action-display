@@ -42,54 +42,55 @@ const SORT_ORDERS = {
 
 const ALLOWED_TYPES = new Set(['weapon', 'equipment', 'consumable', 'tool', 'backpack', 'loot', 'feat', 'spell']);
 
-const ITEM_TYPE_ICONS = {
-    'equipment': 'fas fa-shield',
-    'tool': 'fas fa-hammer',
-    'backpack': 'fas fa-sack',
-    'loot': 'fas fa-gem'
+const ICONS = {
+    item_type: {
+        'equipment': 'fas fa-shield',
+        'tool': 'fas fa-hammer',
+        'backpack': 'fas fa-sack',
+        'loot': 'fas fa-gem'
+    },
+    action_type: {
+        'economy': 'fas fa-stopwatch',
+        'components': 'fas fa-magic'
+    }
 };
 
-const ACTION_TYPE_ICONS = {
-    'economy': 'fas fa-stopwatch',
-    'components': 'fas fa-magic'
-};
-
-const ITEM_TYPE_LABEL_KEYS = {
-    'all': ['BAD.core.allItems', 'All Items'],
-    'weapon': ['DND5E.ItemTypeWeapon', 'Weapon'],
-    'equipment': ['DND5E.ItemTypeEquipment', 'Equipment'],
-    'consumable': ['DND5E.ItemTypeConsumable', 'Consumable'],
-    'tool': ['DND5E.ItemTypeTool', 'Tool'],
-    'backpack': ['DND5E.ItemTypeContainer', 'Container'],
-    'loot': ['DND5E.ItemTypeLoot', 'Loot'],
-    'feat': ['DND5E.ItemTypeFeat', 'Feature'],
-    'spell': ['DND5E.ItemTypeSpell', 'Spell'],
-    'other': ['DND5E.ActionOther', 'Other'],
-    'hidden': ['BAD.core.hidden', 'Hidden']
-};
-
-const ACTION_TYPE_LABEL_KEYS = {
-    'economy': ['BAD.common.actionEconomy', 'Action Economy'],
-    'components': ['BAD.common.spellComponents', 'Spell Components']
-};
-
-const ACTION_SUBTAB_LABEL_KEYS = {
-    'all': ['BAD.core.allActions', 'All Actions'],
-    'action': ['DND5E.Action', 'Action'],
-    'bonus': ['DND5E.BonusAction', 'Bonus Action'],
-    'reaction': ['DND5E.Reaction', 'Reaction'],
-    'minute': ['DND5E.TimeMinute', 'Minute'],
-    'hour': ['DND5E.TimeHour', 'Hour'],
-    'day': ['DND5E.TimeDay', 'Day'],
-    'legendary': ['DND5E.LegendaryAction', 'Legendary'],
-    'mythic': ['DND5E.MythicAction', 'Mythic'],
-    'lair': ['DND5E.LairAction', 'Lair'],
-    'crew': ['DND5E.CrewAction', 'Crew'],
-    'special': ['DND5E.Special', 'Special'],
-    'none': ['DND5E.None', 'None'],
-    'vocal': ['DND5E.ComponentVerbal', 'Verbal'],
-    'somatic': ['DND5E.ComponentSomatic', 'Somatic'],
-    'material': ['DND5E.ComponentMaterial', 'Material']
+const LABEL_KEYS = {
+    item_type: {
+        'all': ['BAD.core.allItems', 'All Items'],
+        'weapon': ['DND5E.ItemTypeWeapon', 'Weapon'],
+        'equipment': ['DND5E.ItemTypeEquipment', 'Equipment'],
+        'consumable': ['DND5E.ItemTypeConsumable', 'Consumable'],
+        'tool': ['DND5E.ItemTypeTool', 'Tool'],
+        'backpack': ['DND5E.ItemTypeContainer', 'Container'],
+        'loot': ['DND5E.ItemTypeLoot', 'Loot'],
+        'feat': ['DND5E.ItemTypeFeat', 'Feature'],
+        'spell': ['DND5E.ItemTypeSpell', 'Spell'],
+        'other': ['DND5E.ActionOther', 'Other'],
+        'hidden': ['BAD.core.hidden', 'Hidden']
+    },
+    action_type: {
+        'economy': ['BAD.common.actionEconomy', 'Action Economy'],
+        'components': ['BAD.common.spellComponents', 'Spell Components']
+    },
+    action_subtab: {
+        'all': ['BAD.core.allActions', 'All Actions'],
+        'action': ['DND5E.Action', 'Action'],
+        'bonus': ['DND5E.BonusAction', 'Bonus Action'],
+        'reaction': ['DND5E.Reaction', 'Reaction'],
+        'minute': ['DND5E.TimeMinute', 'Minute'],
+        'hour': ['DND5E.TimeHour', 'Hour'],
+        'day': ['DND5E.TimeDay', 'Day'],
+        'legendary': ['DND5E.LegendaryAction', 'Legendary'],
+        'mythic': ['DND5E.MythicAction', 'Mythic'],
+        'lair': ['DND5E.LairAction', 'Lair'],
+        'crew': ['DND5E.CrewAction', 'Crew'],
+        'special': ['DND5E.Special', 'Special'],
+        'none': ['DND5E.None', 'None'],
+        'vocal': ['DND5E.ComponentVerbal', 'Verbal'],
+        'somatic': ['DND5E.ComponentSomatic', 'Somatic'],
+        'material': ['DND5E.ComponentMaterial', 'Material']
+    }
 };
 
 /**
@@ -475,12 +476,12 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
 
 
     getItemTypeLabel(parentId) {
-        const config = ITEM_TYPE_LABEL_KEYS[parentId];
+        const config = LABEL_KEYS.item_type[parentId];
         return config ? localize(config[0], config[1]) : super.getItemTypeLabel(parentId);
     }
 
     getItemTypeIcon(parentId) {
-        return ITEM_TYPE_ICONS[parentId] ?? super.getItemTypeIcon(parentId);
+        return ICONS.item_type[parentId] ?? super.getItemTypeIcon(parentId);
     }
 
     /**
@@ -521,7 +522,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
      * Get the localized label for a right-side action type (parent tab) for DnD5e.
      */
     getActionTypeLabel(parentId) {
-        const config = ACTION_TYPE_LABEL_KEYS[parentId];
+        const config = LABEL_KEYS.action_type[parentId];
         return config ? localize(config[0], config[1]) : super.getActionTypeLabel(parentId);
     }
 
@@ -529,11 +530,11 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
      * Get the CSS icon class for a right-side action type (parent tab) for DnD5e.
      */
     getActionTypeIcon(parentId) {
-        return ACTION_TYPE_ICONS[parentId] ?? super.getActionTypeIcon(parentId);
+        return ICONS.action_type[parentId] ?? super.getActionTypeIcon(parentId);
     }
 
     getActionSubTabLabel(subId) {
-        const config = ACTION_SUBTAB_LABEL_KEYS[subId];
+        const config = LABEL_KEYS.action_subtab[subId];
         return config ? localize(config[0], config[1]) : super.getActionSubTabLabel(subId);
     }
 
