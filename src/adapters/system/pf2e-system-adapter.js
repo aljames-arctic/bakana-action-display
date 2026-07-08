@@ -24,6 +24,11 @@ const PF2E_SPELL_SUB_TAB_ORDER = new Map(
     ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'focus', 'innate', 'ritual'].map((id, i) => [id, i])
 );
 
+const PF2E_ACTION_TYPE_ICONS = {
+    'all': 'fas fa-border-all',
+    'economy': 'fas fa-stopwatch'
+};
+
 /**
  * System adapter for Pathfinder 2nd Edition (PF2e).
  * Modifies the base actions list by mapping feats and spells, and injecting Strikes (attacks).
@@ -226,24 +231,20 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
      * Get the CSS icon class for a right-side action type (parent tab) in PF2e.
      */
     getActionTypeIcon(parentId) {
-        const icons = {
-            'all': 'fas fa-border-all',
-            'economy': 'fas fa-stopwatch'
-        };
-        return icons[parentId] ?? super.getActionTypeIcon(parentId);
+        return PF2E_ACTION_TYPE_ICONS[parentId] ?? super.getActionTypeIcon(parentId);
     }
 
     /**
      * Get the localized label for a right-side action sub-tab in PF2e.
      */
     getActionSubTabLabel(subId) {
-        const labels = {
-            'all': localize('BAD.core.allActions', 'All Actions'),
-            'action': localize('PF2E.TabActionsLabel', 'Actions'),
-            'reaction': localize('PF2E.ActionsReactionsHeader', 'Reactions'),
-            'other': localize('PF2E.ActionsFreeActionsHeader', 'Free Actions')
-        };
-        return labels[subId] ?? super.getActionSubTabLabel(subId);
+        switch (subId) {
+            case 'all': return localize('BAD.core.allActions', 'All Actions');
+            case 'action': return localize('PF2E.TabActionsLabel', 'Actions');
+            case 'reaction': return localize('PF2E.ActionsReactionsHeader', 'Reactions');
+            case 'other': return localize('PF2E.ActionsFreeActionsHeader', 'Free Actions');
+            default: return super.getActionSubTabLabel(subId);
+        }
     }
 
     /**
