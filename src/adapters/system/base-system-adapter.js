@@ -148,9 +148,8 @@ export class BaseSystemAdapter {
         const parentGroups = rightContext.groups;
 
         // If an Action instance with subactions is passed, card passes if at least one subaction qualifies
-        if (action.subactions?.length > 0) {
-            const qualifyingSubactions = this.filterSubactions(action.subactions, filterContext);
-            return qualifyingSubactions.length > 0;
+        if (action.subactions?.length) {
+            return this.filterSubactions(action.subactions, filterContext).length > 0;
         }
 
         const tabs = action.tabs;
@@ -158,29 +157,27 @@ export class BaseSystemAdapter {
 
         // 1. Evaluate DIFFERENCE (exclusion) parent groups first
         for (const parentId of activeParents) {
-            if (this.getTabCombinator(parentId) === 'difference') {
-                const group = parentGroups?.[parentId];
-                const validSubIds = toSet(group?.subTabs, t => t.id);
+            if (!this.isExclusionTab(parentId)) continue;
 
-                const hasExcludedTab = tabs.some(
-                    tab => tab.root === parentId && activeSubs.has(tab.label) && validSubIds.has(tab.label)
-                );
-                if (hasExcludedTab) return false;
-            }
+            const group = parentGroups?.[parentId];
+            const validSubIds = toSet(group?.subTabs, t => t.id);
+
+            const hasExcludedTab = tabs.some(
+                tab => tab.root === parentId && activeSubs.has(tab.label) && validSubIds.has(tab.label)
+            );
+            if (hasExcludedTab) return false;
         }
 
         // 2. Evaluate UNION / INTERSECTION (category) parent groups
         const showAllCategory = activeParents.has('all') ||
-            Array.from(activeParents).every(p => p === 'all' || this.getTabCombinator(p) === 'difference');
+            Array.from(activeParents).every(p => p === 'all' || this.isExclusionTab(p));
 
         if (showAllCategory) return true;
 
         return tabs.some(tab => {
             const actionParentId = tab.root;
             if (!activeParents.has(actionParentId)) return false;
-
-            const combinator = this.getTabCombinator(actionParentId);
-            if (combinator === 'difference') return false;
+            if (this.isExclusionTab(actionParentId)) return false;
 
             const parentGroup = parentGroups?.[actionParentId];
             const validSubIds = toSet(parentGroup?.subTabs, t => t.id);
