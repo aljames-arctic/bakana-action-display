@@ -48,6 +48,7 @@ const SORT_ORDERS = {
 
 import { BaseSystemContextMenuManager } from './context-menu/base-system-context-menu-manager.js';
 import { BaseSystemTabFilterManager } from './filter/base-system-tab-filter-manager.js';
+import { BaseSystemContextModifier } from './context-modifier/base-system-context-modifier.js';
 
 /**
  * Base class for all system-specific adapters.
@@ -60,6 +61,7 @@ export class BaseSystemAdapter {
         this.systemId = systemId;
         this.contextMenuManager = new BaseSystemContextMenuManager(this);
         this.filterManager = new BaseSystemTabFilterManager(this);
+        this.contextModifier = new BaseSystemContextModifier(this);
     }
 
     getContextMenuItems(app) {
@@ -183,143 +185,48 @@ export class BaseSystemAdapter {
 
     // #region Localizations & UI Formatting
 
-    /**
-     * Get the localized label for a left-side item type (parent tab).
-     * @param {string} parentId 
-     * @returns {string}
-     */
-    getItemTypeLabel(parentId) {
-        switch (parentId) {
-            case 'all': return localize('BAD.core.allItems', 'All Items');
-            case 'other': return localize('BAD.core.other', 'Other');
-            case 'hidden': return localize('BAD.core.hidden', 'Hidden');
-            default: return parentId.toUpperCase();
-        }
-    }
-
-    /**
-     * Get the CSS icon class for a left-side item type (parent tab).
-     * @param {string} parentId 
-     * @returns {string}
-     */
-    getItemTypeIcon(parentId) {
-        return ICONS.item_type[parentId] ?? 'fas fa-question';
-    }
-
-    /**
-     * Get the localized label for a left-side item sub-tab.
-     * @param {string} parentId The parent tab ID (e.g. 'spell', 'weapon')
-     * @param {string} subId The sub-tab ID (e.g. '0', 'melee')
-     * @returns {string}
-     */
-    getItemSubTabLabel(parentId, subId) {
-        return subId.toUpperCase();
-    }
-
-    /**
-     * Get the localized label for a right-side action type (parent tab).
-     * @param {string} parentId 
-     * @returns {string}
-     */
-    getActionTypeLabel(parentId) {
-        switch (parentId) {
-            case 'all': return localize('BAD.core.allActions', 'All Actions');
-            case 'none': return localize('BAD.core.none', 'None');
-            default: return parentId.toUpperCase();
-        }
-    }
-
-    /**
-     * Get the CSS icon class for a right-side action type (parent tab).
-     * @param {string} parentId 
-     * @returns {string}
-     */
-    getActionTypeIcon(parentId) {
-        return ICONS.action_type[parentId] ?? 'fas fa-question';
-    }
-
-    /**
-     * Get the localized label for a right-side action sub-tab.
-     * @param {string} subId 
-     * @returns {string}
-     */
-    getActionSubTabLabel(subId) {
-        return subId.toUpperCase();
-    }
-
-    /**
-     * Get system-specific context menu items for action items.
-     * @param {ApplicationV2} app The ActionDisplayApp instance
-     * @returns {Object[]} An array of context menu item configurations
-     */
-    getContextMenuItems(app) {
-        return [];
-    }
-
-    /**
-     * Modify the template context before rendering.
-     * @param {Object} context The template context
-     * @param {ApplicationV2} app The ActionDisplayApp instance
-     */
     modifyContext(context, app) {
-        // Default implementation does nothing
+        return this.contextModifier.modifyContext(context, app);
     }
 
-    /**
-     * Get the default active left sub-tabs for this system.
-     * @returns {string[]}
-     */
-    getDefaultActiveLeftSubTypes() {
-        return [];
-    }
-
-    /**
-     * Get the default active sub-tabs (right side) for this system.
-     * @returns {string[]}
-     */
-    getDefaultActiveSubTypes() {
-        return [];
-    }
-
-    /**
-     * Get the sort index for a left-side item parent tab.
-     * @param {string} parentId 
-     * @returns {number}
-     */
     getItemTypeSortOrder(parentId) {
-        return SORT_ORDERS.item_type[parentId] ?? 999;
+        return this.contextModifier.getItemTypeSortOrder(parentId);
     }
 
-    /**
-     * Get the sort index for a left-side item sub-tab.
-     * @param {string} parentId 
-     * @param {string} subId 
-     * @returns {number}
-     */
     getItemSubTabSortOrder(parentId, subId) {
-        if (subId === 'all') return 0;
-        if (subId === 'itemCharges') return 99;
-        const num = Number.parseInt(subId, 10);
-        return Number.isNaN(num) ? 999 : num + 1;
+        return this.contextModifier.getItemSubTabSortOrder(parentId, subId);
     }
 
-    /**
-     * Get the sort index for a right-side action parent tab.
-     * @param {string} parentId 
-     * @returns {number}
-     */
     getActionTypeSortOrder(parentId) {
-        return SORT_ORDERS.action_type[parentId] ?? 999;
+        return this.contextModifier.getActionTypeSortOrder(parentId);
     }
 
-    /**
-     * Get the sort index for a right-side action sub-tab.
-     * @param {string} parentId 
-     * @param {string} subId 
-     * @returns {number}
-     */
     getActionSubTabSortOrder(parentId, subId) {
-        return subId === 'all' ? 0 : 999;
+        return this.contextModifier.getActionSubTabSortOrder(parentId, subId);
+    }
+
+    getItemTypeLabel(parentId) {
+        return this.contextModifier.getItemTypeLabel(parentId);
+    }
+
+    getItemTypeIcon(parentId) {
+        return this.contextModifier.getItemTypeIcon(parentId);
+    }
+
+    getItemSubTabLabel(parentId, subId) {
+        return this.contextModifier.getItemSubTabLabel(parentId, subId);
+    }
+
+    getActionTypeLabel(parentId) {
+        return this.contextModifier.getActionTypeLabel(parentId);
+    }
+
+    getActionTypeIcon(parentId) {
+        return this.contextModifier.getActionTypeIcon(parentId);
+    }
+
+    getActionSubTabLabel(subId) {
+        return this.contextModifier.getActionSubTabLabel(subId);
     }
 
     /**
