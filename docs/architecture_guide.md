@@ -52,6 +52,24 @@ The module is built using a clean **pipes-and-filters / adapter** architecture, 
         *   **`BaseSystemTabFilterManager`** (`src/adapters/system/filter/`): Evaluates set-algebraic tab filter trees (`union`, `intersection`, `difference`) and checks resource depletion.
     *   **`FantasySystemAdapter`**: An intermediate class extending the base adapter. It houses shared defaults for fantasy RPG systems, such as default icon mappings for weapons, spells, feats, and consumables, as well as the numerical spell-level sorting algorithm.
     *   **Concrete Adapters** (e.g., `Dnd5eSystemAdapter`, `Pf1SystemAdapter`, `Pf2eSystemAdapter`): Inherit from `FantasySystemAdapter` and instantiate system-specific managers (`Dnd5eSystemContextMenuManager`, `Dnd5eSystemContextModifier`, `Dnd5eSystemTabFilterManager`) to implement system rules without cluttering the adapter.
+        ```text
+        src/adapters/system/
+        ├── base-system-adapter.js
+        ├── dnd5e-system-adapter.js
+        ├── pf1-system-adapter.js
+        ├── pf2e-system-adapter.js
+        ├── context-menu/
+        │   ├── base-system-context-menu-manager.js
+        │   └── dnd5e-system-context-menu-manager.js
+        ├── context-modifier/
+        │   ├── base-system-context-modifier.js
+        │   └── dnd5e-system-context-modifier.js
+        ├── filter/
+        │   ├── base-system-tab-filter-manager.js
+        │   └── dnd5e-system-tab-filter-manager.js
+        └── genre/
+            └── fantasy-system-adapter.js
+        ```
     *   Maps system-native entities into the generic HUD model (`item` = Item Card, `activities` = Sub-options/Activities):
         *   **D&D 5e**: `item` ──► `Item5e`, `activities` ──► `Activity5e` instances.
         *   **Pathfinder 2e**: `item` ──► `ItemPF2e` / `Strike`, `activities` ──► Strike options / weapon modes.
