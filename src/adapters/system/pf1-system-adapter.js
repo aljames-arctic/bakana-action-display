@@ -137,24 +137,10 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
 
                 const uses = this.#calculateUses(item, actor);
 
-                action.subactions = itemActions.map(itemAction => {
-                    const actionType = itemAction.activation?.type;
-                    const activationType = this.#parseActivationType(actionType);
-                    const actionName = itemAction.name ?? item.name;
-                    
-                    return {
-                        id: itemAction._id,
-                        name: actionName,
-                        img: item.img,
-                        activationType: activationType,
-                        tabs: [TabRef.from('economy', activationType)],
-                        uses: uses,
-                        roll: (event) => this.#executeItemRoll(item, itemAction._id, event)
-                    };
-                });
+                const subactions = this.#buildSubactions(item, itemActions, uses);
+                if (subactions.length === 0) continue;
 
-                action.subactions = action.subactions.filter(sub => sub.activationType !== null);
-                if (action.subactions.length === 0) continue;
+                action.subactions = subactions;
 
                 const firstSub = action.subactions[0];
                 action.activationType = firstSub.activationType;
@@ -233,24 +219,10 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
 
                 const uses = this.#calculateUses(item, actor);
 
-                action.subactions = itemActions.map(itemAction => {
-                    const actionType = itemAction.activation?.type;
-                    const activationType = this.#parseActivationType(actionType);
-                    const actionName = itemAction.name ?? item.name;
-                    
-                    return {
-                        id: itemAction._id,
-                        name: actionName,
-                        img: item.img,
-                        activationType: activationType,
-                        tabs: [TabRef.from('economy', activationType)],
-                        uses: uses,
-                        roll: (event) => this.#executeItemRoll(item, itemAction._id, event)
-                    };
-                });
+                const subactions = this.#buildSubactions(item, itemActions, uses);
+                if (subactions.length === 0) continue;
 
-                action.subactions = action.subactions.filter(sub => sub.activationType !== null);
-                if (action.subactions.length === 0) continue;
+                action.subactions = subactions;
 
                 const firstSub = action.subactions[0];
                 action.activationType = firstSub.activationType;
@@ -409,6 +381,25 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
         } else if (typeof item.roll === 'function') {
             item.roll(options);
         }
+    }
+
+    #buildSubactions(item, itemActions, uses) {
+        const subactions = [];
+        for (const itemAction of itemActions) {
+            const activationType = this.#parseActivationType(itemAction.activation?.type);
+            if (!activationType) continue;
+
+            subactions.push({
+                id: itemAction._id,
+                name: itemAction.name ?? item.name,
+                img: item.img,
+                activationType,
+                tabs: [TabRef.from('economy', activationType)],
+                uses,
+                roll: (event) => this.#executeItemRoll(item, itemAction._id, event)
+            });
+        }
+        return subactions;
     }
 
     #parseActivationType(actType) {
