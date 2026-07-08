@@ -142,6 +142,40 @@ export class BaseSystemAdapter {
         });
     }
 
+    extractCheckActions(actor) {
+        return [];
+    }
+
+    /**
+     * Apply a flat layout template to the HUD context.
+     * @param {Object} context The Handlebars render context
+     */
+    formatFlatLayout(context) {
+        context.layout = 'flat';
+    }
+
+    /**
+     * Apply a split section layout template (two sections separated by a line bar) to the HUD context.
+     * @param {Object} context The Handlebars render context
+     * @param {Object} [options]
+     * @param {Function} [options.topFilter] Filter function for top section items
+     * @param {Function} [options.bottomFilter] Filter function for bottom section items
+     * @param {boolean} [options.sort=true] Whether to sort each section alphabetically
+     */
+    formatSplitLayout(context, { topFilter = a => a.section === 'core', bottomFilter = a => a.section === 'other', sort = true } = {}) {
+        context.layout = 'split';
+        const items = context.items ?? [];
+        const coreItems = items.filter(topFilter);
+        const otherItems = items.filter(bottomFilter);
+        if (sort) {
+            coreItems.sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''));
+            otherItems.sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''));
+        }
+        context.coreItems = coreItems;
+        context.otherItems = otherItems;
+        context.showSeparator = coreItems.length > 0 && otherItems.length > 0;
+    }
+
     // #endregion
 
     // #region Internal Filtering Logic
@@ -185,8 +219,20 @@ export class BaseSystemAdapter {
 
     // #region Localizations & UI Formatting
 
+    /**
+     * Modify the UI context object before template rendering.
+     * Overridable by system adapters to choose layout templates (flat, split, etc.).
+     * @param {Object} context The Handlebars render context
+     * @param {ActionDisplayApp} app The UI application instance
+     * @returns {Object} The modified context
+     */
     modifyContext(context, app) {
-        return this.contextModifier.modifyContext(context, app);
+        if (Number(app?.activePage) === 2) {
+            this.formatSplitLayout(context);
+        } else {
+            this.formatFlatLayout(context);
+        }
+        return this.contextModifier.modifyContext(context, app) ?? context;
     }
 
     getItemTypeSortOrder(parentId) {
@@ -227,6 +273,14 @@ export class BaseSystemAdapter {
 
     getActionSubTabLabel(subId) {
         return this.contextModifier.getActionSubTabLabel(subId);
+    }
+
+    getDefaultActiveLeftSubTypes() {
+        return [];
+    }
+
+    getDefaultActiveSubTypes() {
+        return [];
     }
 
     // #endregion

@@ -26,22 +26,16 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         this.token = token;
         this.actor = token.actor;
         this.actions = [];
+        this.totalPages = 1;
 
         const actorKey = this.actor?.uuid || this.actor?.id;
         const cached = this.retrieveActorTabCache(actorKey);
-
-        // Encapsulated tab side state managers
-        this.leftTabs = new HUDTabColumn({
-            side: 'left',
-            cached: cached?.left,
-            getDefaultSubTypes: () => actionDisplay.activeSystemAdapter?.getDefaultActiveLeftSubTypes() ?? []
-        });
-
-        this.rightTabs = new HUDTabColumn({
-            side: 'right',
-            cached: cached?.right,
-            getDefaultSubTypes: () => actionDisplay.activeSystemAdapter?.getDefaultActiveSubTypes() ?? []
-        });
+        this.activePage = Number(cached?.activePage ?? 1) || 1;
+        this._cachedPages = cached?.pages ?? {
+            '1-left': cached?.left,
+            '1-right': cached?.right
+        };
+        this._tabColumns = {};
 
         // HUD Attachment/Position Mode (persisted client-side)
         this.positionMode = game.settings.get(MODULE_ID, 'hudPositionMode');
@@ -55,6 +49,45 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         this._onDragStart = this._onDragStart.bind(this);
         this._onDragMove = this._onDragMove.bind(this);
         this._onDragEnd = this._onDragEnd.bind(this);
+    }
+
+    getTabColumn(side, page = this.activePage) {
+        const pageNum = Number(page) || 1;
+        if (!this._tabColumns) this._tabColumns = {};
+        const key = `${pageNum}-${side}`;
+        if (!this._tabColumns[key]) {
+            this._tabColumns[key] = new HUDTabColumn({
+                side,
+                defaultParent: 'all',
+                cached: this._cachedPages?.[key],
+                getDefaultSubTypes: () => {
+                    if (pageNum === 2) return side === 'right' ? ['all'] : [];
+                    return side === 'left'
+                        ? actionDisplay?.activeSystemAdapter?.getDefaultActiveLeftSubTypes?.() ?? []
+                        : actionDisplay?.activeSystemAdapter?.getDefaultActiveSubTypes?.() ?? [];
+                }
+            });
+        }
+        return this._tabColumns[key];
+    }
+
+    get leftTabs() {
+        return this.getTabColumn('left', this.activePage);
+    }
+
+    get rightTabs() {
+        return this.getTabColumn('right', this.activePage);
+    }
+
+    cyclePage() {
+        const current = Number(this.activePage) || 1;
+        if (this.totalPages <= 1) {
+            this.activePage = 1;
+        } else {
+            this.activePage = (current % this.totalPages) + 1;
+        }
+        this._saveTabState();
+        this.render();
     }
 
     /**
@@ -100,9 +133,15 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
     _saveTabState() {
         const actorKey = this.actor?.uuid || this.actor?.id;
 
+        if (!this._cachedPages) this._cachedPages = {};
+        this._cachedPages[`${this.activePage}-left`] = this.leftTabs.serialize();
+        this._cachedPages[`${this.activePage}-right`] = this.rightTabs.serialize();
+
         const serialized = {
+            activePage: this.activePage,
             left: this.leftTabs.serialize(),
-            right: this.rightTabs.serialize()
+            right: this.rightTabs.serialize(),
+            pages: this._cachedPages
         };
 
         // Track most recent active tab selections for seamless actor switching
@@ -225,8 +264,10 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
      */
     async _prepareContext(options) {
         const context = await super._prepareContext(options);
-        const rawActions = await actionDisplay.getActions(this.actor);
-        this.actions = rawActions; // Cache the processed actions for high-performance UI lookups
+        const allActions = await actionDisplay.getActions(this.actor);
+        this.actions = allActions; // Cache all processed actions for high-performance UI lookups
+        this.totalPages = allActions.reduce((max, a) => Math.max(max, a.page || 1), 1);
+        const rawActions = allActions.filter(a => (a.page || 1) === this.activePage);
         const adapter = actionDisplay.activeSystemAdapter;
 
         const existingItemCombinations = new Set();
@@ -234,8 +275,11 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
 
         // 1. Single-pass loop: Extract unique tabs and filter actions simultaneously (O(N) vs O(3N))
         for (const action of rawActions) {
-            if (action.itemTypes?.length) {
-                existingItemCombinations.add(action.itemTypes.join('/'));
+            const categories = action.itemCategories || (action.itemTypes?.length ? [action.itemTypes] : []);
+            for (const cat of categories) {
+                if (cat?.length) {
+                    existingItemCombinations.add(cat.join('/'));
+                }
             }
 
             if (action.tabs) {
@@ -434,16 +478,18 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
 
         // 4. Filter actions based on state
         const visibleActions = rawActions.filter(action => this._matchesFilters(action));
+        this.displayedActions = visibleActions;
 
         context.itemTypes = itemTypes;
         context.actionTypes = actionTypes;
         context.items = visibleActions;
+        context.layout = 'flat'; // Default layout template mode
         context.isAttached = this.isAttached;
         context.isPinned = this.isPinned;
         context.isDetached = this.isDetached;
         context.filterNoResources = game.settings.get(MODULE_ID, 'filterNoResources');
 
-        // Delegate to system adapter to allow system-specific context modifications
+        // Delegate to system adapter to allow system-specific context modifications and layout selection
         adapter?.modifyContext?.(context, this);
 
         // Save serialized tab selections for active actor
@@ -475,37 +521,40 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         }
 
         // Filter by Left Side (Item Type)
-        if (!action.itemTypes || action.itemTypes.length === 0) return false;
+        const categories = action.itemCategories || (action.itemTypes?.length ? [action.itemTypes] : []);
+        if (categories.length === 0) return false;
 
-        const matchesLeft = action.itemTypes.some(type => {
-            if (this.leftTabs.activeParents.has(type)) {
-                const parentGroup = this.leftGroups?.[type];
-                const validSubIds = toSet(parentGroup?.subTabs, t => t.id);
-                const activeSubsForParent = Array.from(this.leftTabs.activeSubTypes).filter(id => validSubIds.has(id));
-
-                if (activeSubsForParent.length === 0) {
-                    return true;
-                } else {
-                    const actionSubId = action.itemTypes[1];
-                    return this.leftTabs.activeSubTypes.has(actionSubId);
-                }
-            }
-
-            if (this.leftTabs.activeParents.has('all')) {
-                const isParentActive = this.leftTabs.activeParents.has(type);
-                if (!isParentActive) {
-                    return true;
-                } else {
+        const matchesLeft = categories.some(itemTypes => {
+            return itemTypes.some(type => {
+                if (this.leftTabs.activeParents.has(type)) {
                     const parentGroup = this.leftGroups?.[type];
                     const validSubIds = toSet(parentGroup?.subTabs, t => t.id);
                     const activeSubsForParent = Array.from(this.leftTabs.activeSubTypes).filter(id => validSubIds.has(id));
+
                     if (activeSubsForParent.length === 0) {
                         return true;
+                    } else {
+                        const actionSubId = itemTypes[1];
+                        return this.leftTabs.activeSubTypes.has(actionSubId);
                     }
                 }
-            }
 
-            return false;
+                if (this.leftTabs.activeParents.has('all')) {
+                    const isParentActive = this.leftTabs.activeParents.has(type);
+                    if (!isParentActive) {
+                        return true;
+                    } else {
+                        const parentGroup = this.leftGroups?.[type];
+                        const validSubIds = toSet(parentGroup?.subTabs, t => t.id);
+                        const activeSubsForParent = Array.from(this.leftTabs.activeSubTypes).filter(id => validSubIds.has(id));
+                        if (activeSubsForParent.length === 0) {
+                            return true;
+                        }
+                    }
+                }
+
+                return false;
+            });
         });
 
         if (!matchesLeft) return false;
@@ -554,7 +603,12 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
     async _onChangeLeftItemType(event, target) {
         event.preventDefault();
         this._clearMenuState();
-        const tab = this.leftGroups?.[target.dataset.type];
+        const clickedId = target.dataset.type;
+        if (clickedId === 'all' && this.leftTabs.activeParents.has('all')) {
+            this.cyclePage();
+            return;
+        }
+        const tab = this.leftGroups?.[clickedId];
         tab?.onLeftClick(this, this.leftTabs, this.leftGroups, event);
         this.render();
     }
@@ -586,7 +640,12 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
     async _onChangeActionType(event, target) {
         event.preventDefault();
         this._clearMenuState();
-        const tab = this.parentGroups?.[target.dataset.type];
+        const clickedId = target.dataset.type;
+        if (clickedId === 'all' && this.rightTabs.activeParents.has('all')) {
+            this.cyclePage();
+            return;
+        }
+        const tab = this.parentGroups?.[clickedId];
         tab?.onLeftClick(this, this.rightTabs, this.parentGroups, event);
         this.render();
     }
@@ -675,7 +734,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         this._activeLeftClickMenu = null;
 
         const actionId = target.dataset.actionId;
-        const action = this.actions?.find(a => a.id === actionId);
+        const action = (this.displayedActions || this.actions)?.find(a => a.id === actionId);
 
         if (action) {
             log.debug(`_onRollAction | Left-clicked action "${action.name}" (${action.id}):`, action);
@@ -688,12 +747,12 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
 
                 log.debug(`_onRollAction | Right-side Tab Filters - activeParents:`, Array.from(this.rightTabs.activeParents), `activeSubs:`, Array.from(this.rightTabs.activeSubTypes));
 
-                const adapter = actionDisplay.activeSystemAdapter;
-                const qualifyingSubActions = adapter.filterSubactions(itemActivities, filterContext, action.itemTypes);
+                const adapter = actionDisplay?.activeSystemAdapter;
+                const qualifyingSubActions = adapter?.filterSubactions?.(itemActivities, filterContext, action.itemTypes) ?? itemActivities;
 
                 log.debug(`_onRollAction | "${action.name}" (${action.id})`, {
                     totalSubactions: itemActivities.length,
-                    activeExclusions: adapter.getActiveExclusionSubs?.(filterContext) ?? [],
+                    activeExclusions: adapter?.getActiveExclusionSubs?.(filterContext) ?? [],
                     qualifyingCount: qualifyingSubActions.length,
                     qualifyingNames: qualifyingSubActions.map(s => s.name),
                     allNames: itemActivities.map(s => s.name)
@@ -702,7 +761,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                 log.debug(`_onRollAction | activeParents: ${Array.from(this.rightTabs.activeParents).join(', ')}, activeSubs: ${Array.from(this.rightTabs.activeSubTypes).join(', ')}, qualifying: ${qualifyingSubActions.length}`, qualifyingSubActions);
 
                 const subsToShow = qualifyingSubActions.length > 0 ? qualifyingSubActions : itemActivities;
-                const showDropdown = subsToShow.length > 1 || (itemActivities.length > 1 && subsToShow.length === 1);
+                const showDropdown = subsToShow.length > 1 || (!action.collapseDropdownIfSingle && itemActivities.length > 1 && subsToShow.length === 1);
 
                 if (showDropdown) {
                     this._showActivityDropdown(target, subsToShow, event);
