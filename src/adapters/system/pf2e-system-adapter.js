@@ -70,13 +70,8 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
 
         // 1. Process existing items (Feats, Actions, Spells)
         for (const action of actions) {
-            const item = action.originalItem;
-            const type = item.type;
-
-            if (type === 'action' || type === 'feat') {
-                if (this.#formatFeatAction(action, item)) modified.push(action);
-            } else if (type === 'spell') {
-                if (this.#formatSpellAction(action, item, spellToEntryMap.get(item.id))) modified.push(action);
+            if (this.#formatActionRow(action, spellToEntryMap)) {
+                modified.push(action);
             }
         }
 
@@ -284,6 +279,17 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
             originalItem: strike.item,
             extra: { pf2eStrike: strike }
         };
+    }
+
+    #formatActionRow(action, spellToEntryMap) {
+        const item = action.originalItem;
+        if (item.type === 'action' || item.type === 'feat') {
+            return this.#formatFeatAction(action, item);
+        }
+        if (item.type === 'spell') {
+            return this.#formatSpellAction(action, item, spellToEntryMap.get(item.id));
+        }
+        return false;
     }
 
     #formatFeatAction(action, item) {
