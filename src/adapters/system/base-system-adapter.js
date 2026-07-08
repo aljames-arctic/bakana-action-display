@@ -216,9 +216,12 @@ export class BaseSystemAdapter {
 
             const group = parentGroups?.[parentId];
             const validSubIds = toSet(group?.subTabs, t => t.id);
-            for (const subId of activeSubs) {
-                if (validSubIds.size === 0 || validSubIds.has(subId)) {
-                    activeExclusionSubs.push(subId);
+
+            if (validSubIds.size === 0) {
+                activeExclusionSubs.push(...activeSubs);
+            } else {
+                for (const subId of activeSubs) {
+                    if (validSubIds.has(subId)) activeExclusionSubs.push(subId);
                 }
             }
         }
@@ -406,8 +409,7 @@ export class BaseSystemAdapter {
      * @returns {number}
      */
     getActionSubTabSortOrder(parentId, subId) {
-        if (subId === 'all') return 0;
-        return 999;
+        return subId === 'all' ? 0 : 999;
     }
 
     /**
