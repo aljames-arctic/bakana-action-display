@@ -271,6 +271,43 @@ classDiagram
     BaseModuleAdapter <|-- MidiQolModuleAdapter : extends
 ```
 
+## 2.2 Action, TabRef, & Button State Data Flow
+
+The following diagram illustrates how raw item data is tagged with `TabRef` references, how `HUDTabColumn` maintains button/tab active states, and how `ActionDisplayApp` flattens these into a customized display graph consumed during filtering and rendering:
+
+```mermaid
+flowchart TB
+    subgraph EXTRACTION ["1. Extraction & Tagging (System Adapter Layer)"]
+        A["Actor Items & Activities"] --> B["Dnd5eSystemAdapter / PF1 / PF2e"]
+        B --> C["Tag Action with itemTypes & TabRef nodes"]
+        C --> D["Action Instance<br/>itemTypes: ['spell']<br/>tabs: [TabRef('economy/action'), TabRef('components/vocal')]"]
+    end
+
+    subgraph STATE ["2. Button State Management (UI Layer)"]
+        E["Left Column State (HUDTabColumn)<br/>activeParents: Set{'spell'}<br/>activeSubTypes: Set{'level_1'}"]
+        F["Right Column State (HUDTabColumn)<br/>activeParents: Set{'economy'}<br/>activeSubTypes: Set{'action'}"]
+    end
+
+    subgraph GRAPH ["3. Display Graph Construction (ActionDisplayApp._prepareContext)"]
+        D --> G["Flatten unique TabRef.root & itemTypes across all Actor Actions"]
+        E --> H["Inject active / focused / excluded state into Left HUDTab Tree"]
+        F --> I["Inject active / focused / excluded state into Right HUDTab Tree"]
+        G --> H
+        G --> I
+        H --> J["Left Tab Bar Display Graph (HUDTab Nodes)"]
+        I --> K["Right Tab Bar Display Graph (HUDTab Nodes)"]
+    end
+
+    subgraph CONSUMPTION ["4. Action Filtering & Rendering"]
+        D --> L["matchesEconomyTabs(action, filterContext)"]
+        E --> L
+        F --> L
+        L -- "Set-Algebraic Evaluation (union / intersection / difference)" --> M{"Matches Active Button States?"}
+        M -- Yes --> N["Rendered Action Card in HUD"]
+        M -- No --> O["Filtered Out"]
+    end
+```
+
 ---
 
 ## 3. The HUD Render Pipeline
