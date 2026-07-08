@@ -15,6 +15,13 @@ const SPELL_SUB_SORT_ORDER = {
     'itemCharges': 99
 };
 
+const FANTASY_ITEM_TYPE_ICONS = {
+    'weapon': 'fas fa-sword',
+    'spell': 'fas fa-wand-magic-sparkles',
+    'feat': 'fas fa-award',
+    'consumable': 'fas fa-flask'
+};
+
 /**
  * Intermediate adapter for fantasy-based systems (D&D 5e, PF1e, PF2e).
  * Provides shared fantasy defaults like common item type labels (Weapons, Spells, Feats, Consumables),
@@ -29,13 +36,7 @@ export class FantasySystemAdapter extends BaseSystemAdapter {
      * Get the default CSS icon class for a left-side item type (parent tab) in fantasy systems.
      */
     getItemTypeIcon(parentId) {
-        const icons = {
-            'weapon': 'fas fa-sword',
-            'spell': 'fas fa-wand-magic-sparkles',
-            'feat': 'fas fa-award',
-            'consumable': 'fas fa-flask'
-        };
-        return icons[parentId] ?? super.getItemTypeIcon(parentId);
+        return FANTASY_ITEM_TYPE_ICONS[parentId] ?? super.getItemTypeIcon(parentId);
     }
 
     /**
@@ -43,9 +44,8 @@ export class FantasySystemAdapter extends BaseSystemAdapter {
      * Easily readable list determining the exact display order for spell levels.
      */
     getItemSubTabSortOrder(parentId, subId) {
-        if (parentId === 'spell') {
-            return SPELL_SUB_SORT_ORDER[subId] ?? 999;
-        }
-        return super.getItemSubTabSortOrder(parentId, subId);
+        return parentId === 'spell'
+            ? (SPELL_SUB_SORT_ORDER[subId] ?? 999)
+            : super.getItemSubTabSortOrder(parentId, subId);
     }
 }
