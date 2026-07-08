@@ -72,20 +72,7 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
             const type = item.type;
 
             if (['action', 'feat'].includes(type)) {
-                const activationType = this.#getActionType(item);
-
-                // Skip passive feats/actions that don't have an active cost
-                if (!activationType) continue;
-
-                action.activationType = activationType; // Keep for sorting
-                action.tabs = [TabRef.from('economy', activationType)];
-                action.itemTypes = [type === 'action' ? 'feat' : type];
-                action.uses = this.#getUses(item);
-
-                // Override roll to post the action's chat card (standard PF2e behavior)
-                action.roll = (event) => this.#executeFeatRoll(item, event);
-
-                modified.push(action);
+                if (this.#formatFeatAction(action, item)) modified.push(action);
             } else if (item.type === 'spell') {
                 // Find the spellcasting entry this spell belongs to (O(1) lookup)
                 const entry = spellToEntryMap.get(item.id);
@@ -312,6 +299,18 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
             originalItem: strike.item,
             extra: { pf2eStrike: strike }
         };
+    }
+
+    #formatFeatAction(action, item) {
+        const activationType = this.#getActionType(item);
+        if (!activationType) return false;
+
+        action.activationType = activationType;
+        action.tabs = [TabRef.from('economy', activationType)];
+        action.itemTypes = [item.type === 'action' ? 'feat' : item.type];
+        action.uses = this.#getUses(item);
+        action.roll = (event) => this.#executeFeatRoll(item, event);
+        return true;
     }
 
     /**
