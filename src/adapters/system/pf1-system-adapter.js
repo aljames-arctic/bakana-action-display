@@ -96,13 +96,7 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
                 const subactions = this.#buildSubactions(item, itemActions, uses);
                 if (subactions.length === 0) continue;
 
-                action.subactions = subactions;
-
-                const firstSub = action.subactions[0];
-                action.activationType = firstSub.activationType;
-                action.tabs = firstSub.tabs;
-                action.itemTypes = ['weapon']; // Group under weapons/attacks
-                action.uses = uses;
+                this.#promoteFirstSubaction(action, subactions, ['weapon'], uses);
                 modified.push(action);
 
             } else if (item.type === 'weapon') {
@@ -160,12 +154,7 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
 
                 if (itemActionsList.length === 0) continue; // Skip if no active actions
 
-                action.subactions = itemActionsList;
-                const firstSub = itemActionsList[0];
-                action.activationType = firstSub.activationType;
-                action.tabs = firstSub.tabs;
-                action.itemTypes = ['weapon'];
-                action.uses = uses;
+                this.#promoteFirstSubaction(action, itemActionsList, ['weapon'], uses);
                 modified.push(action);
 
             } else if (['consumable', 'feat'].includes(type)) {
@@ -178,13 +167,7 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
                 const subactions = this.#buildSubactions(item, itemActions, uses);
                 if (subactions.length === 0) continue;
 
-                action.subactions = subactions;
-
-                const firstSub = action.subactions[0];
-                action.activationType = firstSub.activationType;
-                action.tabs = firstSub.tabs;
-                action.itemTypes = [item.type];
-                action.uses = uses;
+                this.#promoteFirstSubaction(action, subactions, [item.type], uses);
                 modified.push(action);
 
             } else if (item.type === 'buff') {
@@ -436,6 +419,15 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
         if (level === 0 && spellbook?.kind === 'arcane') return 'cantrip';
         if (level === 0 && spellbook?.kind === 'divine') return 'orison';
         return level.toString();
+    }
+
+    #promoteFirstSubaction(action, subactions, itemTypes, uses) {
+        const firstSub = subactions[0];
+        action.subactions = subactions;
+        action.activationType = firstSub.activationType;
+        action.tabs = firstSub.tabs;
+        action.itemTypes = itemTypes;
+        action.uses = uses;
     }
 
     /**
