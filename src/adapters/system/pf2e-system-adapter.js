@@ -139,46 +139,36 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
      * Get the localized label for a left-side item type (parent tab) in PF2e.
      */
     getItemTypeLabel(parentId) {
-        const labels = {
-            'feat': localize('PF2E.Item.Feat.Plural', 'Feats'),
-            'spell': localize('PF2E.Item.Spell.Plural', 'Spells'),
-            'weapon': localize('PF2E.TraitWeapons', 'Weapons')
-        };
-        return labels[parentId] ?? super.getItemTypeLabel(parentId);
+        switch (parentId) {
+            case 'feat': return localize('PF2E.Item.Feat.Plural', 'Feats');
+            case 'spell': return localize('PF2E.Item.Spell.Plural', 'Spells');
+            case 'weapon': return localize('PF2E.TraitWeapons', 'Weapons');
+            default: return super.getItemTypeLabel(parentId);
+        }
     }
 
     /**
      * Get the localized label for a left-side item sub-tab (spell rank) in PF2e.
      */
     getItemSubTabLabel(parentId, subId) {
-        if (parentId === 'spell') {
-            if (subId === 'focus') {
-                return localize('PF2E.Focus.Spells', 'Focus Spells');
-            }
-            if (subId === 'innate') {
-                return localize('PF2E.PreparationTypeInnate', 'Innate Spells');
-            }
-            if (subId === 'ritual') {
-                return localize('PF2E.Actor.Character.Spellcasting.Tab.Rituals', 'Rituals');
-            }
-            if (subId === '0') {
-                return localize('PF2E.TraitCantrip', 'Cantrip');
-            }
+        if (parentId !== 'spell') return super.getItemSubTabLabel(parentId, subId);
 
-            const key = `PF2E.Item.Spell.Rank.${subId}`;
-            return localize(key, `${subId} Rank`);
+        switch (subId) {
+            case 'focus': return localize('PF2E.Focus.Spells', 'Focus Spells');
+            case 'innate': return localize('PF2E.PreparationTypeInnate', 'Innate Spells');
+            case 'ritual': return localize('PF2E.Actor.Character.Spellcasting.Tab.Rituals', 'Rituals');
+            case '0': return localize('PF2E.TraitCantrip', 'Cantrip');
+            default: return localize(`PF2E.Item.Spell.Rank.${subId}`, `${subId} Rank`);
         }
-        return super.getItemSubTabLabel(parentId, subId);
     }
 
     /**
      * Get the localized label for a right-side action type (parent tab) in PF2e.
      */
     getActionTypeLabel(parentId) {
-        const labels = {
-            'economy': localize('BAD.common.actionEconomy', 'Action Economy')
-        };
-        return labels[parentId] ?? super.getActionTypeLabel(parentId);
+        return parentId === 'economy'
+            ? localize('BAD.common.actionEconomy', 'Action Economy')
+            : super.getActionTypeLabel(parentId);
     }
 
     getItemTypeSortOrder(parentId) {
