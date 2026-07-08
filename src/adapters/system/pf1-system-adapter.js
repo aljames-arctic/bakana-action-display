@@ -458,25 +458,10 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
      */
     #calculateUses(item, actor) {
         // 1. Ranged weapon ammunition tracking
-        if (item.type === 'weapon' && item.system.weaponSubtype === 'ranged') {
-            const ammoType = item.system.ammo?.type;
-            if (ammoType) {
-                // This weapon requires ammunition!
-                const ammoId = item.system.ammo?.default;
-                let quantity = 0;
-                
-                if (ammoId && actor) {
-                    const ammoItem = actor.items.get(ammoId);
-                    if (ammoItem) {
-                        quantity = ammoItem.system.quantity ?? 0;
-                    }
-                }
-                
-                return {
-                    available: quantity,
-                    max: null
-                };
-            }
+        if (item.type === 'weapon' && item.system.weaponSubtype === 'ranged' && item.system.ammo?.type) {
+            const ammoId = item.system.ammo?.default;
+            const quantity = (ammoId && actor?.items.get(ammoId)?.system.quantity) ?? 0;
+            return { available: quantity, max: null };
         }
 
         // 2. Standard charges/uses
