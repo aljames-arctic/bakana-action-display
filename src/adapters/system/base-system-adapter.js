@@ -46,6 +46,8 @@ const SORT_ORDERS = {
     }
 };
 
+import { BaseSystemContextMenuManager } from './context-menu/base-system-context-menu-manager.js';
+
 /**
  * Base class for all system-specific adapters.
  * System adapters are responsible for modifying, filtering, and sorting
@@ -55,6 +57,15 @@ const SORT_ORDERS = {
 export class BaseSystemAdapter {
     constructor(systemId) {
         this.systemId = systemId;
+        this.contextMenuManager = new BaseSystemContextMenuManager(this);
+    }
+
+    getContextMenuItems(app) {
+        return this.contextMenuManager.getContextMenuItems(app);
+    }
+
+    onTabRightClick(app, el, event) {
+        return this.contextMenuManager.onTabRightClick(app, el, event);
     }
 
     // #region User Interaction Events & Helpers
