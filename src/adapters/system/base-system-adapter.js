@@ -1,7 +1,6 @@
 import { localize, toSet } from '../../lib/utils.js';
 import { MODULE_ID } from '../../constants.js';
 import { KeyboardManager } from '../../lib/compat.js';
-import { TabRef } from '../../ui/tab-ref.js';
 
 /**
  * Base class for all system-specific adapters.
