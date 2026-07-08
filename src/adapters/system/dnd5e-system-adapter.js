@@ -544,7 +544,8 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
 
     #extractItemSpell(obj) {
         if (!obj) return null;
-        return obj.linkedAction ?? obj.cachedSpell ?? (obj.spell instanceof Item ? obj.spell : null);
+        const isItemInstance = typeof Item !== 'undefined' && obj.spell instanceof Item;
+        return obj.linkedAction ?? obj.cachedSpell ?? (isItemInstance || obj.spell?.type === 'spell' ? obj.spell : null);
     }
 
     /**
@@ -590,7 +591,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         if (doc) return doc;
 
         // 4. Fallback if no linked spell document was found: check activity.spell object or parent item (if spell)
-        if (activity?.spell && typeof activity.spell === 'object' && !(activity.spell instanceof Item)) {
+        if (activity?.spell && typeof activity.spell === 'object' && (typeof Item === 'undefined' || !(activity.spell instanceof Item))) {
             return activity.spell;
         }
 

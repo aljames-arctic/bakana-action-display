@@ -3,6 +3,9 @@
  * Sets up globalThis.game and globalThis.foundry before importing adapters or utilities.
  */
 
+globalThis.Item = class Item {};
+globalThis.Actor = class Actor {};
+
 function getProperty(obj, path) {
     if (!obj || !path) return undefined;
     const parts = String(path).split('.');

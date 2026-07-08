@@ -94,5 +94,6 @@ test('Pf1SystemAdapter modifyActions full transformation pipeline', async () => 
     assert.deepEqual(spellAction.uses, { available: 3, max: 4 });
 
     const buffAction = modified.find(a => a.id === 'act-buff');
-    assert.deepEqual(buffAction.itemTypes, ['buff', 'active']);
+    assert.deepEqual(buffAction.itemTypes, ['buff']);
+    assert.equal(buffAction.isActive, true);
 });
