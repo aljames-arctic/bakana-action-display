@@ -14,14 +14,34 @@ const ACTION_TYPE_ICONS = {
 };
 
 const ITEM_TYPE_SORT_ORDER = {
-    'all': 0, 'weapon': 1, 'spell': 2, 'feat': 3, 'buff': 4,
-    'equipment': 5, 'consumable': 6, 'tool': 7, 'backpack': 8,
-    'loot': 9, 'other': 10, 'hidden': 11
+    'all': 0,
+    'weapon': 1,
+    'spell': 2,
+    'feat': 3,
+    'buff': 4,
+    'equipment': 5,
+    'consumable': 6,
+    'tool': 7,
+    'backpack': 8,
+    'loot': 9,
+    'other': 10,
+    'hidden': 11
 };
 
 const ACTION_TYPE_SORT_ORDER = {
-    'all': 0, 'economy': 1, 'components': 2, 'standard': 3, 'action': 4, 'bonus': 5,
-    'reaction': 6, 'free': 7, 'time': 8, 'monster': 9, 'vehicle': 10, 'special': 11, 'none': 12
+    'all': 0,
+    'economy': 1,
+    'components': 2,
+    'standard': 3,
+    'action': 4,
+    'bonus': 5,
+    'reaction': 6,
+    'free': 7,
+    'time': 8,
+    'monster': 9,
+    'vehicle': 10,
+    'special': 11,
+    'none': 12
 };
 
 /**
