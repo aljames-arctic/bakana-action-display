@@ -2,46 +2,48 @@ import { localize, toSet } from '../../lib/utils.js';
 import { MODULE_ID } from '../../constants.js';
 import { KeyboardManager } from '../../lib/compat.js';
 
-const ITEM_TYPE_ICONS = {
-    'all': 'fas fa-border-all',
-    'other': 'fas fa-ellipsis',
-    'hidden': 'fas fa-eye-slash'
+const ICONS = {
+    item_type: {
+        'all': 'fas fa-border-all',
+        'other': 'fas fa-ellipsis',
+        'hidden': 'fas fa-eye-slash'
+    },
+    action_type: {
+        'all': 'fas fa-border-all',
+        'none': 'fas fa-ban'
+    }
 };
 
-const ACTION_TYPE_ICONS = {
-    'all': 'fas fa-border-all',
-    'none': 'fas fa-ban'
-};
-
-const ITEM_TYPE_SORT_ORDER = {
-    'all': 0,
-    'weapon': 1,
-    'spell': 2,
-    'feat': 3,
-    'buff': 4,
-    'equipment': 5,
-    'consumable': 6,
-    'tool': 7,
-    'backpack': 8,
-    'loot': 9,
-    'other': 10,
-    'hidden': 11
-};
-
-const ACTION_TYPE_SORT_ORDER = {
-    'all': 0,
-    'economy': 1,
-    'components': 2,
-    'standard': 3,
-    'action': 4,
-    'bonus': 5,
-    'reaction': 6,
-    'free': 7,
-    'time': 8,
-    'monster': 9,
-    'vehicle': 10,
-    'special': 11,
-    'none': 12
+const SORT_ORDERS = {
+    item_type: {
+        'all': 0,
+        'weapon': 1,
+        'spell': 2,
+        'feat': 3,
+        'buff': 4,
+        'equipment': 5,
+        'consumable': 6,
+        'tool': 7,
+        'backpack': 8,
+        'loot': 9,
+        'other': 10,
+        'hidden': 11
+    },
+    action_type: {
+        'all': 0,
+        'economy': 1,
+        'components': 2,
+        'standard': 3,
+        'action': 4,
+        'bonus': 5,
+        'reaction': 6,
+        'free': 7,
+        'time': 8,
+        'monster': 9,
+        'vehicle': 10,
+        'special': 11,
+        'none': 12
+    }
 };
 
 /**
@@ -301,7 +303,7 @@ export class BaseSystemAdapter {
      * @returns {string}
      */
     getItemTypeIcon(parentId) {
-        return ITEM_TYPE_ICONS[parentId] ?? 'fas fa-question';
+        return ICONS.item_type[parentId] ?? 'fas fa-question';
     }
 
     /**
@@ -333,7 +335,7 @@ export class BaseSystemAdapter {
      * @returns {string}
      */
     getActionTypeIcon(parentId) {
-        return ACTION_TYPE_ICONS[parentId] ?? 'fas fa-question';
+        return ICONS.action_type[parentId] ?? 'fas fa-question';
     }
 
     /**
@@ -385,7 +387,7 @@ export class BaseSystemAdapter {
      * @returns {number}
      */
     getItemTypeSortOrder(parentId) {
-        return ITEM_TYPE_SORT_ORDER[parentId] ?? 999;
+        return SORT_ORDERS.item_type[parentId] ?? 999;
     }
 
     /**
@@ -407,7 +409,7 @@ export class BaseSystemAdapter {
      * @returns {number}
      */
     getActionTypeSortOrder(parentId) {
-        return ACTION_TYPE_SORT_ORDER[parentId] ?? 999;
+        return SORT_ORDERS.action_type[parentId] ?? 999;
     }
 
     /**
