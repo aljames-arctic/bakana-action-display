@@ -31,3 +31,68 @@ test('Pf1SystemAdapter sort orders', () => {
     assert.equal(adapter.getItemSubTabSortOrder('spell', '1'), 3);
     assert.equal(adapter.getItemSubTabSortOrder('spell', 'sla'), 12);
 });
+
+test('Pf1SystemAdapter modifyActions full transformation pipeline', async () => {
+    const adapter = new Pf1SystemAdapter();
+
+    const spellItem = {
+        id: 'spell-1',
+        name: 'Magic Missile',
+        type: 'spell',
+        system: {
+            level: 1,
+            spellbook: 'primary',
+            actions: [
+                {
+                    id: 'act-sub-1',
+                    name: 'Cast Missile',
+                    activation: { type: 'standard' }
+                }
+            ]
+        }
+    };
+
+    const buffItem = {
+        id: 'buff-1',
+        name: 'Haste',
+        type: 'buff',
+        system: {
+            active: true,
+            actions: []
+        }
+    };
+
+    const actor = {
+        items: [spellItem, buffItem],
+        system: {
+            attributes: {
+                spells: {
+                    spellbooks: {
+                        primary: {
+                            spells: {
+                                spell1: { value: 3, max: 4 }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    };
+
+    const rawActions = [
+        { id: 'act-spell', originalItem: spellItem },
+        { id: 'act-buff', originalItem: buffItem }
+    ];
+
+    const modified = await adapter.modifyActions(rawActions, actor);
+
+    assert.equal(modified.length, 2, 'Should format both spell and buff actions');
+
+    const spellAction = modified.find(a => a.id === 'act-spell');
+    assert.equal(spellAction.activationType, 'action');
+    assert.deepEqual(spellAction.itemTypes, ['spell', '1']);
+    assert.deepEqual(spellAction.uses, { available: 3, max: 4 });
+
+    const buffAction = modified.find(a => a.id === 'act-buff');
+    assert.deepEqual(buffAction.itemTypes, ['buff', 'active']);
+});
