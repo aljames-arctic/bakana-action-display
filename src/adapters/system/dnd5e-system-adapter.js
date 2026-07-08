@@ -9,6 +9,7 @@ import { SORT_ORDERS, ALLOWED_TYPES, ICONS, LABEL_KEYS } from './dnd5e/constants
 import { getSpellSlotUses, hasAvailableUpcastSlots, calculateSpellSlots, getHighestAvailableSpellSlot, calculateWeaponAmmunition, getAmmoQuantities } from './dnd5e/spells.js';
 import { normalizeActivationType, extractItemSpell, resolveRootSpellDocument, getActivityActivationType, requiresComponent, getComponentTabs } from './dnd5e/activities.js';
 import { Dnd5eSystemContextMenuManager } from './context-menu/dnd5e-system-context-menu-manager.js';
+import { Dnd5eSystemTabFilterManager } from './filter/dnd5e-system-tab-filter-manager.js';
 
 /**
  * System adapter for D&D 5th Edition.
@@ -23,6 +24,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
     constructor() {
         super('dnd5e');
         this.contextMenuManager = new Dnd5eSystemContextMenuManager(this);
+        this.filterManager = new Dnd5eSystemTabFilterManager(this);
     }
 
     get actor() {
@@ -210,30 +212,6 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
     // #endregion
 
     // #region Internal Filtering Logic
-
-    /**
-     * System-specific sub-action filtering for D&D 5e activities.
-     * Checks D&D 5e spell components (vocal, somatic, material) on linkedActions/originalActivities.
-     */
-    filterSubactions(subactions, filterContext) {
-        const baseFiltered = super.filterSubactions(subactions, filterContext);
-        const activeCompSubs = this.getActiveExclusionSubs(filterContext);
-
-        if (activeCompSubs.length === 0) {
-            return baseFiltered;
-        }
-
-        // Filter out subactions requiring banned spell components
-        return baseFiltered.filter(sub => {
-            const hasPropertyMatch = activeCompSubs.some(comp => this.#requiresComponent(sub, comp));
-            const hasTabMatch = sub.tabs?.some(tab => tab.root === 'components' && activeCompSubs.includes(tab.label));
-            return !hasPropertyMatch && !hasTabMatch;
-        });
-    }
-
-    getTabCombinator(parentId) {
-        return parentId === 'components' ? 'difference' : 'union';
-    }
 
     // #endregion
 

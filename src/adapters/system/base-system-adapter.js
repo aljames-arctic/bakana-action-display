@@ -47,6 +47,7 @@ const SORT_ORDERS = {
 };
 
 import { BaseSystemContextMenuManager } from './context-menu/base-system-context-menu-manager.js';
+import { BaseSystemTabFilterManager } from './filter/base-system-tab-filter-manager.js';
 
 /**
  * Base class for all system-specific adapters.
@@ -58,6 +59,7 @@ export class BaseSystemAdapter {
     constructor(systemId) {
         this.systemId = systemId;
         this.contextMenuManager = new BaseSystemContextMenuManager(this);
+        this.filterManager = new BaseSystemTabFilterManager(this);
     }
 
     getContextMenuItems(app) {
@@ -119,7 +121,7 @@ export class BaseSystemAdapter {
      * @protected
      */
     _isResourceDepleted(action) {
-        return action.uses?.available != null && action.uses.available <= 0;
+        return this.filterManager.isResourceDepleted(action);
     }
 
     /**
@@ -154,140 +156,27 @@ export class BaseSystemAdapter {
      * @returns {boolean} True if the action matches current filter selection
      */
     matchesEconomyTabs(action, filterContext) {
-        if (!action) return false;
-        const rightContext = filterContext?.right ?? {};
-        const activeParents = rightContext.activeParents ?? new Set();
-        const activeSubs = rightContext.activeSubTypes ?? new Set();
-        const parentGroups = rightContext.groups;
-
-        // If an Action instance with subactions is passed, card passes if at least one subaction qualifies
-        if (action.subactions?.length) {
-            return this.filterSubactions(action.subactions, filterContext).length > 0;
-        }
-
-        const tabs = action.tabs;
-        if (!tabs || tabs.length === 0) return false;
-
-        // 1. Evaluate DIFFERENCE (exclusion) parent groups first
-        for (const parentId of activeParents) {
-            if (!this.isExclusionTab(parentId)) continue;
-
-            const group = parentGroups?.[parentId];
-            const validSubIds = toSet(group?.subTabs, t => t.id);
-
-            const hasExcludedTab = tabs.some(
-                tab => tab.root === parentId && activeSubs.has(tab.label) && validSubIds.has(tab.label)
-            );
-            if (hasExcludedTab) return false;
-        }
-
-        // 2. Evaluate UNION / INTERSECTION (category) parent groups
-        const showAllCategory = activeParents.has('all') ||
-            Array.from(activeParents).every(p => p === 'all' || this.isExclusionTab(p));
-
-        if (showAllCategory) return true;
-
-        return tabs.some(tab => {
-            const actionParentId = tab.root;
-            if (!activeParents.has(actionParentId)) return false;
-            if (this.isExclusionTab(actionParentId)) return false;
-
-            const parentGroup = parentGroups?.[actionParentId];
-            const validSubIds = toSet(parentGroup?.subTabs, t => t.id);
-            const activeSubsForParent = Array.from(activeSubs).filter(id => validSubIds.has(id));
-
-            // If no sub-tabs are active under this parent, matching the parent tab matches all its items
-            if (activeSubsForParent.length === 0) return true;
-
-            // Intersection (AND): item must match every active sub-tab for this parent
-            if (this.isIntersectionTab(actionParentId)) {
-                return activeSubsForParent.every(subId =>
-                    tabs.some(t => t.root === actionParentId && t.label === subId)
-                );
-            }
-
-            // Union (OR): item matches if its sub-tab is currently active
-            const actionSubId = tab.parent ? tab.label : undefined;
-            return activeSubs.has(actionSubId);
-        });
+        return this.filterManager.matchesEconomyTabs(action, filterContext);
     }
 
-    /**
-     * Helper to get active sub-type IDs under exclusion tabs (e.g. banned spell components).
-     * @param {Object} filterContext Current HUD filter context { left, right, filterNoResources }
-     * @returns {string[]} Array of active exclusion sub-type IDs
-     */
     getActiveExclusionSubs(filterContext) {
-        const rightContext = filterContext?.right ?? {};
-        const activeParents = rightContext.activeParents ?? new Set();
-        const activeSubs = rightContext.activeSubTypes ?? new Set();
-        const parentGroups = rightContext.groups;
-        const activeExclusionSubs = [];
-
-        for (const parentId of activeParents) {
-            if (!this.isExclusionTab(parentId)) continue;
-
-            const group = parentGroups?.[parentId];
-            const validSubIds = toSet(group?.subTabs, t => t.id);
-
-            if (validSubIds.size === 0) {
-                activeExclusionSubs.push(...activeSubs);
-            } else {
-                for (const subId of activeSubs) {
-                    if (validSubIds.has(subId)) activeExclusionSubs.push(subId);
-                }
-            }
-        }
-
-        return activeExclusionSubs;
+        return this.filterManager.getActiveExclusionSubs(filterContext);
     }
 
-    /**
-     * Filter a list of sub-actions (activities) for a dropdown menu based on current UI filter state.
-     * @param {Action[]} subactions The array of child Action instances
-     * @param {Object} filterContext Current HUD filter context { left, right, filterNoResources }
-     * @returns {Action[]} Qualifying sub-actions to show in the dropdown menu
-     */
     filterSubactions(subactions, filterContext) {
-        if (!subactions?.length) return [];
-        const { filterNoResources } = filterContext;
-
-        return subactions.filter(sub =>
-            this.matchesEconomyTabs(sub, filterContext) &&
-            (!filterNoResources || !this._isResourceDepleted(sub))
-        );
+        return this.filterManager.filterSubactions(subactions, filterContext);
     }
 
-    /**
-     * Get the set-algebraic combinator operator for a parent tab group.
-     * Options:
-     * - 'union': Action matches if it has ANY of the active sub-tabs (default OR behavior).
-     * - 'intersection': Action matches if it has ALL of the active sub-tabs (AND behavior).
-     * - 'difference': Action matches if it has NONE of the active sub-tabs (AND NOT / Exclusion behavior).
-     * @param {string} parentId
-     * @returns {string} 'union'|'intersection'|'difference'
-     */
     getTabCombinator(parentId) {
-        return 'union';
+        return this.filterManager.getTabCombinator(parentId);
     }
 
-    /**
-     * Determine if a parent tab acts as an exclusion/modifier filter (e.g. 'components').
-     * Exclusion tabs operate alongside standard category tabs and should not clear default 'all' category selection.
-     * @param {string} parentId
-     * @returns {boolean}
-     */
     isExclusionTab(parentId) {
-        return this.getTabCombinator(parentId) === 'difference';
+        return this.filterManager.isExclusionTab(parentId);
     }
 
-    /**
-     * Determine if a parent tab requires matching all active sub-tabs ('intersection').
-     * @param {string} parentId
-     * @returns {boolean}
-     */
     isIntersectionTab(parentId) {
-        return this.getTabCombinator(parentId) === 'intersection';
+        return this.filterManager.isIntersectionTab(parentId);
     }
 
     // #endregion
