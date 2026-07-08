@@ -83,13 +83,7 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
                 action.uses = this.#getUses(item);
 
                 // Override roll to post the action's chat card (standard PF2e behavior)
-                action.roll = (event) => {
-                    if (typeof item.toMessage === 'function') {
-                        item.toMessage();
-                    } else if (typeof item.use === 'function') {
-                        item.use({ event });
-                    }
-                };
+                action.roll = (event) => this.#executeFeatRoll(item, event);
 
                 modified.push(action);
             } else if (item.type === 'spell') {
@@ -98,27 +92,12 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
                 if (!entry) continue;
 
                 const spellLevel = item.rank ?? 0;
-                action.tabs = [TabRef.from('economy', 'action')]; // Spells are active actions
+                const subTab = this.#getSpellSubTab(entry, spellLevel);
+
+                action.tabs = [TabRef.from('economy', 'action')];
                 action.activationType = 'action';
-                
-                let subTab = spellLevel.toString();
-                if (entry.isFocusPool) {
-                    subTab = 'focus';
-                } else if (entry.isInnate) {
-                    subTab = 'innate';
-                } else if (entry.isRitual) {
-                    subTab = 'ritual';
-                } else if (spellLevel === 0) {
-                    subTab = '0';
-                }
                 action.itemTypes = ['spell', subTab];
-                action.roll = (event) => {
-                    if (typeof entry.cast === 'function') {
-                        entry.cast(item, { event });
-                    } else if (typeof item.toMessage === 'function') {
-                        item.toMessage();
-                    }
-                };
+                action.roll = (event) => this.#executeSpellRoll(entry, item, event);
                 action.uses = this.#getSpellUses(entry, item);
                 action.name = `${item.name} (${entry.name})`;
 
@@ -142,14 +121,7 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
                 itemTypes: ['weapon'],
                 hidden: false,
                 uses: uses, // Display remaining ammunition
-                roll: (event) => {
-                    const proxiedEvent = this._createRollEvent(event);
-                    if (strike.variants?.[0]?.roll) {
-                        strike.variants[0].roll({ event: proxiedEvent });
-                    } else if (typeof strike.roll === 'function') {
-                        strike.roll({ event: proxiedEvent });
-                    }
-                },
+                roll: (event) => this.#executeStrikeRoll(strike, event),
                 originalItem: strike.item, // Reference to the weapon item if available
                 extra: { pf2eStrike: strike }
             });
@@ -316,6 +288,40 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
      */
     #getActorStrikes(actor) {
         return actor.system.actions ?? [];
+    }
+
+    #getSpellSubTab(entry, spellLevel) {
+        if (entry.isFocusPool) return 'focus';
+        if (entry.isInnate) return 'innate';
+        if (entry.isRitual) return 'ritual';
+        return spellLevel.toString();
+    }
+
+    #executeFeatRoll(item, event) {
+        const proxiedEvent = this._createRollEvent(event);
+        if (typeof item.toMessage === 'function') {
+            item.toMessage();
+        } else if (typeof item.use === 'function') {
+            item.use({ event: proxiedEvent });
+        }
+    }
+
+    #executeSpellRoll(entry, item, event) {
+        const proxiedEvent = this._createRollEvent(event);
+        if (typeof entry.cast === 'function') {
+            entry.cast(item, { event: proxiedEvent });
+        } else if (typeof item.toMessage === 'function') {
+            item.toMessage();
+        }
+    }
+
+    #executeStrikeRoll(strike, event) {
+        const proxiedEvent = this._createRollEvent(event);
+        if (strike.variants?.[0]?.roll) {
+            strike.variants[0].roll({ event: proxiedEvent });
+        } else if (typeof strike.roll === 'function') {
+            strike.roll({ event: proxiedEvent });
+        }
     }
 
     /**
