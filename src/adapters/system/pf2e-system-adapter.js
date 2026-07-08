@@ -29,6 +29,12 @@ const PF2E_ACTION_TYPE_ICONS = {
     'economy': 'fas fa-stopwatch'
 };
 
+const PF2E_ACTION_TYPE_MAP = {
+    'reaction': 'reaction',
+    'free': 'other',
+    'action': 'action'
+};
+
 /**
  * System adapter for Pathfinder 2nd Edition (PF2e).
  * Modifies the base actions list by mapping feats and spells, and injecting Strikes (attacks).
@@ -285,8 +291,7 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
      * @returns {string|null}
      */
     #getActionType(item) {
-        const typeMap = { 'reaction': 'reaction', 'free': 'other', 'action': 'action' };
-        return typeMap[item.system.actionType?.value] ?? null;
+        return PF2E_ACTION_TYPE_MAP[item.system.actionType?.value] ?? null;
     }
 
     /**
