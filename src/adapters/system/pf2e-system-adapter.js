@@ -71,9 +71,9 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
             const item = action.originalItem;
             const type = item.type;
 
-            if (['action', 'feat'].includes(type)) {
+            if (type === 'action' || type === 'feat') {
                 if (this.#formatFeatAction(action, item)) modified.push(action);
-            } else if (item.type === 'spell') {
+            } else if (type === 'spell') {
                 if (this.#formatSpellAction(action, item, spellToEntryMap.get(item.id))) modified.push(action);
             }
         }
