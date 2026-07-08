@@ -21,6 +21,10 @@ const SORT_ORDERS = {
 
 const EXTRACTABLE_TYPES = new Set(['spell', 'attack', 'weapon', 'consumable', 'feat', 'buff']);
 
+const SPELL_SUB_TAB_ORDER = new Map(
+    ['cantrip', 'orison', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'sla'].map((id, i) => [id, i])
+);
+
 /**
  * System adapter for Pathfinder 1st Edition (PF1e).
  * Handles PF1e's multi-action items, prepared/spontaneous spellcasting, and toggleable buffs.
@@ -225,11 +229,12 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
      */
     modifyContext(context, app) {
         super.modifyContext?.(context, app);
-        
+
         const spellGroup = context.itemTypes?.find(g => g.id === 'spell');
-        if (spellGroup && spellGroup.subTabs.length > 0) {
-            const orderMap = new Map(['cantrip', 'orison', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'sla'].map((id, i) => [id, i]));
-            spellGroup.subTabs.sort((a, b) => (orderMap.get(a.id) ?? 999) - (orderMap.get(b.id) ?? 999));
+        if (spellGroup?.subTabs?.length) {
+            spellGroup.subTabs.sort((a, b) =>
+                (SPELL_SUB_TAB_ORDER.get(a.id) ?? 999) - (SPELL_SUB_TAB_ORDER.get(b.id) ?? 999)
+            );
         }
     }
 
