@@ -341,13 +341,20 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
     #parseActivationType(actType) {
         if (!actType) return null;
 
-        const type = actType.toLowerCase();
-        if (['standard', 'attack'].includes(type)) return 'action';
-        if (type === 'swift') return 'bonus'; // Map Swift to 'bonus'
-        if (type === 'immediate') return 'reaction'; // Map Immediate to 'reaction'
-        if (['free', 'nonaction'].includes(type)) return 'other'; // Map Free/Non-action to 'other'
-        
-        return null; // Passive or other unhandled types are ignored
+        switch (actType.toLowerCase()) {
+            case 'standard':
+            case 'attack':
+                return 'action';
+            case 'swift':
+                return 'bonus';
+            case 'immediate':
+                return 'reaction';
+            case 'free':
+            case 'nonaction':
+                return 'other';
+            default:
+                return null;
+        }
     }
 
     #buildWeaponAttackLinks(actor) {
