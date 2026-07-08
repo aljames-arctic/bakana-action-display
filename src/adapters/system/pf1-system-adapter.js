@@ -291,20 +291,18 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
      * Get the localized label for a left-side item sub-tab (spell level/spellbook) in PF1e.
      */
     getItemSubTabLabel(parentId, subId) {
-        if (parentId === 'spell') {
-            if (subId === 'sla') {
+        if (parentId !== 'spell') return super.getItemSubTabLabel(parentId, subId);
+
+        switch (subId) {
+            case 'sla':
                 return localize('PF1.SpellBookSpelllike', 'Spell-like');
-            }
-            if (subId === 'cantrip') {
+            case 'cantrip':
                 return localize('PF1.Cantrip', localize('PF1.Cantrips', 'Cantrips'));
-            }
-            if (subId === 'orison') {
+            case 'orison':
                 return localize('PF1.Orison', localize('PF1.Orisons', 'Orisons'));
-            }
-            const key = `PF1.SpellLevels.${subId}`;
-            return localize(key, `${subId} Level`);
+            default:
+                return localize(`PF1.SpellLevels.${subId}`, `${subId} Level`);
         }
-        return super.getItemSubTabLabel(parentId, subId);
     }
 
     /**
