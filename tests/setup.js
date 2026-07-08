@@ -47,7 +47,7 @@ const settingsStore = new Map([
 
 globalThis.game = {
     i18n: {
-        has(key) { return false; },
+        has(key) { return true; },
         localize(key) { return key; }
     },
     settings: {

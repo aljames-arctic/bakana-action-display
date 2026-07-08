@@ -45,6 +45,7 @@ test('Pf2eSystemAdapter modifyActions full transformation pipeline', async () =>
         id: 'entry-1',
         name: 'Arcane Spells',
         isFocusPool: false,
+        isSpontaneous: true,
         isInnate: false,
         spells: [
             { id: 'spell-fireball' }
