@@ -5,93 +5,9 @@ import { MODULE_ID } from '../../constants.js';
 import { TabRef } from '../../ui/tab-ref.js';
 import { Action } from '../../ui/action.js';
 
-const SORT_ORDERS = {
-    tabs: {
-        'spell': {
-            'all': 0, 'level_0': 1, 'level_1': 2, 'level_2': 3, 'level_3': 4,
-            'level_4': 5, 'level_5': 6, 'level_6': 7, 'level_7': 8, 'level_8': 9,
-            'level_9': 10, 'itemCharges': 99
-        },
-        'weapon': {
-            'all': 0, 'simpleM': 1, 'martialM': 2, 'simpleR': 3, 'martialR': 4,
-            'natural': 5, 'improv': 6, 'siege': 7
-        },
-        'equipment': {
-            'all': 0, 'light': 1, 'medium': 2, 'heavy': 3, 'shield': 4,
-            'clothing': 5, 'trinket': 6, 'ring': 7, 'rod': 8, 'wand': 9,
-            'wondrous': 10, 'vehicle': 11, 'natural': 12
-        },
-        'economy': {
-            'all': 0, 'action': 1, 'bonus': 2, 'reaction': 3, 'other': 4,
-            'special': 5, 'legendary': 6, 'mythic': 7, 'crew': 8, 'lair': 9,
-            'minute': 10, 'hour': 11, 'day': 12, 'none': 13
-        },
-        'components': { 'vocal': 0, 'somatic': 1, 'material': 2 }
-    },
-    item_type: {
-        'weapon': 1,
-        'equipment': 2,
-        'spell': 3,
-        'consumable': 4,
-        'tool': 5,
-        'backpack': 6,
-        'loot': 7,
-        'feat': 8
-    }
-};
-
-const ALLOWED_TYPES = new Set(['weapon', 'equipment', 'consumable', 'tool', 'backpack', 'loot', 'feat', 'spell']);
-
-const ICONS = {
-    item_type: {
-        'equipment': 'fas fa-shield',
-        'tool': 'fas fa-hammer',
-        'backpack': 'fas fa-sack',
-        'loot': 'fas fa-gem'
-    },
-    action_type: {
-        'economy': 'fas fa-stopwatch',
-        'components': 'fas fa-magic'
-    }
-};
-
-const LABEL_KEYS = {
-    item_type: {
-        'all': ['BAD.core.allItems', 'All Items'],
-        'weapon': ['DND5E.ItemTypeWeapon', 'Weapon'],
-        'equipment': ['DND5E.ItemTypeEquipment', 'Equipment'],
-        'consumable': ['DND5E.ItemTypeConsumable', 'Consumable'],
-        'tool': ['DND5E.ItemTypeTool', 'Tool'],
-        'backpack': ['DND5E.ItemTypeContainer', 'Container'],
-        'loot': ['DND5E.ItemTypeLoot', 'Loot'],
-        'feat': ['DND5E.ItemTypeFeat', 'Feature'],
-        'spell': ['DND5E.ItemTypeSpell', 'Spell'],
-        'other': ['DND5E.ActionOther', 'Other'],
-        'hidden': ['BAD.core.hidden', 'Hidden']
-    },
-    action_type: {
-        'economy': ['BAD.common.actionEconomy', 'Action Economy'],
-        'components': ['BAD.common.spellComponents', 'Spell Components']
-    },
-    action_subtab: {
-        'all': ['BAD.core.allActions', 'All Actions'],
-        'action': ['DND5E.Action', 'Action'],
-        'bonus': ['DND5E.BonusAction', 'Bonus Action'],
-        'reaction': ['DND5E.Reaction', 'Reaction'],
-        'minute': ['DND5E.TimeMinute', 'Minute'],
-        'hour': ['DND5E.TimeHour', 'Hour'],
-        'day': ['DND5E.TimeDay', 'Day'],
-        'legendary': ['DND5E.LegendaryAction', 'Legendary'],
-        'mythic': ['DND5E.MythicAction', 'Mythic'],
-        'lair': ['DND5E.LairAction', 'Lair'],
-        'crew': ['DND5E.CrewAction', 'Crew'],
-        'special': ['DND5E.Special', 'Special'],
-        'none': ['DND5E.None', 'None'],
-        'vocal': ['DND5E.ComponentVerbal', 'Verbal'],
-        'somatic': ['DND5E.ComponentSomatic', 'Somatic'],
-        'material': ['DND5E.ComponentMaterial', 'Material']
-    }
-};
+import { SORT_ORDERS, ALLOWED_TYPES, ICONS, LABEL_KEYS } from './dnd5e/constants.js';
+import { getSpellSlotUses, hasAvailableUpcastSlots, calculateSpellSlots, getHighestAvailableSpellSlot, calculateWeaponAmmunition, getAmmoQuantities } from './dnd5e/spells.js';
+import { normalizeActivationType, extractItemSpell, resolveRootSpellDocument, getActivityActivationType, requiresComponent, getComponentTabs } from './dnd5e/activities.js';
 
 /**
  * System adapter for D&D 5th Edition.
@@ -544,77 +460,13 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
     // #region System Specific Data Extractors & Schema Helpers
 
     #extractItemSpell(obj) {
-        if (!obj) return null;
-        const isItemInstance = typeof Item !== 'undefined' && obj.spell instanceof Item;
-        return obj.linkedAction ?? obj.cachedSpell ?? (isItemInstance || obj.spell?.type === 'spell' ? obj.spell : null);
+        return extractItemSpell(obj);
     }
 
-    /**
-     * Recursively resolve the true root spell / item document for an activity or item.
-     * Follows linkedActions, activity.spell.uuid, activity.item, activity.cachedSpell recursively.
-     * @param {Action} sub Sub-action or Activity Action instance
-     * @param {Object} [parentItem] Parent Item5e document
-     * @returns {Object|null} The resolved root Item5e document, spell data, or item properties
-     * @private
-     */
     #resolveRootSpellDocument(sub, parentItem) {
-        if (!sub) return null;
-
-        // 1. Check direct linkedAction (if resolved from UUID)
-        let doc = sub.linkedAction;
-
-        // 2. Check activity linked sources if doc is not set
-        const activity = sub.originalActivity;
-        if (!doc && activity) {
-            doc = this.#extractItemSpell(activity);
-            if (!doc && activity.spell?.uuid && typeof fromUuidSync === 'function') {
-                try {
-                    doc = fromUuidSync(activity.spell.uuid);
-                } catch (e) {
-                    // ignore sync resolution errors
-                }
-            }
-        }
-
-        // 3. Follow doc links recursively if doc itself has a linked spell / UUID
-        const maxDepth = 5;
-        let depth = 0;
-        while (doc && depth < maxDepth) {
-            const nextDoc = this.#extractItemSpell(doc);
-            if (nextDoc && nextDoc !== doc) {
-                doc = nextDoc;
-                depth++;
-            } else {
-                break;
-            }
-        }
-
-        if (doc) return doc;
-
-        // 4. Fallback if no linked spell document was found: check activity.spell object or parent item (if spell)
-        if (activity?.spell && typeof activity.spell === 'object' && (typeof Item === 'undefined' || !(activity.spell instanceof Item))) {
-            return activity.spell;
-        }
-
-        if (activity?.type === 'cast') {
-            return activity.spell || activity;
-        }
-
-        const origItem = sub.originalItem ?? parentItem;
-        if (origItem?.type === 'spell') {
-            return origItem;
-        }
-
-        return null;
+        return resolveRootSpellDocument(sub, parentItem);
     }
 
-    /**
-     * Resolve the linked spell document for a D&D 5e activity.
-     * @param {object} activity
-     * @param {Actor} actor
-     * @returns {Promise<object>}
-     * @private
-     */
     async #resolveActivityLinkedAction(activity, actor) {
         if (activity.type === 'cast' && activity.spell?.uuid) {
             try {
@@ -631,53 +483,12 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         return activity.cachedSpell ?? activity.spell ?? activity;
     }
 
-    /**
-     * Helper to test if a property container (Set, Array, or Object) contains the specified component.
-     * @param {Set|Array|Object|null} container The property container
-     * @param {string} component The component to check for (e.g. 'vocal', 'somatic', 'material')
-     * @returns {boolean}
-     * @private
-     */
-    #containerHasComponent(container, component) {
-        if (!container) return false;
-        const target = container.value ?? container;
-        if (target instanceof Set) return target.has(component);
-        if (Array.isArray(target)) return target.includes(component);
-        if (typeof target === 'object') return !!target[component];
-        return false;
-    }
-
-    #docHasComponent(doc, component) {
-        if (!doc) return false;
-        return this.#containerHasComponent(doc, component) ||
-               this.#containerHasComponent(doc.system?.properties ?? doc.properties, component) ||
-               this.#containerHasComponent(doc.system?.components ?? doc.components, component);
-    }
-
-    /**
-     * Helper to check if a subaction, activity, linked spell, or item requires a given spell component ('vocal', 'somatic', 'material').
-     * Checks the action/activity/item directly and via root spell doc resolution.
-     * @param {Action} sub Sub-action
-     * @param {string} component 'vocal' | 'somatic' | 'material'
-     * @returns {boolean}
-     * @private
-     */
     #requiresComponent(sub, component) {
-        if (!sub) return false;
-        const docsToCheck = [sub, sub.linkedAction, sub.originalActivity, sub.originalItem, this.#resolveRootSpellDocument(sub)];
-        return docsToCheck.some(doc => this.#docHasComponent(doc, component));
+        return requiresComponent(sub, component);
     }
 
-    /**
-     * Get component TabRefs required by an action, activity, or item.
-     * @param {Action|Object} doc
-     * @returns {TabRef[]}
-     * @private
-     */
     #getComponentTabs(doc) {
-        return ['vocal', 'somatic', 'material']
-            .filter(comp => this.#requiresComponent(doc, comp))
-            .map(comp => TabRef.from('components', comp));
+        return getComponentTabs(doc);
     }
 
     #collectUniqueTabs(activities) {
@@ -929,137 +740,35 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
      * @private
      */
     #getSpellSlotUses(actor, level, highestAvailableSlot) {
-        const actorSpells = actor.system.spells;
-        const isPact = level === 'pact';
-        const lvl = isPact ? (actorSpells?.pact?.level ?? 0) : (Number(level) || 0);
-
-        if (!isPact && lvl <= 0) return { available: null, max: null };
-
-        const slot = isPact ? actorSpells?.pact : actorSpells?.[`spell${lvl}`];
-        const available = slot?.value ?? 0;
-        const max = slot?.max ?? 0;
-
-        if (available > 0) {
-            return { available, max };
-        }
-        if (highestAvailableSlot >= lvl) {
-            return {
-                available: localize('BAD.dnd5e.upcast', 'Upcast'),
-                max: null,
-                isUpcast: true
-            };
-        }
-        return { available: 0, max };
+        return getSpellSlotUses(actor, level, highestAvailableSlot);
     }
 
-    /**
-     * Check if the actor has any available spell slots (standard or pact) of a given level or higher.
-     * Optimized to O(1) by comparing against the pre-calculated highest available slot.
-     * @private
-     */
     #hasAvailableUpcastSlots(level, highestAvailableSlot) {
-        return highestAvailableSlot >= level;
+        return hasAvailableUpcastSlots(level, highestAvailableSlot);
     }
 
-    /**
-     * Fallback method to calculate spell slots for standard slot-based spells.
-     * Used when the Cast activity doesn't have an explicit spellSlots consumption target.
-     * @param {Item} item The spell item
-     * @param {Actor} actor The actor
-     * @param {number} highestAvailableSlot The highest available spell slot level on the actor
-     * @private
-     */
     #calculateSpellSlots(item, actor = this.#actor, highestAvailableSlot = this.#highestAvailableSlot) {
-        const system = item.system;
-        const prepMode = system.method;
-        const level = system.level ?? 0;
-        
-        if (prepMode === 'pact') {
-            return this.#getSpellSlotUses(actor, 'pact', highestAvailableSlot);
-        } else if (!['innate', 'atwill'].includes(prepMode)) {
-            return this.#getSpellSlotUses(actor, level, highestAvailableSlot);
-        }
-        return { available: null, max: null };
+        return calculateSpellSlots(item, actor, highestAvailableSlot);
     }
 
-    /**
-     * Fallback method to calculate ammunition quantity for ranged weapons.
-     * Used when the Attack activity doesn't have a working item consumption target.
-     * @private
-     */
     #calculateWeaponAmmunition(item, ammoQuantities) {
-        const ammoType = item.system.ammunition?.type;
-        const quantity = ammoQuantities.get(ammoType) ?? 0;
-        return {
-            available: quantity,
-            max: null
-        };
+        return calculateWeaponAmmunition(item, ammoQuantities);
     }
 
     #getAmmoQuantities(actor) {
-        const ammoQuantities = new Map();
-        for (const i of actor?.items ?? []) {
-            if (i.type === 'consumable' && i.system.type?.value === 'ammo') {
-                const subtype = i.system.type.subtype;
-                if (subtype) {
-                    const qty = i.system.quantity ?? 0;
-                    ammoQuantities.set(subtype, (ammoQuantities.get(subtype) ?? 0) + qty);
-                }
-            }
-        }
-        return ammoQuantities;
+        return getAmmoQuantities(actor);
     }
 
     #getHighestAvailableSpellSlot(actor) {
-        const actorSpells = actor?.system?.spells;
-        if (!actorSpells) return 0;
-
-        let highest = 0;
-        for (let i = 9; i >= 1; i--) {
-            if (actorSpells[`spell${i}`]?.value > 0) {
-                highest = i;
-                break;
-            }
-        }
-        if (actorSpells.pact?.value > 0) {
-            highest = Math.max(highest, actorSpells.pact.level ?? 0);
-        }
-        return highest;
+        return getHighestAvailableSpellSlot(actor);
     }
 
-    /**
-     * Normalize an activation type string to lowercase, returning null if invalid or 'none'.
-     * @param {string} type
-     * @returns {string|null}
-     * @private
-     */
     #normalizeActivationType(type) {
-        if (!type || type === 'none' || type === '') return null;
-        return String(type).toLowerCase();
+        return normalizeActivationType(type);
     }
 
-    /**
-     * Resolve the effective lowercased activation type for a D&D 5e activity.
-     * Checks activity-level activation override before falling back to the parent item activation.
-     * @param {Object} activity The D&D 5e activity object instance
-     * @param {Object} item The parent D&D 5e item document
-     * @returns {string} The lowercased activation type string
-     * @private
-     */
     #getActivityActivationType(activity, item, linkedAction = null) {
-        const actOverride = activity.activation?.override ?? activity.system?.activation?.override;
-        if (actOverride) {
-            const overrideType = this.#normalizeActivationType(activity.activation?.type ?? activity.system?.activation?.type);
-            if (overrideType) return overrideType;
-        }
-
-        const spellDoc = linkedAction ?? this.#resolveRootSpellDocument({ originalActivity: activity, linkedAction: activity.spell });
-        const spellType = this.#normalizeActivationType(spellDoc?.system?.activation?.type ?? spellDoc?.activation?.type);
-        if (spellType) return spellType;
-
-        return this.#normalizeActivationType(item.system?.activation?.type)
-            ?? this.#normalizeActivationType(activity.activation?.type ?? activity.system?.activation?.type)
-            ?? 'none';
+        return getActivityActivationType(activity, item, linkedAction);
     }
 
     // #endregion
