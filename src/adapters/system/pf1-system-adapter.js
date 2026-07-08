@@ -144,7 +144,7 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
                     await item.update({ "system.active": !active });
                 };
                 
-                action.isActive = this.getBuffActiveState(item);
+                action.isActive = this.#getBuffActiveState(item);
                 action.uses = { available: null, max: null };
                 action.excludeFromAll = true; // Exclude buffs from the 'All Items' tab in PF1e
 

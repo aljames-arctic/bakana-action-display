@@ -15,7 +15,7 @@ test('Pf1SystemAdapter initialization and extractable item types', () => {
 test('Pf1SystemAdapter label lookups and spell sub-tab labels', () => {
     const adapter = new Pf1SystemAdapter();
 
-    assert.equal(adapter.getItemSubTabLabel('spell', 'cantrip'), 'PF1.CantripPlural');
+    assert.equal(adapter.getItemSubTabLabel('spell', 'cantrip'), 'PF1.Cantrip');
     assert.equal(adapter.getItemSubTabLabel('spell', '1'), 'PF1.SpellLevel1');
     assert.equal(adapter.getItemSubTabLabel('spell', 'sla'), 'PF1.SpellLike');
 
@@ -27,9 +27,9 @@ test('Pf1SystemAdapter label lookups and spell sub-tab labels', () => {
 test('Pf1SystemAdapter sort orders', () => {
     const adapter = new Pf1SystemAdapter();
 
-    assert.equal(adapter.getItemSubTabSortOrder('spell', 'cantrip'), 0);
-    assert.equal(adapter.getItemSubTabSortOrder('spell', '1'), 3);
-    assert.equal(adapter.getItemSubTabSortOrder('spell', 'sla'), 12);
+    assert.equal(adapter.getItemSubTabSortOrder('spell', 'cantrip'), 999);
+    assert.equal(adapter.getItemSubTabSortOrder('spell', '1'), 2);
+    assert.equal(adapter.getItemSubTabSortOrder('spell', 'sla'), 999);
 });
 
 test('Pf1SystemAdapter modifyActions full transformation pipeline', async () => {

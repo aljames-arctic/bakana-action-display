@@ -6,7 +6,7 @@ import { Dnd5eSystemAdapter } from '../../src/adapters/system/dnd5e-system-adapt
 test('Dnd5eSystemAdapter initialization and labels', () => {
     const adapter = new Dnd5eSystemAdapter();
     assert.equal(adapter.systemId, 'dnd5e');
-    assert.equal(adapter.getItemTypeIcon('weapon'), 'fas fa-question'); // falls back to base
+    assert.equal(adapter.getItemTypeIcon('weapon'), 'fas fa-sword');
     assert.equal(adapter.getItemTypeIcon('equipment'), 'fas fa-shield');
 });
 
@@ -31,17 +31,19 @@ test('Dnd5eSystemAdapter spell slot calculation', () => {
         }
     };
 
+    adapter.init(actor);
+
     // Cantrip -> no slots
     const cantrip = { type: 'spell', system: { level: 0, preparation: { mode: 'prepared' } } };
-    assert.deepEqual(adapter.getSpellSlotUses(actor, cantrip), { available: null, max: null });
+    assert.deepEqual(adapter.calculateUses(cantrip), { available: null, max: null });
 
     // Level 1 spell
     const spell1 = { type: 'spell', system: { level: 1, preparation: { mode: 'prepared' } } };
-    assert.deepEqual(adapter.getSpellSlotUses(actor, spell1), { available: 3, max: 4 });
+    assert.deepEqual(adapter.calculateUses(spell1), { available: 3, max: 4 });
 
     // Pact spell
     const pactSpell = { type: 'spell', system: { level: 2, preparation: { mode: 'pact' } } };
-    assert.deepEqual(adapter.getSpellSlotUses(actor, pactSpell), { available: 2, max: 2 });
+    assert.deepEqual(adapter.calculateUses(pactSpell), { available: 2, max: 2 });
 });
 
 test('Dnd5eSystemAdapter modifyActions full transformation pipeline', async () => {
@@ -53,7 +55,14 @@ test('Dnd5eSystemAdapter modifyActions full transformation pipeline', async () =
         type: 'weapon',
         system: {
             equipped: true,
-            activation: { type: 'action' }
+            activities: [
+                {
+                    id: 'act-weapon',
+                    name: 'Attack',
+                    type: 'attack',
+                    activation: { type: 'action' }
+                }
+            ]
         }
     };
 
@@ -64,7 +73,14 @@ test('Dnd5eSystemAdapter modifyActions full transformation pipeline', async () =
         system: {
             level: 1,
             preparation: { mode: 'prepared', prepared: true },
-            activation: { type: 'bonus' }
+            activities: [
+                {
+                    id: 'act-spell',
+                    name: 'Cast',
+                    type: 'cast',
+                    activation: { type: 'bonus' }
+                }
+            ]
         }
     };
 
@@ -73,8 +89,15 @@ test('Dnd5eSystemAdapter modifyActions full transformation pipeline', async () =
         name: 'Shield Master Reaction',
         type: 'feat',
         system: {
-            activation: { type: 'reaction' },
-            uses: { value: 1, max: 2 }
+            uses: { value: 1, max: 2 },
+            activities: [
+                {
+                    id: 'act-feat',
+                    name: 'Block',
+                    type: 'utility',
+                    activation: { type: 'reaction' }
+                }
+            ]
         }
     };
 
@@ -95,7 +118,7 @@ test('Dnd5eSystemAdapter modifyActions full transformation pipeline', async () =
 
     const modified = await adapter.modifyActions(rawActions, actor);
 
-    assert.equal(modified.length, 3, 'Should transform weapon, spell, and feat actions');
+    assert.equal(modified.length, 3, 'Should transform weapon, spell, and feat activities');
 
     const weaponAction = modified.find(a => a.id === 'act-weapon');
     assert.equal(weaponAction.activationType, 'action');

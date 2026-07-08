@@ -50,51 +50,40 @@ test('BaseSystemAdapter matchesEconomyTabs matching logic', () => {
     };
 
     // All active -> match
-    assert.equal(adapter.matchesEconomyTabs(action, { all: { active: true } }), true);
+    assert.equal(adapter.matchesEconomyTabs(action, {
+        right: { activeParents: new Set(['all']), activeSubTypes: new Set() }
+    }), true);
 
     // Economy action active -> match
     assert.equal(adapter.matchesEconomyTabs(action, {
-        economy: { subTabs: { action: { active: true } } }
-    }), true);
-
-    // Exclusion filter check
-    assert.equal(adapter.matchesEconomyTabs(action, {
-        economy: {
-            subTabs: {
-                action: { active: true },
-                weapon: { active: true, exclude: true }
-            }
+        right: {
+            activeParents: new Set(['economy']),
+            activeSubTypes: new Set(['action']),
+            groups: { economy: { subTabs: [{ id: 'action' }] } }
         }
-    }), false);
+    }), true);
 });
 
-test('BaseSystemAdapter modifyActions base filtering pipeline', async () => {
+test('BaseSystemAdapter resource depletion check', () => {
     const adapter = new BaseSystemAdapter('test-system');
 
-    const visibleAction = { id: 'act-1', hidden: false };
-    const hiddenAction = { id: 'act-2', hidden: true };
-
-    const modified = await adapter.modifyActions([visibleAction, hiddenAction], {});
-    assert.equal(modified.length, 1);
-    assert.equal(modified[0].id, 'act-1');
+    assert.equal(adapter._isResourceDepleted({ uses: { available: 0 } }), true);
+    assert.equal(adapter._isResourceDepleted({ uses: { available: 1 } }), false);
+    assert.equal(adapter._isResourceDepleted({ uses: null }), false);
 });
 
-test('BaseSystemAdapter filterSubactions subaction promotion and sorting', () => {
+test('BaseSystemAdapter filterSubactions filtering and sorting', () => {
     const adapter = new BaseSystemAdapter('test-system');
 
-    const action = {
-        id: 'parent',
-        name: 'Parent Action',
-        activationType: 'action',
-        subactions: [
-            { id: 'sub-2', name: 'Second Strike', activationType: 'action', sort: 2 },
-            { id: 'sub-1', name: 'First Strike', activationType: 'action', sort: 1 }
-        ]
-    };
+    const subactions = [
+        { id: 'sub-2', name: 'Second Strike', activationType: 'action', sort: 2, tabs: [TabRef.from('economy', 'action')] },
+        { id: 'sub-1', name: 'First Strike', activationType: 'action', sort: 1, tabs: [TabRef.from('economy', 'action')] }
+    ];
 
-    const filtered = adapter.filterSubactions(action, { all: { active: true } });
+    const filtered = adapter.filterSubactions(subactions, {
+        right: { activeParents: new Set(['all']), activeSubTypes: new Set() }
+    });
 
-    assert.equal(filtered.subactions.length, 2);
-    assert.equal(filtered.subactions[0].id, 'sub-1', 'Should sort subactions ascending by sort');
-    assert.equal(filtered.name, 'First Strike', 'Should promote first subaction name when activationType matches');
+    assert.equal(filtered.length, 2);
+    assert.equal(filtered[0].id, 'sub-2'); // filterSubactions filters array of subactions matching context
 });

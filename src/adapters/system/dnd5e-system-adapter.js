@@ -134,7 +134,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
      */
     shouldExtractItem(item) {
         const type = item.type;
-        if (!ALLOWED_TYPES.has(type) || item.getFlag('dnd5e', 'cachedFor')) return false;
+        if (!ALLOWED_TYPES.has(type) || item.getFlag?.('dnd5e', 'cachedFor')) return false;
         return !(['consumable', 'tool'].includes(type) && !this.getItemEquipped(item));
     }
 
@@ -160,7 +160,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
             }
 
             // Check if user has hidden this item
-            const hiddenIds = actor.getFlag(MODULE_ID, 'hiddenItems') ?? [];
+            const hiddenIds = actor?.getFlag?.(MODULE_ID, 'hiddenItems') ?? [];
             const isUserHidden = hiddenIds.includes(item.id);
 
             // 1. Filter out unprepared spells (unless innate/at-will/pact, showUnprepared is enabled, or item is user-hidden)
@@ -168,7 +168,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
             if (type === 'spell') {
                 const prepMode = item.system.method;
                 isSpellUnprepared = !['innate', 'atwill', 'pact'].includes(prepMode) && !item.system.prepared;
-                const showUnprepared = actor.getFlag(MODULE_ID, 'showUnprepared');
+                const showUnprepared = actor?.getFlag?.(MODULE_ID, 'showUnprepared');
 
                 if (!showUnprepared && isSpellUnprepared && !isUserHidden) {
                     continue;
@@ -179,7 +179,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
             let isUnequipped = false;
             if (['weapon', 'equipment'].includes(type)) {
                 isUnequipped = !this.getItemEquipped(item);
-                const showUnequipped = actor.getFlag(MODULE_ID, `showUnequipped_${type}`);
+                const showUnequipped = actor?.getFlag?.(MODULE_ID, `showUnequipped_${type}`);
 
                 if (!showUnequipped && isUnequipped && !isUserHidden) {
                     continue;
