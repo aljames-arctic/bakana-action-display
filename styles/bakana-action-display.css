@@ -625,9 +625,10 @@
     align-items: center;
     justify-content: center;
     gap: 0.75em;
-    padding: 0.28em 0;
-    margin-top: 0.14em;
+    padding: 0;
+    margin: 0;
     flex-shrink: 0;
+    width: 100%;
 }
 
 .bad-page-btn {
@@ -693,12 +694,14 @@
 }
 
 /* ==========================================================================
-   FOOTER (Filter Checkbox)
+   FOOTER (Filter Checkbox & Page Controls)
    ========================================================================== */
 .bad-footer {
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: 0.57em;
     border-top: 1px solid rgba(167, 139, 250, 0.15); /* Soft violet line separator */
     padding-top: 0.57em; /* 8px -> 0.57em */
     margin-top: 0.28em; /* 4px -> 0.28em */
