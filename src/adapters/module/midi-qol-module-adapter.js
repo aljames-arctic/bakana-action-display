@@ -71,6 +71,6 @@ export class MidiQolModuleAdapter extends BaseModuleAdapter {
      * @returns {boolean} True if the activity should be hidden from player view
      */
     isAutomationOnly(activity) {
-        return activity?.originalActivity?.midiProperties?.automationOnly === true;
+        return Boolean(activity?.originalActivity?.midiProperties?.automationOnly);
     }
 }

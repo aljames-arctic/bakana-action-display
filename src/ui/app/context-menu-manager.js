@@ -1,5 +1,6 @@
 import { log } from '../../lib/logger.js';
 import { actionDisplay } from '../../action-display.js';
+import { ContextMenu } from '../../lib/compat.js';
 
 /**
  * Manages UI context menus for action items inside ActionDisplayApp.
@@ -64,8 +65,7 @@ export class ContextMenuManager {
             }
         };
 
-        const ContextMenuClass = globalThis.foundry?.applications?.ux?.ContextMenu ?? globalThis.ContextMenu?.implementation ?? class {};
-        return new ContextMenuClass(this.element, ".bad-action-item", menuItems, options);
+        return new ContextMenu(this.element, ".bad-action-item", menuItems, options);
     }
 }
 

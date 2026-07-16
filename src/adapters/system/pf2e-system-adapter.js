@@ -268,10 +268,10 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
 
     #createStrikeAction(strike, ammoQuantities) {
         return {
-            id: `strike-${strike.slug ?? strike.name}`,
-            name: strike.label ?? strike.name,
+            id: `strike-${strike.slug ?? strike.label}`,
+            name: strike.label,
             type: 'weapon',
-            img: strike.item?.img ?? strike.img ?? strike.imageUrl ?? ICONS.default_strike,
+            img: strike.item?.img ?? ICONS.default_strike,
             activationType: 'action',
             tabs: [TabRef.from('economy', 'action')],
             itemTypes: ['weapon'],

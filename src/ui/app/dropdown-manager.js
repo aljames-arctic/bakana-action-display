@@ -15,7 +15,7 @@ export function buildSubactionMenuItem(sub, event) {
     }
 
     return {
-        name: sub.name || "Action",
+        name: sub.name ?? "Action",
         icon: `<span class="bad-menu-icon-wrap">${iconHtml}</span>`,
         usesHtml: usesHtml,
         callback: () => {

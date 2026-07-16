@@ -6,7 +6,7 @@ function containerHasComponent(container, component) {
     const target = container.value ?? container;
     if (target instanceof Set) return target.has(component);
     if (Array.isArray(target)) return target.includes(component);
-    if (typeof target === 'object') return !!target[component];
+    if (typeof target === 'object') return Boolean(target[component]);
     return false;
 }
 

@@ -68,7 +68,7 @@ export class HUDTab {
 
     set parent(parentTab) {
         this._parent = parentTab;
-        const newRoot = parentTab ? (parentTab.rootParent || parentTab) : this;
+        const newRoot = parentTab ? (parentTab.rootParent ?? parentTab) : this;
         this._setRootParent(newRoot);
     }
 

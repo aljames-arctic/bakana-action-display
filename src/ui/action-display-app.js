@@ -28,7 +28,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         this.actions = [];
         this.totalPages = 1;
 
-        const actorKey = this.actor?.uuid ?? this.actor?.id;
+        const actorKey = this.actor?.uuid;
         const cached = this.retrieveActorTabCache(actorKey);
         const parsedPage = Number(cached?.activePage ?? 1);
         this.activePage = (!isNaN(parsedPage) && parsedPage > 0) ? parsedPage : 1;
@@ -150,7 +150,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
      * Capped to at most 25 most-recently-used actors using LRU pruning.
      */
     _saveTabState() {
-        const actorKey = this.actor?.uuid ?? this.actor?.id;
+        const actorKey = this.actor?.uuid;
 
         if (!this._cachedPages) this._cachedPages = {};
         this._cachedPages[`${this.activePage}-left`] = this.leftTabs.serialize();
@@ -551,8 +551,8 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         // Hidden Filter: If 'hidden' tab is selected, ONLY show actions that have action.isHidden === true
         const isHiddenActive = this.leftTabs.activeParents.has('hidden');
         if (isHiddenActive) {
-            return action.isHidden === true;
-        } else if (action.isHidden === true) {
+            return Boolean(action.isHidden);
+        } else if (action.isHidden) {
             return false; // Hide hidden actions from all other tabs
         }
 
@@ -1215,9 +1215,8 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         if (!el) return super.setPosition(position);
 
         const scale = game.settings.get(MODULE_ID, 'hudScale') ?? 1.0;
-        const container = el.querySelector('.bakana-action-display-container');
-        const appWidth = container?.offsetWidth ?? this._width ?? el.offsetWidth ?? (320 * scale);
-        const appHeight = container?.offsetHeight ?? this._height ?? el.offsetHeight ?? (200 * scale);
+        const appWidth = this._width ?? el.offsetWidth;
+        const appHeight = this._height ?? el.offsetHeight;
         const tabExtension = 150 * scale;
 
         if (this.positionMode === 'attached' && this.token) {

@@ -124,8 +124,8 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
 
                     return new Action({
                         id: activity.id,
-                        name: activity.name || linkedAction?.name || activity.type.toUpperCase(),
-                        img: activity.img || linkedAction?.img || item.img,
+                        name: activity.name ?? linkedAction?.name ?? activity.type.toUpperCase(),
+                        img: activity.img ?? linkedAction?.img ?? item.img,
                         uses: this.#calculateActivityUses(activity, item),
                         tabs: [tabRef],
                         roll: async (event) => {
@@ -309,9 +309,9 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         const cfg = globalThis.CONFIG?.DND5E;
         const skills = actor.system?.skills ?? {};
         for (const [skillId, skill] of Object.entries(skills)) {
-            const abl = skill.ability || 'dex';
-            const label = skill.label || cfg?.skills?.[skillId]?.label || skillId;
-            const skillImg = abilityIcons[abl] || 'icons/svg/d20.svg';
+            const abl = skill.ability ?? 'dex';
+            const label = skill.label ?? cfg?.skills?.[skillId]?.label ?? skillId;
+            const skillImg = abilityIcons[abl] ?? 'icons/svg/d20.svg';
             const skillAction = new Action({
                 id: `skill-${skillId}`,
                 name: label,
@@ -324,7 +324,11 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                 roll: async (event) => {
                     const rollEvent = this._createRollEvent(event);
                     if (typeof actor.rollSkill === 'function') {
-                        return actor.rollSkill({ skill: skillId, event: rollEvent }) ?? actor.rollSkill(skillId, { event: rollEvent });
+                        try {
+                            return await actor.rollSkill({ skill: skillId, event: rollEvent });
+                        } catch {
+                            return actor.rollSkill(skillId, { event: rollEvent });
+                        }
                     }
                 },
                 extra: { section: 'other', page: 2, ability: abl }
@@ -370,10 +374,16 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
 
     // #region System Specific Data Extractors & Schema Helpers
 
+    #isItemDocument(doc) {
+        if (!doc || typeof doc !== 'object') return false;
+        return (typeof Item !== 'undefined' && doc instanceof Item) || doc.documentName === 'Item';
+    }
+
     #extractItemSpell(obj) {
         if (!obj) return null;
-        const isItemInstance = typeof Item !== 'undefined' && obj.spell instanceof Item;
-        return obj.linkedAction ?? obj.cachedSpell ?? (isItemInstance || obj.spell?.type === 'spell' ? obj.spell : null);
+        if (obj.linkedAction !== undefined) return obj.linkedAction;
+        const spell = obj.spell;
+        return (this.#isItemDocument(spell) || spell?.type === 'spell') ? spell : null;
     }
 
     resolveRootSpellDocument(sub, parentItem) {
@@ -406,12 +416,12 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
 
         if (doc) return doc;
 
-        if (activity?.spell && typeof activity.spell === 'object' && (typeof Item === 'undefined' || !(activity.spell instanceof Item))) {
+        if (activity?.spell && typeof activity.spell === 'object' && !this.#isItemDocument(activity.spell)) {
             return activity.spell;
         }
 
         if (activity?.type === 'cast') {
-            return activity.spell || activity;
+            return activity.spell ?? activity;
         }
 
         const origItem = sub.originalItem ?? parentItem;
@@ -428,14 +438,17 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                 const doc = await fromUuid(activity.spell.uuid);
                 if (doc) return doc;
             } catch (e) {
-                log.debug(`Failed to resolve compendium spell UUID ${activity.spell.uuid}:`, e);
+                log.warn(`Failed to resolve compendium spell UUID ${activity.spell.uuid}:`, e);
             }
         }
         if (actor) {
             const cached = actor.items?.find(i => i.flags?.dnd5e?.cachedFor?.endsWith(activity.id));
             if (cached) return cached;
         }
-        return activity.cachedSpell ?? activity.spell ?? activity;
+        if (activity.type === 'cast') {
+            return activity.spell ?? activity;
+        }
+        return activity;
     }
 
     #requiresComponent(sub, component) {
@@ -525,7 +538,8 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         if (system.uses && system.uses.max && system.uses.max !== "0") {
             let max = system.uses.max;
             if (typeof max === 'string') {
-                max = parseInt(max, 10) || 0;
+                const parsed = parseInt(max, 10);
+                max = Number.isNaN(parsed) ? 0 : parsed;
             }
 
             if (max > 0) {
@@ -582,7 +596,8 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         if (uses && uses.max && uses.max !== "0") {
             let max = uses.max;
             if (typeof max === 'string') {
-                max = parseInt(max, 10) || 0;
+                const parsed = parseInt(max, 10);
+                max = Number.isNaN(parsed) ? 0 : parsed;
             }
             if (max > 0) {
                 const spent = uses.spent;
@@ -603,8 +618,8 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         if (!targetId) return null;
         return targetId.includes('.')
             ? (foundry.utils.fromUuidSync(targetId, { relative: item })
-               || foundry.utils.fromUuidSync(targetId, { relative: actor })
-               || actor.items.get(targetId))
+               ?? foundry.utils.fromUuidSync(targetId, { relative: actor })
+               ?? actor.items.get(targetId))
             : actor.items.get(targetId);
     }
 
@@ -646,7 +661,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                 const targetItem = this.#resolveTargetItem(target.target, item, actor);
 
                 if (targetItem) {
-                    const consumed = target.value || 1;
+                    const consumed = target.value ?? 1;
                     // If the target item has its own limited uses (like a wand), use those
                     const uses = this.#calculateUses(targetItem);
                     if (uses.available !== null) {
@@ -668,7 +683,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
 
                 if (targetItem) {
                     const qty = targetItem.system.quantity ?? 0;
-                    const consumed = target.value || 1;
+                    const consumed = target.value ?? 1;
                     return {
                         available: Math.floor(qty / consumed),
                         max: null
@@ -697,7 +712,8 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
     #getSpellSlotUses(actor, level, highestAvailableSlot) {
         const actorSpells = actor?.system?.spells;
         const isPact = level === 'pact';
-        const lvl = isPact ? (actorSpells?.pact?.level ?? 0) : (Number(level) || 0);
+        const numLevel = Number(level);
+        const lvl = isPact ? (actorSpells?.pact?.level ?? 0) : (Number.isNaN(numLevel) ? 0 : numLevel);
 
         if (!isPact && lvl <= 0) return { available: null, max: null };
 
@@ -772,20 +788,24 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
     }
 
     #normalizeActivationType(type) {
-        if (!type || type === 'none' || type === '') return null;
+        if (!type || typeof type === 'boolean' || type === 'none' || type === '') return null;
         return String(type).toLowerCase();
     }
 
     #getActivityActivationType(activity, item, linkedAction = null) {
-        const actOverride = activity.activation?.override ?? activity.system?.activation?.override;
+        const actOverride = Boolean(activity.activation?.override ?? activity.system?.activation?.override);
         if (actOverride) {
             const overrideType = this.#normalizeActivationType(activity.activation?.type ?? activity.system?.activation?.type);
             if (overrideType) return overrideType;
         }
 
         const spellDoc = linkedAction ?? this.resolveRootSpellDocument({ originalActivity: activity, linkedAction: activity.spell });
-        const spellType = this.#normalizeActivationType(spellDoc?.system?.activation?.type ?? spellDoc?.activation?.type);
-        if (spellType) return spellType;
+        if (spellDoc) {
+            const spellType = this.#normalizeActivationType(
+                this.#isItemDocument(spellDoc) ? spellDoc.system?.activation?.type : spellDoc.activation?.type
+            );
+            if (spellType) return spellType;
+        }
 
         return this.#normalizeActivationType(item.system?.activation?.type)
             ?? this.#normalizeActivationType(activity.activation?.type ?? activity.system?.activation?.type)

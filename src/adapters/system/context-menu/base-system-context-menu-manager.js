@@ -37,6 +37,6 @@ export class BaseSystemContextMenuManager {
         const actionId = el?.dataset?.actionId;
         if (!actionId) return null;
         const action = app.actions?.find(a => a.id === actionId);
-        return action?.originalItem ?? action ?? null;
+        return action?.originalItem ?? null;
     }
 }

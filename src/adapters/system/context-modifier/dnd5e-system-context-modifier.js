@@ -146,7 +146,7 @@ export class Dnd5eSystemContextModifier extends BaseSystemContextModifier {
                 if (num === '0') return localize('DND5E.SpellCantrip', 'Cantrip');
                 const key = `DND5E.SpellLevel${num}`;
                 const ordinals = { '1': '1st', '2': '2nd', '3': '3rd' };
-                const ord = ordinals[num] || `${num}th`;
+                const ord = ordinals[num] ?? `${num}th`;
                 return localize(key, `${ord} Level`);
             }
         }
