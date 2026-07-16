@@ -1,6 +1,6 @@
 # Bakana's Action Display
 
-[![Foundry VTT Version](https://img.shields.io/badge/Foundry%20VTT-v13+-orange.svg)](https://foundryvtt.com/)
+[![Foundry VTT Version](https://img.shields.io/badge/Foundry%20VTT-v12+-orange.svg)](https://foundryvtt.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 [![Latest Module Downloads](https://img.shields.io/github/downloads/aljames-arctic/bakana-action-display/latest/module.zip?style=flat-square&label=latest%20downloads&color=blue)](https://github.com/aljames-arctic/bakana-action-display/releases) [![Total Module Downloads](https://img.shields.io/github/downloads-pre/aljames-arctic/bakana-action-display/module.zip?style=flat-square&label=total%20downloads&color=success)](https://github.com/aljames-arctic/bakana-action-display/releases)
