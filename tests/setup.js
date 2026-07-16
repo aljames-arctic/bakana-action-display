@@ -26,7 +26,9 @@ globalThis.foundry = {
     applications: {
         api: {
             HandlebarsApplicationMixin: (cls) => cls,
-            ApplicationV2: class ApplicationV2 {}
+            ApplicationV2: class ApplicationV2 {
+                async _prepareContext(options = {}) { return { ...options }; }
+            }
         },
         ux: {
             ContextMenu: class ContextMenu {}

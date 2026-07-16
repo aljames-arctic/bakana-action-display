@@ -28,9 +28,10 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         this.actions = [];
         this.totalPages = 1;
 
-        const actorKey = this.actor?.uuid || this.actor?.id;
+        const actorKey = this.actor?.uuid ?? this.actor?.id;
         const cached = this.retrieveActorTabCache(actorKey);
-        this.activePage = Number(cached?.activePage ?? 1) || 1;
+        const parsedPage = Number(cached?.activePage ?? 1);
+        this.activePage = (!isNaN(parsedPage) && parsedPage > 0) ? parsedPage : 1;
         this._cachedPages = cached?.pages ?? {
             '1-left': cached?.left,
             '1-right': cached?.right
@@ -52,7 +53,8 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
     }
 
     getTabColumn(side, page = this.activePage) {
-        const pageNum = Number(page) || 1;
+        const parsedPage = Number(page ?? 1);
+        const pageNum = (!isNaN(parsedPage) && parsedPage > 0) ? parsedPage : 1;
         if (!this._tabColumns) this._tabColumns = {};
         const key = `${pageNum}-${side}`;
         if (!this._tabColumns[key]) {
@@ -79,12 +81,29 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         return this.getTabColumn('right', this.activePage);
     }
 
-    cyclePage() {
-        const current = Number(this.activePage) || 1;
+    previousPage() {
+        const parsed = Number(this.activePage ?? 1);
+        const current = (!isNaN(parsed) && parsed > 0) ? parsed : 1;
         if (this.totalPages <= 1) {
             this.activePage = 1;
+        } else if (current <= 1) {
+            this.activePage = this.totalPages;
         } else {
-            this.activePage = (current % this.totalPages) + 1;
+            this.activePage = current - 1;
+        }
+        this._saveTabState();
+        this.render();
+    }
+
+    nextPage() {
+        const parsed = Number(this.activePage ?? 1);
+        const current = (!isNaN(parsed) && parsed > 0) ? parsed : 1;
+        if (this.totalPages <= 1) {
+            this.activePage = 1;
+        } else if (current >= this.totalPages) {
+            this.activePage = 1;
+        } else {
+            this.activePage = current + 1;
         }
         this._saveTabState();
         this.render();
@@ -131,7 +150,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
      * Capped to at most 25 most-recently-used actors using LRU pruning.
      */
     _saveTabState() {
-        const actorKey = this.actor?.uuid || this.actor?.id;
+        const actorKey = this.actor?.uuid ?? this.actor?.id;
 
         if (!this._cachedPages) this._cachedPages = {};
         this._cachedPages[`${this.activePage}-left`] = this.leftTabs.serialize();
@@ -242,7 +261,10 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             changeSubActionType: ActionDisplayApp.prototype._onChangeSubActionType,
             toggleAnchor: ActionDisplayApp.prototype._onToggleAnchor,
             rollAction: ActionDisplayApp.prototype._onRollAction,
-            toggleFilterResources: ActionDisplayApp.prototype._onToggleFilterResources
+            toggleFilterResources: ActionDisplayApp.prototype._onToggleFilterResources,
+            previousPage: ActionDisplayApp.prototype._onPreviousPage,
+            nextPage: ActionDisplayApp.prototype._onNextPage,
+            changePage: ActionDisplayApp.prototype._onChangePage
         }
     };
 
@@ -266,8 +288,8 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         const context = await super._prepareContext(options);
         const allActions = await actionDisplay.getActions(this.actor);
         this.actions = allActions; // Cache all processed actions for high-performance UI lookups
-        this.totalPages = allActions.reduce((max, a) => Math.max(max, a.page || 1), 1);
-        const rawActions = allActions.filter(a => (a.page || 1) === this.activePage);
+        this.totalPages = allActions.reduce((max, a) => Math.max(max, a.page ?? 1), 1);
+        const rawActions = allActions.filter(a => (a.page ?? 1) === this.activePage);
         const adapter = actionDisplay.activeSystemAdapter;
 
         const existingItemCombinations = new Set();
@@ -275,7 +297,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
 
         // 1. Single-pass loop: Extract unique tabs and filter actions simultaneously (O(N) vs O(3N))
         for (const action of rawActions) {
-            const categories = action.itemCategories || (action.itemTypes?.length ? [action.itemTypes] : []);
+            const categories = action.itemCategories ?? (action.itemTypes?.length ? [action.itemTypes] : []);
             for (const cat of categories) {
                 if (cat?.length) {
                     existingItemCombinations.add(cat.join('/'));
@@ -489,6 +511,20 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         context.isDetached = this.isDetached;
         context.filterNoResources = game.settings.get(MODULE_ID, 'filterNoResources');
 
+        const parsedActivePage = Number(this.activePage ?? 1);
+        const currentActivePage = (!isNaN(parsedActivePage) && parsedActivePage > 0) ? parsedActivePage : 1;
+        const pages = [];
+        for (let i = 1; i <= this.totalPages; i++) {
+            pages.push({
+                page: i,
+                active: i === currentActivePage
+            });
+        }
+        context.pages = pages;
+        context.activePage = currentActivePage;
+        context.totalPages = this.totalPages;
+        context.hasMultiplePages = this.totalPages > 1;
+
         // Delegate to system adapter to allow system-specific context modifications and layout selection
         adapter?.modifyContext?.(context, this);
 
@@ -521,7 +557,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         }
 
         // Filter by Left Side (Item Type)
-        const categories = action.itemCategories || (action.itemTypes?.length ? [action.itemTypes] : []);
+        const categories = action.itemCategories ?? (action.itemTypes?.length ? [action.itemTypes] : []);
         if (categories.length === 0) return false;
 
         const matchesLeft = categories.some(itemTypes => {
@@ -604,10 +640,6 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         event.preventDefault();
         this._clearMenuState();
         const clickedId = target.dataset.type;
-        if (clickedId === 'all' && this.leftTabs.activeParents.has('all')) {
-            this.cyclePage();
-            return;
-        }
         const tab = this.leftGroups?.[clickedId];
         tab?.onLeftClick(this, this.leftTabs, this.leftGroups, event);
         this.render();
@@ -641,10 +673,6 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         event.preventDefault();
         this._clearMenuState();
         const clickedId = target.dataset.type;
-        if (clickedId === 'all' && this.rightTabs.activeParents.has('all')) {
-            this.cyclePage();
-            return;
-        }
         const tab = this.parentGroups?.[clickedId];
         tab?.onLeftClick(this, this.rightTabs, this.parentGroups, event);
         this.render();
@@ -714,6 +742,29 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         this.render();
     }
 
+    async _onPreviousPage(event, target) {
+        event.preventDefault();
+        this._clearMenuState();
+        this.previousPage();
+    }
+
+    async _onNextPage(event, target) {
+        event.preventDefault();
+        this._clearMenuState();
+        this.nextPage();
+    }
+
+    async _onChangePage(event, target) {
+        event.preventDefault();
+        this._clearMenuState();
+        const targetPage = Number(target.dataset.page ?? 1);
+        if (!isNaN(targetPage) && targetPage >= 1 && targetPage <= this.totalPages && targetPage !== this.activePage) {
+            this.activePage = targetPage;
+            this._saveTabState();
+            this.render();
+        }
+    }
+
     /**
      * Handle action item clicks to roll them.
      * 'this' refers to the application instance.
@@ -734,7 +785,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         this._activeLeftClickMenu = null;
 
         const actionId = target.dataset.actionId;
-        const action = (this.displayedActions || this.actions)?.find(a => a.id === actionId);
+        const action = (this.displayedActions ?? this.actions)?.find(a => a.id === actionId);
 
         if (action) {
             log.debug(`_onRollAction | Left-clicked action "${action.name}" (${action.id}):`, action);
@@ -848,8 +899,8 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         this._adjustMinHeight();
 
         const container = this.element?.querySelector('.bakana-action-display-container');
-        this._width = container?.offsetWidth || this.element.offsetWidth;
-        this._height = container?.offsetHeight || this.element.offsetHeight;
+        this._width = container?.offsetWidth ?? this.element.offsetWidth;
+        this._height = container?.offsetHeight ?? this.element.offsetHeight;
 
         this.setPosition();
     }
@@ -902,7 +953,8 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             // Lazy-load and cache the container's bottom padding to prevent expensive getComputedStyle calls
             if (this._containerPaddingBottom === undefined) {
                 const containerStyle = window.getComputedStyle(container);
-                this._containerPaddingBottom = parseFloat(containerStyle.paddingBottom) || 0;
+                const parsedPadding = parseFloat(containerStyle.paddingBottom);
+                this._containerPaddingBottom = !isNaN(parsedPadding) ? parsedPadding : 0;
             }
 
             const targetMinHeight = maxTabBottom + this._containerPaddingBottom;
@@ -1164,8 +1216,8 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
 
         const scale = game.settings.get(MODULE_ID, 'hudScale') ?? 1.0;
         const container = el.querySelector('.bakana-action-display-container');
-        const appWidth = container?.offsetWidth || this._width || (el.offsetWidth || 320 * scale);
-        const appHeight = container?.offsetHeight || this._height || (el.offsetHeight || 200 * scale);
+        const appWidth = container?.offsetWidth ?? this._width ?? el.offsetWidth ?? (320 * scale);
+        const appHeight = container?.offsetHeight ?? this._height ?? el.offsetHeight ?? (200 * scale);
         const tabExtension = 150 * scale;
 
         if (this.positionMode === 'attached' && this.token) {

@@ -162,6 +162,23 @@
 
     </div>
 
+    {{#if hasMultiplePages}}
+    <!-- Page Controls (Bubbles indicator + left/right buttons) -->
+    <div class="bad-page-controls">
+        <button class="bad-page-btn bad-page-prev" data-action="previousPage" title="{{localize 'BAD.core.previousPage'}}">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+        <div class="bad-page-indicator">
+            {{#each pages}}
+            <span class="bad-page-bubble {{#if this.active}}active{{/if}}" data-action="changePage" data-page="{{this.page}}"></span>
+            {{/each}}
+        </div>
+        <button class="bad-page-btn bad-page-next" data-action="nextPage" title="{{localize 'BAD.core.nextPage'}}">
+            <i class="fas fa-chevron-right"></i>
+        </button>
+    </div>
+    {{/if}}
+
     <!-- Footer / Filter Bar -->
     <div class="bad-footer">
         <label class="bad-filter-label">
