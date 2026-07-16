@@ -172,3 +172,21 @@ test('Dnd5eSystemAdapter extractCheckActions generates core saves, core checks, 
     assert.equal(acrSkill.name, 'Acrobatics');
     assert.equal(acrSkill.tabs[0].label, 'dex');
 });
+
+test('Dnd5eSystemAdapter modifyContext triggers split layout exclusively on Page 2 for ability/skill checks', () => {
+    const adapter = new Dnd5eSystemAdapter();
+    const items = [
+        { id: 'b', name: 'B-Skill', section: 'other' },
+        { id: 'a', name: 'A-Core', section: 'core' }
+    ];
+
+    const ctxStr = { items, itemTypes: [] };
+    adapter.modifyContext(ctxStr, { activePage: '2' });
+    assert.equal(ctxStr.layout, 'split');
+    assert.equal(ctxStr.coreItems.length, 1);
+    assert.equal(ctxStr.otherItems.length, 1);
+
+    const ctxNum = { items, itemTypes: [] };
+    adapter.modifyContext(ctxNum, { activePage: 1 });
+    assert.equal(ctxNum.layout, 'flat');
+});

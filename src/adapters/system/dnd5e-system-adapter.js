@@ -367,7 +367,11 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
     }
 
     modifyContext(context, app) {
-        return super.modifyContext(context, app);
+        super.modifyContext(context, app);
+        if (Number(app?.activePage) === 2) {
+            this.formatSplitLayout(context);
+        }
+        return context;
     }
 
     // #endregion

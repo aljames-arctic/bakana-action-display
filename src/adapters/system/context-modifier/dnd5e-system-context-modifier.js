@@ -97,7 +97,7 @@ export class Dnd5eSystemContextModifier extends BaseSystemContextModifier {
     }
 
     modifyContext(context, app) {
-        const findParent = id => context.itemTypes.find(t => t.id === id);
+        const findParent = id => context.itemTypes?.find(t => t.id === id);
 
         this.#ensureAllSubTab(findParent('spell'), app, localize('BAD.common.allSpells', 'All Spells'), 'showUnprepared', true);
         this.#ensureAllSubTab(findParent('weapon'), app, localize('BAD.common.allWeapons', 'All Weapons'), 'showUnequipped_weapon');

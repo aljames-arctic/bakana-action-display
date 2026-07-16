@@ -227,11 +227,7 @@ export class BaseSystemAdapter {
      * @returns {Object} The modified context
      */
     modifyContext(context, app) {
-        if (Number(app?.activePage) === 2) {
-            this.formatSplitLayout(context);
-        } else {
-            this.formatFlatLayout(context);
-        }
+        this.formatFlatLayout(context);
         return this.contextModifier.modifyContext(context, app) ?? context;
     }
 

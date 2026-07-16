@@ -135,7 +135,7 @@ test('BaseSystemAdapter formatFlatLayout and formatSplitLayout templates', () =>
     assert.equal(splitContext.showSeparator, true);
 });
 
-test('BaseSystemAdapter modifyContext triggers split layout for string "2" or numeric 2 activePage', () => {
+test('BaseSystemAdapter modifyContext defaults to flat layout regardless of activePage (split layout is Dnd5e exclusive)', () => {
     const adapter = new BaseSystemAdapter('test-system');
     const items = [
         { id: 'b', name: 'B-Skill', section: 'other' },
@@ -144,9 +144,7 @@ test('BaseSystemAdapter modifyContext triggers split layout for string "2" or nu
 
     const ctxStr = { items };
     adapter.modifyContext(ctxStr, { activePage: '2' });
-    assert.equal(ctxStr.layout, 'split');
-    assert.equal(ctxStr.coreItems.length, 1);
-    assert.equal(ctxStr.otherItems.length, 1);
+    assert.equal(ctxStr.layout, 'flat');
 
     const ctxNum = { items };
     adapter.modifyContext(ctxNum, { activePage: 1 });
