@@ -62,9 +62,7 @@
             "allItems": "All Items",
             "other": "Other",
             "allActions": "All Actions",
-            "none": "None",
-            "previousPage": "Previous Page",
-            "nextPage": "Next Page"
+            "none": "None"
         },
         "common": {
             "actionEconomy": "Action Economy",

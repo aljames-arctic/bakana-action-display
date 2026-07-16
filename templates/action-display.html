@@ -171,7 +171,7 @@
         {{#if hasMultiplePages}}
         <!-- Page Controls (Bubbles indicator + left/right buttons) -->
         <div class="bad-page-controls">
-            <button class="bad-page-btn bad-page-prev" data-action="previousPage" title="{{localize 'BAD.core.previousPage'}}">
+            <button class="bad-page-btn bad-page-prev" data-action="previousPage">
                 <i class="fas fa-chevron-left"></i>
             </button>
             <div class="bad-page-indicator">
@@ -179,7 +179,7 @@
                 <span class="bad-page-bubble {{#if this.active}}active{{/if}}" data-action="changePage" data-page="{{this.page}}"></span>
                 {{/each}}
             </div>
-            <button class="bad-page-btn bad-page-next" data-action="nextPage" title="{{localize 'BAD.core.nextPage'}}">
+            <button class="bad-page-btn bad-page-next" data-action="nextPage">
                 <i class="fas fa-chevron-right"></i>
             </button>
         </div>
