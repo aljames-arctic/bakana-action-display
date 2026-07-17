@@ -130,18 +130,9 @@ export class HUDTabColumn {
                 log.debug(`[${this.side}] Toggled ON parent ${parentId}`);
             }
         }
-
         if (this.activeParents.size === 0) {
             this.resetToDefault();
             return;
-        }
-
-        if (groups) {
-            const mainParents = Object.keys(groups).filter(k => k !== 'all' && k !== 'hidden' && k !== 'other');
-            if (mainParents.length > 1 && mainParents.every(k => this.activeParents.has(k))) {
-                this.resetToDefault();
-                return;
-            }
         }
     }
 

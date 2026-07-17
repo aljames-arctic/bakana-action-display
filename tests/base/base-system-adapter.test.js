@@ -151,7 +151,7 @@ test('BaseSystemAdapter modifyContext defaults to flat layout regardless of acti
     assert.equal(ctxNum.layout, 'flat');
 });
 
-test('HUDTabColumn resets to default "all" when all main parent tabs are multi-selected or sole parent is deselected', async () => {
+test('HUDTabColumn resets to default "all" when sole parent is deselected, but not when all main parent tabs are multi-selected', async () => {
     const { HUDTabColumn } = await import('../../src/ui/hud-tab-column.js');
     const col = new HUDTabColumn({ side: 'left', defaultParent: 'all' });
     const groups = {
@@ -163,10 +163,12 @@ test('HUDTabColumn resets to default "all" when all main parent tabs are multi-s
     col.selectParent('savingThrow', groups);
     assert.ok(col.activeParents.has('savingThrow'));
 
-    // Selecting all main parent tabs reverts to 'all'
+    // Selecting all main parent tabs does NOT revert to 'all'
     col.toggleParent('abilityCheck', groups);
-    assert.ok(col.activeParents.has('all'));
-    assert.equal(col.activeParents.size, 1);
+    assert.ok(col.activeParents.has('savingThrow'));
+    assert.ok(col.activeParents.has('abilityCheck'));
+    assert.ok(!col.activeParents.has('all'));
+    assert.equal(col.activeParents.size, 2);
 
     // Deselecting the sole active parent reverts to 'all'
     col.selectParent('savingThrow', groups);
