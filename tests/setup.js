@@ -38,6 +38,8 @@ globalThis.foundry = {
                     this.menuItems = menuItems;
                     this.options = options;
                 }
+                async render() {}
+                async close() {}
             }
         }
     },

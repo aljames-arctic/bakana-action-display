@@ -990,6 +990,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
      * @private
      */
     _onContextMenuCapture(event) {
+        if (event.target.closest('#context-menu, .context-menu, .context-item')) return;
         log.debug(`_onContextMenuCapture | preventReopen: ${this._preventReopen}`);
         if (this._preventReopen) {
             log.debug("Preventing context menu from reopening (toggled off)");

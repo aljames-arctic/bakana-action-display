@@ -1,5 +1,38 @@
 import { log } from '../../lib/logger.js';
 
+export function openActivitySubContextMenu(app, targetLi, subaction) {
+    const menuItems = [
+        {
+            name: "BAD.core.editActivity",
+            icon: '<i class="fas fa-edit"></i>',
+            condition: () => {
+                if (!app.actor?.isOwner) return false;
+                const entity = subaction?.originalActivity ?? subaction?.originalItem ?? app.actor?.items?.get(subaction?.id);
+                return Boolean(entity && (typeof entity.sheet?.render === "function" || typeof entity.edit === "function"));
+            },
+            callback: () => {
+                const entity = subaction?.originalActivity ?? subaction?.originalItem ?? app.actor?.items?.get(subaction?.id);
+                if (typeof entity?.sheet?.render === "function") {
+                    entity.sheet.render(true);
+                } else if (typeof entity?.edit === "function") {
+                    entity.edit();
+                }
+            }
+        }
+    ];
+
+    const ContextMenuClass = globalThis.foundry?.applications?.ux?.ContextMenu ?? globalThis.ContextMenu?.implementation ?? class {};
+    const targetBody = app?.element?.ownerDocument?.body ?? globalThis.document?.body;
+    const subMenu = new ContextMenuClass(targetBody, null, menuItems, {
+        jQuery: false
+    });
+    setTimeout(() => {
+        if (typeof subMenu?.render === "function") {
+            subMenu.render(targetLi)?.catch?.(err => log.debug("SubContextMenu render error:", err));
+        }
+    }, 10);
+}
+
 export function buildSubactionMenuItem(sub, event) {
     const uses = sub.uses;
     const iconHtml = sub.img
@@ -67,6 +100,17 @@ export function showActivityDropdown(app, target, subactions, event) {
 
             const lis = menuEl.querySelectorAll('.context-item');
             lis.forEach((li, idx) => {
+                const sub = subactions[idx];
+                if (sub) {
+                    li.addEventListener('contextmenu', (ev) => {
+                        ev.preventDefault();
+                        ev.stopPropagation();
+                        ev.stopImmediatePropagation();
+                        app._activeLeftClickMenu?.close();
+                        app._activeLeftClickMenu = null;
+                        openActivitySubContextMenu(app, li, sub);
+                    });
+                }
                 const itemData = menuItems[idx];
                 if (itemData && itemData.usesHtml && !li.querySelector('.bad-menu-uses')) {
                     li.insertAdjacentHTML('beforeend', itemData.usesHtml);

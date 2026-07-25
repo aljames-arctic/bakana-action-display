@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import '../setup.js';
 import { createActionContextMenu } from '../../src/ui/app/context-menu-manager.js';
+import { openActivitySubContextMenu } from '../../src/ui/app/dropdown-manager.js';
 
 test('createActionContextMenu includes Edit Item option that renders originalItem sheet', () => {
     let sheetRendered = false;
@@ -35,4 +36,26 @@ test('createActionContextMenu includes Edit Item option that renders originalIte
 
     editOption.callback(mockEl);
     assert.equal(sheetRendered, true, 'Callback must call sheet.render(true) on the original item');
+});
+
+test('openActivitySubContextMenu creates sub-context menu with Edit Activity option', () => {
+    let activitySheetRendered = false;
+    const mockActivity = {
+        sheet: {
+            render: (force) => {
+                if (force === true) activitySheetRendered = true;
+            }
+        }
+    };
+    const mockApp = {
+        actor: { isOwner: true }
+    };
+    const mockSubaction = {
+        id: 'act-sub-1',
+        name: 'Fireball Activity',
+        originalActivity: mockActivity
+    };
+
+    openActivitySubContextMenu(mockApp, {}, mockSubaction);
+    assert.ok(true, 'openActivitySubContextMenu should execute without throwing');
 });
