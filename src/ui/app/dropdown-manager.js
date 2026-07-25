@@ -23,7 +23,7 @@ export function openActivitySubContextMenu(app, targetLi, subaction) {
 
     const ContextMenuClass = globalThis.foundry?.applications?.ux?.ContextMenu ?? globalThis.ContextMenu?.implementation ?? class {};
     const targetBody = app?.element?.ownerDocument?.body ?? globalThis.document?.body;
-    const subMenu = new ContextMenuClass(targetBody, null, menuItems, {
+    const subMenu = new ContextMenuClass(targetBody, ".context-item", menuItems, {
         jQuery: false
     });
     setTimeout(() => {
@@ -73,7 +73,7 @@ export function showActivityDropdown(app, target, subactions, event) {
     target.classList.add('bad-dropdown-active');
 
     const ContextMenuClass = globalThis.foundry?.applications?.ux?.ContextMenu ?? globalThis.ContextMenu?.implementation ?? class {};
-    const menu = new ContextMenuClass(app.element, null, menuItems, {
+    const menu = new ContextMenuClass(app.element, ".bad-action-item", menuItems, {
         jQuery: false,
         onClose: () => {
             log.debug("Left-click dropdown menu closed");
