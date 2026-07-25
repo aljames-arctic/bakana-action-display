@@ -31,7 +31,14 @@ globalThis.foundry = {
             }
         },
         ux: {
-            ContextMenu: class ContextMenu {}
+            ContextMenu: class ContextMenu {
+                constructor(element, selector, menuItems, options = {}) {
+                    this.element = element;
+                    this.selector = selector;
+                    this.menuItems = menuItems;
+                    this.options = options;
+                }
+            }
         }
     },
     canvas: {

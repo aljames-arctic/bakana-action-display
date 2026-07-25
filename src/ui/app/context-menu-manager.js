@@ -14,6 +14,21 @@ export class ContextMenuManager {
     createActionContextMenu() {
         const menuItems = [
             {
+                name: "BAD.core.editItem",
+                icon: '<i class="fas fa-edit"></i>',
+                condition: el => {
+                    if (!this.app.actor?.isOwner) return false;
+                    const action = this.app.actions?.find(a => a.id === el.dataset.actionId);
+                    const item = action?.originalItem ?? this.app.actor?.items?.get(action?.id ?? el.dataset.actionId);
+                    return Boolean(item && typeof item.sheet?.render === "function");
+                },
+                callback: el => {
+                    const action = this.app.actions?.find(a => a.id === el.dataset.actionId);
+                    const item = action?.originalItem ?? this.app.actor?.items?.get(action?.id ?? el.dataset.actionId);
+                    item?.sheet?.render(true);
+                }
+            },
+            {
                 name: "BAD.core.hideAction",
                 icon: '<i class="fas fa-eye-slash"></i>',
                 condition: el => {
