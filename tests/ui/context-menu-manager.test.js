@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import '../setup.js';
 import { createActionContextMenu } from '../../src/ui/app/context-menu-manager.js';
 import { openActivitySubContextMenu } from '../../src/ui/app/dropdown-manager.js';
+import { Dnd5eSystemAdapter } from '../../src/adapters/system/dnd5e-system-adapter.js';
 
 test('createActionContextMenu includes Edit Item option that renders originalItem sheet', () => {
     let sheetRendered = false;
@@ -58,4 +59,26 @@ test('openActivitySubContextMenu creates sub-context menu with Edit Activity opt
 
     openActivitySubContextMenu(mockApp, {}, mockSubaction);
     assert.ok(true, 'openActivitySubContextMenu should execute without throwing');
+});
+
+test('Dnd5eSystemAdapter openEditSheet renders activity sheet when originalActivity is present', () => {
+    let activityRendered = false;
+    let fallbackRendered = false;
+    const adapter = new Dnd5eSystemAdapter();
+    const actionWithActivity = {
+        originalActivity: {
+            sheet: {
+                render: (force) => { if (force) activityRendered = true; }
+            }
+        },
+        originalItem: {
+            sheet: {
+                render: () => { fallbackRendered = true; }
+            }
+        }
+    };
+
+    adapter.openEditSheet(actionWithActivity);
+    assert.equal(activityRendered, true, 'openEditSheet should invoke activity.sheet.render(true)');
+    assert.equal(fallbackRendered, false, 'Fallback item sheet should not render when activity sheet succeeds');
 });

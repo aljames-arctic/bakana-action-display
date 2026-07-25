@@ -816,5 +816,28 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
             ?? 'none';
     }
 
+    /**
+     * Open the sheet or edit dialog for a DnD5e action, activity, or item.
+     * Handles opening the DnD5e Activity configuration sheet directly for activities.
+     * @param {Object} action
+     */
+    openEditSheet(action) {
+        const activity = action?.originalActivity;
+        if (activity) {
+            if (typeof activity.sheet?.render === "function") {
+                activity.sheet.render(true);
+                return;
+            }
+            if (typeof activity.item?.sheet?.render === "function") {
+                activity.item.sheet.render(true, { subtab: "activities", activityId: activity.id });
+                return;
+            }
+        }
+        const item = action?.originalItem;
+        if (typeof item?.sheet?.render === "function") {
+            item.sheet.render(true);
+        }
+    }
+
     // #endregion
 }

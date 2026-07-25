@@ -147,6 +147,21 @@ export class BaseSystemAdapter {
     }
 
     /**
+     * Open the sheet or edit dialog for an action or its underlying item/activity.
+     * @param {Object} action The Action instance to edit
+     */
+    openEditSheet(action) {
+        const entity = action?.originalActivity ?? action?.originalItem;
+        if (typeof entity?.sheet?.render === "function") {
+            entity.sheet.render(true);
+        } else if (typeof entity?.edit === "function") {
+            entity.edit();
+        } else if (typeof action?.originalItem?.sheet?.render === "function") {
+            action.originalItem.sheet.render(true);
+        }
+    }
+
+    /**
      * Apply a flat layout template to the HUD context.
      * @param {Object} context The Handlebars render context
      */

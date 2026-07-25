@@ -1,4 +1,5 @@
 import { log } from '../../lib/logger.js';
+import { actionDisplay } from '../../action-display.js';
 
 export function openActivitySubContextMenu(app, targetLi, subaction) {
     const menuItems = [
@@ -11,11 +12,15 @@ export function openActivitySubContextMenu(app, targetLi, subaction) {
                 return Boolean(entity && (typeof entity.sheet?.render === "function" || typeof entity.edit === "function"));
             },
             callback: () => {
-                const entity = subaction?.originalActivity ?? subaction?.originalItem ?? app.actor?.items?.get(subaction?.id);
-                if (typeof entity?.sheet?.render === "function") {
-                    entity.sheet.render(true);
-                } else if (typeof entity?.edit === "function") {
-                    entity.edit();
+                if (actionDisplay.activeSystemAdapter?.openEditSheet) {
+                    actionDisplay.activeSystemAdapter.openEditSheet(subaction);
+                } else {
+                    const entity = subaction?.originalActivity ?? subaction?.originalItem ?? app.actor?.items?.get(subaction?.id);
+                    if (typeof entity?.sheet?.render === "function") {
+                        entity.sheet.render(true);
+                    } else if (typeof entity?.edit === "function") {
+                        entity.edit();
+                    }
                 }
             }
         }
@@ -108,7 +113,12 @@ export function showActivityDropdown(app, target, subactions, event) {
                         ev.stopImmediatePropagation();
                         app._activeLeftClickMenu?.close();
                         app._activeLeftClickMenu = null;
-                        openActivitySubContextMenu(app, li, sub);
+                        if (actionDisplay.activeSystemAdapter?.openEditSheet) {
+                            actionDisplay.activeSystemAdapter.openEditSheet(sub);
+                        } else {
+                            const entity = sub.originalActivity ?? sub.originalItem;
+                            entity?.sheet?.render?.(true);
+                        }
                     });
                 }
                 const itemData = menuItems[idx];

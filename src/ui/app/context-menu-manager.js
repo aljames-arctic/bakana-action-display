@@ -24,8 +24,12 @@ export class ContextMenuManager {
                 },
                 callback: el => {
                     const action = this.app.actions?.find(a => a.id === el.dataset.actionId);
-                    const item = action?.originalItem ?? this.app.actor?.items?.get(action?.id ?? el.dataset.actionId);
-                    item?.sheet?.render(true);
+                    if (action && actionDisplay.activeSystemAdapter?.openEditSheet) {
+                        actionDisplay.activeSystemAdapter.openEditSheet(action);
+                    } else {
+                        const item = action?.originalItem ?? this.app.actor?.items?.get(action?.id ?? el.dataset.actionId);
+                        item?.sheet?.render(true);
+                    }
                 }
             },
             {
