@@ -74,6 +74,20 @@ export function showActivityDropdown(app, target, subactions, event) {
         app._activeLeftClickMenu = null;
     }
 
+    if (app._contextMenu) {
+        try {
+            app._contextMenu.close()?.catch?.(err => {
+                log.debug("ContextMenu.close promise rejected:", err);
+            });
+        } catch (err) {
+            log.debug("ContextMenu.close threw synchronously:", err);
+        }
+    }
+    if (app._activeContextMenuTarget) {
+        app._activeContextMenuTarget.classList.remove('bad-menu-active');
+        app._activeContextMenuTarget = null;
+    }
+
     app._activeMenuTarget = target;
     target.classList.add('bad-dropdown-active');
 

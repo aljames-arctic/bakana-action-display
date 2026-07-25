@@ -82,3 +82,37 @@ test('Dnd5eSystemAdapter openEditSheet renders activity sheet when originalActiv
     assert.equal(activityRendered, true, 'openEditSheet should invoke activity.sheet.render(true)');
     assert.equal(fallbackRendered, false, 'Fallback item sheet should not render when activity sheet succeeds');
 });
+
+test('createActionContextMenu onOpen closes open left-click dropdown', () => {
+    let leftClickClosed = false;
+    let removeClassCalled = false;
+    const mockLeftClickMenu = {
+        close: () => { leftClickClosed = true; }
+    };
+    const mockTarget = {
+        classList: {
+            remove: (cls) => { if (cls === 'bad-dropdown-active') removeClassCalled = true; }
+        }
+    };
+    const mockApp = {
+        actor: { isOwner: true, items: new Map() },
+        actions: [],
+        _activeLeftClickMenu: mockLeftClickMenu,
+        _activeMenuTarget: mockTarget
+    };
+    const mockElement = {
+        querySelectorAll: () => [],
+        querySelector: () => null
+    };
+
+    const menu = createActionContextMenu(mockApp, mockElement);
+    const targetElement = {
+        classList: { add: () => {}, remove: () => {} }
+    };
+    menu.options.onOpen(targetElement);
+
+    assert.equal(leftClickClosed, true, 'Opening right-click context menu must close active left-click dropdown');
+    assert.equal(removeClassCalled, true, 'Opening right-click context menu must remove bad-dropdown-active class from target');
+    assert.equal(mockApp._activeLeftClickMenu, null);
+    assert.equal(mockApp._activeMenuTarget, null);
+});

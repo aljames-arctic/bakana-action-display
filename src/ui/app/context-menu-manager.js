@@ -67,6 +67,14 @@ export class ContextMenuManager {
             jQuery: false,
             onOpen: (target) => {
                 log.debug("Context menu opened on target:", target);
+                if (this.app._activeLeftClickMenu) {
+                    this.app._activeLeftClickMenu.close();
+                    this.app._activeLeftClickMenu = null;
+                }
+                if (this.app._activeMenuTarget) {
+                    this.app._activeMenuTarget.classList.remove('bad-dropdown-active');
+                    this.app._activeMenuTarget = null;
+                }
                 this.app._activeContextMenuTarget = target;
                 this.element.querySelectorAll('.bad-action-item').forEach(el => {
                     if (el !== target) el.classList.remove('bad-menu-active');

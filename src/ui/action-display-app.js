@@ -775,14 +775,12 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         if (this._preventReopen) {
             log.debug("_onRollAction | preventReopen is true, toggling off and closing menu");
             this._preventReopen = false;
-            this._activeLeftClickMenu?.close();
-            this._activeLeftClickMenu = null;
+            this._clearMenuState();
             return;
         }
 
-        // Close any existing left-click menu if we clicked a different item
-        this._activeLeftClickMenu?.close();
-        this._activeLeftClickMenu = null;
+        // Close any existing open menu state before rolling or opening dropdown
+        this._clearMenuState();
 
         const actionId = target.dataset.actionId;
         const action = (this.displayedActions ?? this.actions)?.find(a => a.id === actionId);
@@ -878,7 +876,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
 
         // Close dropdown when dragging or clicking outside the active menu/item
         this._boundOutsidePointerDown = (event) => {
-            if (this._activeLeftClickMenu && !event.target.closest('#context-menu, .context-menu, .bad-action-item')) {
+            if ((this._activeLeftClickMenu || this._activeContextMenuTarget) && !event.target.closest('#context-menu, .context-menu, .bad-action-item')) {
                 this._clearMenuState();
             }
         };
@@ -909,7 +907,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         log.debug("_clearMenuState | Clearing menu state and closing open menus");
 
         // Close any open context menus if we have an active target
-        if (this._activeMenuTarget) {
+        if (this._activeContextMenuTarget || this._activeMenuTarget) {
             if (this._contextMenu) {
                 try {
                     this._contextMenu.close()?.catch?.(err => {
@@ -919,12 +917,20 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                     log.debug("ContextMenu.close threw synchronously:", err);
                 }
             }
+        }
 
+        if (this._activeContextMenuTarget) {
+            this._activeContextMenuTarget.classList.remove('bad-menu-active');
+            this._activeContextMenuTarget = null;
+        }
+
+        if (this._activeMenuTarget) {
+            this._activeMenuTarget.classList.remove('bad-dropdown-active');
+            this._activeMenuTarget = null;
         }
 
         this._activeLeftClickMenu?.close();
         this._activeLeftClickMenu = null;
-        this._activeMenuTarget = null;
         this._preventReopen = false;
     }
 
@@ -973,7 +979,8 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         if (event.button !== 2 && event.button !== 0) return; // Only care about right-clicks (2) or left-clicks (0)
 
         const targetItem = event.target.closest('.bad-action-item, .bad-left-sub-tab, .bad-left-tab');
-        const activeItem = this._activeMenuTarget?.closest('.bad-action-item, .bad-left-sub-tab, .bad-left-tab') ?? this._activeMenuTarget;
+        const activeTarget = event.button === 2 ? this._activeContextMenuTarget : this._activeMenuTarget;
+        const activeItem = activeTarget?.closest('.bad-action-item, .bad-left-sub-tab, .bad-left-tab') ?? activeTarget;
 
         log.debug(`_onPointerDownCapture | button: ${event.button}, targetItem:`, targetItem, `activeItem:`, activeItem);
 
@@ -1056,16 +1063,15 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
 
 
         const targetItem = event.target.closest('.bad-action-item, .bad-left-sub-tab, .bad-left-tab');
-        const activeItem = this._activeMenuTarget?.closest('.bad-action-item, .bad-left-sub-tab, .bad-left-tab') ?? this._activeMenuTarget;
+        const activeTarget = this._activeContextMenuTarget;
+        const activeItem = activeTarget?.closest('.bad-action-item, .bad-left-sub-tab, .bad-left-tab') ?? activeTarget;
 
         log.debug(`_onContextMenuCapture | targetItem:`, targetItem, `activeItem:`, activeItem);
 
         if (targetItem && activeItem === targetItem) {
             log.debug("Right-clicked the same item, toggling context menu off (fallback)");
 
-            this._contextMenu?.close()?.catch?.(err => {
-                log.debug("ContextMenu.close promise rejected in fallback:", err);
-            });
+            this._clearMenuState();
 
             event.preventDefault();
             event.stopPropagation();
@@ -1209,7 +1215,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
      * In Detached mode, places it at the user's last dragged screen coordinates.
      */
     setPosition(position = {}) {
-        if (this._activeLeftClickMenu) {
+        if (this._activeLeftClickMenu || this._activeContextMenuTarget) {
             this._clearMenuState();
         }
         const el = this.element;
