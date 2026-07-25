@@ -26,9 +26,9 @@ test('createActionContextMenu includes Edit Item option that renders originalIte
     };
 
     const menu = createActionContextMenu(mockApp, mockElement);
-    const editOption = menu.menuItems.find(item => item.name === 'BAD.core.editItem');
+    const editOption = menu.menuItems.find(item => item.name === 'SIDEBAR.Edit');
 
-    assert.ok(editOption, 'Edit Item menu option must be present');
+    assert.ok(editOption, 'Edit menu option must be present');
     assert.equal(editOption.icon, '<i class="fas fa-edit"></i>');
 
     const mockEl = { dataset: { actionId: 'item-1' } };

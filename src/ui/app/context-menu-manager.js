@@ -14,7 +14,7 @@ export class ContextMenuManager {
     createActionContextMenu() {
         const menuItems = [
             {
-                name: "BAD.core.editItem",
+                name: "SIDEBAR.Edit",
                 icon: '<i class="fas fa-edit"></i>',
                 condition: el => {
                     if (!this.app.actor?.isOwner) return false;

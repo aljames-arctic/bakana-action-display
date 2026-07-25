@@ -3,7 +3,7 @@ import { log } from '../../lib/logger.js';
 export function openActivitySubContextMenu(app, targetLi, subaction) {
     const menuItems = [
         {
-            name: "BAD.core.editActivity",
+            name: "SIDEBAR.Edit",
             icon: '<i class="fas fa-edit"></i>',
             condition: () => {
                 if (!app.actor?.isOwner) return false;
