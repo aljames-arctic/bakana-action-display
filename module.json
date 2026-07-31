@@ -31,34 +31,7 @@
   "changelog": "https://github.com/aljames-arctic/bakana-action-display/releases",
   "bugs": "https://github.com/aljames-arctic/bakana-action-display/issues",
   "license": "LICENSE",
-  "relationships": {
-    "systems": [
-      {
-        "id": "dnd5e",
-        "type": "system",
-        "compatibility": {
-            "minimum": "4",
-            "verified": "5.3.3"
-        }
-      },
-      {
-        "id": "pf1",
-        "type": "system",
-        "compatibility": {
-            "minimum": "11",
-            "verified": "11.11"
-        }
-      },
-      {
-        "id": "pf2e",
-        "type": "system",
-        "compatibility": {
-            "minimum": "7",
-            "verified": "8.2"
-        }
-      }
-    ]
-  },
+  "relationships": {},
   "styles": [
       "styles/bakana-action-display.css"
   ],
