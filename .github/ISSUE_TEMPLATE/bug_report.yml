@@ -15,7 +15,7 @@ body:
       description: What game system are you running, and what is its version?
       placeholder: e.g., dnd5e v4.0.3 or pf2e v6.1.2
     validations:
-      required: true
+      required: false
 
   - type: input
     id: foundry_version
@@ -24,7 +24,7 @@ body:
       description: Which version and build of Foundry VTT are you using?
       placeholder: e.g., V12 Build 328
     validations:
-      required: true
+      required: false
 
   - type: textarea
     id: active_modules
@@ -33,7 +33,7 @@ body:
       description: List any active modules that might interact with the HUD, items, or rolls (especially automation modules like Midi-QOL, Ready Up, etc.).
       placeholder: e.g., midi-qol v12.0.5, warpgate, etc.
     validations:
-      required: true
+      required: false
 
   - type: dropdown
     id: troubleshooting
@@ -44,7 +44,7 @@ body:
         - "Yes, and the bug still occurs in a clean environment"
         - "No, I cannot disable other modules right now"
     validations:
-      required: true
+      required: false
 
   - type: textarea
     id: description

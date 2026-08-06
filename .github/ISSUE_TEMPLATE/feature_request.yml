@@ -39,12 +39,3 @@ body:
       placeholder: Explain your idea...
     validations:
       required: true
-
-  - type: textarea
-    id: rationale
-    attributes:
-      label: Use Case / Rationale
-      description: Why would this feature be useful? How does it improve the user experience or speed up play?
-      placeholder: Explain why this is important...
-    validations:
-      required: true
