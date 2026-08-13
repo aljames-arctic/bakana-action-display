@@ -51,7 +51,35 @@
             "hudGridOffsetHorizontal": {
                 "name": "HUD Grid Offset (Horizontal)",
                 "hint": "Controls the horizontal distance (in grid units) to offset the HUD to the left or right of the token."
+            },
+            "categorizationMenu": {
+                "name": "HUD Item Categorization",
+                "label": "Configure Categorization",
+                "hint": "Define custom category sections, sub-sections, and boolean expressions for filtering HUD items."
             }
+        },
+        "categorization": {
+            "title": "Bakana's HUD Categorization Configuration",
+            "enable": "Enable Custom Categorization",
+            "enableHint": "Organize HUD actions into categorized sections with custom divider bars utilizing user defined boolean expressions.",
+            "addCategory": "Add Category",
+            "addSubCategory": "Add Subcategory",
+            "removeCategory": "Remove Category",
+            "removeSubCategory": "Remove Subcategory",
+            "categoryNamePlaceholder": "Category Name (e.g. WEAPONS)",
+            "categoryExprPlaceholder": "Boolean Expression (e.g. item.type === 'weapon')",
+            "subCategoryNamePlaceholder": "Subcategory Name (e.g. daggers)",
+            "subCategoryExprPlaceholder": "Boolean Expression (e.g. item.name.toLowerCase().includes('dagger'))",
+            "dragToReorder": "Drag to reorder",
+            "save": "Save Changes",
+            "loadPresets": "Load Presets",
+            "cancel": "Cancel",
+            "saved": "Categorization configuration saved successfully.",
+            "noCategories": "No custom categories defined. Click '+ Add Category' to start.",
+            "others": "Others",
+            "reservedKeywordWarning": "The category name \"{name}\" is a reserved keyword for uncategorized items. Please choose a different name.",
+            "emptyNameWarning": "Category and subcategory names cannot be empty.",
+            "invalidExpressionWarning": "The expression \"{expr}\" contains a syntax error."
         },
         "core": {
             "filterNoResources": "Hide Depleted",

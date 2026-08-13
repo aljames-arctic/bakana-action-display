@@ -7,6 +7,7 @@ import { HUDTab } from './hud-tab.js';
 import { ContextMenu } from '../lib/compat.js';
 import { createActionContextMenu } from './app/context-menu-manager.js';
 import { showActivityDropdown } from './app/dropdown-manager.js';
+import { categorizeActions } from '../categorization/categorization-manager.js';
 
 // Cache to persist tab states per actor across HUD rebuilds
 const activeTabCache = new Map();
@@ -510,6 +511,19 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         context.isPinned = this.isPinned;
         context.isDetached = this.isDetached;
         context.filterNoResources = game.settings.get(MODULE_ID, 'filterNoResources');
+
+        // Apply categorization if enabled
+        const rawCatConfig = game.settings.get(MODULE_ID, 'categorizationConfig');
+        const isCategorizationEnabled = Boolean(rawCatConfig?.enabled);
+        if (isCategorizationEnabled) {
+            const othersLabel = game.i18n.localize('BAD.categorization.others') ?? 'Others';
+            const categorized = categorizeActions(visibleActions, rawCatConfig, othersLabel);
+            context.isCategorized = true;
+            context.categorizedSections = categorized ?? [];
+        } else {
+            context.isCategorized = false;
+            context.categorizedSections = null;
+        }
 
         const parsedActivePage = Number(this.activePage ?? 1);
         const currentActivePage = (!isNaN(parsedActivePage) && parsedActivePage > 0) ? parsedActivePage : 1;

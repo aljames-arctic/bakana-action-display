@@ -60,13 +60,29 @@ globalThis.foundry = {
 };
 
 const settingsStore = new Map([
-    ['bakana-action-display.filterNoResources', false]
+    ['bakana-action-display.filterNoResources', false],
+    ['bakana-action-display.categorizationConfig', { enabled: false, categories: [] }]
 ]);
+
+globalThis.ui = {
+    notifications: {
+        info(msg) {},
+        warn(msg) {},
+        error(msg) {}
+    }
+};
 
 globalThis.game = {
     i18n: {
         has(key) { return true; },
-        localize(key) { return key; }
+        localize(key) { return key; },
+        format(key, data = {}) {
+            let str = key;
+            for (const [k, v] of Object.entries(data)) {
+                str = str.replace(`{${k}}`, v);
+            }
+            return str;
+        }
     },
     settings: {
         get(moduleId, key) {

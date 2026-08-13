@@ -1,6 +1,7 @@
 import { MODULE_ID } from "./constants.js";
 import { log } from "./lib/logger.js";
 import { actionDisplay } from "./action-display.js";
+import { CategorizationConfigApp } from "./categorization/categorization-config-app.js";
 
 Hooks.once('init', () => {
     // Register Log Verbosity Setting
@@ -206,6 +207,32 @@ Hooks.once('init', () => {
         config: false,
         type: Object,
         default: null
+    });
+
+    // Register Categorization Configuration Menu Button
+    game.settings.registerMenu(MODULE_ID, 'categorizationMenu', {
+        name: game.i18n.localize('BAD.settings.categorizationMenu.name'),
+        label: game.i18n.localize('BAD.settings.categorizationMenu.label'),
+        hint: game.i18n.localize('BAD.settings.categorizationMenu.hint'),
+        icon: 'fas fa-layer-group',
+        type: CategorizationConfigApp,
+        restricted: false
+    });
+
+    // Register Categorization Configuration Storage
+    game.settings.register(MODULE_ID, 'categorizationConfig', {
+        scope: 'client',
+        config: false,
+        type: Object,
+        default: {
+            enabled: false,
+            categories: []
+        },
+        onChange: () => {
+            if (actionDisplay.activeApp && actionDisplay.activeApp.rendered) {
+                actionDisplay.activeApp.render();
+            }
+        }
     });
 
     // Apply the initial opacity and scale values to the document root
