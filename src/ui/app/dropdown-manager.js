@@ -57,7 +57,8 @@ export function buildSubactionMenuItem(sub, event) {
         icon: `<span class="bad-menu-icon-wrap">${iconHtml}</span>`,
         usesHtml: usesHtml,
         callback: () => {
-            log.debug(`Rolling sub-action: ${sub.name} via dropdown`);
+            const item = sub.originalItem ?? sub;
+            log.debug(`Rolling subaction "${sub.name}" via dropdown:`, { action: sub, item });
             sub.roll(event);
         }
     };
