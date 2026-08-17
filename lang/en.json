@@ -80,7 +80,7 @@
             "reservedKeywordWarning": "The category name \"{name}\" is a reserved keyword for uncategorized items. Please choose a different name.",
             "emptyNameWarning": "Category and subcategory names cannot be empty.",
             "invalidExpressionWarning": "The expression \"{expr}\" contains a syntax error.",
-            "expressionHelpTooltip": "Available Variables in Boolean Expressions:<br/>• <strong>item</strong>: Foundry Item document (e.g. <code>item.type === 'weapon'</code>, <code>item.name</code>, <code>item.system</code>)<br/>• <strong>action</strong>: HUD Action instance (e.g. <code>action.leftTab</code>, <code>action.rightTab</code>, <code>action.uses.available</code>)<br/>• <strong>tab</strong>: Array of all active HUD tabs (e.g. <code>tab.includes('weapon')</code>, <code>tab.includes('action')</code>)"
+            "expressionHelpTooltip": "<div class=\"bad-expression-tooltip\"><div class=\"bad-expression-tooltip-title\">Available Variables in Boolean Expressions:</div><ul class=\"bad-expression-tooltip-list\"><li><strong>item</strong>: Foundry Item document (e.g. <code>item.type === 'weapon'</code>, <code>item.name</code>, <code>item.system</code>)</li><li><strong>action</strong>: HUD Action instance (e.g. <code>action.leftTab</code>, <code>action.rightTab</code>, <code>action.uses.available</code>)</li><li><strong>tab</strong>: Array of all active HUD tabs (e.g. <code>tab.includes('weapon')</code>, <code>tab.includes('action')</code>)</li></ul></div>"
         },
         "core": {
             "filterNoResources": "Hide Depleted",
