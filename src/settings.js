@@ -27,7 +27,7 @@ Hooks.once('init', () => {
     game.settings.register(MODULE_ID, 'persistDetached', {
         name: game.i18n.localize('BAD.settings.persistDetached.name'),
         hint: game.i18n.localize('BAD.settings.persistDetached.hint'),
-        scope: 'client',
+        scope: 'user',
         config: true,
         type: Boolean,
         default: true
@@ -64,7 +64,7 @@ Hooks.once('init', () => {
     game.settings.register(MODULE_ID, 'hudScale', {
         name: game.i18n.localize('BAD.settings.hudScale.name'),
         hint: game.i18n.localize('BAD.settings.hudScale.hint'),
-        scope: 'client',
+        scope: 'user',
         config: true,
         type: Number,
         range: {
@@ -83,7 +83,7 @@ Hooks.once('init', () => {
     game.settings.register(MODULE_ID, 'fontSize', {
         name: game.i18n.localize('BAD.settings.fontSize.name'),
         hint: game.i18n.localize('BAD.settings.fontSize.hint'),
-        scope: 'client',
+        scope: 'user',
         config: true,
         type: Number,
         range: {
@@ -112,7 +112,7 @@ Hooks.once('init', () => {
     game.settings.register(MODULE_ID, 'toggleTabSelection', {
         name: game.i18n.localize('BAD.settings.toggleTabSelection.name'),
         hint: game.i18n.localize('BAD.settings.toggleTabSelection.hint'),
-        scope: 'client',
+        scope: 'user',
         config: true,
         type: Boolean,
         default: false
@@ -122,7 +122,7 @@ Hooks.once('init', () => {
     game.settings.register(MODULE_ID, 'hudAnchorSide', {
         name: game.i18n.localize('BAD.settings.hudAnchorSide.name'),
         hint: game.i18n.localize('BAD.settings.hudAnchorSide.hint'),
-        scope: 'client',
+        scope: 'user',
         config: true,
         type: String,
         default: 'vertical',
@@ -141,7 +141,7 @@ Hooks.once('init', () => {
     game.settings.register(MODULE_ID, 'hudGridOffset', {
         name: game.i18n.localize('BAD.settings.hudGridOffset.name'),
         hint: game.i18n.localize('BAD.settings.hudGridOffset.hint'),
-        scope: 'client',
+        scope: 'world',
         config: true,
         type: Number,
         range: {
@@ -161,7 +161,7 @@ Hooks.once('init', () => {
     game.settings.register(MODULE_ID, 'hudGridOffsetHorizontal', {
         name: game.i18n.localize('BAD.settings.hudGridOffsetHorizontal.name'),
         hint: game.i18n.localize('BAD.settings.hudGridOffsetHorizontal.hint'),
-        scope: 'client',
+        scope: 'world',
         config: true,
         type: Number,
         range: {
@@ -179,7 +179,7 @@ Hooks.once('init', () => {
 
     // Register HUD Tab States (persisted actor tab selections object)
     game.settings.register(MODULE_ID, 'hudTabStates', {
-        scope: 'client',
+        scope: 'world',
         config: false,
         type: Object,
         default: {}
