@@ -801,7 +801,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
 
         if (action) {
             const item = action.originalItem ?? action;
-            log.debug(`_onRollAction | Left-clicked action "${action.name}" (${action.id}):`, { action, item });
+            log.info(`_onRollAction | Left-clicked action "${action.name}" (${action.id}):`, { action, item });
             const itemActivities = action.subactions;
             log.debug(`_onRollAction | Action subactions (${itemActivities?.length ?? 0}):`, itemActivities);
 
@@ -832,16 +832,16 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                 } else if (subsToShow.length === 1) {
                     const chosenSub = subsToShow[0];
                     const chosenItem = chosenSub.originalItem ?? action.originalItem ?? chosenSub;
-                    log.debug(`_onRollAction | Rolling subaction "${chosenSub.name}":`, { action: chosenSub, item: chosenItem });
+                    log.info(`_onRollAction | Rolling subaction "${chosenSub.name}":`, { action: chosenSub, item: chosenItem });
                     chosenSub.roll(event);
                 } else {
-                    log.debug(`_onRollAction | Rolling action "${action.name}":`, { action, item });
+                    log.info(`_onRollAction | Rolling action "${action.name}":`, { action, item });
                     action.roll(event);
                 }
             } else {
                 log.debug(`_onRollAction | "${action.name}" (${action.id}) has no subactions (length 0)`);
                 // No sub-actions: roll directly
-                log.debug(`_onRollAction | Rolling action "${action.name}":`, { action, item });
+                log.info(`_onRollAction | Rolling action "${action.name}":`, { action, item });
                 action.roll(event);
             }
         }

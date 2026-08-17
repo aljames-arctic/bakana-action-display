@@ -58,7 +58,7 @@ export function buildSubactionMenuItem(sub, event) {
         usesHtml: usesHtml,
         callback: () => {
             const item = sub.originalItem ?? sub;
-            log.debug(`Rolling subaction "${sub.name}" via dropdown:`, { action: sub, item });
+            log.info(`Rolling subaction "${sub.name}" via dropdown:`, { action: sub, item });
             sub.roll(event);
         }
     };
