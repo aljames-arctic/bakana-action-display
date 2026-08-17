@@ -74,12 +74,12 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
                 const spellbook = this.#getSpellbook(actor, spellbookId);
                 if (!spellbook) continue;
 
-                action.tabs = [TabRef.from('economy', 'action')];
+                action.rightTab = [TabRef.from('economy', 'action')];
                 action.activationType = 'action';
                 
                 const level = item.system.level ?? 0;
                 const subTab = this.#getSpellSubTab(spellbookId, spellbook, level);
-                action.itemTypes = ['spell', subTab];
+                action.leftTab = ['spell', subTab];
                 
                 // Calculate uses (slots or prepared casts)
                 action.uses = this.#calculateSpellUses(spellbook, item);
@@ -135,9 +135,9 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
 
             } else if (item.type === 'buff') {
                 // 5. Buffs
-                action.tabs = [TabRef.from('economy', 'other')];
+                action.rightTab = [TabRef.from('economy', 'other')];
                 action.activationType = 'other';
-                action.itemTypes = ['buff'];
+                action.leftTab = ['buff'];
                 
                 action.roll = async (event) => {
                     const active = this.#getBuffActiveState(item);
@@ -409,12 +409,12 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
         return level.toString();
     }
 
-    #promoteFirstSubaction(action, subactions, itemTypes, uses) {
+    #promoteFirstSubaction(action, subactions, leftTab, uses) {
         const firstSub = subactions[0];
         action.subactions = subactions;
         action.activationType = firstSub.activationType;
-        action.tabs = firstSub.tabs;
-        action.itemTypes = itemTypes;
+        action.rightTab = firstSub.rightTab ?? firstSub.tabs;
+        action.leftTab = leftTab;
         action.uses = uses;
     }
 

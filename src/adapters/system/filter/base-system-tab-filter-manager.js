@@ -44,8 +44,8 @@ export class BaseSystemTabFilterManager {
             return this.filterSubactions(action.subactions, filterContext).length > 0;
         }
 
-        const tabs = action.tabs;
-        if (!tabs || tabs.length === 0) return false;
+        const rightTab = action.rightTab;
+        if (!rightTab || rightTab.length === 0) return false;
 
         // 1. Evaluate DIFFERENCE (exclusion) parent groups first
         for (const parentId of activeParents) {
@@ -54,7 +54,7 @@ export class BaseSystemTabFilterManager {
             const group = parentGroups?.[parentId];
             const validSubIds = toSet(group?.subTabs, t => t.id);
 
-            const hasExcludedTab = tabs.some(
+            const hasExcludedTab = rightTab.some(
                 tab => tab.root === parentId && activeSubs.has(tab.label) && validSubIds.has(tab.label)
             );
             if (hasExcludedTab) return false;
@@ -66,7 +66,7 @@ export class BaseSystemTabFilterManager {
 
         if (showAllCategory) return true;
 
-        return tabs.some(tab => {
+        return rightTab.some(tab => {
             const actionParentId = tab.root;
             if (!activeParents.has(actionParentId)) return false;
             if (this.isExclusionTab(actionParentId)) return false;
@@ -79,7 +79,7 @@ export class BaseSystemTabFilterManager {
 
             if (this.isIntersectionTab(actionParentId)) {
                 return activeSubsForParent.every(subId =>
-                    tabs.some(t => t.root === actionParentId && t.label === subId)
+                    rightTab.some(t => t.root === actionParentId && t.label === subId)
                 );
             }
 
@@ -118,10 +118,10 @@ export class BaseSystemTabFilterManager {
         const { filterNoResources, left } = filterContext;
 
         return subactions.filter(sub => {
-            if (left && sub.itemTypes?.length > 0) {
+            if (left && sub.leftTab?.length > 0) {
                 const activeLeft = left.activeParents;
                 if (activeLeft && !activeLeft.has('all')) {
-                    if (!sub.itemTypes.some(type => activeLeft.has(type))) {
+                    if (!sub.leftTab.some(type => activeLeft.has(type))) {
                         return false;
                     }
                 }

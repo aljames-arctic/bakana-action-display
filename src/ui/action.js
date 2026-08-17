@@ -10,8 +10,8 @@ export class Action {
      * @param {string} options.name Display name of the action
      * @param {string} [options.type=''] Foundry Item or Activity type
      * @param {string} [options.img=''] Icon image URL/path
-     * @param {TabRef[]} [options.tabs] Array of TabRef instances
-     * @param {string[]} [options.itemTypes] Hierarchical category list for left-side tabs
+     * @param {TabRef[]} [options.rightTab] Array of TabRef instances for right-side tabs
+     * @param {string[]} [options.leftTab] Hierarchical category list for left-side tabs
      * @param {boolean} [options.hidden=false] System-level hidden state
      * @param {boolean} [options.isHidden=false] User-flagged hidden override state
      * @param {boolean} [options.available=true] Action availability state
@@ -28,8 +28,8 @@ export class Action {
         name,
         type = '',
         img = '',
-        tabs = [TabRef.from('all')],
-        itemTypes = [],
+        rightTab = [TabRef.from('all')],
+        leftTab = [],
         itemCategories = null,
         hidden = false,
         isHidden = false,
@@ -47,8 +47,8 @@ export class Action {
         this.name = name;
         this.type = type;
         this.img = img;
-        this.tabs = tabs;
-        this.itemTypes = itemTypes;
+        this.leftTab = leftTab;
+        this.rightTab = rightTab;
         this.itemCategories = itemCategories;
         this.hidden = hidden;
         this.isHidden = isHidden;

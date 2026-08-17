@@ -26,9 +26,9 @@ test('ActionDisplayApp _prepareContext categorizes actions when categorization i
     });
 
     actionDisplay.getActions = async () => [
-        { id: 'act-1', name: 'Dagger', page: 1, type: 'weapon', itemTypes: ['weapon'], tabs: [{ path: 'all' }] },
-        { id: 'act-2', name: 'Longsword', page: 1, type: 'weapon', itemTypes: ['weapon'], tabs: [{ path: 'all' }] },
-        { id: 'act-3', name: 'Fireball', page: 1, type: 'spell', itemTypes: ['spell'], tabs: [{ path: 'all' }] }
+        { id: 'act-1', name: 'Dagger', page: 1, type: 'weapon', leftTab: ['weapon'], rightTab: [{ path: 'all' }] },
+        { id: 'act-2', name: 'Longsword', page: 1, type: 'weapon', leftTab: ['weapon'], rightTab: [{ path: 'all' }] },
+        { id: 'act-3', name: 'Fireball', page: 1, type: 'spell', leftTab: ['spell'], rightTab: [{ path: 'all' }] }
     ];
 
     actionDisplay.activeSystemAdapter = {
@@ -77,7 +77,7 @@ test('ActionDisplayApp _prepareContext uses standard layout when categorization 
     });
 
     actionDisplay.getActions = async () => [
-        { id: 'act-1', name: 'Dagger', page: 1, type: 'weapon', itemTypes: ['weapon'], tabs: [{ path: 'all' }] }
+        { id: 'act-1', name: 'Dagger', page: 1, type: 'weapon', leftTab: ['weapon'], rightTab: [{ path: 'all' }] }
     ];
 
     actionDisplay.activeSystemAdapter = {

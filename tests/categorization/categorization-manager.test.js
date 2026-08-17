@@ -73,6 +73,19 @@ test('evaluateBooleanExpression evaluates action and item properties safely', ()
     assert.equal(evaluateBooleanExpression('system.level === 0', weaponAction), true);
     assert.equal(evaluateBooleanExpression('system.level === 5', weaponAction), false);
 
+    // Test unified tab variable and action.leftTab / action.rightTab
+    weaponAction.leftTab = ['weapon', 'melee'];
+    weaponAction.rightTab = [{ label: 'action', root: 'economy', path: 'economy/action' }];
+    assert.deepEqual(weaponAction.leftTab, ['weapon', 'melee']);
+    assert.deepEqual(weaponAction.rightTab, [{ label: 'action', root: 'economy', path: 'economy/action' }]);
+    assert.equal(evaluateBooleanExpression('tab.includes("weapon")', weaponAction), true);
+    assert.equal(evaluateBooleanExpression('tab.includes("melee")', weaponAction), true);
+    assert.equal(evaluateBooleanExpression('tab.includes("action")', weaponAction), true);
+    assert.equal(evaluateBooleanExpression('tab.includes("economy/action")', weaponAction), true);
+    assert.equal(evaluateBooleanExpression('tab.includes("spell")', weaponAction), false);
+    assert.equal(evaluateBooleanExpression('action.leftTab.includes("weapon")', weaponAction), true);
+    assert.equal(evaluateBooleanExpression('action.rightTab.some(t => t.label === "action")', weaponAction), true);
+
     // Fault tolerance tests
     assert.equal(evaluateBooleanExpression('', weaponAction), false);
     assert.equal(evaluateBooleanExpression(null, weaponAction), false);

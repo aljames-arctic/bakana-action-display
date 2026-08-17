@@ -298,15 +298,15 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
 
         // 1. Single-pass loop: Extract unique tabs and filter actions simultaneously (O(N) vs O(3N))
         for (const action of rawActions) {
-            const categories = action.itemCategories ?? (action.itemTypes?.length ? [action.itemTypes] : []);
+            const categories = action.itemCategories ?? (action.leftTab?.length ? [action.leftTab] : []);
             for (const cat of categories) {
                 if (cat?.length) {
                     existingItemCombinations.add(cat.join('/'));
                 }
             }
 
-            if (action.tabs) {
-                for (const tab of action.tabs) {
+            if (action.rightTab) {
+                for (const tab of action.rightTab) {
                     if (tab?.path) existingCombinations.add(tab.path);
                 }
             }
@@ -571,11 +571,11 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         }
 
         // Filter by Left Side (Item Type)
-        const categories = action.itemCategories ?? (action.itemTypes?.length ? [action.itemTypes] : []);
+        const categories = action.itemCategories ?? (action.leftTab?.length ? [action.leftTab] : []);
         if (categories.length === 0) return false;
 
-        const matchesLeft = categories.some(itemTypes => {
-            return itemTypes.some(type => {
+        const matchesLeft = categories.some(leftTab => {
+            return leftTab.some(type => {
                 if (this.leftTabs.activeParents.has(type)) {
                     const parentGroup = this.leftGroups?.[type];
                     const validSubIds = toSet(parentGroup?.subTabs, t => t.id);
@@ -584,7 +584,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                     if (activeSubsForParent.length === 0) {
                         return true;
                     } else {
-                        const actionSubId = itemTypes[1];
+                        const actionSubId = leftTab[1];
                         return this.leftTabs.activeSubTypes.has(actionSubId);
                     }
                 }
@@ -610,7 +610,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         if (!matchesLeft) return false;
 
         // Filter by Right Side (Action Type & Economy Tabs)
-        if (!action.tabs) return false;
+        if (!action.rightTab) return false;
 
         const filterContext = this._getFilterContext();
         const adapter = actionDisplay.activeSystemAdapter;
@@ -811,7 +811,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                 log.debug(`_onRollAction | Right-side Tab Filters - activeParents:`, Array.from(this.rightTabs.activeParents), `activeSubs:`, Array.from(this.rightTabs.activeSubTypes));
 
                 const adapter = actionDisplay?.activeSystemAdapter;
-                const qualifyingSubActions = adapter?.filterSubactions?.(itemActivities, filterContext, action.itemTypes) ?? itemActivities;
+                const qualifyingSubActions = adapter?.filterSubactions?.(itemActivities, filterContext, action.leftTab) ?? itemActivities;
 
                 log.debug(`_onRollAction | "${action.name}" (${action.id})`, {
                     totalSubactions: itemActivities.length,

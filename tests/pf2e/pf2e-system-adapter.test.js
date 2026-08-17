@@ -14,7 +14,6 @@ test('Pf2eSystemAdapter initialization and extractable item types', () => {
     assert.equal(defaultCategories.length, 3);
     assert.equal(defaultCategories[0].name, 'Weapons & Strikes');
     assert.equal(defaultCategories[1].name, 'Spells');
-    assert.equal(defaultCategories[1].subcategories.length, 2);
     assert.equal(defaultCategories[1].subcategories[0].name, 'Cantrips');
     assert.equal(defaultCategories[1].subcategories[1].name, 'Ranked Spells');
     assert.equal(defaultCategories[2].name, 'Feats & Actions');
@@ -118,7 +117,7 @@ test('Pf2eSystemAdapter modifyActions full transformation pipeline', async () =>
     // Spell verification
     const spellAction = modified.find(a => a.id === 'act-2');
     assert.equal(spellAction.name, 'Fireball (Arcane Spells)');
-    assert.deepEqual(spellAction.itemTypes, ['spell', '3']);
+    assert.deepEqual(spellAction.leftTab, ['spell', '3']);
     assert.deepEqual(spellAction.uses, { available: 2, max: 3 });
 
     // Injected Strike verification

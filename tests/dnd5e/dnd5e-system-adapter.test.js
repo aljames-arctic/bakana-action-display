@@ -132,20 +132,20 @@ test('Dnd5eSystemAdapter modifyActions full transformation pipeline', async () =
     assert.equal(page2Actions.length, 6, 'Should extract 6 core ability items on Page 2');
 
     const weaponAction = page1Actions.find(a => a.id === 'act-weapon');
-    assert.equal(weaponAction.subactions[0].tabs[0].label, 'action');
-    assert.deepEqual(weaponAction.itemTypes, ['weapon']);
+    assert.equal(weaponAction.subactions[0].rightTab[0].label, 'action');
+    assert.deepEqual(weaponAction.leftTab, ['weapon']);
 
     const spellAction = page1Actions.find(a => a.id === 'act-spell');
-    assert.equal(spellAction.subactions[0].tabs[0].label, 'bonus');
+    assert.equal(spellAction.subactions[0].rightTab[0].label, 'bonus');
     assert.deepEqual(spellAction.uses, { available: 3, max: 4 });
 
     const featAction = page1Actions.find(a => a.id === 'act-feat');
-    assert.equal(featAction.subactions[0].tabs[0].label, 'reaction');
+    assert.equal(featAction.subactions[0].rightTab[0].label, 'reaction');
 
     const dexAbility = page2Actions.find(a => a.id === 'ability-dex');
     assert.equal(dexAbility.type, 'ability');
     assert.equal(dexAbility.section, 'core');
-    assert.deepEqual(dexAbility.itemTypes, ['savingThrow']);
+    assert.deepEqual(dexAbility.leftTab, ['savingThrow']);
     assert.deepEqual(dexAbility.itemCategories, [['savingThrow'], ['abilityCheck']]);
     assert.equal(dexAbility.subactions.length, 2);
     assert.equal(dexAbility.collapseDropdownIfSingle, true);
@@ -176,7 +176,7 @@ test('Dnd5eSystemAdapter extractCheckActions generates core saves, core checks, 
 
     const acrSkill = skills.find(s => s.id === 'skill-acr');
     assert.equal(acrSkill.name, 'Acrobatics');
-    assert.equal(acrSkill.tabs[0].label, 'dex');
+    assert.equal(acrSkill.rightTab[0].label, 'dex');
 });
 
 test('Dnd5eSystemAdapter modifyContext triggers split layout exclusively on Page 2 for ability/skill checks', () => {

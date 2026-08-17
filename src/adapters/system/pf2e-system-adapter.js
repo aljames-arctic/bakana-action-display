@@ -273,8 +273,8 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
             type: 'weapon',
             img: strike.item?.img ?? ICONS.default_strike,
             activationType: 'action',
-            tabs: [TabRef.from('economy', 'action')],
-            itemTypes: ['weapon'],
+            rightTab: [TabRef.from('economy', 'action')],
+            leftTab: ['weapon'],
             hidden: false,
             uses: this.#getStrikeAmmoUses(strike, ammoQuantities),
             roll: (event) => this.#executeStrikeRoll(strike, event),
@@ -299,8 +299,8 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
         if (!activationType) return false;
 
         action.activationType = activationType;
-        action.tabs = [TabRef.from('economy', activationType)];
-        action.itemTypes = [item.type === 'action' ? 'feat' : item.type];
+        action.rightTab = [TabRef.from('economy', activationType)];
+        action.leftTab = [item.type === 'action' ? 'feat' : item.type];
         action.uses = this.#getUses(item);
         action.roll = (event) => this.#executeFeatRoll(item, event);
         return true;
@@ -310,9 +310,9 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
         if (!entry) return false;
 
         const spellLevel = item.rank ?? 0;
-        action.tabs = [TabRef.from('economy', 'action')];
+        action.rightTab = [TabRef.from('economy', 'action')];
         action.activationType = 'action';
-        action.itemTypes = ['spell', this.#getSpellSubTab(entry, spellLevel)];
+        action.leftTab = ['spell', this.#getSpellSubTab(entry, spellLevel)];
         action.roll = (event) => this.#executeSpellRoll(entry, item, event);
         action.uses = this.#getSpellUses(entry, item);
         action.name = `${item.name} (${entry.name})`;

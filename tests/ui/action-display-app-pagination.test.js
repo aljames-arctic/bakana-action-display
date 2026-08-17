@@ -60,8 +60,8 @@ test('ActionDisplayApp _prepareContext populates pages metadata correctly', asyn
 
     // Mock getActions to return items across 2 pages
     actionDisplay.getActions = async () => [
-        { id: 'act-1', name: 'Slash', page: 1, itemTypes: ['weapon'] },
-        { id: 'act-2', name: 'Save', page: 2, itemTypes: ['savingThrow'] }
+        { id: 'act-1', name: 'Slash', page: 1, leftTab: ['weapon'] },
+        { id: 'act-2', name: 'Save', page: 2, leftTab: ['savingThrow'] }
     ];
     actionDisplay.activeSystemAdapter = {
         getItemTypeLabel: (id) => id,

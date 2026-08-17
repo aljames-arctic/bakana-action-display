@@ -127,7 +127,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                         name: activity.name ?? linkedAction?.name ?? activity.type.toUpperCase(),
                         img: activity.img ?? linkedAction?.img ?? item.img,
                         uses: this.#calculateActivityUses(activity, item),
-                        tabs: [tabRef],
+                        rightTab: [tabRef],
                         roll: async (event) => {
                             const proxiedEvent = this._createRollEvent(event);
                             return activity.use({ event: proxiedEvent }, { event: proxiedEvent });
@@ -146,7 +146,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                     const compTabs = this.#getComponentTabs(act);
                     if (compTabs.length > 0) {
                         spellComponents.push(...compTabs);
-                        act.tabs = [...act.tabs, ...compTabs];
+                        act.rightTab = [...act.rightTab, ...compTabs];
                     }
                 }
 
@@ -165,11 +165,11 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                     name: a.name,
                     uses: a.uses,
                     isDepleted: a.isDepleted,
-                    tabs: a.tabs?.map(t => t.path)
+                    rightTab: a.rightTab?.map(t => t.path)
                 })));
 
                 // Assign to hierarchical item types: [parentType, subType] (for left-side tabs)
-                const itemTypes = this.#getItemTabTypes(item, type, filteredActivities);
+                const leftTab = this.#getItemTabTypes(item, type, filteredActivities);
 
                 // Calculate main action uses
                 const actionUses = filteredActivities.length === 1
@@ -183,8 +183,8 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                     img: item.img, // Use the parent item's icon
                     available: !(isSpellUnprepared || isUnequipped),
                     subactions: filteredActivities,
-                    tabs: this.#collectUniqueTabs(filteredActivities),
-                    itemTypes,
+                    rightTab: this.#collectUniqueTabs(filteredActivities),
+                    leftTab,
                     uses: actionUses,
                     roll: async (event) => {
                         // Roll the first active activity directly
@@ -199,8 +199,8 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                 const passiveAction = new Action({
                     ...action,
                     available: !(isSpellUnprepared || isUnequipped),
-                    tabs: [TabRef.from('economy', 'none')],
-                    itemTypes: subType ? [type, subType] : [type],
+                    rightTab: [TabRef.from('economy', 'none')],
+                    leftTab: subType ? [type, subType] : [type],
                     uses: { available: null, max: null }
                 });
                 modified.push(passiveAction);
@@ -247,8 +247,8 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                 name: localize('BAD.page2.savingThrow', 'Saving Throw'),
                 type: 'savingThrow',
                 img,
-                tabs: [TabRef.from('ability', abl)],
-                itemTypes: ['savingThrow'],
+                rightTab: [TabRef.from('ability', abl)],
+                leftTab: ['savingThrow'],
                 available: true,
                 roll: async (event) => {
                     const rollEvent = this._createRollEvent(event);
@@ -265,8 +265,8 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                 name: localize('BAD.page2.abilityCheck', 'Ability Check'),
                 type: 'abilityCheck',
                 img,
-                tabs: [TabRef.from('ability', abl)],
-                itemTypes: ['abilityCheck'],
+                rightTab: [TabRef.from('ability', abl)],
+                leftTab: ['abilityCheck'],
                 available: true,
                 roll: async (event) => {
                     const rollEvent = this._createRollEvent(event);
@@ -291,8 +291,8 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                 name,
                 type: 'ability',
                 img,
-                tabs: [TabRef.from('ability', abl)],
-                itemTypes: ['savingThrow'],
+                rightTab: [TabRef.from('ability', abl)],
+                leftTab: ['savingThrow'],
                 itemCategories: [['savingThrow'], ['abilityCheck']],
                 available: true,
                 uses: { available: null, max: null },
@@ -317,8 +317,8 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                 name: label,
                 type: 'skill',
                 img: skillImg,
-                tabs: [TabRef.from('ability', abl)],
-                itemTypes: ['abilityCheck'],
+                rightTab: [TabRef.from('ability', abl)],
+                leftTab: ['abilityCheck'],
                 available: true,
                 uses: { available: null, max: null },
                 roll: async (event) => {
