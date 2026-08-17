@@ -501,8 +501,12 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
      */
     getDefaultCategories() {
         return super.getDefaultCategories({
-            weapon: { expression: `item.type === 'weapon' || item.type === 'attack'` },
-            feature: { expression: `item.type === 'feat' || item.type === 'buff'` }
+            weapon: { 
+                expression: `item.type === 'weapon' || item.type === 'attack'`
+            },
+            feature: { 
+                expression: `item.type === 'feat' || item.type === 'buff'`
+            }
         });
     }
 

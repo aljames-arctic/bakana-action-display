@@ -380,12 +380,12 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
                     {
                         id: 'sub_cantrips',
                         name: 'Cantrips',
-                        expression: `item.rank === 0 || Boolean(item.isCantrip) || (Array.isArray(item.system?.traits?.value) && item.system.traits.value.includes('cantrip'))`
+                        expression: `item.rank === 0 || item.isCantrip || item.system.traits.value.includes('cantrip')`
                     },
                     {
                         id: 'sub_ranked_spells',
                         name: 'Ranked Spells',
-                        expression: `(typeof item.rank === 'number' && item.rank > 0) || (typeof item.system?.level?.value === 'number' && item.system.level.value > 0)`
+                        expression: `item.rank > 0`
                     }
                 ]
             },
