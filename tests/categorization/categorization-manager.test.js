@@ -10,6 +10,7 @@ import {
     getDefaultCategories
 } from '../../src/categorization/categorization-manager.js';
 import { Action } from '../../src/ui/action.js';
+import { log } from '../../src/lib/logger.js';
 
 test('normalizeCategorizationConfig creates strict contract from arbitrary input', () => {
     const emptyConfig = normalizeCategorizationConfig();
@@ -85,11 +86,21 @@ test('evaluateBooleanExpression evaluates action and item properties safely', ()
     assert.equal(evaluateBooleanExpression('right.some(t => t.label === "action")', weaponAction), true);
     assert.equal(evaluateBooleanExpression('action.right.some(t => t.label === "action")', weaponAction), true);
 
-    // Fault tolerance tests
-    assert.equal(evaluateBooleanExpression('', weaponAction), false);
-    assert.equal(evaluateBooleanExpression(null, weaponAction), false);
-    assert.equal(evaluateBooleanExpression('invalid syntax +++', weaponAction), false);
-    assert.equal(evaluateBooleanExpression('nonExistent.nested.deepProperty === 123', weaponAction), false);
+    // Fault tolerance & error logging tests
+    const originalError = log.error;
+    const loggedErrors = [];
+    log.error = (msg, err) => { loggedErrors.push({ msg, err }); };
+    try {
+        assert.equal(evaluateBooleanExpression('', weaponAction), false);
+        assert.equal(evaluateBooleanExpression(null, weaponAction), false);
+        assert.equal(evaluateBooleanExpression('invalid syntax +++', weaponAction), false);
+        assert.equal(evaluateBooleanExpression('nonExistent.nested.deepProperty === 123', weaponAction), false);
+        assert.equal(evaluateBooleanExpression('unknownVar === 42', weaponAction), false);
+        assert.equal(loggedErrors.length, 3);
+        assert.match(loggedErrors[0].msg, /Failed to evaluate boolean expression/);
+    } finally {
+        log.error = originalError;
+    }
 });
 
 test('categorizeActions returns null when disabled or categories are empty', () => {
