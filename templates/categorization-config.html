@@ -6,7 +6,10 @@
                 <input type="checkbox" name="categorizationEnabled" class="bad-config-enable-checkbox" data-action="toggleEnabled" {{#if config.enabled}}checked{{/if}} />
                 <span>{{localize "BAD.categorization.enable"}}</span>
             </label>
-            <div class="bad-config-hint">{{localize "BAD.categorization.enableHint"}}</div>
+            <div class="bad-config-hint">
+                {{localize "BAD.categorization.enableHint"}}
+                <i class="fas fa-circle-question bad-config-help-icon" data-tooltip="{{localize 'BAD.categorization.expressionHelpTooltip'}}" data-tooltip-direction="RIGHT"></i>
+            </div>
         </div>
         <button type="button" class="bad-config-btn bad-config-btn-primary" data-action="addCategory" title="{{localize 'BAD.categorization.addCategory'}}">
             <i class="fas fa-plus"></i> {{localize "BAD.categorization.addCategory"}}
@@ -27,7 +30,7 @@
                         <i class="fas fa-plus"></i>
                     </button>
                     <input type="text" class="bad-cat-name-input" data-cat-index="{{catIndex}}" value="{{cat.name}}" placeholder="{{localize 'BAD.categorization.categoryNamePlaceholder'}}" />
-                    <input type="text" class="bad-cat-expr-input" data-cat-index="{{catIndex}}" value="{{cat.expression}}" placeholder="{{localize 'BAD.categorization.categoryExprPlaceholder'}}" />
+                    <input type="text" class="bad-cat-expr-input" data-cat-index="{{catIndex}}" value="{{cat.expression}}" placeholder="{{localize 'BAD.categorization.categoryExprPlaceholder'}}" data-tooltip="{{localize 'BAD.categorization.expressionHelpTooltip'}}" />
                     <button type="button" class="bad-config-btn bad-config-btn-danger" data-action="removeCategory" data-cat-index="{{catIndex}}" title="{{localize 'BAD.categorization.removeCategory'}}">
                         <i class="fas fa-trash"></i>
                     </button>
@@ -42,7 +45,7 @@
                             <i class="fas fa-grip-vertical"></i>
                         </div>
                         <input type="text" class="bad-sub-name-input" data-cat-index="{{catIndex}}" data-sub-index="{{subIndex}}" value="{{sub.name}}" placeholder="{{localize 'BAD.categorization.subCategoryNamePlaceholder'}}" />
-                        <input type="text" class="bad-sub-expr-input" data-cat-index="{{catIndex}}" data-sub-index="{{subIndex}}" value="{{sub.expression}}" placeholder="{{localize 'BAD.categorization.subCategoryExprPlaceholder'}}" />
+                        <input type="text" class="bad-sub-expr-input" data-cat-index="{{catIndex}}" data-sub-index="{{subIndex}}" value="{{sub.expression}}" placeholder="{{localize 'BAD.categorization.subCategoryExprPlaceholder'}}" data-tooltip="{{localize 'BAD.categorization.expressionHelpTooltip'}}" />
                         <button type="button" class="bad-config-btn bad-config-btn-danger" data-action="removeSubCategory" data-cat-index="{{catIndex}}" data-sub-index="{{subIndex}}" title="{{localize 'BAD.categorization.removeSubCategory'}}">
                             <i class="fas fa-trash"></i>
                         </button>

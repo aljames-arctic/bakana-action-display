@@ -957,6 +957,21 @@
     color: #94a3b8;
     font-size: 0.82em;
     margin-top: 0.2em;
+    display: flex;
+    align-items: center;
+    gap: 0.4em;
+}
+
+.bad-config-help-icon {
+    color: #a78bfa;
+    cursor: help;
+    font-size: 1em;
+    transition: color 0.15s ease, transform 0.15s ease;
+}
+
+.bad-config-help-icon:hover {
+    color: #c4b5fd;
+    transform: scale(1.15);
 }
 
 .bad-config-categories-list {
