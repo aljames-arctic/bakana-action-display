@@ -50,8 +50,8 @@ test('BaseSystemAdapter matchesEconomyTabs matching logic', () => {
     const adapter = new BaseSystemAdapter('test-system');
 
     const action = {
-        rightTab: [TabRef.from('economy', 'action')],
-        leftTab: ['weapon']
+        right: [TabRef.from('economy', 'action')],
+        left: ['weapon']
     };
 
     // All active -> match
@@ -81,8 +81,8 @@ test('BaseSystemAdapter filterSubactions filtering and sorting', () => {
     const adapter = new BaseSystemAdapter('test-system');
 
     const subactions = [
-        { id: 'sub-2', name: 'Second Strike', activationType: 'action', sort: 2, rightTab: [TabRef.from('economy', 'action')] },
-        { id: 'sub-1', name: 'First Strike', activationType: 'action', sort: 1, rightTab: [TabRef.from('economy', 'action')] }
+        { id: 'sub-2', name: 'Second Strike', activationType: 'action', sort: 2, right: [TabRef.from('economy', 'action')] },
+        { id: 'sub-1', name: 'First Strike', activationType: 'action', sort: 1, right: [TabRef.from('economy', 'action')] }
     ];
 
     const filtered = adapter.filterSubactions(subactions, {
@@ -191,8 +191,8 @@ test('ActionDisplayApp _onRollAction bypasses activity dropdown when only one su
         name: 'Strength',
         collapseDropdownIfSingle: true,
         subactions: [
-            { id: 'save-str', leftTab: ['savingThrow'], roll: () => { rolled = true; } },
-            { id: 'check-str', leftTab: ['abilityCheck'], roll: () => {} }
+            { id: 'save-str', left: ['savingThrow'], roll: () => { rolled = true; } },
+            { id: 'check-str', left: ['abilityCheck'], roll: () => {} }
         ]
     };
 

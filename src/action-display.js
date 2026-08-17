@@ -93,7 +93,7 @@ class ActionDisplay {
             const itemId = action.originalItem?.id ?? action.id;
             if (hiddenSet.has(itemId)) {
                 action.isHidden = true;
-                action.leftTab = ['hidden'];
+                action.left = ['hidden'];
                 // Ensure hidden actions are never skipped due to preparedness/equipped status
                 action.available = true;
             }
@@ -126,8 +126,8 @@ class ActionDisplay {
                 name: item.name,
                 type: item.type,
                 img: item.img,
-                rightTab: [TabRef.from('all')], // Default tab array
-                leftTab: [item.type], // Default item type category
+                right: [TabRef.from('all')], // Default tab array
+                left: [item.type], // Default item type category
                 hidden: false,
                 uses: { available: null, max: null },
                 roll: (event) => {

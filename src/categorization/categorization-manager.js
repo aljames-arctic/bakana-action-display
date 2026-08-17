@@ -90,7 +90,7 @@ export function validateExpression(expression) {
     }
     try {
         new Function(
-            'action', 'item', 'system', 'name', 'type', 'extra', 'uses', 'available', 'leftTab', 'rightTab', 'itemCategories',
+            'action', 'item', 'system', 'name', 'type', 'extra', 'uses', 'available', 'left', 'right', 'itemCategories',
             `"use strict"; return Boolean(${expression.trim()});`
         );
         return { valid: true, error: null };
@@ -120,11 +120,11 @@ export function evaluateBooleanExpression(expression, action) {
         const uses = action?.uses ?? {};
         const available = action?.available ?? true;
         const itemCategories = action?.itemCategories ?? [];
-        const leftTab = action?.leftTab ?? [];
-        const rightTab = action?.rightTab ?? [];
+        const left = action?.left ?? [];
+        const right = action?.right ?? [];
 
         const evaluator = new Function(
-            'action', 'item', 'system', 'name', 'type', 'extra', 'uses', 'available', 'leftTab', 'rightTab', 'itemCategories',
+            'action', 'item', 'system', 'name', 'type', 'extra', 'uses', 'available', 'left', 'right', 'itemCategories',
             `"use strict";
             try {
                 return Boolean(${expr});
@@ -133,7 +133,7 @@ export function evaluateBooleanExpression(expression, action) {
             }`
         );
 
-        return Boolean(evaluator(action, item, system, name, type, extra, uses, available, leftTab, rightTab, itemCategories));
+        return Boolean(evaluator(action, item, system, name, type, extra, uses, available, left, right, itemCategories));
     } catch (err) {
         log.debug(`Failed to evaluate boolean expression: "${expression}"`, err);
         return false;

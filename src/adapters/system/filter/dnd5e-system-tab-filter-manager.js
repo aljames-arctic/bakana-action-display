@@ -49,7 +49,7 @@ export class Dnd5eSystemTabFilterManager extends BaseSystemTabFilterManager {
 
         return baseFiltered.filter(sub => {
             const hasPropertyMatch = activeCompSubs.some(comp => this.requiresComponent(sub, comp));
-            const hasTabMatch = sub.rightTab?.some(tab => tab.root === 'components' && activeCompSubs.includes(tab.label));
+            const hasTabMatch = sub.right?.some(tab => tab.root === 'components' && activeCompSubs.includes(tab.label));
             return !hasPropertyMatch && !hasTabMatch;
         });
     }

@@ -73,17 +73,17 @@ test('evaluateBooleanExpression evaluates action and item properties safely', ()
     assert.equal(evaluateBooleanExpression('system.level === 0', weaponAction), true);
     assert.equal(evaluateBooleanExpression('system.level === 5', weaponAction), false);
 
-    // Test action.leftTab and action.rightTab
-    weaponAction.leftTab = ['weapon', 'melee'];
-    weaponAction.rightTab = [{ label: 'action', root: 'economy', path: 'economy/action' }];
-    assert.deepEqual(weaponAction.leftTab, ['weapon', 'melee']);
-    assert.deepEqual(weaponAction.rightTab, [{ label: 'action', root: 'economy', path: 'economy/action' }]);
-    assert.equal(evaluateBooleanExpression('leftTab.includes("weapon")', weaponAction), true);
-    assert.equal(evaluateBooleanExpression('leftTab.includes("melee")', weaponAction), true);
-    assert.equal(evaluateBooleanExpression('leftTab.includes("spell")', weaponAction), false);
-    assert.equal(evaluateBooleanExpression('action.leftTab.includes("weapon")', weaponAction), true);
-    assert.equal(evaluateBooleanExpression('rightTab.some(t => t.label === "action")', weaponAction), true);
-    assert.equal(evaluateBooleanExpression('action.rightTab.some(t => t.label === "action")', weaponAction), true);
+    // Test action.left and action.right
+    weaponAction.left = ['weapon', 'melee'];
+    weaponAction.right = [{ label: 'action', root: 'economy', path: 'economy/action' }];
+    assert.deepEqual(weaponAction.left, ['weapon', 'melee']);
+    assert.deepEqual(weaponAction.right, [{ label: 'action', root: 'economy', path: 'economy/action' }]);
+    assert.equal(evaluateBooleanExpression('left.includes("weapon")', weaponAction), true);
+    assert.equal(evaluateBooleanExpression('left.includes("melee")', weaponAction), true);
+    assert.equal(evaluateBooleanExpression('left.includes("spell")', weaponAction), false);
+    assert.equal(evaluateBooleanExpression('action.left.includes("weapon")', weaponAction), true);
+    assert.equal(evaluateBooleanExpression('right.some(t => t.label === "action")', weaponAction), true);
+    assert.equal(evaluateBooleanExpression('action.right.some(t => t.label === "action")', weaponAction), true);
 
     // Fault tolerance tests
     assert.equal(evaluateBooleanExpression('', weaponAction), false);

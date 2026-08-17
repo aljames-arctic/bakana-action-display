@@ -273,8 +273,8 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
             type: 'weapon',
             img: strike.item?.img ?? ICONS.default_strike,
             activationType: 'action',
-            rightTab: [TabRef.from('economy', 'action')],
-            leftTab: ['weapon'],
+            right: [TabRef.from('economy', 'action')],
+            left: ['weapon'],
             hidden: false,
             uses: this.#getStrikeAmmoUses(strike, ammoQuantities),
             roll: (event) => this.#executeStrikeRoll(strike, event),
@@ -299,8 +299,8 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
         if (!activationType) return false;
 
         action.activationType = activationType;
-        action.rightTab = [TabRef.from('economy', activationType)];
-        action.leftTab = [item.type === 'action' ? 'feat' : item.type];
+        action.right = [TabRef.from('economy', activationType)];
+        action.left = [item.type === 'action' ? 'feat' : item.type];
         action.uses = this.#getUses(item);
         action.roll = (event) => this.#executeFeatRoll(item, event);
         return true;
@@ -310,9 +310,9 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
         if (!entry) return false;
 
         const spellLevel = item.rank ?? 0;
-        action.rightTab = [TabRef.from('economy', 'action')];
+        action.right = [TabRef.from('economy', 'action')];
         action.activationType = 'action';
-        action.leftTab = ['spell', this.#getSpellSubTab(entry, spellLevel)];
+        action.left = ['spell', this.#getSpellSubTab(entry, spellLevel)];
         action.roll = (event) => this.#executeSpellRoll(entry, item, event);
         action.uses = this.#getSpellUses(entry, item);
         action.name = `${item.name} (${entry.name})`;
@@ -353,8 +353,8 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
     }
 
     /**
-     * Calculate remaining ammunition for a PF2e Strike.
-     * @param {Object} strike PF2e strike object
+     * Calculate ammo uses for a PF2e strike if applicable.
+     * @param {Object} strike
      * @param {Map<string, number>} ammoQuantities
      * @returns {{ available: number|null, max: number|null }}
      */
@@ -373,7 +373,7 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
         return super.getDefaultCategories({
             weapon: {
                 name: 'Weapons & Strikes',
-                expression: `item.type === 'weapon' || leftTab.includes('weapon')`
+                expression: `item.type === 'weapon' || left.includes('weapon')`
             },
             spell: {
                 subcategories: [

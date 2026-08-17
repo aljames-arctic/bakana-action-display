@@ -74,12 +74,12 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
                 const spellbook = this.#getSpellbook(actor, spellbookId);
                 if (!spellbook) continue;
 
-                action.rightTab = [TabRef.from('economy', 'action')];
+                action.right = [TabRef.from('economy', 'action')];
                 action.activationType = 'action';
                 
                 const level = item.system.level ?? 0;
                 const subTab = this.#getSpellSubTab(spellbookId, spellbook, level);
-                action.leftTab = ['spell', subTab];
+                action.left = ['spell', subTab];
                 
                 // Calculate uses (slots or prepared casts)
                 action.uses = this.#calculateSpellUses(spellbook, item);
@@ -135,9 +135,9 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
 
             } else if (item.type === 'buff') {
                 // 5. Buffs
-                action.rightTab = [TabRef.from('economy', 'other')];
+                action.right = [TabRef.from('economy', 'other')];
                 action.activationType = 'other';
-                action.leftTab = ['buff'];
+                action.left = ['buff'];
                 
                 action.roll = async (event) => {
                     const active = this.#getBuffActiveState(item);
@@ -288,7 +288,7 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
                 name: itemAction.name ?? item.name,
                 img: item.img,
                 activationType,
-                tabs: [TabRef.from('economy', activationType)],
+                right: [TabRef.from('economy', activationType)],
                 uses,
                 roll: (event) => this.#executeItemRoll(item, itemAction._id, event)
             });
@@ -312,7 +312,7 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
                     name,
                     img: attackItem.img ?? weapon.img,
                     activationType,
-                    tabs: [TabRef.from('economy', activationType)],
+                    right: [TabRef.from('economy', activationType)],
                     uses,
                     roll: (event) => this.#executeItemRoll(attackItem, itemAction._id, event)
                 });
@@ -409,12 +409,12 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
         return level.toString();
     }
 
-    #promoteFirstSubaction(action, subactions, leftTab, uses) {
+    #promoteFirstSubaction(action, subactions, left, uses) {
         const firstSub = subactions[0];
         action.subactions = subactions;
         action.activationType = firstSub.activationType;
-        action.rightTab = firstSub.rightTab ?? firstSub.tabs;
-        action.leftTab = leftTab;
+        action.right = firstSub.right ?? firstSub.tabs;
+        action.left = left;
         action.uses = uses;
     }
 

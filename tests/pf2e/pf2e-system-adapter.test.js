@@ -117,7 +117,7 @@ test('Pf2eSystemAdapter modifyActions full transformation pipeline', async () =>
     // Spell verification
     const spellAction = modified.find(a => a.id === 'act-2');
     assert.equal(spellAction.name, 'Fireball (Arcane Spells)');
-    assert.deepEqual(spellAction.leftTab, ['spell', '3']);
+    assert.deepEqual(spellAction.left, ['spell', '3']);
     assert.deepEqual(spellAction.uses, { available: 2, max: 3 });
 
     // Injected Strike verification
