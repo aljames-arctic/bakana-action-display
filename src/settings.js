@@ -221,7 +221,7 @@ Hooks.once('init', () => {
 
     // Register Categorization Configuration Storage
     game.settings.register(MODULE_ID, 'categorizationConfig', {
-        scope: 'client',
+        scope: 'world',
         config: false,
         type: Object,
         default: {
