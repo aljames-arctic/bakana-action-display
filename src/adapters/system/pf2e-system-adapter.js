@@ -373,7 +373,7 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
         return super.getDefaultCategories({
             weapon: {
                 name: 'Weapons & Strikes',
-                expression: `item.type === 'weapon' || tab.includes('weapon')`
+                expression: `item.type === 'weapon' || leftTab.includes('weapon')`
             },
             spell: {
                 subcategories: [

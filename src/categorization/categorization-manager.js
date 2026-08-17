@@ -90,7 +90,7 @@ export function validateExpression(expression) {
     }
     try {
         new Function(
-            'action', 'item', 'system', 'name', 'type', 'extra', 'uses', 'available', 'tab', 'leftTab', 'rightTab', 'itemCategories',
+            'action', 'item', 'system', 'name', 'type', 'extra', 'uses', 'available', 'leftTab', 'rightTab', 'itemCategories',
             `"use strict"; return Boolean(${expression.trim()});`
         );
         return { valid: true, error: null };
@@ -123,24 +123,8 @@ export function evaluateBooleanExpression(expression, action) {
         const leftTab = action?.leftTab ?? [];
         const rightTab = action?.rightTab ?? [];
 
-        // Build a unified tab collection combining all left-side and right-side HUD tabs
-        const tabSet = new Set();
-        for (const it of leftTab) {
-            if (it) tabSet.add(it);
-        }
-        for (const t of rightTab) {
-            if (typeof t === 'string') {
-                tabSet.add(t);
-            } else if (t) {
-                if (t.label) tabSet.add(t.label);
-                if (t.root) tabSet.add(t.root);
-                if (t.path) tabSet.add(t.path);
-            }
-        }
-        const tab = Array.from(tabSet);
-
         const evaluator = new Function(
-            'action', 'item', 'system', 'name', 'type', 'extra', 'uses', 'available', 'tab', 'leftTab', 'rightTab', 'itemCategories',
+            'action', 'item', 'system', 'name', 'type', 'extra', 'uses', 'available', 'leftTab', 'rightTab', 'itemCategories',
             `"use strict";
             try {
                 return Boolean(${expr});
@@ -149,7 +133,7 @@ export function evaluateBooleanExpression(expression, action) {
             }`
         );
 
-        return Boolean(evaluator(action, item, system, name, type, extra, uses, available, tab, leftTab, rightTab, itemCategories));
+        return Boolean(evaluator(action, item, system, name, type, extra, uses, available, leftTab, rightTab, itemCategories));
     } catch (err) {
         log.debug(`Failed to evaluate boolean expression: "${expression}"`, err);
         return false;
