@@ -10,6 +10,13 @@ test('Pf1SystemAdapter initialization and extractable item types', () => {
     assert.equal(adapter.shouldExtractItem({ type: 'attack' }), true);
     assert.equal(adapter.shouldExtractItem({ type: 'buff' }), true);
     assert.equal(adapter.shouldExtractItem({ type: 'class' }), false);
+    const defaultCategories = adapter.getDefaultCategories();
+    assert.equal(defaultCategories.length, 3);
+    assert.equal(defaultCategories[0].name, 'Weapons');
+    assert.ok(defaultCategories[0].expression.includes('attack'));
+    assert.equal(defaultCategories[1].name, 'Spells');
+    assert.equal(defaultCategories[2].name, 'Features');
+    assert.ok(defaultCategories[2].expression.includes('buff'));
 });
 
 test('Pf1SystemAdapter label lookups and spell sub-tab labels', () => {

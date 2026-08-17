@@ -311,7 +311,7 @@ export class CategorizationConfigApp extends foundry.applications.api.Handlebars
 
     _onLoadPresets(event, target) {
         event.preventDefault();
-        this.config.categories = getDefaultCategories();
+        this.config.categories = getDefaultCategories(actionDisplay?.activeSystemAdapter);
         this.render();
     }
 

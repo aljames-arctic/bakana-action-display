@@ -199,12 +199,21 @@ test('categorizeActions supports custom localized Others keyword (e.g. French Au
     assert.deepEqual(result[1].items, [potion]);
 });
 
-test('getDefaultCategories provides standard preset configuration', () => {
+test('getDefaultCategories provides standard preset configuration and delegates to adapter', () => {
     const presets = getDefaultCategories();
     assert.ok(Array.isArray(presets));
     assert.equal(presets.length, 3);
-    assert.equal(presets[0].name, 'WEAPONS');
-    assert.equal(presets[0].subcategories.length, 2);
-    assert.equal(presets[1].name, 'SPELLS');
-    assert.equal(presets[2].name, 'FEATURES');
+    assert.equal(presets[0].name, 'Weapons');
+    assert.equal(presets[1].name, 'Spells');
+    assert.equal(presets[2].name, 'Features');
+
+    // Test delegation to custom adapter
+    const customAdapter = {
+        getDefaultCategories: () => [
+            { id: 'c1', name: 'Custom Cat', expression: 'type === "custom"', subcategories: [] }
+        ]
+    };
+    const delegated = getDefaultCategories(customAdapter);
+    assert.equal(delegated.length, 1);
+    assert.equal(delegated[0].name, 'Custom Cat');
 });

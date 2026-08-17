@@ -495,5 +495,16 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
         return { available: null, max: null };
     }
 
+    /**
+     * Get the default HUD categorization structure for PF1e.
+     * @returns {Object[]} Array of category definition objects
+     */
+    getDefaultCategories() {
+        return super.getDefaultCategories({
+            weapon: { expression: `item.type === 'weapon' || item.type === 'attack'` },
+            feature: { expression: `item.type === 'feat' || item.type === 'buff'` }
+        });
+    }
+
     // #endregion
 }

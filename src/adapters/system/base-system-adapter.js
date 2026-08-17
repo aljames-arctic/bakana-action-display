@@ -294,5 +294,32 @@ export class BaseSystemAdapter {
         return [];
     }
 
+    /**
+     * Get the default HUD categorization structure for this system.
+     * @returns {Object[]} Array of category definition objects
+     */
+    getDefaultCategories() {
+        return [
+            {
+                id: 'cat_weapons',
+                name: 'Weapons',
+                expression: `item.type === 'weapon'`,
+                subcategories: []
+            },
+            {
+                id: 'cat_spells',
+                name: 'Spells',
+                expression: `item.type === 'spell'`,
+                subcategories: []
+            },
+            {
+                id: 'cat_features',
+                name: 'Features',
+                expression: `item.type === 'feat'`,
+                subcategories: []
+            }
+        ];
+    }
+
     // #endregion
 }

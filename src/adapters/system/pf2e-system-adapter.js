@@ -365,5 +365,36 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
             : { available: null, max: null };
     }
 
+    /**
+     * Get the default HUD categorization structure for PF2e.
+     * @returns {Object[]} Array of category definition objects
+     */
+    getDefaultCategories() {
+        return super.getDefaultCategories({
+            weapon: {
+                name: 'Weapons & Strikes',
+                expression: `item.type === 'weapon' || tab.includes('weapon')`
+            },
+            spell: {
+                subcategories: [
+                    {
+                        id: 'sub_cantrips',
+                        name: 'Cantrips',
+                        expression: `item.rank === 0 || Boolean(item.isCantrip) || (Array.isArray(item.system?.traits?.value) && item.system.traits.value.includes('cantrip'))`
+                    },
+                    {
+                        id: 'sub_ranked_spells',
+                        name: 'Ranked Spells',
+                        expression: `(typeof item.rank === 'number' && item.rank > 0) || (typeof item.system?.level?.value === 'number' && item.system.level.value > 0)`
+                    }
+                ]
+            },
+            feature: {
+                name: 'Feats & Actions',
+                expression: `item.type === 'feat' || item.type === 'action'`
+            }
+        });
+    }
+
     // #endregion
 }

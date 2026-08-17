@@ -8,6 +8,12 @@ test('Dnd5eSystemAdapter initialization and labels', () => {
     assert.equal(adapter.systemId, 'dnd5e');
     assert.equal(adapter.getItemTypeIcon('weapon'), 'fas fa-sword');
     assert.equal(adapter.getItemTypeIcon('equipment'), 'fas fa-shield');
+    const defaultCategories = adapter.getDefaultCategories();
+    assert.equal(defaultCategories.length, 3);
+    assert.equal(defaultCategories[0].name, 'Weapons');
+    assert.equal(defaultCategories[1].name, 'Spells');
+    assert.equal(defaultCategories[1].subcategories.length, 3);
+    assert.equal(defaultCategories[2].name, 'Features');
 });
 
 test('Dnd5eSystemAdapter shouldExtractItem filtering', () => {

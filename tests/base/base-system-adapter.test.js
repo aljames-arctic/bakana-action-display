@@ -8,6 +8,11 @@ test('BaseSystemAdapter initialization and metadata', () => {
     const adapter = new BaseSystemAdapter('test-system');
     assert.equal(adapter.systemId, 'test-system');
     assert.equal(adapter.shouldExtractItem({ type: 'any' }), true);
+    const defaultCategories = adapter.getDefaultCategories();
+    assert.equal(defaultCategories.length, 3);
+    assert.equal(defaultCategories[0].name, 'Weapons');
+    assert.equal(defaultCategories[1].name, 'Spells');
+    assert.equal(defaultCategories[2].name, 'Features');
 });
 
 test('BaseSystemAdapter label and icon getters', () => {

@@ -26,6 +26,43 @@ const ICONS = {
     }
 };
 
+const DEFAULT_CATEGORIES = [
+    {
+        id: 'cat_weapons',
+        name: 'Weapons',
+        expression: `item.type === 'weapon'`,
+        subcategories: []
+    },
+    {
+        id: 'cat_spells',
+        name: 'Spells',
+        expression: `item.type === 'spell'`,
+        subcategories: [
+            {
+                id: 'sub_low_level',
+                name: 'Low Level',
+                expression: `item.system.level < 3`
+            },
+            {
+                id: 'sub_mid_level',
+                name: 'Mid Level',
+                expression: `item.system.level < 6`
+            },
+            {
+                id: 'sub_high_level',
+                name: 'High Level',
+                expression: `item.system.level < 10`
+            }
+        ]
+    },
+    {
+        id: 'cat_features',
+        name: 'Features',
+        expression: `item.type === 'feat'`,
+        subcategories: []
+    }
+];
+
 /**
  * Intermediate adapter for fantasy-based systems (D&D 5e, PF1e, PF2e).
  * Provides shared fantasy defaults like common item type labels (Weapons, Spells, Feats, Consumables),
@@ -51,5 +88,19 @@ export class FantasySystemAdapter extends BaseSystemAdapter {
         return parentId === 'spell'
             ? (SORT_ORDERS.spell_subtab[subId] ?? 999)
             : super.getItemSubTabSortOrder(parentId, subId);
+    }
+
+    /**
+     * Get the default HUD categorization structure for fantasy-based systems.
+     * Pulls from DEFAULT_CATEGORIES and uses foundry.utils.mergeObject to apply overrides.
+     * @param {Object} [overrides={}] Generic category overrides
+     * @returns {Object[]} Array of category definition objects
+     */
+    getDefaultCategories(overrides = {}) {
+        return DEFAULT_CATEGORIES.map(defaultCat => {
+            const key = defaultCat.id.replace('cat_', '').replace(/s$/, ''); // e.g. 'weapon', 'spell', 'feature'
+            const catOverride = overrides[defaultCat.id] ?? overrides[key] ?? overrides[defaultCat.name.toLowerCase()] ?? {};
+            return foundry.utils.mergeObject(defaultCat, catOverride, { inplace: false, overwrite: true });
+        });
     }
 }

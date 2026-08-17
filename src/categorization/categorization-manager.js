@@ -1,4 +1,5 @@
 import { log } from '../lib/logger.js';
+import { actionDisplay } from '../action-display.js';
 
 /**
  * @typedef {Object} SubCategory
@@ -261,11 +262,15 @@ export function categorizeActions(actions, config, reservedOthers) {
 }
 
 /**
- * Returns default preset categories.
+ * Returns default preset categories, delegating to the provided or active system adapter.
  *
+ * @param {Object} [adapter] Optional system adapter instance
  * @returns {Category[]} Default category list
  */
-export function getDefaultCategories() {
+export function getDefaultCategories(adapter = actionDisplay?.activeSystemAdapter) {
+    if (typeof adapter?.getDefaultCategories === 'function') {
+        return adapter.getDefaultCategories();
+    }
     return [
         {
             id: 'cat_weapons',
@@ -277,23 +282,7 @@ export function getDefaultCategories() {
             id: 'cat_spells',
             name: 'Spells',
             expression: `item.type === 'spell'`,
-            subcategories: [
-                {
-                    id: 'sub_low_level',
-                    name: 'Low Level',
-                    expression: `item.system.level < 3`
-                },
-                {
-                    id: 'sub_mid_level',
-                    name: 'Mid Level',
-                    expression: `item.system.level < 6`
-                },
-                {
-                    id: 'sub_high_level',
-                    name: 'High Level',
-                    expression: `item.system.level < 10`
-                },
-            ]
+            subcategories: []
         },
         {
             id: 'cat_features',

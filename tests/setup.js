@@ -50,6 +50,19 @@ globalThis.foundry = {
     },
     utils: {
         getProperty,
+        mergeObject(original, other = {}, { inplace = true, overwrite = true, recursive = true } = {}) {
+            const target = inplace ? original : structuredClone(original);
+            if (!other || typeof other !== 'object') return target;
+            for (const [key, value] of Object.entries(other)) {
+                if (value === undefined) continue;
+                if (recursive && value && typeof value === 'object' && !Array.isArray(value) && typeof target[key] === 'object' && !Array.isArray(target[key])) {
+                    target[key] = foundry.utils.mergeObject(target[key], value, { inplace: true, overwrite, recursive });
+                } else if (overwrite || target[key] === undefined) {
+                    target[key] = (value && typeof value === 'object') ? structuredClone(value) : value;
+                }
+            }
+            return target;
+        },
         fromUuidSync(uuid, options = {}) {
             if (options.relative?.items) {
                 return options.relative.items.find(i => i.uuid === uuid || i.id === uuid) ?? null;
