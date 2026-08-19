@@ -1,6 +1,5 @@
 import { log } from '../lib/logger.js';
 import { actionDisplay } from '../action-display.js';
-import { MODULE_ID } from '../constants.js';
 
 /**
  * @typedef {Object} SubCategory
@@ -104,13 +103,6 @@ export function evaluateBooleanExpression(expression, action, context = {}) {
         const actor = context?.actor ?? action?.actor ?? item?.actor ?? actionDisplay?.activeApp?.actor ?? null;
         const token = context?.token ?? action?.token ?? actor?.token ?? actionDisplay?.activeApp?.token ?? null;
         const user = context?.user ?? game?.user ?? null;
-
-        if (actor && typeof actor === 'object') {
-            actor.flags = actor.flags ?? {};
-            actor.flags[MODULE_ID] = actor.flags[MODULE_ID] ?? {};
-            actor.flags[MODULE_ID].favorites = actor.flags[MODULE_ID].favorites ?? {};
-            actor.flags[MODULE_ID].hiddenItems = actor.flags[MODULE_ID].hiddenItems ?? {};
-        }
 
         const evaluator = new Function(
             'action', 'item', 'actor', 'token', 'user',
