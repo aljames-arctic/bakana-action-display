@@ -106,19 +106,23 @@ test('evaluateBooleanExpression queries actor.flags.hiddenItems object map safel
             [MODULE_ID]: {
                 hiddenItems: { 'item-1': true }
             }
+        },
+        getFlag(mod, key) {
+            return this.flags?.[mod]?.[key];
         }
     };
     const actorWithoutHidden = {
         name: 'Paladin',
-        flags: {}
+        flags: {},
+        getFlag: () => undefined
     };
 
     assert.equal(
-        evaluateBooleanExpression('Boolean(actor.flags["bakana-action-display"].hiddenItems[item.id])', action, { actor: actorWithHidden }),
+        evaluateBooleanExpression('actor.getFlag("bakana-action-display", "hiddenItems")?.[item.id]', action, { actor: actorWithHidden }),
         true
     );
     assert.equal(
-        evaluateBooleanExpression('Boolean(actor.flags["bakana-action-display"].hiddenItems[item.id])', action, { actor: actorWithoutHidden }),
+        evaluateBooleanExpression('actor.getFlag("bakana-action-display", "hiddenItems")?.[item.id]', action, { actor: actorWithoutHidden }),
         false
     );
 });

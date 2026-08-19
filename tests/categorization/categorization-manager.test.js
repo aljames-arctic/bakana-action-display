@@ -104,6 +104,9 @@ test('evaluateBooleanExpression evaluates action and item properties safely', ()
                     'action-dagger': true
                 }
             }
+        },
+        getFlag(mod, key) {
+            return this.flags?.[mod]?.[key];
         }
     };
     const mockToken = { name: 'Hero Token' };
@@ -128,18 +131,27 @@ test('evaluateBooleanExpression evaluates action and item properties safely', ()
         true
     );
     assert.equal(
-        evaluateBooleanExpression('Boolean(actor?.flags?.["bakana-action-display"]?.favorites?.[item.id])', daggerAction, { actor: mockActor }),
+        evaluateBooleanExpression('actor.getFlag("bakana-action-display", "favorites")?.[item.id]', daggerAction, { actor: mockActor }),
         true
     );
     assert.equal(
-        evaluateBooleanExpression('Boolean(actor?.flags?.["bakana-action-display"]?.favorites?.[item.id])', weaponAction, { actor: mockActor }),
+        evaluateBooleanExpression('actor.getFlag("bakana-action-display", "favorites")?.[item.id]', weaponAction, { actor: mockActor }),
         false
     );
-
-    // Direct access to actor.flags['bakana-action-display'].favorites[item.id] without optional chaining on unfavorited actor
-    const actorWithoutFavorites = { name: 'New Actor', flags: {} };
+    // Explicit Boolean(...) wrapper by user is also supported
     assert.equal(
-        evaluateBooleanExpression('Boolean(actor.flags["bakana-action-display"].favorites[item.id])', daggerAction, { actor: actorWithoutFavorites }),
+        evaluateBooleanExpression('Boolean(actor.getFlag("bakana-action-display", "favorites")?.[item.id])', daggerAction, { actor: mockActor }),
+        true
+    );
+
+    // Unfavorited actor with getFlag returns falsy/false without Boolean wrapper
+    const actorWithoutFavorites = {
+        name: 'New Actor',
+        flags: {},
+        getFlag: () => undefined
+    };
+    assert.equal(
+        evaluateBooleanExpression('actor.getFlag("bakana-action-display", "favorites")?.[item.id]', daggerAction, { actor: actorWithoutFavorites }),
         false
     );
 

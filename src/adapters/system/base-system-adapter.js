@@ -258,7 +258,7 @@ export class BaseSystemAdapter {
             {
                 id: 'cat_favorites',
                 name: 'Favorites',
-                expression: `Boolean(actor?.flags?.['bakana-action-display']?.favorites?.[item.id])`,
+                expression: `actor.getFlag('bakana-action-display', 'favorites')?.[item.id]`,
                 subcategories: []
             },
             {

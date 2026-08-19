@@ -9,12 +9,8 @@ import { actionDisplay } from '../action-display.js';
  * @returns {Record<string, boolean>} Map of itemId to boolean
  */
 export function getActorFavorites(actor) {
-    if (!actor) return {};
-    if (typeof actor === 'object' && actor.flags) {
-        actor.flags[MODULE_ID] = actor.flags[MODULE_ID] ?? {};
-        actor.flags[MODULE_ID].favorites = actor.flags[MODULE_ID].favorites ?? {};
-    }
-    return (typeof actor.getFlag === 'function' ? actor.getFlag(MODULE_ID, 'favorites') : actor.flags?.[MODULE_ID]?.favorites) ?? {};
+    if (!actor || typeof actor.getFlag !== 'function') return {};
+    return actor.getFlag(MODULE_ID, 'favorites') ?? {};
 }
 
 /**
@@ -100,46 +96,36 @@ export async function setActorItemFavorite(actor, item, isFavorite, adapter = ac
  * @returns {Promise<void>}
  */
 export async function syncActorFavorites(actor, adapter = actionDisplay?.activeSystemAdapter) {
-    if (!actor) return;
-    if (typeof actor === 'object' && actor.flags) {
-        actor.flags[MODULE_ID] = actor.flags[MODULE_ID] ?? {};
-        actor.flags[MODULE_ID].favorites = actor.flags[MODULE_ID].favorites ?? {};
-    }
-    if (!actor.isOwner) return;
+    if (!actor || !adapter?.hasFavorites?.() || !actor.isOwner) return;
 
     try {
-        const rawFlag = typeof actor.getFlag === 'function' ? actor.getFlag(MODULE_ID, 'favorites') : undefined;
-        const currentFlags = rawFlag ?? {};
+        const currentFlags = { ...getActorFavorites(actor) };
         const updatedFlags = {};
-        let hasChanges = (rawFlag === undefined); // True if flag was never initialized on the document
+        let hasChanges = false;
 
-        if (adapter?.hasFavorites?.()) {
-            for (const item of (actor.items ?? [])) {
-                if (!item?.id) continue;
-                const isSysFav = Boolean(adapter.isFavorite(actor, item));
-                if (isSysFav) {
-                    updatedFlags[item.id] = true;
-                    if (!currentFlags[item.id]) {
-                        hasChanges = true;
-                    }
-                } else {
-                    if (currentFlags[item.id]) {
-                        hasChanges = true;
-                    }
+        for (const item of (actor.items ?? [])) {
+            if (!item?.id) continue;
+            const isSysFav = Boolean(adapter.isFavorite(actor, item));
+            if (isSysFav) {
+                updatedFlags[item.id] = true;
+                if (!currentFlags[item.id]) {
+                    hasChanges = true;
                 }
-            }
-
-            for (const id of Object.keys(currentFlags)) {
-                if (!updatedFlags[id]) {
+            } else {
+                if (currentFlags[item.id]) {
                     hasChanges = true;
                 }
             }
-        } else {
-            Object.assign(updatedFlags, currentFlags);
+        }
+
+        for (const id of Object.keys(currentFlags)) {
+            if (!updatedFlags[id]) {
+                hasChanges = true;
+            }
         }
 
         if (hasChanges) {
-            log.debug(`syncActorFavorites | Initializing/synchronizing favorites flag for actor "${actor.name}"`);
+            log.debug(`syncActorFavorites | Synchronizing favorites flag for actor "${actor.name}"`);
             if (typeof actor.setFlag === 'function') {
                 await actor.setFlag(MODULE_ID, 'favorites', updatedFlags);
             }
