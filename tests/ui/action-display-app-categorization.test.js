@@ -17,9 +17,9 @@ test('ActionDisplayApp _prepareContext categorizes actions when categorization i
             {
                 id: 'c1',
                 name: 'WEAPONS',
-                expression: 'type === "weapon"',
+                expression: 'item.type === "weapon"',
                 subcategories: [
-                    { id: 's1', name: 'daggers', expression: 'name.toLowerCase().includes("dagger")' }
+                    { id: 's1', name: 'daggers', expression: 'item.name.toLowerCase().includes("dagger")' }
                 ]
             }
         ]

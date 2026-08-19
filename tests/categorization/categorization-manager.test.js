@@ -20,9 +20,9 @@ test('normalizeCategorizationConfig creates strict contract from arbitrary input
         categories: [
             {
                 name: 'Weapons',
-                expression: 'type === "weapon"',
+                expression: 'item.type === "weapon"',
                 subcategories: [
-                    { name: 'Daggers', expression: 'name.includes("dagger")' }
+                    { name: 'Daggers', expression: 'item.name.includes("dagger")' }
                 ]
             }
         ]
@@ -31,11 +31,11 @@ test('normalizeCategorizationConfig creates strict contract from arbitrary input
     assert.equal(partialConfig.enabled, true);
     assert.equal(partialConfig.categories.length, 1);
     assert.equal(partialConfig.categories[0].name, 'Weapons');
-    assert.equal(partialConfig.categories[0].expression, 'type === "weapon"');
+    assert.equal(partialConfig.categories[0].expression, 'item.type === "weapon"');
     assert.ok(partialConfig.categories[0].id.startsWith('cat_'));
     assert.equal(partialConfig.categories[0].subcategories.length, 1);
     assert.equal(partialConfig.categories[0].subcategories[0].name, 'Daggers');
-    assert.equal(partialConfig.categories[0].subcategories[0].expression, 'name.includes("dagger")');
+    assert.equal(partialConfig.categories[0].subcategories[0].expression, 'item.name.includes("dagger")');
     assert.ok(partialConfig.categories[0].subcategories[0].id.startsWith('sub_'));
 });
 
@@ -44,8 +44,8 @@ test('categorizeActions permits duplicate category names and categories named Ot
     const config = {
         enabled: true,
         categories: [
-            { id: 'c1', name: 'Other Actions', expression: 'type === "weapon"', subcategories: [] },
-            { id: 'c2', name: 'Other Actions', expression: 'type === "spell"', subcategories: [] }
+            { id: 'c1', name: 'Other Actions', expression: 'item.type === "weapon"', subcategories: [] },
+            { id: 'c2', name: 'Other Actions', expression: 'item.type === "spell"', subcategories: [] }
         ]
     };
 
@@ -56,11 +56,14 @@ test('categorizeActions permits duplicate category names and categories named Ot
 });
 
 test('validateExpression verifies valid and invalid syntax', () => {
-    assert.equal(validateExpression('type === "weapon"').valid, true);
-    assert.equal(validateExpression('name.toLowerCase().includes("dagger")').valid, true);
-    assert.equal(validateExpression('system?.level === 0 || type === "cantrip"').valid, true);
+    assert.equal(validateExpression('item.type === "weapon"').valid, true);
+    assert.equal(validateExpression('item.name.toLowerCase().includes("dagger")').valid, true);
+    assert.equal(validateExpression('item.system?.level === 0 || item.type === "cantrip"').valid, true);
+    assert.equal(validateExpression('action.left.includes("weapon")').valid, true);
+    assert.equal(validateExpression('actor.name === "Hero"').valid, true);
+    assert.equal(validateExpression('token.name === "Token"').valid, true);
     assert.equal(validateExpression('').valid, false);
-    assert.equal(validateExpression('type ===').valid, false);
+    assert.equal(validateExpression('item.type ===').valid, false);
     assert.equal(validateExpression('&& invalid').valid, false);
 });
 
@@ -72,23 +75,22 @@ test('evaluateBooleanExpression evaluates action and item properties safely', ()
         originalItem: { id: 'w1', name: 'Silver Dagger', type: 'weapon', system: { equipped: true, level: 0 } }
     });
 
-    assert.equal(evaluateBooleanExpression('type === "weapon"', weaponAction), true);
-    assert.equal(evaluateBooleanExpression('name.toLowerCase().includes("dagger")', weaponAction), true);
-    assert.equal(evaluateBooleanExpression('name.toLowerCase().includes("sword")', weaponAction), false);
-    assert.equal(evaluateBooleanExpression('system.equipped === true', weaponAction), true);
-    assert.equal(evaluateBooleanExpression('system.level === 0', weaponAction), true);
-    assert.equal(evaluateBooleanExpression('system.level === 5', weaponAction), false);
+    assert.equal(evaluateBooleanExpression('item.type === "weapon"', weaponAction), true);
+    assert.equal(evaluateBooleanExpression('action.type === "weapon"', weaponAction), true);
+    assert.equal(evaluateBooleanExpression('item.name.toLowerCase().includes("dagger")', weaponAction), true);
+    assert.equal(evaluateBooleanExpression('item.name.toLowerCase().includes("sword")', weaponAction), false);
+    assert.equal(evaluateBooleanExpression('item.system.equipped === true', weaponAction), true);
+    assert.equal(evaluateBooleanExpression('item.system.level === 0', weaponAction), true);
+    assert.equal(evaluateBooleanExpression('item.system.level === 5', weaponAction), false);
 
     // Test action.left and action.right
     weaponAction.left = ['weapon', 'melee'];
     weaponAction.right = [{ label: 'action', root: 'economy', path: 'economy/action' }];
     assert.deepEqual(weaponAction.left, ['weapon', 'melee']);
     assert.deepEqual(weaponAction.right, [{ label: 'action', root: 'economy', path: 'economy/action' }]);
-    assert.equal(evaluateBooleanExpression('left.includes("weapon")', weaponAction), true);
-    assert.equal(evaluateBooleanExpression('left.includes("melee")', weaponAction), true);
-    assert.equal(evaluateBooleanExpression('left.includes("spell")', weaponAction), false);
     assert.equal(evaluateBooleanExpression('action.left.includes("weapon")', weaponAction), true);
-    assert.equal(evaluateBooleanExpression('right.some(t => t.label === "action")', weaponAction), true);
+    assert.equal(evaluateBooleanExpression('action.left.includes("melee")', weaponAction), true);
+    assert.equal(evaluateBooleanExpression('action.left.includes("spell")', weaponAction), false);
     assert.equal(evaluateBooleanExpression('action.right.some(t => t.label === "action")', weaponAction), true);
 
     // Test actor and token exposure
@@ -123,7 +125,7 @@ test('evaluateBooleanExpression evaluates action and item properties safely', ()
         false
     );
 
-    // Fault tolerance & error logging tests
+    // Fault tolerance & error logging tests (including undeclared shorthand variables)
     const originalError = log.error;
     const loggedErrors = [];
     log.error = (msg, err) => { loggedErrors.push({ msg, err }); };
@@ -133,7 +135,10 @@ test('evaluateBooleanExpression evaluates action and item properties safely', ()
         assert.equal(evaluateBooleanExpression('invalid syntax +++', weaponAction), false);
         assert.equal(evaluateBooleanExpression('nonExistent.nested.deepProperty === 123', weaponAction), false);
         assert.equal(evaluateBooleanExpression('unknownVar === 42', weaponAction), false);
-        assert.equal(loggedErrors.length, 3);
+        // Shorthand variables no longer in scope must evaluate to false
+        assert.equal(evaluateBooleanExpression('type === "weapon"', weaponAction), false);
+        assert.equal(evaluateBooleanExpression('left.includes("weapon")', weaponAction), false);
+        assert.equal(loggedErrors.length, 5);
         assert.match(loggedErrors[0].msg, /Failed to evaluate boolean expression/);
     } finally {
         log.error = originalError;
@@ -163,28 +168,28 @@ test('categorizeActions partitions actions into top-level categories and subcate
             {
                 id: 'c1',
                 name: 'WEAPONS',
-                expression: 'type === "weapon"',
+                expression: 'item.type === "weapon"',
                 subcategories: [
-                    { id: 's1', name: 'daggers', expression: 'name.toLowerCase().includes("dagger")' },
-                    { id: 's2', name: 'short sword', expression: 'name.toLowerCase().includes("shortsword")' }
+                    { id: 's1', name: 'daggers', expression: 'item.name.toLowerCase().includes("dagger")' },
+                    { id: 's2', name: 'short sword', expression: 'item.name.toLowerCase().includes("shortsword")' }
                 ]
             },
             {
                 id: 'c2',
                 name: 'SPELLS',
-                expression: 'type === "spell"',
+                expression: 'item.type === "spell"',
                 subcategories: []
             },
             {
                 id: 'c3',
                 name: 'FEATURES',
-                expression: 'type === "feat"',
+                expression: 'item.type === "feat"',
                 subcategories: []
             },
             {
                 id: 'c4',
                 name: 'EMPTY_CATEGORY',
-                expression: 'type === "does_not_exist"',
+                expression: 'item.type === "does_not_exist"',
                 subcategories: []
             }
         ]
@@ -237,9 +242,9 @@ test('categorizeActions supports custom localized catch-all keyword (e.g. French
             {
                 id: 'c1',
                 name: 'ARMES',
-                expression: 'type === "weapon"',
+                expression: 'item.type === "weapon"',
                 subcategories: [
-                    { id: 's1', name: 'dagues', expression: 'name.toLowerCase().includes("dague")' }
+                    { id: 's1', name: 'dagues', expression: 'item.name.toLowerCase().includes("dague")' }
                 ]
             }
         ]
@@ -270,7 +275,7 @@ test('getDefaultCategories provides standard preset configuration and delegates 
     // Test delegation to custom adapter
     const customAdapter = {
         getDefaultCategories: () => [
-            { id: 'c1', name: 'Custom Cat', expression: 'type === "custom"', subcategories: [] }
+            { id: 'c1', name: 'Custom Cat', expression: 'item.type === "custom"', subcategories: [] }
         ]
     };
     const delegated = getDefaultCategories(customAdapter);

@@ -76,7 +76,7 @@ export function validateExpression(expression) {
     }
     try {
         new Function(
-            'action', 'item', 'system', 'name', 'type', 'extra', 'uses', 'available', 'left', 'right', 'itemCategories', 'actor', 'token',
+            'action', 'item', 'actor', 'token',
             `"use strict"; return Boolean(${expression.trim()});`
         );
         return { valid: true, error: null };
@@ -100,24 +100,15 @@ export function evaluateBooleanExpression(expression, action, context = {}) {
 
     try {
         const item = action?.originalItem ?? action ?? {};
-        const system = item?.system ?? action?.system ?? {};
-        const name = action?.name ?? item?.name ?? '';
-        const type = action?.type ?? item?.type ?? '';
-        const extra = action?.extra ?? {};
-        const uses = action?.uses ?? {};
-        const available = action?.available ?? true;
-        const itemCategories = action?.itemCategories ?? [];
-        const left = action?.left ?? [];
-        const right = action?.right ?? [];
         const actor = context?.actor ?? action?.actor ?? item?.actor ?? actionDisplay?.activeApp?.actor ?? null;
         const token = context?.token ?? action?.token ?? actor?.token ?? actionDisplay?.activeApp?.token ?? null;
 
         const evaluator = new Function(
-            'action', 'item', 'system', 'name', 'type', 'extra', 'uses', 'available', 'left', 'right', 'itemCategories', 'actor', 'token',
+            'action', 'item', 'actor', 'token',
             `"use strict"; return Boolean(${expr});`
         );
 
-        return Boolean(evaluator(action, item, system, name, type, extra, uses, available, left, right, itemCategories, actor, token));
+        return Boolean(evaluator(action, item, actor, token));
     } catch (err) {
         log.error(`Failed to evaluate boolean expression: "${expression}"`, err);
         return false;
