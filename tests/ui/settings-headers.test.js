@@ -80,24 +80,12 @@ class MockElement extends HTMLElement {
     }
 }
 
-test('injectSettingsHeaders inserts client, user, and world headers into SettingsConfig DOM', () => {
+test('injectSettingsHeaders inserts world, user, and client headers into SettingsConfig DOM', () => {
     const origCreateElement = globalThis.document.createElement;
     globalThis.document.createElement = (tagName) => new MockElement(tagName);
 
     try {
         const root = new MockElement('div', { className: 'settings-list' });
-
-        // Client group
-        const fgClient = new MockElement('div', { className: 'form-group' });
-        const inputClient = new MockElement('input', { name: 'bakana-action-display.logVerbosity' });
-        fgClient.appendChild(inputClient);
-        root.appendChild(fgClient);
-
-        // User group
-        const fgUser = new MockElement('div', { className: 'form-group' });
-        const inputUser = new MockElement('input', { name: 'bakana-action-display.hudOpacity' });
-        fgUser.appendChild(inputUser);
-        root.appendChild(fgUser);
 
         // World group (menu button)
         const fgWorld = new MockElement('div', { className: 'form-group' });
@@ -105,21 +93,33 @@ test('injectSettingsHeaders inserts client, user, and world headers into Setting
         fgWorld.appendChild(btnWorld);
         root.appendChild(fgWorld);
 
+        // User group
+        const fgUser = new MockElement('div', { className: 'form-group' });
+        const inputUser = new MockElement('input', { name: 'bakana-action-display.hudOpacity' });
+        fgUser.appendChild(inputUser);
+        root.appendChild(fgUser);
+
+        // Client group
+        const fgClient = new MockElement('div', { className: 'form-group' });
+        const inputClient = new MockElement('input', { name: 'bakana-action-display.logVerbosity' });
+        fgClient.appendChild(inputClient);
+        root.appendChild(fgClient);
+
         // First injection
         injectSettingsHeaders(root);
 
         assert.equal(root.children.length, 6, 'Should have 3 headers and 3 form groups (total 6)');
         assert.equal(root.children[0].className, 'bad-settings-section-header');
-        assert.equal(root.children[0].dataset.scope, 'client');
-        assert.equal(root.children[1], fgClient);
+        assert.equal(root.children[0].dataset.scope, 'world');
+        assert.equal(root.children[1], fgWorld);
 
         assert.equal(root.children[2].className, 'bad-settings-section-header');
         assert.equal(root.children[2].dataset.scope, 'user');
         assert.equal(root.children[3], fgUser);
 
         assert.equal(root.children[4].className, 'bad-settings-section-header');
-        assert.equal(root.children[4].dataset.scope, 'world');
-        assert.equal(root.children[5], fgWorld);
+        assert.equal(root.children[4].dataset.scope, 'client');
+        assert.equal(root.children[5], fgClient);
 
         // Second injection (idempotency check)
         injectSettingsHeaders(root);

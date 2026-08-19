@@ -1,32 +1,19 @@
 {
     "BAD": {
         "settingsSections": {
-            "client": "Client Settings",
+            "world": "World Settings",
             "user": "User Settings",
-            "world": "World Settings"
+            "client": "Client Settings"
         },
         "settings": {
-            "logVerbosity": {
-                "name": "Log Verbosity Level",
-                "hint": "Controls the level of detail printed to the browser console.",
-                "choices": {
-                    "error": "Errors Only",
-                    "warn": "Warnings & Errors (Default)",
-                    "info": "Info, Warnings & Errors",
-                    "debug": "Debug (Everything)"
-                }
+            "categorizationMenu": {
+                "name": "HUD Item Categorization",
+                "label": "Configure Categorization",
+                "hint": "Define custom category sections, sub-sections, and boolean expressions for filtering HUD items."
             },
             "hudOpacity": {
                 "name": "HUD Opacity",
                 "hint": "Controls the transparency of the Action Display HUD overlay."
-            },
-            "persistTabState": {
-                "name": "Persist Tab Selections",
-                "hint": "If enabled, your active tab selections for each character are saved and restored whenever you re-open the HUD or refresh Foundry."
-            },
-            "persistDetached": {
-                "name": "Persist Detached HUD on Click-Off",
-                "hint": "If enabled, a detached HUD will stay open when clicking off the token, and will only close if you right-click the same token again."
             },
             "hudScale": {
                 "name": "HUD Scale",
@@ -35,6 +22,14 @@
             "fontSize": {
                 "name": "Font Size (px)",
                 "hint": "Controls the base font size of the text and icons. The HUD window size will remain independent."
+            },
+            "persistTabState": {
+                "name": "Persist Tab Selections",
+                "hint": "If enabled, your active tab selections for each character are saved and restored whenever you re-open the HUD or refresh Foundry."
+            },
+            "persistDetached": {
+                "name": "Persist Detached HUD on Click-Off",
+                "hint": "If enabled, a detached HUD will stay open when clicking off the token, and will only close if you right-click the same token again."
             },
             "toggleTabSelection": {
                 "name": "Toggle Tab Selections on Left-Click",
@@ -56,10 +51,15 @@
                 "name": "HUD Grid Offset (Horizontal)",
                 "hint": "Controls the horizontal distance (in grid units) to offset the HUD to the left or right of the token."
             },
-            "categorizationMenu": {
-                "name": "HUD Item Categorization",
-                "label": "Configure Categorization",
-                "hint": "Define custom category sections, sub-sections, and boolean expressions for filtering HUD items."
+            "logVerbosity": {
+                "name": "Log Verbosity Level",
+                "hint": "Controls the level of detail printed to the browser console.",
+                "choices": {
+                    "error": "Errors Only",
+                    "warn": "Warnings & Errors (Default)",
+                    "info": "Info, Warnings & Errors",
+                    "debug": "Debug (Everything)"
+                }
             }
         },
         "categorization": {

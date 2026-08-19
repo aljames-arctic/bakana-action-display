@@ -5,58 +5,41 @@ import { CategorizationConfigApp } from "./categorization/categorization-config-
 
 Hooks.once('init', () => {
     // ==========================================
-    // Client Scope Settings
+    // World Scope Settings & Menus
     // ==========================================
 
-    // Register Log Verbosity Setting
-    game.settings.register(MODULE_ID, 'logVerbosity', {
-        name: game.i18n.localize('BAD.settings.logVerbosity.name'),
-        hint: game.i18n.localize('BAD.settings.logVerbosity.hint'),
-        scope: 'client',
-        config: true,
-        type: String,
-        default: 'warn',
-        choices: {
-            'error': game.i18n.localize('BAD.settings.logVerbosity.choices.error'),
-            'warn': game.i18n.localize('BAD.settings.logVerbosity.choices.warn'),
-            'info': game.i18n.localize('BAD.settings.logVerbosity.choices.info'),
-            'debug': game.i18n.localize('BAD.settings.logVerbosity.choices.debug')
+    // Register Categorization Configuration Menu Button
+    game.settings.registerMenu(MODULE_ID, 'categorizationMenu', {
+        name: game.i18n.localize('BAD.settings.categorizationMenu.name'),
+        label: game.i18n.localize('BAD.settings.categorizationMenu.label'),
+        hint: game.i18n.localize('BAD.settings.categorizationMenu.hint'),
+        icon: 'fas fa-layer-group',
+        type: CategorizationConfigApp,
+        restricted: true
+    });
+
+    // Register Categorization Configuration Storage
+    game.settings.register(MODULE_ID, 'categorizationConfig', {
+        scope: 'world',
+        config: false,
+        type: Object,
+        default: {
+            enabled: false,
+            categories: []
         },
-        onChange: value => {
-            log.setVerbosity(value);
+        onChange: () => {
+            if (actionDisplay.activeApp && actionDisplay.activeApp.rendered) {
+                actionDisplay.activeApp.render();
+            }
         }
     });
 
-    // Register Filter Out of Resources Setting (hidden from config menu, managed via HUD footer)
-    game.settings.register(MODULE_ID, 'filterNoResources', {
-        scope: 'client',
-        config: false,
-        type: Boolean,
-        default: false
-    });
-
-    // Register HUD Position Mode (attached/pinned/detached)
-    game.settings.register(MODULE_ID, 'hudPositionMode', {
-        scope: 'client',
-        config: false,
-        type: String,
-        default: 'attached'
-    });
-
-    // Register HUD Pinned Offset (fixed offset relative to token top-left)
-    game.settings.register(MODULE_ID, 'hudPinnedOffset', {
-        scope: 'client',
+    // Register HUD Tab States (persisted actor tab selections object)
+    game.settings.register(MODULE_ID, 'hudTabStates', {
+        scope: 'world',
         config: false,
         type: Object,
-        default: { x: 0, y: -50 }
-    });
-
-    // Register HUD Detached Position (coordinates)
-    game.settings.register(MODULE_ID, 'hudDetachedPosition', {
-        scope: 'client',
-        config: false,
-        type: Object,
-        default: null
+        default: {}
     });
 
     // ==========================================
@@ -207,41 +190,58 @@ Hooks.once('init', () => {
     });
 
     // ==========================================
-    // World Scope Settings & Menus
+    // Client Scope Settings
     // ==========================================
 
-    // Register HUD Tab States (persisted actor tab selections object)
-    game.settings.register(MODULE_ID, 'hudTabStates', {
-        scope: 'world',
-        config: false,
-        type: Object,
-        default: {}
-    });
-
-    // Register Categorization Configuration Menu Button
-    game.settings.registerMenu(MODULE_ID, 'categorizationMenu', {
-        name: game.i18n.localize('BAD.settings.categorizationMenu.name'),
-        label: game.i18n.localize('BAD.settings.categorizationMenu.label'),
-        hint: game.i18n.localize('BAD.settings.categorizationMenu.hint'),
-        icon: 'fas fa-layer-group',
-        type: CategorizationConfigApp,
-        restricted: true
-    });
-
-    // Register Categorization Configuration Storage
-    game.settings.register(MODULE_ID, 'categorizationConfig', {
-        scope: 'world',
-        config: false,
-        type: Object,
-        default: {
-            enabled: false,
-            categories: []
+    // Register Log Verbosity Setting
+    game.settings.register(MODULE_ID, 'logVerbosity', {
+        name: game.i18n.localize('BAD.settings.logVerbosity.name'),
+        hint: game.i18n.localize('BAD.settings.logVerbosity.hint'),
+        scope: 'client',
+        config: true,
+        type: String,
+        default: 'warn',
+        choices: {
+            'error': game.i18n.localize('BAD.settings.logVerbosity.choices.error'),
+            'warn': game.i18n.localize('BAD.settings.logVerbosity.choices.warn'),
+            'info': game.i18n.localize('BAD.settings.logVerbosity.choices.info'),
+            'debug': game.i18n.localize('BAD.settings.logVerbosity.choices.debug')
         },
-        onChange: () => {
-            if (actionDisplay.activeApp && actionDisplay.activeApp.rendered) {
-                actionDisplay.activeApp.render();
-            }
+        onChange: value => {
+            log.setVerbosity(value);
         }
+    });
+
+    // Register Filter Out of Resources Setting (hidden from config menu, managed via HUD footer)
+    game.settings.register(MODULE_ID, 'filterNoResources', {
+        scope: 'client',
+        config: false,
+        type: Boolean,
+        default: false
+    });
+
+    // Register HUD Position Mode (attached/pinned/detached)
+    game.settings.register(MODULE_ID, 'hudPositionMode', {
+        scope: 'client',
+        config: false,
+        type: String,
+        default: 'attached'
+    });
+
+    // Register HUD Pinned Offset (fixed offset relative to token top-left)
+    game.settings.register(MODULE_ID, 'hudPinnedOffset', {
+        scope: 'client',
+        config: false,
+        type: Object,
+        default: { x: 0, y: -50 }
+    });
+
+    // Register HUD Detached Position (coordinates)
+    game.settings.register(MODULE_ID, 'hudDetachedPosition', {
+        scope: 'client',
+        config: false,
+        type: Object,
+        default: null
     });
 
     // Apply initial CSS variables (opacity, scale, font size) to the document root
@@ -256,7 +256,7 @@ Hooks.once('init', () => {
 });
 
 /**
- * Injects styled subsection headers for Client, User, and World settings into the SettingsConfig dialog.
+ * Injects styled subsection headers for World, User, and Client settings into the SettingsConfig dialog.
  * @param {HTMLElement|Object} html Rendered settings config DOM element or jQuery collection
  */
 export function injectSettingsHeaders(html) {
@@ -265,10 +265,10 @@ export function injectSettingsHeaders(html) {
 
     const sections = [
         {
-            key: 'logVerbosity',
-            scope: 'client',
-            title: game.i18n.localize('BAD.settingsSections.client') ?? 'Client Settings',
-            icon: 'fas fa-desktop'
+            key: 'categorizationMenu',
+            scope: 'world',
+            title: game.i18n.localize('BAD.settingsSections.world') ?? 'World Settings',
+            icon: 'fas fa-globe'
         },
         {
             key: 'hudOpacity',
@@ -277,10 +277,10 @@ export function injectSettingsHeaders(html) {
             icon: 'fas fa-user'
         },
         {
-            key: 'categorizationMenu',
-            scope: 'world',
-            title: game.i18n.localize('BAD.settingsSections.world') ?? 'World Settings',
-            icon: 'fas fa-globe'
+            key: 'logVerbosity',
+            scope: 'client',
+            title: game.i18n.localize('BAD.settingsSections.client') ?? 'Client Settings',
+            icon: 'fas fa-desktop'
         }
     ];
 
