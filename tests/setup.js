@@ -5,6 +5,7 @@
 
 globalThis.Item = class Item {};
 globalThis.Actor = class Actor {};
+globalThis.HTMLElement = class HTMLElement {};
 
 function getProperty(obj, path) {
     if (!obj || !path) return undefined;
@@ -85,6 +86,32 @@ globalThis.ui = {
     }
 };
 
+globalThis.Hooks = {
+    once(event, fn) {},
+    on(event, fn) {},
+    callAll(event, ...args) {},
+    call(event, ...args) {}
+};
+
+globalThis.document = globalThis.document ?? {
+    documentElement: {
+        style: {
+            setProperty(prop, val) {}
+        }
+    },
+    createElement(tag) {
+        return {
+            tagName: tag,
+            className: '',
+            dataset: {},
+            children: [],
+            classList: { contains: () => false, add: () => {} },
+            appendChild(child) { this.children.push(child); return child; },
+            insertBefore(child) { this.children.push(child); return child; }
+        };
+    }
+};
+
 globalThis.game = {
     i18n: {
         has(key) { return true; },
@@ -98,6 +125,12 @@ globalThis.game = {
         }
     },
     settings: {
+        register(moduleId, key, config) {
+            if (!settingsStore.has(`${moduleId}.${key}`)) {
+                settingsStore.set(`${moduleId}.${key}`, config?.default);
+            }
+        },
+        registerMenu(moduleId, key, config) {},
         get(moduleId, key) {
             const fullKey = `${moduleId}.${key}`;
             return settingsStore.has(fullKey) ? settingsStore.get(fullKey) : false;

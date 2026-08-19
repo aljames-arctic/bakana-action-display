@@ -254,3 +254,65 @@ Hooks.once('init', () => {
     const initialFontSize = game.settings.get(MODULE_ID, 'fontSize');
     document.documentElement.style.setProperty('--bad-hud-font-size', `${initialFontSize}px`);
 });
+
+/**
+ * Injects styled subsection headers for Client, User, and World settings into the SettingsConfig dialog.
+ * @param {HTMLElement|Object} html Rendered settings config DOM element or jQuery collection
+ */
+export function injectSettingsHeaders(html) {
+    const root = (typeof HTMLElement !== 'undefined' && html instanceof HTMLElement) ? html : (html?.[0] ?? html);
+    if (!root || typeof root.querySelector !== 'function') return;
+
+    const sections = [
+        {
+            key: 'logVerbosity',
+            scope: 'client',
+            title: game.i18n.localize('BAD.settingsSections.client') ?? 'Client Settings',
+            icon: 'fas fa-desktop'
+        },
+        {
+            key: 'persistDetached',
+            scope: 'user',
+            title: game.i18n.localize('BAD.settingsSections.user') ?? 'User Settings',
+            icon: 'fas fa-user'
+        },
+        {
+            key: 'hudGridOffset',
+            scope: 'world',
+            title: game.i18n.localize('BAD.settingsSections.world') ?? 'World Settings',
+            icon: 'fas fa-globe'
+        }
+    ];
+
+    for (const section of sections) {
+        const settingSelector = [
+            `[data-setting-id="${MODULE_ID}.${section.key}"]`,
+            `[data-entry-id="${MODULE_ID}.${section.key}"]`,
+            `[name="${MODULE_ID}.${section.key}"]`,
+            `[data-key="${MODULE_ID}.${section.key}"]`
+        ].join(', ');
+
+        const targetEl = root.querySelector(settingSelector);
+        if (!targetEl) continue;
+
+        const formGroup = targetEl.closest('.form-group') ?? targetEl;
+        if (!formGroup || !formGroup.parentNode) continue;
+
+        // Ensure we don't insert duplicate headers
+        const prev = formGroup.previousElementSibling;
+        if (prev?.classList?.contains('bad-settings-section-header') && prev?.dataset?.scope === section.scope) {
+            continue;
+        }
+
+        const header = document.createElement('div');
+        header.className = 'bad-settings-section-header';
+        header.dataset.scope = section.scope;
+        header.innerHTML = `<i class="${section.icon}"></i><span>${section.title}</span>`;
+        formGroup.parentNode.insertBefore(header, formGroup);
+    }
+}
+
+Hooks.on('renderSettingsConfig', (app, html) => {
+    injectSettingsHeaders(html);
+});
+

@@ -1,8 +1,13 @@
 {
     "BAD": {
+        "settingsSections": {
+            "client": "Client Settings",
+            "user": "User Settings",
+            "world": "World Settings"
+        },
         "settings": {
             "logVerbosity": {
-                "name": "[Client] Log Verbosity Level",
+                "name": "Log Verbosity Level",
                 "hint": "Controls the level of detail printed to the browser console.",
                 "choices": {
                     "error": "Errors Only",
@@ -12,31 +17,31 @@
                 }
             },
             "hudOpacity": {
-                "name": "[Client] HUD Opacity",
+                "name": "HUD Opacity",
                 "hint": "Controls the transparency of the Action Display HUD overlay."
             },
             "persistTabState": {
-                "name": "[Client] Persist Tab Selections",
+                "name": "Persist Tab Selections",
                 "hint": "If enabled, your active tab selections for each character are saved and restored whenever you re-open the HUD or refresh Foundry."
             },
             "persistDetached": {
-                "name": "[User] Persist Detached HUD on Click-Off",
+                "name": "Persist Detached HUD on Click-Off",
                 "hint": "If enabled, a detached HUD will stay open when clicking off the token, and will only close if you right-click the same token again."
             },
             "hudScale": {
-                "name": "[User] HUD Scale",
+                "name": "HUD Scale",
                 "hint": "Controls the overall scale of the HUD window and all its contents proportionally."
             },
             "fontSize": {
-                "name": "[User] Font Size (px)",
+                "name": "Font Size (px)",
                 "hint": "Controls the base font size of the text and icons. The HUD window size will remain independent."
             },
             "toggleTabSelection": {
-                "name": "[User] Toggle Tab Selections on Left-Click",
+                "name": "Toggle Tab Selections on Left-Click",
                 "hint": "If enabled, left-clicking a tab toggles its selection on or off (multi-select) instead of clearing other selected tabs. Selections are only cleared by clicking them again or clicking 'All'."
             },
             "hudAnchorSide": {
-                "name": "[User] HUD Attachment Side",
+                "name": "HUD Attachment Side",
                 "hint": "Controls whether the Attached HUD anchors vertically (Above / Below) or horizontally (Left / Right) relative to the token.",
                 "choices": {
                     "vertical": "Vertical (Above / Below)",
@@ -44,15 +49,15 @@
                 }
             },
             "hudGridOffset": {
-                "name": "[World] HUD Grid Offset (Vertical)",
+                "name": "HUD Grid Offset (Vertical)",
                 "hint": "Controls the vertical distance (in grid units) to offset the HUD above or below the token."
             },
             "hudGridOffsetHorizontal": {
-                "name": "[World] HUD Grid Offset (Horizontal)",
+                "name": "HUD Grid Offset (Horizontal)",
                 "hint": "Controls the horizontal distance (in grid units) to offset the HUD to the left or right of the token."
             },
             "categorizationMenu": {
-                "name": "[World] HUD Item Categorization",
+                "name": "HUD Item Categorization",
                 "label": "Configure Categorization",
                 "hint": "Define custom category sections, sub-sections, and boolean expressions for filtering HUD items."
             }
