@@ -105,36 +105,41 @@ export async function syncActorFavorites(actor, adapter = actionDisplay?.activeS
         actor.flags[MODULE_ID] = actor.flags[MODULE_ID] ?? {};
         actor.flags[MODULE_ID].favorites = actor.flags[MODULE_ID].favorites ?? {};
     }
-    if (!adapter?.hasFavorites?.() || !actor.isOwner) return;
+    if (!actor.isOwner) return;
 
     try {
-        const currentFlags = { ...getActorFavorites(actor) };
+        const rawFlag = typeof actor.getFlag === 'function' ? actor.getFlag(MODULE_ID, 'favorites') : undefined;
+        const currentFlags = rawFlag ?? {};
         const updatedFlags = {};
-        let hasChanges = false;
+        let hasChanges = (rawFlag === undefined); // True if flag was never initialized on the document
 
-        for (const item of (actor.items ?? [])) {
-            if (!item?.id) continue;
-            const isSysFav = Boolean(adapter.isFavorite(actor, item));
-            if (isSysFav) {
-                updatedFlags[item.id] = true;
-                if (!currentFlags[item.id]) {
-                    hasChanges = true;
+        if (adapter?.hasFavorites?.()) {
+            for (const item of (actor.items ?? [])) {
+                if (!item?.id) continue;
+                const isSysFav = Boolean(adapter.isFavorite(actor, item));
+                if (isSysFav) {
+                    updatedFlags[item.id] = true;
+                    if (!currentFlags[item.id]) {
+                        hasChanges = true;
+                    }
+                } else {
+                    if (currentFlags[item.id]) {
+                        hasChanges = true;
+                    }
                 }
-            } else {
-                if (currentFlags[item.id]) {
+            }
+
+            for (const id of Object.keys(currentFlags)) {
+                if (!updatedFlags[id]) {
                     hasChanges = true;
                 }
             }
-        }
-
-        for (const id of Object.keys(currentFlags)) {
-            if (!updatedFlags[id]) {
-                hasChanges = true;
-            }
+        } else {
+            Object.assign(updatedFlags, currentFlags);
         }
 
         if (hasChanges) {
-            log.debug(`syncActorFavorites | Synchronizing favorites flag for actor "${actor.name}"`);
+            log.debug(`syncActorFavorites | Initializing/synchronizing favorites flag for actor "${actor.name}"`);
             if (typeof actor.setFlag === 'function') {
                 await actor.setFlag(MODULE_ID, 'favorites', updatedFlags);
             }

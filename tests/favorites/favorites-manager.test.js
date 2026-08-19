@@ -123,3 +123,23 @@ test('syncActorFavorites synchronizes system favorites into actor flag map', asy
     // Should have synchronized item-1 to true and removed item-old
     assert.deepEqual(flagState, { 'item-1': true });
 });
+
+test('syncActorFavorites initializes flag map when uninitialized (undefined)', async () => {
+    let setFlagPayload = null;
+    const mockActor = {
+        name: 'New Hero',
+        isOwner: true,
+        items: [],
+        getFlag: () => undefined,
+        setFlag: async (moduleId, key, val) => {
+            if (moduleId === MODULE_ID && key === 'favorites') setFlagPayload = val;
+        }
+    };
+
+    const mockAdapter = {
+        hasFavorites: () => false
+    };
+
+    await syncActorFavorites(mockActor, mockAdapter);
+    assert.deepEqual(setFlagPayload, {}, 'Should initialize empty favorites object on uninitialized actor');
+});
