@@ -6,6 +6,7 @@ import { log } from './lib/logger.js';
 
 import { MODULE_ID } from './constants.js';
 import { MODULE_ADAPTERS } from './adapters/module/module-adapters.js';
+import { syncActorFavorites } from './favorites/favorites-manager.js';
 
 let activeApp = null;
 let closeDetachedHUD = false;
@@ -137,6 +138,10 @@ Hooks.on('renderTokenHUD', (tokenHUD, html, data) => {
     if (!token || !token.document.isOwner) return;
 
     log.debug("renderTokenHUD hook fired for token:", token.name);
+
+    if (token.actor) {
+        syncActorFavorites(token.actor, actionDisplay.activeSystemAdapter);
+    }
 
     // If we already have an activeApp for this token, preserve it to keep its tab/scroll state
     if (activeApp && activeApp.token.id === token.id) {

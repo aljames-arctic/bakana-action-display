@@ -116,3 +116,49 @@ test('createActionContextMenu onOpen closes open left-click dropdown', () => {
     assert.equal(mockApp._activeLeftClickMenu, null);
     assert.equal(mockApp._activeMenuTarget, null);
 });
+
+test('createActionContextMenu includes Add to Favorites and Remove from Favorites options', async () => {
+    let flagVal = null;
+    let renderCalled = false;
+    const mockActor = {
+        isOwner: true,
+        getFlag: (mod, key) => (key === 'favorites' && flagVal ? { 'item-1': true } : undefined),
+        setFlag: async (mod, key, val) => { flagVal = val; },
+        update: async (data) => { flagVal = null; }
+    };
+    const mockItem = { id: 'item-1', name: 'Dagger' };
+    const mockApp = {
+        actor: mockActor,
+        actions: [{ id: 'item-1', name: 'Dagger', originalItem: mockItem }],
+        render: () => { renderCalled = true; }
+    };
+    const mockElement = { querySelectorAll: () => [], querySelector: () => null };
+
+    const menu = createActionContextMenu(mockApp, mockElement);
+    const addFavOption = menu.menuItems.find(item => item.name === 'BAD.actionMenu.addFavorite');
+    const removeFavOption = menu.menuItems.find(item => item.name === 'BAD.actionMenu.removeFavorite');
+
+    assert.ok(addFavOption, 'Add to Favorites option must be present');
+    assert.ok(removeFavOption, 'Remove from Favorites option must be present');
+
+    const mockEl = { dataset: { actionId: 'item-1' } };
+
+    // Initially unfavorited: add is true, remove is false
+    assert.equal(addFavOption.condition(mockEl), true);
+    assert.equal(removeFavOption.condition(mockEl), false);
+
+    // Click add to favorites
+    await addFavOption.callback(mockEl);
+    assert.ok(flagVal);
+    assert.equal(renderCalled, true);
+
+    // Now favorited: add is false, remove is true
+    assert.equal(addFavOption.condition(mockEl), false);
+    assert.equal(removeFavOption.condition(mockEl), true);
+
+    // Click remove from favorites
+    renderCalled = false;
+    await removeFavOption.callback(mockEl);
+    assert.equal(flagVal, null);
+    assert.equal(renderCalled, true);
+});

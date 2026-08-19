@@ -13,6 +13,15 @@ test('BaseSystemAdapter initialization and metadata', () => {
     assert.equal(defaultCategories[0].name, 'Weapons');
     assert.equal(defaultCategories[1].name, 'Spells');
     assert.equal(defaultCategories[2].name, 'Features');
+    assert.equal(adapter.hasFavorites(), false);
+    assert.equal(adapter.isFavorite({}, {}), false);
+});
+
+test('BaseSystemAdapter favorites default NOP and values', async () => {
+    const adapter = new BaseSystemAdapter('test-system');
+    assert.equal(adapter.hasFavorites(), false);
+    assert.equal(adapter.isFavorite({}, {}), false);
+    assert.equal(await adapter.setFavorite({}, {}, true), null);
 });
 
 test('BaseSystemAdapter label and icon getters', () => {

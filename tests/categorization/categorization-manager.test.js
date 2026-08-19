@@ -91,6 +91,38 @@ test('evaluateBooleanExpression evaluates action and item properties safely', ()
     assert.equal(evaluateBooleanExpression('right.some(t => t.label === "action")', weaponAction), true);
     assert.equal(evaluateBooleanExpression('action.right.some(t => t.label === "action")', weaponAction), true);
 
+    // Test actor and token exposure
+    const mockActor = {
+        name: 'Hero Actor',
+        flags: {
+            'bakana-action-display': {
+                favorites: {
+                    'action-dagger': true
+                }
+            }
+        }
+    };
+    const mockToken = { name: 'Hero Token' };
+    const daggerAction = new Action({ id: 'action-dagger', name: 'Dagger', type: 'weapon' });
+    daggerAction.originalItem = { id: 'action-dagger', name: 'Dagger', type: 'weapon' };
+
+    assert.equal(
+        evaluateBooleanExpression('actor.name === "Hero Actor"', daggerAction, { actor: mockActor, token: mockToken }),
+        true
+    );
+    assert.equal(
+        evaluateBooleanExpression('token.name === "Hero Token"', daggerAction, { actor: mockActor, token: mockToken }),
+        true
+    );
+    assert.equal(
+        evaluateBooleanExpression('Boolean(actor?.flags?.["bakana-action-display"]?.favorites?.[item.id])', daggerAction, { actor: mockActor }),
+        true
+    );
+    assert.equal(
+        evaluateBooleanExpression('Boolean(actor?.flags?.["bakana-action-display"]?.favorites?.[item.id])', weaponAction, { actor: mockActor }),
+        false
+    );
+
     // Fault tolerance & error logging tests
     const originalError = log.error;
     const loggedErrors = [];

@@ -196,3 +196,50 @@ test('Dnd5eSystemAdapter modifyContext triggers split layout exclusively on Page
     adapter.modifyContext(ctxNum, { activePage: 1 });
     assert.equal(ctxNum.layout, 'flat');
 });
+
+test('Dnd5eSystemAdapter favorites integration (hasFavorites, isFavorite, setFavorite)', async () => {
+    const adapter = new Dnd5eSystemAdapter();
+    assert.equal(adapter.hasFavorites(), true);
+
+    // 1. Direct system.favorite
+    const item1 = { id: 'item1', system: { favorite: true }, update: async (data) => { if ('system.favorite' in data) item1.system.favorite = data['system.favorite']; return item1; } };
+    assert.equal(adapter.isFavorite({}, item1), true);
+
+    // 2. Legacy flags.dnd5e.favorite
+    const item2 = { id: 'item2', flags: { dnd5e: { favorite: true } }, update: async (data) => { if ('flags.dnd5e.favorite' in data) item2.flags.dnd5e.favorite = data['flags.dnd5e.favorite']; return item2; } };
+    assert.equal(adapter.isFavorite({}, item2), true);
+
+    // 3. Actor system.favorites collection
+    const actor = {
+        system: {
+            favorites: [{ id: 'item3', type: 'item' }]
+        }
+    };
+    const item3 = { id: 'item3' };
+    assert.equal(adapter.isFavorite(actor, item3), true);
+
+    // 4. Unfavorited item
+    const item4 = { id: 'item4', system: { favorite: false } };
+    assert.equal(adapter.isFavorite(actor, item4), false);
+
+    // 5. setFavorite on item with system.favorite
+    await adapter.setFavorite(actor, item1, false);
+    assert.equal(item1.system.favorite, false);
+    await adapter.setFavorite(actor, item1, true);
+    assert.equal(item1.system.favorite, true);
+
+    // 6. setFavorite using actor addFavorite / removeFavorite
+    let added = null;
+    let removed = null;
+    const actorWithMethods = {
+        system: {
+            addFavorite: async (obj) => { added = obj; },
+            removeFavorite: async (id) => { removed = id; }
+        }
+    };
+    const itemWithoutUpdate = { id: 'item5' };
+    await adapter.setFavorite(actorWithMethods, itemWithoutUpdate, true);
+    assert.deepEqual(added, { id: 'item5', type: 'item' });
+    await adapter.setFavorite(actorWithMethods, itemWithoutUpdate, false);
+    assert.equal(removed, 'item5');
+});

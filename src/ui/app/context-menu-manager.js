@@ -1,6 +1,7 @@
 import { log } from '../../lib/logger.js';
 import { actionDisplay } from '../../action-display.js';
 import { ContextMenu } from '../../lib/compat.js';
+import { isActorItemFavorite, setActorItemFavorite } from '../../favorites/favorites-manager.js';
 
 /**
  * Manages UI context menus for action items inside ActionDisplayApp.
@@ -29,6 +30,42 @@ export class ContextMenuManager {
                     } else {
                         const item = action?.originalItem ?? this.app.actor?.items?.get(action?.id ?? el.dataset.actionId);
                         item?.sheet?.render(true);
+                    }
+                }
+            },
+            {
+                name: "BAD.actionMenu.addFavorite",
+                icon: '<i class="fas fa-star"></i>',
+                condition: el => {
+                    if (!this.app.actor?.isOwner) return false;
+                    const action = this.app.actions?.find(a => a.id === el.dataset.actionId);
+                    const item = action?.originalItem ?? this.app.actor?.items?.get(action?.id ?? el.dataset.actionId);
+                    return Boolean(item && !isActorItemFavorite(this.app.actor, item, actionDisplay.activeSystemAdapter));
+                },
+                callback: async el => {
+                    const action = this.app.actions?.find(a => a.id === el.dataset.actionId);
+                    const item = action?.originalItem ?? this.app.actor?.items?.get(action?.id ?? el.dataset.actionId);
+                    if (item) {
+                        await setActorItemFavorite(this.app.actor, item, true, actionDisplay.activeSystemAdapter);
+                        this.app.render();
+                    }
+                }
+            },
+            {
+                name: "BAD.actionMenu.removeFavorite",
+                icon: '<i class="far fa-star"></i>',
+                condition: el => {
+                    if (!this.app.actor?.isOwner) return false;
+                    const action = this.app.actions?.find(a => a.id === el.dataset.actionId);
+                    const item = action?.originalItem ?? this.app.actor?.items?.get(action?.id ?? el.dataset.actionId);
+                    return Boolean(item && isActorItemFavorite(this.app.actor, item, actionDisplay.activeSystemAdapter));
+                },
+                callback: async el => {
+                    const action = this.app.actions?.find(a => a.id === el.dataset.actionId);
+                    const item = action?.originalItem ?? this.app.actor?.items?.get(action?.id ?? el.dataset.actionId);
+                    if (item) {
+                        await setActorItemFavorite(this.app.actor, item, false, actionDisplay.activeSystemAdapter);
+                        this.app.render();
                     }
                 }
             },

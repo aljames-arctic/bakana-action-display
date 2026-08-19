@@ -76,7 +76,7 @@ export function validateExpression(expression) {
     }
     try {
         new Function(
-            'action', 'item', 'system', 'name', 'type', 'extra', 'uses', 'available', 'left', 'right', 'itemCategories',
+            'action', 'item', 'system', 'name', 'type', 'extra', 'uses', 'available', 'left', 'right', 'itemCategories', 'actor', 'token',
             `"use strict"; return Boolean(${expression.trim()});`
         );
         return { valid: true, error: null };
@@ -90,9 +90,10 @@ export function validateExpression(expression) {
  *
  * @param {string} expression JS boolean expression
  * @param {Object} action The Action instance being evaluated
+ * @param {Object} [context={}] Additional context such as actor or token documents
  * @returns {boolean} True if expression evaluates to truthy
  */
-export function evaluateBooleanExpression(expression, action) {
+export function evaluateBooleanExpression(expression, action, context = {}) {
     if (!expression || typeof expression !== 'string') return false;
     const expr = expression.trim();
     if (!expr) return false;
@@ -108,13 +109,15 @@ export function evaluateBooleanExpression(expression, action) {
         const itemCategories = action?.itemCategories ?? [];
         const left = action?.left ?? [];
         const right = action?.right ?? [];
+        const actor = context?.actor ?? action?.actor ?? item?.actor ?? actionDisplay?.activeApp?.actor ?? null;
+        const token = context?.token ?? action?.token ?? actor?.token ?? actionDisplay?.activeApp?.token ?? null;
 
         const evaluator = new Function(
-            'action', 'item', 'system', 'name', 'type', 'extra', 'uses', 'available', 'left', 'right', 'itemCategories',
+            'action', 'item', 'system', 'name', 'type', 'extra', 'uses', 'available', 'left', 'right', 'itemCategories', 'actor', 'token',
             `"use strict"; return Boolean(${expr});`
         );
 
-        return Boolean(evaluator(action, item, system, name, type, extra, uses, available, left, right, itemCategories));
+        return Boolean(evaluator(action, item, system, name, type, extra, uses, available, left, right, itemCategories, actor, token));
     } catch (err) {
         log.error(`Failed to evaluate boolean expression: "${expression}"`, err);
         return false;
@@ -127,9 +130,10 @@ export function evaluateBooleanExpression(expression, action) {
  * @param {Object[]} actions Array of Action instances
  * @param {CategorizationConfig} config Categorization configuration object
  * @param {string} [catchAllLabel='Other Actions'] Localized name for the catch-all category for uncategorized actions
+ * @param {Object} [context={}] Evaluation context containing actor and token documents
  * @returns {Object[]|null} List of categorized sections or null if categorization is disabled
  */
-export function categorizeActions(actions, config, catchAllLabel) {
+export function categorizeActions(actions, config, catchAllLabel, context = {}) {
     const normalizedConfig = normalizeCategorizationConfig(config);
     if (!normalizedConfig.enabled || normalizedConfig.categories.length === 0) {
         return null;
@@ -164,7 +168,7 @@ export function categorizeActions(actions, config, catchAllLabel) {
         let matchedCategoryBucket = null;
 
         for (const [catId, bucket] of categoryMap.entries()) {
-            if (evaluateBooleanExpression(bucket.category.expression, action)) {
+            if (evaluateBooleanExpression(bucket.category.expression, action, context)) {
                 matchedCategoryBucket = bucket;
                 break;
             }
@@ -175,7 +179,7 @@ export function categorizeActions(actions, config, catchAllLabel) {
             if (hasSubcategories) {
                 let matchedSubBucket = null;
                 for (const [subId, subEntry] of matchedCategoryBucket.subBuckets.entries()) {
-                    if (evaluateBooleanExpression(subEntry.subcategory.expression, action)) {
+                    if (evaluateBooleanExpression(subEntry.subcategory.expression, action, context)) {
                         matchedSubBucket = subEntry;
                         break;
                     }

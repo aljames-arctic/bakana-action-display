@@ -8,6 +8,7 @@ import { ContextMenu } from '../lib/compat.js';
 import { createActionContextMenu } from './app/context-menu-manager.js';
 import { showActivityDropdown } from './app/dropdown-manager.js';
 import { categorizeActions } from '../categorization/categorization-manager.js';
+import { syncActorFavorites } from '../favorites/favorites-manager.js';
 
 // Cache to persist tab states per actor across HUD rebuilds
 const activeTabCache = new Map();
@@ -512,12 +513,20 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         context.isDetached = this.isDetached;
         context.filterNoResources = game.settings.get(MODULE_ID, 'filterNoResources');
 
+        // Synchronize favorites if system supports them and user is owner
+        if (this.actor?.isOwner) {
+            syncActorFavorites(this.actor, actionDisplay.activeSystemAdapter);
+        }
+
         // Apply categorization if enabled
         const rawCatConfig = game.settings.get(MODULE_ID, 'categorizationConfig');
         const isCategorizationEnabled = Boolean(rawCatConfig?.enabled);
         if (isCategorizationEnabled) {
             const othersLabel = game.i18n.localize('BAD.categorization.others') ?? 'Other Actions';
-            const categorized = categorizeActions(visibleActions, rawCatConfig, othersLabel);
+            const categorized = categorizeActions(visibleActions, rawCatConfig, othersLabel, {
+                actor: this.actor,
+                token: this.token
+            });
             context.isCategorized = true;
             context.categorizedSections = categorized ?? [];
         } else {
