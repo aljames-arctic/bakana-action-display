@@ -65,20 +65,6 @@ export function normalizeCategorizationConfig(raw) {
 }
 
 /**
- * Check whether a category or subcategory name matches the reserved 'Others' keyword.
- *
- * @param {string} name Category name to check
- * @returns {boolean} True if the name is reserved
- */
-export function isReservedCategoryName(name) {
-    if (!name || typeof name !== 'string') return false;
-    const trimmed = name.trim().toLowerCase();
-    const localizedOthers = (game?.i18n?.localize('BAD.categorization.others') ?? 'Others').toLowerCase();
-    const coreOther = (game?.i18n?.localize('BAD.core.other') ?? 'Other').toLowerCase();
-    return trimmed === 'others' || trimmed === 'other' || trimmed === localizedOthers || trimmed === coreOther;
-}
-
-/**
  * Validate syntax of a boolean expression string.
  *
  * @param {string} expression JS boolean expression
@@ -140,18 +126,18 @@ export function evaluateBooleanExpression(expression, action) {
  *
  * @param {Object[]} actions Array of Action instances
  * @param {CategorizationConfig} config Categorization configuration object
- * @param {string} [reservedOthers] Localized name for the reserved 'Others' category
+ * @param {string} [catchAllLabel='Other Actions'] Localized name for the catch-all category for uncategorized actions
  * @returns {Object[]|null} List of categorized sections or null if categorization is disabled
  */
-export function categorizeActions(actions, config, reservedOthers) {
+export function categorizeActions(actions, config, catchAllLabel) {
     const normalizedConfig = normalizeCategorizationConfig(config);
     if (!normalizedConfig.enabled || normalizedConfig.categories.length === 0) {
         return null;
     }
 
-    const othersLabel = (typeof reservedOthers === 'string' && reservedOthers.trim().length > 0)
-        ? reservedOthers.trim()
-        : 'Others';
+    const othersLabel = (typeof catchAllLabel === 'string' && catchAllLabel.trim().length > 0)
+        ? catchAllLabel.trim()
+        : 'Other Actions';
 
     // Map each category to an internal bucket structure
     const categoryMap = new Map();

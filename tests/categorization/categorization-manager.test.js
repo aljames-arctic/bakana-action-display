@@ -5,7 +5,6 @@ import {
     evaluateBooleanExpression,
     categorizeActions,
     normalizeCategorizationConfig,
-    isReservedCategoryName,
     validateExpression,
     getDefaultCategories
 } from '../../src/categorization/categorization-manager.js';
@@ -40,14 +39,20 @@ test('normalizeCategorizationConfig creates strict contract from arbitrary input
     assert.ok(partialConfig.categories[0].subcategories[0].id.startsWith('sub_'));
 });
 
-test('isReservedCategoryName identifies reserved keywords case-insensitively', () => {
-    assert.equal(isReservedCategoryName('Others'), true);
-    assert.equal(isReservedCategoryName('others'), true);
-    assert.equal(isReservedCategoryName(' Other '), true);
-    assert.equal(isReservedCategoryName('Weapons'), false);
-    assert.equal(isReservedCategoryName('Spells'), false);
-    assert.equal(isReservedCategoryName(''), false);
-    assert.equal(isReservedCategoryName(null), false);
+test('categorizeActions permits duplicate category names and categories named Other Actions', () => {
+    const sword = new Action({ id: '1', name: 'Longsword', type: 'weapon' });
+    const config = {
+        enabled: true,
+        categories: [
+            { id: 'c1', name: 'Other Actions', expression: 'type === "weapon"', subcategories: [] },
+            { id: 'c2', name: 'Other Actions', expression: 'type === "spell"', subcategories: [] }
+        ]
+    };
+
+    const result = categorizeActions([sword], config);
+    assert.equal(result.length, 1);
+    assert.equal(result[0].name, 'Other Actions');
+    assert.deepEqual(result[0].items, [sword]);
 });
 
 test('validateExpression verifies valid and invalid syntax', () => {
@@ -153,22 +158,22 @@ test('categorizeActions partitions actions into top-level categories and subcate
         ]
     };
 
-    const result = categorizeActions(actions, config, 'Others');
+    const result = categorizeActions(actions, config);
     assert.ok(Array.isArray(result));
 
     // c4 should be excluded because it has 0 items
-    assert.equal(result.length, 4); // WEAPONS, SPELLS, FEATURES, Others (for potion)
+    assert.equal(result.length, 4); // WEAPONS, SPELLS, FEATURES, Other Actions (for potion)
 
     // 1. WEAPONS
     const weaponsSection = result[0];
     assert.equal(weaponsSection.name, 'WEAPONS');
     assert.equal(weaponsSection.items.length, 0); // items partitioned into subsections
-    assert.equal(weaponsSection.subsections.length, 3); // daggers, short sword, Others (warhammer)
+    assert.equal(weaponsSection.subsections.length, 3); // daggers, short sword, Other Actions (warhammer)
     assert.equal(weaponsSection.subsections[0].name, 'daggers');
     assert.deepEqual(weaponsSection.subsections[0].items, [dagger]);
     assert.equal(weaponsSection.subsections[1].name, 'short sword');
     assert.deepEqual(weaponsSection.subsections[1].items, [shortsword]);
-    assert.equal(weaponsSection.subsections[2].name, 'Others');
+    assert.equal(weaponsSection.subsections[2].name, 'Other Actions');
     assert.deepEqual(weaponsSection.subsections[2].items, [warhammer]);
 
     // 2. SPELLS
@@ -185,12 +190,12 @@ test('categorizeActions partitions actions into top-level categories and subcate
 
     // 4. Remainder at top level (Healing Potion)
     const othersSection = result[3];
-    assert.equal(othersSection.name, 'Others');
+    assert.equal(othersSection.name, 'Other Actions');
     assert.deepEqual(othersSection.items, [potion]);
     assert.equal(othersSection.subsections.length, 0);
 });
 
-test('categorizeActions supports custom localized Others keyword (e.g. French Autres)', () => {
+test('categorizeActions supports custom localized catch-all keyword (e.g. French Autres)', () => {
     const sword = new Action({ id: '1', name: 'Longsword', type: 'weapon' });
     const potion = new Action({ id: '2', name: 'Potion de Soin', type: 'consumable' });
 

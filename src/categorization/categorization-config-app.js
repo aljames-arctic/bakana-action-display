@@ -3,7 +3,6 @@ import { log } from '../lib/logger.js';
 import {
     normalizeCategorizationConfig,
     getDefaultCategories,
-    isReservedCategoryName,
     validateExpression
 } from './categorization-manager.js';
 import { actionDisplay } from '../action-display.js';
@@ -326,12 +325,6 @@ export class CategorizationConfigApp extends foundry.applications.api.Handlebars
                 ui?.notifications?.warn?.(game.i18n.localize('BAD.categorization.emptyNameWarning'));
                 return;
             }
-            if (isReservedCategoryName(trimmedName)) {
-                ui?.notifications?.warn?.(
-                    game.i18n.format('BAD.categorization.reservedKeywordWarning', { name: trimmedName })
-                );
-                return;
-            }
             if (cat.expression) {
                 const check = validateExpression(cat.expression);
                 if (!check.valid) {
@@ -346,12 +339,6 @@ export class CategorizationConfigApp extends foundry.applications.api.Handlebars
                 const trimmedSubName = (sub.name ?? '').trim();
                 if (!trimmedSubName) {
                     ui?.notifications?.warn?.(game.i18n.localize('BAD.categorization.emptyNameWarning'));
-                    return;
-                }
-                if (isReservedCategoryName(trimmedSubName)) {
-                    ui?.notifications?.warn?.(
-                        game.i18n.format('BAD.categorization.reservedKeywordWarning', { name: trimmedSubName })
-                    );
                     return;
                 }
                 if (sub.expression) {

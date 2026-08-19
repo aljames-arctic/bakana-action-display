@@ -76,8 +76,7 @@
             "cancel": "Cancel",
             "saved": "Categorization configuration saved successfully.",
             "noCategories": "No custom categories defined. Click '+ Add Category' to start.",
-            "others": "Others",
-            "reservedKeywordWarning": "The category name \"{name}\" is a reserved keyword for uncategorized items. Please choose a different name.",
+            "others": "Other Actions",
             "emptyNameWarning": "Category and subcategory names cannot be empty.",
             "invalidExpressionWarning": "The expression \"{expr}\" contains a syntax error.",
             "expressionHelpTooltip": "<div class=\"bad-expression-tooltip\"><div class=\"bad-expression-tooltip-title\">Available Variables in Boolean Expressions:</div><ul class=\"bad-expression-tooltip-list\"><li><strong>item</strong>: Foundry Item document (e.g. <code>item.type === 'weapon'</code>, <code>item.name</code>, <code>item.system</code>)</li><li><strong>action</strong>: HUD Action instance (e.g. <code>action.left</code>, <code>action.right</code>, <code>action.uses.available</code>)</li></ul></div>"

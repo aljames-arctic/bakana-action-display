@@ -56,7 +56,7 @@ test('CategorizationConfigApp action handlers mutate configuration state', async
     assert.equal(app.config.categories.length, 2);
 });
 
-test('CategorizationConfigApp _onSaveConfig validates reserved names and persists to settings', async () => {
+test('CategorizationConfigApp _onSaveConfig validates names and expressions and persists to settings', async () => {
     const app = new CategorizationConfigApp();
     let closed = false;
     app.close = () => { closed = true; };
@@ -70,20 +70,25 @@ test('CategorizationConfigApp _onSaveConfig validates reserved names and persist
     assert.equal(warned, true);
     assert.equal(closed, false);
 
-    // Test 2: Category with reserved name "Others" is rejected
+    // Test 2: Category with syntax error expression is rejected
     warned = false;
-    app.config.categories = [{ id: 'c1', name: 'Others', expression: 'type === "weapon"', subcategories: [] }];
+    app.config.categories = [{ id: 'c1', name: 'Weapons', expression: 'type === +++', subcategories: [] }];
     await app._onSaveConfig({ preventDefault: () => {} }, {});
     assert.equal(warned, true);
     assert.equal(closed, false);
 
-    // Test 3: Valid category saves successfully
+    // Test 3: Categories named "Other Actions" and duplicate names are allowed and save successfully
     warned = false;
-    app.config.categories = [{ id: 'c1', name: 'Weapons', expression: 'type === "weapon"', subcategories: [] }];
+    app.config.categories = [
+        { id: 'c1', name: 'Other Actions', expression: 'type === "weapon"', subcategories: [] },
+        { id: 'c2', name: 'Other Actions', expression: 'type === "spell"', subcategories: [] }
+    ];
     await app._onSaveConfig({ preventDefault: () => {} }, {});
     assert.equal(warned, false);
     assert.equal(closed, true);
 
     const saved = game.settings.get(MODULE_ID, 'categorizationConfig');
-    assert.equal(saved.categories[0].name, 'Weapons');
+    assert.equal(saved.categories.length, 2);
+    assert.equal(saved.categories[0].name, 'Other Actions');
+    assert.equal(saved.categories[1].name, 'Other Actions');
 });

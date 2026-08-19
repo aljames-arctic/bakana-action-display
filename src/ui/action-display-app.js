@@ -516,7 +516,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         const rawCatConfig = game.settings.get(MODULE_ID, 'categorizationConfig');
         const isCategorizationEnabled = Boolean(rawCatConfig?.enabled);
         if (isCategorizationEnabled) {
-            const othersLabel = game.i18n.localize('BAD.categorization.others') ?? 'Others';
+            const othersLabel = game.i18n.localize('BAD.categorization.others') ?? 'Other Actions';
             const categorized = categorizeActions(visibleActions, rawCatConfig, othersLabel);
             context.isCategorized = true;
             context.categorizedSections = categorized ?? [];
