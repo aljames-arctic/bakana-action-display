@@ -4,6 +4,10 @@ import { actionDisplay } from "./action-display.js";
 import { CategorizationConfigApp } from "./categorization/categorization-config-app.js";
 
 Hooks.once('init', () => {
+    // ==========================================
+    // Client Scope Settings
+    // ==========================================
+
     // Register Log Verbosity Setting
     game.settings.register(MODULE_ID, 'logVerbosity', {
         name: game.i18n.localize('BAD.settings.logVerbosity.name'),
@@ -23,24 +27,6 @@ Hooks.once('init', () => {
         }
     });
 
-    // Register Persist Detached HUD Setting
-    game.settings.register(MODULE_ID, 'persistDetached', {
-        name: game.i18n.localize('BAD.settings.persistDetached.name'),
-        hint: game.i18n.localize('BAD.settings.persistDetached.hint'),
-        scope: 'user',
-        config: true,
-        type: Boolean,
-        default: true
-    });
-
-    // Register Filter Out of Resources Setting (hidden from config menu, managed via HUD footer)
-    game.settings.register(MODULE_ID, 'filterNoResources', {
-        scope: 'client',
-        config: false,
-        type: Boolean,
-        default: false
-    });
-
     // Register HUD Opacity Setting (Slider)
     game.settings.register(MODULE_ID, 'hudOpacity', {
         name: game.i18n.localize('BAD.settings.hudOpacity.name'),
@@ -54,10 +40,65 @@ Hooks.once('init', () => {
             step: 0.05
         },
         default: 0.88,
-        // Reactively update the CSS variable instantly when changed
         onChange: value => {
             document.documentElement.style.setProperty('--bad-hud-opacity', value);
         }
+    });
+
+    // Register Persist Tab State setting
+    game.settings.register(MODULE_ID, 'persistTabState', {
+        name: game.i18n.localize('BAD.settings.persistTabState.name'),
+        hint: game.i18n.localize('BAD.settings.persistTabState.hint'),
+        scope: 'client',
+        config: true,
+        type: Boolean,
+        default: true
+    });
+
+    // Register Filter Out of Resources Setting (hidden from config menu, managed via HUD footer)
+    game.settings.register(MODULE_ID, 'filterNoResources', {
+        scope: 'client',
+        config: false,
+        type: Boolean,
+        default: false
+    });
+
+    // Register HUD Position Mode (attached/pinned/detached)
+    game.settings.register(MODULE_ID, 'hudPositionMode', {
+        scope: 'client',
+        config: false,
+        type: String,
+        default: 'attached'
+    });
+
+    // Register HUD Pinned Offset (fixed offset relative to token top-left)
+    game.settings.register(MODULE_ID, 'hudPinnedOffset', {
+        scope: 'client',
+        config: false,
+        type: Object,
+        default: { x: 0, y: -50 }
+    });
+
+    // Register HUD Detached Position (coordinates)
+    game.settings.register(MODULE_ID, 'hudDetachedPosition', {
+        scope: 'client',
+        config: false,
+        type: Object,
+        default: null
+    });
+
+    // ==========================================
+    // User Scope Settings
+    // ==========================================
+
+    // Register Persist Detached HUD Setting
+    game.settings.register(MODULE_ID, 'persistDetached', {
+        name: game.i18n.localize('BAD.settings.persistDetached.name'),
+        hint: game.i18n.localize('BAD.settings.persistDetached.hint'),
+        scope: 'user',
+        config: true,
+        type: Boolean,
+        default: true
     });
 
     // Register HUD Scale Setting (Slider)
@@ -73,7 +114,6 @@ Hooks.once('init', () => {
             step: 0.05
         },
         default: 1.0,
-        // Reactively update the CSS variable instantly when changed
         onChange: value => {
             document.documentElement.style.setProperty('--bad-hud-scale', value);
         }
@@ -92,20 +132,9 @@ Hooks.once('init', () => {
             step: 1
         },
         default: 14,
-        // Reactively update the CSS variable instantly when changed
         onChange: value => {
             document.documentElement.style.setProperty('--bad-hud-font-size', `${value}px`);
         }
-    });
-
-    // Register Persist Tab State setting
-    game.settings.register(MODULE_ID, 'persistTabState', {
-        name: game.i18n.localize('BAD.settings.persistTabState.name'),
-        hint: game.i18n.localize('BAD.settings.persistTabState.hint'),
-        scope: 'client',
-        config: true,
-        type: Boolean,
-        default: true
     });
 
     // Register Toggle Tab Selection Setting
@@ -136,6 +165,10 @@ Hooks.once('init', () => {
             }
         }
     });
+
+    // ==========================================
+    // World Scope Settings & Menus
+    // ==========================================
 
     // Register HUD Grid Offset Setting (Vertical)
     game.settings.register(MODULE_ID, 'hudGridOffset', {
@@ -185,30 +218,6 @@ Hooks.once('init', () => {
         default: {}
     });
 
-    // Register HUD Position Mode (attached/pinned/detached)
-    game.settings.register(MODULE_ID, 'hudPositionMode', {
-        scope: 'client',
-        config: false,
-        type: String,
-        default: 'attached'
-    });
-
-    // Register HUD Pinned Offset (fixed offset relative to token top-left)
-    game.settings.register(MODULE_ID, 'hudPinnedOffset', {
-        scope: 'client',
-        config: false,
-        type: Object,
-        default: { x: 0, y: -50 }
-    });
-
-    // Register HUD Detached Position (coordinates)
-    game.settings.register(MODULE_ID, 'hudDetachedPosition', {
-        scope: 'client',
-        config: false,
-        type: Object,
-        default: null
-    });
-
     // Register Categorization Configuration Menu Button
     game.settings.registerMenu(MODULE_ID, 'categorizationMenu', {
         name: game.i18n.localize('BAD.settings.categorizationMenu.name'),
@@ -235,7 +244,7 @@ Hooks.once('init', () => {
         }
     });
 
-    // Apply the initial opacity and scale values to the document root
+    // Apply initial CSS variables (opacity, scale, font size) to the document root
     const initialOpacity = game.settings.get(MODULE_ID, 'hudOpacity');
     document.documentElement.style.setProperty('--bad-hud-opacity', initialOpacity);
 
