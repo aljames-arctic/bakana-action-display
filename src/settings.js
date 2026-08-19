@@ -34,14 +34,6 @@ Hooks.once('init', () => {
         }
     });
 
-    // Register HUD Tab States (persisted actor tab selections object)
-    game.settings.register(MODULE_ID, 'hudTabStates', {
-        scope: 'world',
-        config: false,
-        type: Object,
-        default: {}
-    });
-
     // ==========================================
     // User Scope Settings
     // ==========================================
@@ -242,6 +234,14 @@ Hooks.once('init', () => {
         config: false,
         type: Object,
         default: null
+    });
+
+    // Register HUD Tab States (persisted actor tab selections object)
+    game.settings.register(MODULE_ID, 'hudTabStates', {
+        scope: 'client',
+        config: false,
+        type: Object,
+        default: {}
     });
 
     // Apply initial CSS variables (opacity, scale, font size) to the document root
