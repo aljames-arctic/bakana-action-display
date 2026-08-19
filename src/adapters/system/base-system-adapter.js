@@ -301,6 +301,12 @@ export class BaseSystemAdapter {
     getDefaultCategories() {
         return [
             {
+                id: 'cat_favorites',
+                name: 'Favorites',
+                expression: `Boolean(actor?.flags?.['bakana-action-display']?.favorites?.[item.id])`,
+                subcategories: []
+            },
+            {
                 id: 'cat_weapons',
                 name: 'Weapons',
                 expression: `item.type === 'weapon'`,

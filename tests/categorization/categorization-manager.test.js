@@ -268,10 +268,11 @@ test('categorizeActions supports custom localized catch-all keyword (e.g. French
 test('getDefaultCategories provides standard preset configuration and delegates to adapter', () => {
     const presets = getDefaultCategories();
     assert.ok(Array.isArray(presets));
-    assert.equal(presets.length, 3);
-    assert.equal(presets[0].name, 'Weapons');
-    assert.equal(presets[1].name, 'Spells');
-    assert.equal(presets[2].name, 'Features');
+    assert.equal(presets.length, 4);
+    assert.equal(presets[0].name, 'Favorites');
+    assert.equal(presets[1].name, 'Weapons');
+    assert.equal(presets[2].name, 'Spells');
+    assert.equal(presets[3].name, 'Features');
 
     // Test delegation to custom adapter
     const customAdapter = {

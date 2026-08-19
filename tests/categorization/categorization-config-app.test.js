@@ -43,8 +43,8 @@ test('CategorizationConfigApp action handlers mutate configuration state', async
 
     // 4. Load Presets
     app._onLoadPresets({ preventDefault: () => {} }, {});
-    assert.equal(app.config.categories.length, 3);
-    assert.equal(app.config.categories[0].name, 'Weapons');
+    assert.equal(app.config.categories.length, 4);
+    assert.equal(app.config.categories[0].name, 'Favorites');
 
     // 5. Remove Subcategory
     if (app.config.categories[0].subcategories.length > 0) {
@@ -53,7 +53,7 @@ test('CategorizationConfigApp action handlers mutate configuration state', async
 
     // 6. Remove Category
     app._onRemoveCategory({ preventDefault: () => {} }, { dataset: { catIndex: '0' } });
-    assert.equal(app.config.categories.length, 2);
+    assert.equal(app.config.categories.length, 3);
 });
 
 test('CategorizationConfigApp _onSaveConfig validates names and expressions and persists to settings', async () => {

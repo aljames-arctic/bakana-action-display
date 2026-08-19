@@ -9,10 +9,11 @@ test('BaseSystemAdapter initialization and metadata', () => {
     assert.equal(adapter.systemId, 'test-system');
     assert.equal(adapter.shouldExtractItem({ type: 'any' }), true);
     const defaultCategories = adapter.getDefaultCategories();
-    assert.equal(defaultCategories.length, 3);
-    assert.equal(defaultCategories[0].name, 'Weapons');
-    assert.equal(defaultCategories[1].name, 'Spells');
-    assert.equal(defaultCategories[2].name, 'Features');
+    assert.equal(defaultCategories.length, 4);
+    assert.equal(defaultCategories[0].name, 'Favorites');
+    assert.equal(defaultCategories[1].name, 'Weapons');
+    assert.equal(defaultCategories[2].name, 'Spells');
+    assert.equal(defaultCategories[3].name, 'Features');
     assert.equal(adapter.hasFavorites(), false);
     assert.equal(adapter.isFavorite({}, {}), false);
 });

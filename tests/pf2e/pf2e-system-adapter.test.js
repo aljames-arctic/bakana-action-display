@@ -11,12 +11,13 @@ test('Pf2eSystemAdapter initialization and extractable item types', () => {
     assert.equal(adapter.shouldExtractItem({ type: 'spell' }), true);
     assert.equal(adapter.shouldExtractItem({ type: 'equipment' }), false);
     const defaultCategories = adapter.getDefaultCategories();
-    assert.equal(defaultCategories.length, 3);
-    assert.equal(defaultCategories[0].name, 'Weapons & Strikes');
-    assert.equal(defaultCategories[1].name, 'Spells');
-    assert.equal(defaultCategories[1].subcategories[0].name, 'Cantrips');
-    assert.equal(defaultCategories[1].subcategories[1].name, 'Ranked Spells');
-    assert.equal(defaultCategories[2].name, 'Feats & Actions');
+    assert.equal(defaultCategories.length, 4);
+    assert.equal(defaultCategories[0].name, 'Favorites');
+    assert.equal(defaultCategories[1].name, 'Weapons & Strikes');
+    assert.equal(defaultCategories[2].name, 'Spells');
+    assert.equal(defaultCategories[2].subcategories[0].name, 'Cantrips');
+    assert.equal(defaultCategories[2].subcategories[1].name, 'Ranked Spells');
+    assert.equal(defaultCategories[3].name, 'Feats & Actions');
 });
 
 test('Pf2eSystemAdapter label lookups', () => {
