@@ -62,8 +62,6 @@ test('validateExpression verifies valid and invalid syntax', () => {
     assert.equal(validateExpression('action.left.includes("weapon")').valid, true);
     assert.equal(validateExpression('actor.name === "Hero"').valid, true);
     assert.equal(validateExpression('token.name === "Token"').valid, true);
-    assert.equal(validateExpression('context.actor?.name === "Hero"').valid, true);
-    assert.equal(validateExpression('context.customVar === 123').valid, true);
     assert.equal(validateExpression('').valid, false);
     assert.equal(validateExpression('item.type ===').valid, false);
     assert.equal(validateExpression('&& invalid').valid, false);
@@ -126,18 +124,6 @@ test('evaluateBooleanExpression evaluates action and item properties safely', ()
         evaluateBooleanExpression('Boolean(actor?.flags?.["bakana-action-display"]?.favorites?.[item.id])', weaponAction, { actor: mockActor }),
         false
     );
-    assert.equal(
-        evaluateBooleanExpression('context.actor?.name === "Hero Actor"', daggerAction, { actor: mockActor, token: mockToken }),
-        true
-    );
-    assert.equal(
-        evaluateBooleanExpression('context.token?.name === "Hero Token"', daggerAction, { actor: mockActor, token: mockToken }),
-        true
-    );
-    assert.equal(
-        evaluateBooleanExpression('context.customFlag === true', daggerAction, { actor: mockActor, token: mockToken, customFlag: true }),
-        true
-    );
 
     // Fault tolerance & error logging tests (including undeclared shorthand variables)
     const originalError = log.error;
@@ -149,10 +135,11 @@ test('evaluateBooleanExpression evaluates action and item properties safely', ()
         assert.equal(evaluateBooleanExpression('invalid syntax +++', weaponAction), false);
         assert.equal(evaluateBooleanExpression('nonExistent.nested.deepProperty === 123', weaponAction), false);
         assert.equal(evaluateBooleanExpression('unknownVar === 42', weaponAction), false);
-        // Shorthand variables no longer in scope must evaluate to false
+        // Shorthand variables and context no longer in scope must evaluate to false
         assert.equal(evaluateBooleanExpression('type === "weapon"', weaponAction), false);
         assert.equal(evaluateBooleanExpression('left.includes("weapon")', weaponAction), false);
-        assert.equal(loggedErrors.length, 5);
+        assert.equal(evaluateBooleanExpression('context.actor === null', weaponAction), false);
+        assert.equal(loggedErrors.length, 6);
         assert.match(loggedErrors[0].msg, /Failed to evaluate boolean expression/);
     } finally {
         log.error = originalError;

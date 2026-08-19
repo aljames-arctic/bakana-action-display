@@ -523,7 +523,10 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         const isCategorizationEnabled = Boolean(rawCatConfig?.enabled);
         if (isCategorizationEnabled) {
             const othersLabel = game.i18n.localize('BAD.categorization.others') ?? 'Other Actions';
-            const categorized = categorizeActions(visibleActions, rawCatConfig, othersLabel, context);
+            const categorized = categorizeActions(visibleActions, rawCatConfig, othersLabel, {
+                actor: this.actor,
+                token: this.token
+            });
             context.isCategorized = true;
             context.categorizedSections = categorized ?? [];
         } else {
@@ -809,8 +812,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             const item = action.originalItem ?? action;
             const actor = this.actor;
             const token = this.token;
-            const context = { action, item, actor, token };
-            log.info(`_onRollAction | Left-clicked action "${action.name}" (${action.id}):`, { action, item, actor, token, context });
+            log.info(`_onRollAction | Left-clicked action "${action.name}" (${action.id}):`, { action, item, actor, token });
             const itemActivities = action.subactions;
             log.debug(`_onRollAction | Action subactions (${itemActivities?.length ?? 0}):`, itemActivities);
 
@@ -818,20 +820,8 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                 // Filter sub-actions to only those that match the currently active right-side tabs
                 const filterContext = this._getFilterContext();
 
-                log.debug(`_onRollAction | Right-side Tab Filters - activeParents:`, Array.from(this.rightTabs.activeParents), `activeSubs:`, Array.from(this.rightTabs.activeSubTypes));
-
                 const adapter = actionDisplay?.activeSystemAdapter;
                 const qualifyingSubActions = adapter?.filterSubactions?.(itemActivities, filterContext, action.left) ?? itemActivities;
-
-                log.debug(`_onRollAction | "${action.name}" (${action.id})`, {
-                    totalSubactions: itemActivities.length,
-                    activeExclusions: adapter?.getActiveExclusionSubs?.(filterContext) ?? [],
-                    qualifyingCount: qualifyingSubActions.length,
-                    qualifyingNames: qualifyingSubActions.map(s => s.name),
-                    allNames: itemActivities.map(s => s.name)
-                });
-
-                log.debug(`_onRollAction | activeParents: ${Array.from(this.rightTabs.activeParents).join(', ')}, activeSubs: ${Array.from(this.rightTabs.activeSubTypes).join(', ')}, qualifying: ${qualifyingSubActions.length}`, qualifyingSubActions);
 
                 const subsToShow = qualifyingSubActions.length > 0 ? qualifyingSubActions : itemActivities;
                 const showDropdown = subsToShow.length > 1 || (!action.collapseDropdownIfSingle && itemActivities.length > 1 && subsToShow.length === 1);
@@ -841,17 +831,16 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                 } else if (subsToShow.length === 1) {
                     const chosenSub = subsToShow[0];
                     const chosenItem = chosenSub.originalItem ?? action.originalItem ?? chosenSub;
-                    const subContext = { action: chosenSub, item: chosenItem, actor, token };
-                    log.info(`_onRollAction | Rolling subaction "${chosenSub.name}":`, { action: chosenSub, item: chosenItem, actor, token, context: subContext });
+                    log.info(`_onRollAction | Rolling subaction "${chosenSub.name}":`, { action: chosenSub, item: chosenItem, actor, token });
                     chosenSub.roll(event);
                 } else {
-                    log.info(`_onRollAction | Rolling action "${action.name}":`, { action, item, actor, token, context });
+                    log.info(`_onRollAction | Rolling action "${action.name}":`, { action, item, actor, token });
                     action.roll(event);
                 }
             } else {
                 log.debug(`_onRollAction | "${action.name}" (${action.id}) has no subactions (length 0)`);
                 // No sub-actions: roll directly
-                log.info(`_onRollAction | Rolling action "${action.name}":`, { action, item, actor, token, context });
+                log.info(`_onRollAction | Rolling action "${action.name}":`, { action, item, actor, token });
                 action.roll(event);
             }
         }
