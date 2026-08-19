@@ -12,6 +12,7 @@ export class Action {
      * @param {string} [options.img=''] Icon image URL/path
      * @param {TabRef[]} [options.right] Array of TabRef instances for right-side tabs
      * @param {string[]} [options.left] Hierarchical category list for left-side tabs
+     * @param {string[]|null} [options.itemCategories=null] Custom categorization hierarchy
      * @param {boolean} [options.hidden=false] System-level hidden state
      * @param {boolean} [options.isHidden=false] User-flagged hidden override state
      * @param {boolean} [options.available=true] Action availability state
@@ -21,6 +22,7 @@ export class Action {
      * @param {Action[]} [options.subactions=[]] Array of child Action instances
      * @param {Object|null} [options.originalActivity=null] Underlying system Activity instance
      * @param {Object|null} [options.linkedAction=null] Linked document/item data (e.g. compendium spell)
+     * @param {boolean} [options.collapseDropdownIfSingle=false] Collapse dropdown if only one subaction qualifies
      * @param {Object} [options.extra={}] Additional metadata
      */
     constructor({

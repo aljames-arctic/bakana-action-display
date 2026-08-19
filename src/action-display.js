@@ -54,8 +54,8 @@ class ActionDisplay {
     /**
      * Run the pipeline to get actions for a given actor.
      * Pipeline: Core Extraction -> System Adapter Layer -> Module Adapter Layer.
-     * @param {Actor} actor 
-     * @returns {Object[]} The processed actions
+     * @param {Actor} actor The actor to extract actions for
+     * @returns {Promise<Action[]>} The processed actions
      */
     async getActions(actor) {
         if (!actor) return [];

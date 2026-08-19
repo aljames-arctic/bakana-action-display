@@ -14,6 +14,8 @@ let closeDetachedHUD = false;
 
 /**
  * Helper to convert hyphenated or lowercase IDs into PascalCase.
+ * @param {string} str The string to convert
+ * @returns {string} PascalCase string
  */
 function toPascalCase(str) {
     return str.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join('');
@@ -21,6 +23,7 @@ function toPascalCase(str) {
 
 /**
  * Dynamically loads and registers adapters based on the active system and enabled modules.
+ * @returns {Promise<void>}
  */
 async function registerAdapters() {
     const systemId = game.system.id;
@@ -54,8 +57,6 @@ async function registerAdapters() {
     }
 }
 
-// Wrap TokenHUD.clear synchronously during init to ensure it is registered
-// before any instances are created, and fires instantly when the HUD is cleared.
 // Initialize hook
 Hooks.once('init', async () => {
     log.info("Initializing Bakana's Action Display");

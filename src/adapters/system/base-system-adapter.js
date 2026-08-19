@@ -1,51 +1,6 @@
 import { localize, toSet } from '../../lib/utils.js';
 import { MODULE_ID } from '../../constants.js';
 import { KeyboardManager } from '../../lib/compat.js';
-
-const ICONS = {
-    item_type: {
-        'all': 'fas fa-border-all',
-        'other': 'fas fa-ellipsis',
-        'hidden': 'fas fa-eye-slash'
-    },
-    action_type: {
-        'all': 'fas fa-border-all',
-        'none': 'fas fa-ban'
-    }
-};
-
-const SORT_ORDERS = {
-    item_type: {
-        'all': 0,
-        'weapon': 1,
-        'spell': 2,
-        'feat': 3,
-        'buff': 4,
-        'equipment': 5,
-        'consumable': 6,
-        'tool': 7,
-        'backpack': 8,
-        'loot': 9,
-        'other': 10,
-        'hidden': 11
-    },
-    action_type: {
-        'all': 0,
-        'economy': 1,
-        'components': 2,
-        'standard': 3,
-        'action': 4,
-        'bonus': 5,
-        'reaction': 6,
-        'free': 7,
-        'time': 8,
-        'monster': 9,
-        'vehicle': 10,
-        'special': 11,
-        'none': 12
-    }
-};
-
 import { BaseSystemContextMenuManager } from './context-menu/base-system-context-menu-manager.js';
 import { BaseSystemTabFilterManager } from './filter/base-system-tab-filter-manager.js';
 import { BaseSystemContextModifier } from './context-modifier/base-system-context-modifier.js';

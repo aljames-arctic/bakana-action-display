@@ -659,7 +659,8 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
 
     /**
      * Handle left-side item type (parent) selection clicks.
-     * 'this' refers to the application instance.
+     * @param {Event} event Click event
+     * @param {HTMLElement} target Clicked element
      */
     async _onChangeLeftItemType(event, target) {
         event.preventDefault();
@@ -804,7 +805,8 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
 
     /**
      * Handle action item clicks to roll them.
-     * 'this' refers to the application instance.
+     * @param {Event} event Click event
+     * @param {HTMLElement} target Clicked element
      */
     async _onRollAction(event, target) {
         event.preventDefault();
@@ -862,10 +864,10 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
     }
 
     /**
-     * Build the context menu item object for a sub-action.
-     * @param {Action} sub 
-     * @param {Event} event 
-     * @returns {Object} Context menu item specification
+     * Show the activity dropdown menu for an action with multiple subactions.
+     * @param {HTMLElement} target The target action DOM element
+     * @param {Action[]} subactions List of subactions to display
+     * @param {Event} event The triggering click event
      * @private
      */
     _showActivityDropdown(target, subactions, event) {

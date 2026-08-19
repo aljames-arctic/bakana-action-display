@@ -259,10 +259,6 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
     /*  System Data Structure Accessors / Schema Extraction Helpers              */
     /* ------------------------------------------------------------------------- */
 
-    /**
-     * Translate PF1e activation types into our core activation types.
-     * Maps Swift -> bonus, Immediate -> reaction, Free/Nonaction -> other.
-     */
     // #endregion
 
     // #region System Specific Data Extractors & Schema Helpers
@@ -321,6 +317,13 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
         return subactions;
     }
 
+    /**
+     * Translate PF1e activation types into our core activation types.
+     * Maps Swift -> bonus, Immediate -> reaction, Free/Nonaction -> other.
+     * @param {string} actType Raw PF1e activation type
+     * @returns {string|null} Normalized activation type
+     * @private
+     */
     #parseActivationType(actType) {
         if (!actType) return null;
 
