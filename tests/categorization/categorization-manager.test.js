@@ -62,6 +62,8 @@ test('validateExpression verifies valid and invalid syntax', () => {
     assert.equal(validateExpression('action.left.includes("weapon")').valid, true);
     assert.equal(validateExpression('actor.name === "Hero"').valid, true);
     assert.equal(validateExpression('token.name === "Token"').valid, true);
+    assert.equal(validateExpression('user.isGM === true').valid, true);
+    assert.equal(validateExpression('user.name === "DM"').valid, true);
     assert.equal(validateExpression('').valid, false);
     assert.equal(validateExpression('item.type ===').valid, false);
     assert.equal(validateExpression('&& invalid').valid, false);
@@ -93,7 +95,7 @@ test('evaluateBooleanExpression evaluates action and item properties safely', ()
     assert.equal(evaluateBooleanExpression('action.left.includes("spell")', weaponAction), false);
     assert.equal(evaluateBooleanExpression('action.right.some(t => t.label === "action")', weaponAction), true);
 
-    // Test actor and token exposure
+    // Test actor, token, and user exposure
     const mockActor = {
         name: 'Hero Actor',
         flags: {
@@ -105,15 +107,24 @@ test('evaluateBooleanExpression evaluates action and item properties safely', ()
         }
     };
     const mockToken = { name: 'Hero Token' };
+    const mockUser = { name: 'Dungeon Master', isGM: true };
     const daggerAction = new Action({ id: 'action-dagger', name: 'Dagger', type: 'weapon' });
     daggerAction.originalItem = { id: 'action-dagger', name: 'Dagger', type: 'weapon' };
 
     assert.equal(
-        evaluateBooleanExpression('actor.name === "Hero Actor"', daggerAction, { actor: mockActor, token: mockToken }),
+        evaluateBooleanExpression('actor.name === "Hero Actor"', daggerAction, { actor: mockActor, token: mockToken, user: mockUser }),
         true
     );
     assert.equal(
-        evaluateBooleanExpression('token.name === "Hero Token"', daggerAction, { actor: mockActor, token: mockToken }),
+        evaluateBooleanExpression('token.name === "Hero Token"', daggerAction, { actor: mockActor, token: mockToken, user: mockUser }),
+        true
+    );
+    assert.equal(
+        evaluateBooleanExpression('user.isGM === true', daggerAction, { actor: mockActor, token: mockToken, user: mockUser }),
+        true
+    );
+    assert.equal(
+        evaluateBooleanExpression('user.name === "Dungeon Master"', daggerAction, { actor: mockActor, token: mockToken, user: mockUser }),
         true
     );
     assert.equal(

@@ -60,7 +60,8 @@ export function buildSubactionMenuItem(sub, event, app = null) {
             const item = sub.originalItem ?? sub;
             const actor = app?.actor ?? item?.actor ?? null;
             const token = app?.token ?? actor?.token ?? null;
-            log.info(`Rolling subaction "${sub.name}" via dropdown:`, { action: sub, item, actor, token });
+            const user = game?.user ?? null;
+            log.info(`Rolling subaction "${sub.name}" via dropdown:`, { action: sub, item, actor, token, user });
             sub.roll(event);
         }
     };

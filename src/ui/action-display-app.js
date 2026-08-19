@@ -526,7 +526,8 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             const othersLabel = game.i18n.localize('BAD.categorization.others') ?? 'Other Actions';
             const categorized = categorizeActions(visibleActions, rawCatConfig, othersLabel, {
                 actor: this.actor,
-                token: this.token
+                token: this.token,
+                user: game.user
             });
             context.isCategorized = true;
             context.categorizedSections = categorized ?? [];
@@ -825,7 +826,8 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             const item = action.originalItem ?? action;
             const actor = this.actor;
             const token = this.token;
-            log.info(`_onRollAction | Left-clicked action "${action.name}" (${action.id}):`, { action, item, actor, token });
+            const user = game.user;
+            log.info(`_onRollAction | Left-clicked action "${action.name}" (${action.id}):`, { action, item, actor, token, user });
             const itemActivities = action.subactions;
             log.debug(`_onRollAction | Action subactions (${itemActivities?.length ?? 0}):`, itemActivities);
 
@@ -844,16 +846,16 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                 } else if (subsToShow.length === 1) {
                     const chosenSub = subsToShow[0];
                     const chosenItem = chosenSub.originalItem ?? action.originalItem ?? chosenSub;
-                    log.info(`_onRollAction | Rolling subaction "${chosenSub.name}":`, { action: chosenSub, item: chosenItem, actor, token });
+                    log.info(`_onRollAction | Rolling subaction "${chosenSub.name}":`, { action: chosenSub, item: chosenItem, actor, token, user });
                     chosenSub.roll(event);
                 } else {
-                    log.info(`_onRollAction | Rolling action "${action.name}":`, { action, item, actor, token });
+                    log.info(`_onRollAction | Rolling action "${action.name}":`, { action, item, actor, token, user });
                     action.roll(event);
                 }
             } else {
                 log.debug(`_onRollAction | "${action.name}" (${action.id}) has no subactions (length 0)`);
                 // No sub-actions: roll directly
-                log.info(`_onRollAction | Rolling action "${action.name}":`, { action, item, actor, token });
+                log.info(`_onRollAction | Rolling action "${action.name}":`, { action, item, actor, token, user });
                 action.roll(event);
             }
         }

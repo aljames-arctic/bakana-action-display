@@ -76,7 +76,7 @@ export function validateExpression(expression) {
     }
     try {
         new Function(
-            'action', 'item', 'actor', 'token',
+            'action', 'item', 'actor', 'token', 'user',
             `"use strict"; return Boolean(${expression.trim()});`
         );
         return { valid: true, error: null };
@@ -90,7 +90,7 @@ export function validateExpression(expression) {
  *
  * @param {string} expression JS boolean expression
  * @param {Object} action The Action instance being evaluated
- * @param {Object} [context={}] Additional context such as actor or token documents
+ * @param {Object} [context={}] Additional context such as actor, token, or user documents
  * @returns {boolean} True if expression evaluates to truthy
  */
 export function evaluateBooleanExpression(expression, action, context = {}) {
@@ -102,13 +102,14 @@ export function evaluateBooleanExpression(expression, action, context = {}) {
         const item = action?.originalItem ?? action ?? {};
         const actor = context?.actor ?? action?.actor ?? item?.actor ?? actionDisplay?.activeApp?.actor ?? null;
         const token = context?.token ?? action?.token ?? actor?.token ?? actionDisplay?.activeApp?.token ?? null;
+        const user = context?.user ?? game?.user ?? null;
 
         const evaluator = new Function(
-            'action', 'item', 'actor', 'token',
+            'action', 'item', 'actor', 'token', 'user',
             `"use strict"; return Boolean(${expr});`
         );
 
-        return Boolean(evaluator(action, item, actor, token));
+        return Boolean(evaluator(action, item, actor, token, user));
     } catch (err) {
         log.error(`Failed to evaluate boolean expression: "${expression}"`, err);
         return false;
