@@ -1,20 +1,8 @@
 {
     "BAD": {
         "settings": {
-            "hudOpacity": {
-                "name": "HUD Opacity",
-                "hint": "Controls the transparency of the Action Display HUD overlay."
-            },
-            "hudScale": {
-                "name": "HUD Scale",
-                "hint": "Controls the overall scale of the HUD window and all its contents proportionally."
-            },
-            "fontSize": {
-                "name": "Font Size (px)",
-                "hint": "Controls the base font size of the text and icons. The HUD window size will remain independent."
-            },
             "logVerbosity": {
-                "name": "Log Verbosity Level",
+                "name": "[Client] Log Verbosity Level",
                 "hint": "Controls the level of detail printed to the browser console.",
                 "choices": {
                     "error": "Errors Only",
@@ -23,21 +11,32 @@
                     "debug": "Debug (Everything)"
                 }
             },
-            "persistDetached": {
-                "name": "Persist Detached HUD on Click-Off",
-                "hint": "If enabled, a detached HUD will stay open when clicking off the token, and will only close if you right-click the same token again."
+            "hudOpacity": {
+                "name": "[Client] HUD Opacity",
+                "hint": "Controls the transparency of the Action Display HUD overlay."
             },
-
             "persistTabState": {
-                "name": "Persist Tab Selections",
+                "name": "[Client] Persist Tab Selections",
                 "hint": "If enabled, your active tab selections for each character are saved and restored whenever you re-open the HUD or refresh Foundry."
             },
+            "persistDetached": {
+                "name": "[User] Persist Detached HUD on Click-Off",
+                "hint": "If enabled, a detached HUD will stay open when clicking off the token, and will only close if you right-click the same token again."
+            },
+            "hudScale": {
+                "name": "[User] HUD Scale",
+                "hint": "Controls the overall scale of the HUD window and all its contents proportionally."
+            },
+            "fontSize": {
+                "name": "[User] Font Size (px)",
+                "hint": "Controls the base font size of the text and icons. The HUD window size will remain independent."
+            },
             "toggleTabSelection": {
-                "name": "Toggle Tab Selections on Left-Click",
+                "name": "[User] Toggle Tab Selections on Left-Click",
                 "hint": "If enabled, left-clicking a tab toggles its selection on or off (multi-select) instead of clearing other selected tabs. Selections are only cleared by clicking them again or clicking 'All'."
             },
             "hudAnchorSide": {
-                "name": "HUD Attachment Side",
+                "name": "[User] HUD Attachment Side",
                 "hint": "Controls whether the Attached HUD anchors vertically (Above / Below) or horizontally (Left / Right) relative to the token.",
                 "choices": {
                     "vertical": "Vertical (Above / Below)",
@@ -45,15 +44,15 @@
                 }
             },
             "hudGridOffset": {
-                "name": "HUD Grid Offset (Vertical)",
+                "name": "[World] HUD Grid Offset (Vertical)",
                 "hint": "Controls the vertical distance (in grid units) to offset the HUD above or below the token."
             },
             "hudGridOffsetHorizontal": {
-                "name": "HUD Grid Offset (Horizontal)",
+                "name": "[World] HUD Grid Offset (Horizontal)",
                 "hint": "Controls the horizontal distance (in grid units) to offset the HUD to the left or right of the token."
             },
             "categorizationMenu": {
-                "name": "HUD Item Categorization",
+                "name": "[World] HUD Item Categorization",
                 "label": "Configure Categorization",
                 "hint": "Define custom category sections, sub-sections, and boolean expressions for filtering HUD items."
             }
