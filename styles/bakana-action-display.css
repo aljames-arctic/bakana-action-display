@@ -99,6 +99,10 @@
     color: #a78bfa !important; /* Soft violet glow */
 }
 
+.bad-close-btn:hover {
+    color: #ef4444 !important; /* Soft red on close hover */
+}
+
 
 /* ==========================================================================
    MAIN LAYOUT & CONTENT AREA

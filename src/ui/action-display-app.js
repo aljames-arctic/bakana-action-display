@@ -262,6 +262,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             changeActionType: ActionDisplayApp.prototype._onChangeActionType,
             changeSubActionType: ActionDisplayApp.prototype._onChangeSubActionType,
             toggleAnchor: ActionDisplayApp.prototype._onToggleAnchor,
+            closeHUD: ActionDisplayApp.prototype._onCloseHUD,
             rollAction: ActionDisplayApp.prototype._onRollAction,
             toggleFilterResources: ActionDisplayApp.prototype._onToggleFilterResources,
             previousPage: ActionDisplayApp.prototype._onPreviousPage,
@@ -763,6 +764,18 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         log.debug(`Toggled HUD position mode to: ${this.positionMode}`);
 
         this.render();
+    }
+
+    /**
+     * Handle close button click on the HUD.
+     * @param {Event} event
+     * @param {HTMLElement} target
+     */
+    async _onCloseHUD(event, target) {
+        event?.preventDefault?.();
+        event?.stopPropagation?.();
+        log.debug("_onCloseHUD called");
+        await this.close();
     }
 
     async _onPreviousPage(event, target) {

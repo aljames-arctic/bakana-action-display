@@ -86,3 +86,13 @@ test('ActionDisplayApp _prepareContext populates pages metadata correctly', asyn
     assert.deepEqual(context.pages[0], { page: 1, active: false });
     assert.deepEqual(context.pages[1], { page: 2, active: true });
 });
+
+test('ActionDisplayApp _onCloseHUD calls close on the application', async () => {
+    const app = new ActionDisplayApp({ actor: { id: 'test-actor' } });
+    let closeCalled = false;
+    app.close = async () => { closeCalled = true; };
+
+    assert.equal(typeof ActionDisplayApp.DEFAULT_OPTIONS.actions.closeHUD, 'function');
+    await app._onCloseHUD({ preventDefault: () => {}, stopPropagation: () => {} }, {});
+    assert.equal(closeCalled, true);
+});

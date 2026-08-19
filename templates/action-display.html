@@ -1,9 +1,12 @@
 <div class="bakana-action-display-container">
-    <!-- Control Bar (Grip + Pin Button) -->
+    <!-- Control Bar (Grip + Pin Button + Close Button) -->
     <div class="bad-control-bar">
         <div class="bad-drag-handle"><i class="fas fa-grip"></i></div>
-        <button class="bad-control-btn bad-pin-btn" data-action="toggleAnchor">
+        <button class="bad-control-btn bad-pin-btn" data-action="toggleAnchor" title="{{localize 'BAD.core.toggleAnchor'}}">
             <i class="fas {{#if isAttached}}fa-link{{else if isPinned}}fa-thumbtack{{else}}fa-unlink{{/if}}"></i>
+        </button>
+        <button class="bad-control-btn bad-close-btn" data-action="closeHUD" title="{{localize 'BAD.core.closeHUD'}}">
+            <i class="fas fa-times"></i>
         </button>
     </div>
 
