@@ -3,6 +3,7 @@ import './settings.js';
 import { actionDisplay } from './action-display.js';
 import { ActionDisplayApp } from './ui/action-display-app.js';
 import { log } from './lib/logger.js';
+import { Token } from './lib/compat.js';
 
 import { MODULE_ID } from './constants.js';
 import { MODULE_ADAPTERS } from './adapters/module/module-adapters.js';
