@@ -36,18 +36,17 @@ export class MidiQolModuleAdapter extends BaseModuleAdapter {
 
                     // Identify root tab categories controlled by D&D 5e activities (e.g. 'economy')
                     const activityRootCategories = toSet(
-                        activities.flatMap(act => act.right ?? act.tabs ?? []),
+                        activities.flatMap(act => act.right ?? []),
                         tab => tab.root
                     );
 
                     // Preserve non-activity tabs from other categories (e.g. spell components under 'components')
-                    const currentRight = item.right ?? item.tabs ?? [];
-                    const preservedTabs = currentRight.filter(tab => !activityRootCategories.has(tab.root));
+                    const preservedTabs = (item.right ?? []).filter(tab => !activityRootCategories.has(tab.root));
 
                     // Recalculate unique activity tabs using only the remaining non-removed activities
                     const uniqueTabsMap = new Map();
                     for (const activity of filteredActivities) {
-                        for (const tab of (activity.right ?? activity.tabs ?? [])) {
+                        for (const tab of (activity.right ?? [])) {
                             if (tab?.path && !uniqueTabsMap.has(tab.path)) {
                                 uniqueTabsMap.set(tab.path, tab);
                             }
