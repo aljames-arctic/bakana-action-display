@@ -83,15 +83,17 @@ class ActionDisplay {
         }
 
         // 4. Filter out system-hidden actions and apply user-hidden overrides in a single pass (O(1) lookups)
-        const hiddenIds = actor.getFlag(MODULE_ID, 'hiddenItems') ?? [];
-        const hiddenSet = new Set(hiddenIds);
+        const rawHidden = actor.getFlag(MODULE_ID, 'hiddenItems');
+        const hiddenMap = Array.isArray(rawHidden)
+            ? rawHidden.reduce((acc, id) => { acc[id] = true; return acc; }, {})
+            : (rawHidden ?? {});
         const filtered = [];
 
         for (const action of actions) {
             if (action.hidden) continue;
 
             const itemId = action.originalItem?.id ?? action.id;
-            if (hiddenSet.has(itemId)) {
+            if (Boolean(hiddenMap[itemId])) {
                 action.isHidden = true;
                 action.left = ['hidden'];
                 // Ensure hidden actions are never skipped due to preparedness/equipped status

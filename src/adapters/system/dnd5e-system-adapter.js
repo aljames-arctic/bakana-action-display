@@ -81,8 +81,10 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
             }
 
             // Check if user has hidden this item
-            const hiddenIds = actor?.getFlag?.(MODULE_ID, 'hiddenItems') ?? [];
-            const isUserHidden = hiddenIds.includes(item.id);
+            const rawHidden = actor?.getFlag?.(MODULE_ID, 'hiddenItems');
+            const isUserHidden = Array.isArray(rawHidden)
+                ? rawHidden.includes(item.id)
+                : Boolean(rawHidden?.[item.id]);
 
             // 1. Filter out unprepared spells (unless innate/at-will/pact, showUnprepared is enabled, or item is user-hidden)
             let isSpellUnprepared = false;

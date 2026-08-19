@@ -1139,23 +1139,29 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         if (!action) return;
 
         const itemId = action.originalItem?.id ?? action.id;
-        const hiddenItems = this.actor.getFlag(MODULE_ID, 'hiddenItems') ?? [];
+        const rawHidden = this.actor.getFlag(MODULE_ID, 'hiddenItems');
+        const currentHidden = Array.isArray(rawHidden)
+            ? rawHidden.reduce((acc, id) => { acc[id] = true; return acc; }, {})
+            : { ...(rawHidden ?? {}) };
 
-        let newHiddenItems = [...hiddenItems];
         if (shouldHide) {
-            if (!newHiddenItems.includes(itemId)) {
-                newHiddenItems.push(itemId);
-                log.debug(`Hiding item: ${action.name} (ID: ${itemId})`);
+            currentHidden[itemId] = true;
+            log.debug(`Hiding item: ${action.name} (ID: ${itemId})`);
+            if (typeof this.actor.setFlag === 'function') {
+                await this.actor.setFlag(MODULE_ID, 'hiddenItems', currentHidden);
             }
         } else {
-            const index = newHiddenItems.indexOf(itemId);
-            if (index > -1) {
-                newHiddenItems.splice(index, 1);
-                log.debug(`Unhiding item: ${action.name} (ID: ${itemId})`);
+            delete currentHidden[itemId];
+            log.debug(`Unhiding item: ${action.name} (ID: ${itemId})`);
+            if (typeof this.actor.update === 'function') {
+                await this.actor.update({
+                    [`flags.${MODULE_ID}.hiddenItems.-=${itemId}`]: null
+                });
+            } else if (typeof this.actor.setFlag === 'function') {
+                await this.actor.setFlag(MODULE_ID, 'hiddenItems', currentHidden);
             }
         }
 
-        await this.actor.setFlag(MODULE_ID, 'hiddenItems', newHiddenItems);
         this.render();
     }
 

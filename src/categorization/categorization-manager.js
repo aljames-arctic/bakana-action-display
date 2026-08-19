@@ -109,6 +109,7 @@ export function evaluateBooleanExpression(expression, action, context = {}) {
             actor.flags = actor.flags ?? {};
             actor.flags[MODULE_ID] = actor.flags[MODULE_ID] ?? {};
             actor.flags[MODULE_ID].favorites = actor.flags[MODULE_ID].favorites ?? {};
+            actor.flags[MODULE_ID].hiddenItems = actor.flags[MODULE_ID].hiddenItems ?? {};
         }
 
         const evaluator = new Function(
