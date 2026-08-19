@@ -225,7 +225,7 @@ Hooks.once('init', () => {
         hint: game.i18n.localize('BAD.settings.categorizationMenu.hint'),
         icon: 'fas fa-layer-group',
         type: CategorizationConfigApp,
-        restricted: false
+        restricted: true
     });
 
     // Register Categorization Configuration Storage
