@@ -81,6 +81,8 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
             }
 
             // Check if user has hidden this item
+            // NOTE(migration): hiddenItems transitioned from legacy string[] to Record<string, boolean> object map.
+            // Array check fallback can be removed in a future cleanup once legacy world actor flags have migrated.
             const rawHidden = actor?.getFlag?.(MODULE_ID, 'hiddenItems');
             const isUserHidden = Array.isArray(rawHidden)
                 ? rawHidden.includes(item.id)

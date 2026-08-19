@@ -83,6 +83,8 @@ class ActionDisplay {
         }
 
         // 4. Filter out system-hidden actions and apply user-hidden overrides in a single pass (O(1) lookups)
+        // NOTE(migration): hiddenItems transitioned from legacy string[] to Record<string, boolean> object map.
+        // Array normalization can be removed in a future cleanup once legacy world actor flags have migrated.
         const rawHidden = actor.getFlag(MODULE_ID, 'hiddenItems');
         const hiddenMap = Array.isArray(rawHidden)
             ? rawHidden.reduce((acc, id) => { acc[id] = true; return acc; }, {})

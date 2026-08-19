@@ -1139,6 +1139,8 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         if (!action) return;
 
         const itemId = action.originalItem?.id ?? action.id;
+        // NOTE(migration): hiddenItems transitioned from legacy string[] to Record<string, boolean> object map.
+        // Array normalization can be removed in a future cleanup once legacy world actor flags have migrated.
         const rawHidden = this.actor.getFlag(MODULE_ID, 'hiddenItems');
         const currentHidden = Array.isArray(rawHidden)
             ? rawHidden.reduce((acc, id) => { acc[id] = true; return acc; }, {})
