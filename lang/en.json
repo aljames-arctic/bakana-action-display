@@ -86,8 +86,6 @@
             "removeFavorite": "Remove from Favorites"
         },
         "core": {
-            "closeHUD": "Close HUD",
-            "toggleAnchor": "Toggle Anchor / Pin Mode",
             "filterNoResources": "Hide Depleted",
             "hidden": "Hidden",
             "hideAction": "Hide Action",
