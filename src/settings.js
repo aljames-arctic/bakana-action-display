@@ -166,15 +166,11 @@ Hooks.once('init', () => {
         }
     });
 
-    // ==========================================
-    // World Scope Settings & Menus
-    // ==========================================
-
     // Register HUD Grid Offset Setting (Vertical)
     game.settings.register(MODULE_ID, 'hudGridOffset', {
         name: game.i18n.localize('BAD.settings.hudGridOffset.name'),
         hint: game.i18n.localize('BAD.settings.hudGridOffset.hint'),
-        scope: 'world',
+        scope: 'user',
         config: true,
         type: Number,
         range: {
@@ -194,7 +190,7 @@ Hooks.once('init', () => {
     game.settings.register(MODULE_ID, 'hudGridOffsetHorizontal', {
         name: game.i18n.localize('BAD.settings.hudGridOffsetHorizontal.name'),
         hint: game.i18n.localize('BAD.settings.hudGridOffsetHorizontal.hint'),
-        scope: 'world',
+        scope: 'user',
         config: true,
         type: Number,
         range: {
@@ -209,6 +205,10 @@ Hooks.once('init', () => {
             }
         }
     });
+
+    // ==========================================
+    // World Scope Settings & Menus
+    // ==========================================
 
     // Register HUD Tab States (persisted actor tab selections object)
     game.settings.register(MODULE_ID, 'hudTabStates', {
@@ -277,7 +277,7 @@ export function injectSettingsHeaders(html) {
             icon: 'fas fa-user'
         },
         {
-            key: 'hudGridOffset',
+            key: 'categorizationMenu',
             scope: 'world',
             title: game.i18n.localize('BAD.settingsSections.world') ?? 'World Settings',
             icon: 'fas fa-globe'

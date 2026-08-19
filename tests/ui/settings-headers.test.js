@@ -65,6 +65,10 @@ class MockElement extends HTMLElement {
                     const expectedId = part.slice(18, -2);
                     if (el.dataset?.settingId === expectedId) return el;
                 }
+                if (part.startsWith('[data-key="') && part.endsWith('"]')) {
+                    const expectedKey = part.slice(11, -2);
+                    if (el.dataset?.key === expectedKey) return el;
+                }
             }
             for (const child of el.children) {
                 const found = findMatch(child);
@@ -95,10 +99,10 @@ test('injectSettingsHeaders inserts client, user, and world headers into Setting
         fgUser.appendChild(inputUser);
         root.appendChild(fgUser);
 
-        // World group
+        // World group (menu button)
         const fgWorld = new MockElement('div', { className: 'form-group' });
-        const inputWorld = new MockElement('input', { name: 'bakana-action-display.hudGridOffset' });
-        fgWorld.appendChild(inputWorld);
+        const btnWorld = new MockElement('button', { dataset: { key: 'bakana-action-display.categorizationMenu' } });
+        fgWorld.appendChild(btnWorld);
         root.appendChild(fgWorld);
 
         // First injection
