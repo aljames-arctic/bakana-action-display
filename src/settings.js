@@ -27,34 +27,6 @@ Hooks.once('init', () => {
         }
     });
 
-    // Register HUD Opacity Setting (Slider)
-    game.settings.register(MODULE_ID, 'hudOpacity', {
-        name: game.i18n.localize('BAD.settings.hudOpacity.name'),
-        hint: game.i18n.localize('BAD.settings.hudOpacity.hint'),
-        scope: 'client',
-        config: true,
-        type: Number,
-        range: {
-            min: 0.1,
-            max: 1.0,
-            step: 0.05
-        },
-        default: 0.88,
-        onChange: value => {
-            document.documentElement.style.setProperty('--bad-hud-opacity', value);
-        }
-    });
-
-    // Register Persist Tab State setting
-    game.settings.register(MODULE_ID, 'persistTabState', {
-        name: game.i18n.localize('BAD.settings.persistTabState.name'),
-        hint: game.i18n.localize('BAD.settings.persistTabState.hint'),
-        scope: 'client',
-        config: true,
-        type: Boolean,
-        default: true
-    });
-
     // Register Filter Out of Resources Setting (hidden from config menu, managed via HUD footer)
     game.settings.register(MODULE_ID, 'filterNoResources', {
         scope: 'client',
@@ -91,14 +63,22 @@ Hooks.once('init', () => {
     // User Scope Settings
     // ==========================================
 
-    // Register Persist Detached HUD Setting
-    game.settings.register(MODULE_ID, 'persistDetached', {
-        name: game.i18n.localize('BAD.settings.persistDetached.name'),
-        hint: game.i18n.localize('BAD.settings.persistDetached.hint'),
+    // Register HUD Opacity Setting (Slider)
+    game.settings.register(MODULE_ID, 'hudOpacity', {
+        name: game.i18n.localize('BAD.settings.hudOpacity.name'),
+        hint: game.i18n.localize('BAD.settings.hudOpacity.hint'),
         scope: 'user',
         config: true,
-        type: Boolean,
-        default: true
+        type: Number,
+        range: {
+            min: 0.1,
+            max: 1.0,
+            step: 0.05
+        },
+        default: 0.88,
+        onChange: value => {
+            document.documentElement.style.setProperty('--bad-hud-opacity', value);
+        }
     });
 
     // Register HUD Scale Setting (Slider)
@@ -135,6 +115,26 @@ Hooks.once('init', () => {
         onChange: value => {
             document.documentElement.style.setProperty('--bad-hud-font-size', `${value}px`);
         }
+    });
+
+    // Register Persist Tab State setting
+    game.settings.register(MODULE_ID, 'persistTabState', {
+        name: game.i18n.localize('BAD.settings.persistTabState.name'),
+        hint: game.i18n.localize('BAD.settings.persistTabState.hint'),
+        scope: 'user',
+        config: true,
+        type: Boolean,
+        default: true
+    });
+
+    // Register Persist Detached HUD Setting
+    game.settings.register(MODULE_ID, 'persistDetached', {
+        name: game.i18n.localize('BAD.settings.persistDetached.name'),
+        hint: game.i18n.localize('BAD.settings.persistDetached.hint'),
+        scope: 'user',
+        config: true,
+        type: Boolean,
+        default: true
     });
 
     // Register Toggle Tab Selection Setting
@@ -271,7 +271,7 @@ export function injectSettingsHeaders(html) {
             icon: 'fas fa-desktop'
         },
         {
-            key: 'persistDetached',
+            key: 'hudOpacity',
             scope: 'user',
             title: game.i18n.localize('BAD.settingsSections.user') ?? 'User Settings',
             icon: 'fas fa-user'

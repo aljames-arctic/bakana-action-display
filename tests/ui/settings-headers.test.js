@@ -91,7 +91,7 @@ test('injectSettingsHeaders inserts client, user, and world headers into Setting
 
         // User group
         const fgUser = new MockElement('div', { className: 'form-group' });
-        const inputUser = new MockElement('input', { name: 'bakana-action-display.persistDetached' });
+        const inputUser = new MockElement('input', { name: 'bakana-action-display.hudOpacity' });
         fgUser.appendChild(inputUser);
         root.appendChild(fgUser);
 
