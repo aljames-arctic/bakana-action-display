@@ -981,17 +981,31 @@
 }
 
 /* Categorization Tooltip Formatting */
-.bad-expression-tooltip,
-#tooltip .bad-expression-tooltip,
-#tooltip:has(.bad-expression-tooltip) {
+#tooltip:has(.bad-expression-tooltip),
+aside#tooltip:has(.bad-expression-tooltip),
+div#tooltip:has(.bad-expression-tooltip),
+.bad-expression-tooltip {
     text-align: left !important;
     direction: ltr !important;
+    max-width: 720px !important;
+    min-width: 520px !important;
+    width: max-content !important;
+    white-space: normal !important;
+}
+
+.bad-expression-tooltip {
+    max-width: 720px;
+    min-width: 500px;
+    font-size: 0.95em;
+    line-height: 1.4;
 }
 
 .bad-expression-tooltip-title {
     font-weight: 600;
-    margin-bottom: 0.35em;
+    margin-bottom: 0.4em;
     text-align: left !important;
+    font-size: 1.05em;
+    color: #e2e8f0;
 }
 
 .bad-expression-tooltip-list {
@@ -1003,8 +1017,19 @@
 
 .bad-expression-tooltip-list li {
     text-align: left !important;
-    margin-bottom: 0.25em;
-    line-height: 1.35;
+    margin-bottom: 0.35em;
+    line-height: 1.4;
+    color: #cbd5e1;
+}
+
+.bad-expression-tooltip code {
+    background: rgba(0, 0, 0, 0.4);
+    padding: 0.1em 0.35em;
+    border-radius: 3px;
+    font-family: var(--font-mono, monospace);
+    font-size: 0.9em;
+    color: #f1f5f9;
+    white-space: nowrap;
 }
 
 .bad-config-categories-list {
