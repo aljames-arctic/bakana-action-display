@@ -62,6 +62,8 @@ test('validateExpression verifies valid and invalid syntax', () => {
     assert.equal(validateExpression('action.left.includes("weapon")').valid, true);
     assert.equal(validateExpression('actor.name === "Hero"').valid, true);
     assert.equal(validateExpression('token.name === "Token"').valid, true);
+    assert.equal(validateExpression('context.actor?.name === "Hero"').valid, true);
+    assert.equal(validateExpression('context.customVar === 123').valid, true);
     assert.equal(validateExpression('').valid, false);
     assert.equal(validateExpression('item.type ===').valid, false);
     assert.equal(validateExpression('&& invalid').valid, false);
@@ -123,6 +125,18 @@ test('evaluateBooleanExpression evaluates action and item properties safely', ()
     assert.equal(
         evaluateBooleanExpression('Boolean(actor?.flags?.["bakana-action-display"]?.favorites?.[item.id])', weaponAction, { actor: mockActor }),
         false
+    );
+    assert.equal(
+        evaluateBooleanExpression('context.actor?.name === "Hero Actor"', daggerAction, { actor: mockActor, token: mockToken }),
+        true
+    );
+    assert.equal(
+        evaluateBooleanExpression('context.token?.name === "Hero Token"', daggerAction, { actor: mockActor, token: mockToken }),
+        true
+    );
+    assert.equal(
+        evaluateBooleanExpression('context.customFlag === true', daggerAction, { actor: mockActor, token: mockToken, customFlag: true }),
+        true
     );
 
     // Fault tolerance & error logging tests (including undeclared shorthand variables)

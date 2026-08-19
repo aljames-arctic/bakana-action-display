@@ -38,7 +38,7 @@ export function openActivitySubContextMenu(app, targetLi, subaction) {
     }, 10);
 }
 
-export function buildSubactionMenuItem(sub, event) {
+export function buildSubactionMenuItem(sub, event, app = null) {
     const uses = sub.uses;
     const iconHtml = sub.img
         ? `<img class="bad-menu-icon" src="${sub.img}" />`
@@ -58,7 +58,10 @@ export function buildSubactionMenuItem(sub, event) {
         usesHtml: usesHtml,
         callback: () => {
             const item = sub.originalItem ?? sub;
-            log.info(`Rolling subaction "${sub.name}" via dropdown:`, { action: sub, item });
+            const actor = app?.actor ?? item?.actor ?? null;
+            const token = app?.token ?? actor?.token ?? null;
+            const context = { action: sub, item, actor, token };
+            log.info(`Rolling subaction "${sub.name}" via dropdown:`, { action: sub, item, actor, token, context });
             sub.roll(event);
         }
     };
@@ -68,7 +71,7 @@ export function showActivityDropdown(app, target, subactions, event) {
     event?.preventDefault?.();
     event?.stopPropagation?.();
     log.debug(`showActivityDropdown | "${target.dataset.actionId}" with ${subactions.length} items:`, subactions.map(s => s.name));
-    const menuItems = subactions.map(sub => buildSubactionMenuItem(sub, event));
+    const menuItems = subactions.map(sub => buildSubactionMenuItem(sub, event, app));
 
     if (app._activeLeftClickMenu) {
         app._activeLeftClickMenu.close();
