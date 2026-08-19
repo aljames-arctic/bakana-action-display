@@ -136,6 +136,13 @@ test('evaluateBooleanExpression evaluates action and item properties safely', ()
         false
     );
 
+    // Direct access to actor.flags['bakana-action-display'].favorites[item.id] without optional chaining on unfavorited actor
+    const actorWithoutFavorites = { name: 'New Actor', flags: {} };
+    assert.equal(
+        evaluateBooleanExpression('Boolean(actor.flags["bakana-action-display"].favorites[item.id])', daggerAction, { actor: actorWithoutFavorites }),
+        false
+    );
+
     // Fault tolerance & error logging tests (including undeclared shorthand variables)
     const originalError = log.error;
     const loggedErrors = [];

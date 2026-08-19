@@ -9,8 +9,12 @@ import { actionDisplay } from '../action-display.js';
  * @returns {Record<string, boolean>} Map of itemId to boolean
  */
 export function getActorFavorites(actor) {
-    if (!actor || typeof actor.getFlag !== 'function') return {};
-    return actor.getFlag(MODULE_ID, 'favorites') ?? {};
+    if (!actor) return {};
+    if (typeof actor === 'object' && actor.flags) {
+        actor.flags[MODULE_ID] = actor.flags[MODULE_ID] ?? {};
+        actor.flags[MODULE_ID].favorites = actor.flags[MODULE_ID].favorites ?? {};
+    }
+    return (typeof actor.getFlag === 'function' ? actor.getFlag(MODULE_ID, 'favorites') : actor.flags?.[MODULE_ID]?.favorites) ?? {};
 }
 
 /**
@@ -96,7 +100,12 @@ export async function setActorItemFavorite(actor, item, isFavorite, adapter = ac
  * @returns {Promise<void>}
  */
 export async function syncActorFavorites(actor, adapter = actionDisplay?.activeSystemAdapter) {
-    if (!actor || !adapter?.hasFavorites?.() || !actor.isOwner) return;
+    if (!actor) return;
+    if (typeof actor === 'object' && actor.flags) {
+        actor.flags[MODULE_ID] = actor.flags[MODULE_ID] ?? {};
+        actor.flags[MODULE_ID].favorites = actor.flags[MODULE_ID].favorites ?? {};
+    }
+    if (!adapter?.hasFavorites?.() || !actor.isOwner) return;
 
     try {
         const currentFlags = { ...getActorFavorites(actor) };
