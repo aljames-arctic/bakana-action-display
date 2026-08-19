@@ -81,6 +81,7 @@ test('Dnd5eSystemAdapter modifyActions full transformation pipeline', async () =
             level: 1,
             method: 'prepared',
             prepared: true,
+            properties: new Set(['vocal', 'somatic']),
             activities: [
                 {
                     id: 'act-spell',
@@ -134,14 +135,17 @@ test('Dnd5eSystemAdapter modifyActions full transformation pipeline', async () =
 
     const weaponAction = page1Actions.find(a => a.id === 'act-weapon');
     assert.equal(weaponAction.subactions[0].right[0].label, 'action');
+    assert.deepEqual(weaponAction.right.map(t => t.path), ['economy/action']);
     assert.deepEqual(weaponAction.left, ['weapon']);
 
     const spellAction = page1Actions.find(a => a.id === 'act-spell');
     assert.equal(spellAction.subactions[0].right[0].label, 'bonus');
+    assert.deepEqual(spellAction.right.map(t => t.path), ['economy/bonus', 'components/vocal', 'components/somatic']);
     assert.deepEqual(spellAction.uses, { available: 3, max: 4 });
 
     const featAction = page1Actions.find(a => a.id === 'act-feat');
     assert.equal(featAction.subactions[0].right[0].label, 'reaction');
+    assert.deepEqual(featAction.right.map(t => t.path), ['economy/reaction']);
 
     const dexAbility = page2Actions.find(a => a.id === 'ability-dex');
     assert.equal(dexAbility.type, 'ability');

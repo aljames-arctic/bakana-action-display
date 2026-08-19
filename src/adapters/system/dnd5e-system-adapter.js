@@ -470,7 +470,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
     #collectUniqueTabs(activities) {
         const uniqueTabsMap = new Map();
         for (const activity of activities) {
-            for (const tab of activity.tabs ?? []) {
+            for (const tab of activity.right ?? activity.tabs ?? []) {
                 if (tab?.path && !uniqueTabsMap.has(tab.path)) {
                     uniqueTabsMap.set(tab.path, tab);
                 }

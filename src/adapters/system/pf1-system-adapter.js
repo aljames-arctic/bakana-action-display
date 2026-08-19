@@ -416,7 +416,7 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
         const firstSub = subactions[0];
         action.subactions = subactions;
         action.activationType = firstSub.activationType;
-        action.right = firstSub.right ?? firstSub.tabs;
+        action.right = firstSub.right;
         action.left = left;
         action.uses = uses;
     }
