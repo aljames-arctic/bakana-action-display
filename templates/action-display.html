@@ -1,13 +1,23 @@
 <div class="bakana-action-display-container">
-    <!-- Control Bar (Grip + Pin Button + Close Button) -->
+    <!-- Control Bar (Recenter + Filter Resources + Grip + Pin Button + Close Button) -->
     <div class="bad-control-bar">
+        <div class="bad-control-group bad-control-left">
+            <button class="bad-control-btn bad-recenter-btn" data-action="recenterToken">
+                <i class="fas fa-crosshairs"></i>
+            </button>
+            <button class="bad-control-btn bad-filter-resources-btn {{#if filterNoResources}}active{{/if}}" data-action="toggleFilterResources">
+                <i class="fas {{#if filterNoResources}}fa-eye-slash{{else}}fa-eye{{/if}}"></i>
+            </button>
+        </div>
         <div class="bad-drag-handle"><i class="fas fa-grip"></i></div>
-        <button class="bad-control-btn bad-pin-btn" data-action="toggleAnchor">
-            <i class="fas {{#if isAttached}}fa-link{{else if isPinned}}fa-thumbtack{{else}}fa-unlink{{/if}}"></i>
-        </button>
-        <button class="bad-control-btn bad-close-btn" data-action="closeHUD">
-            <i class="fas fa-times"></i>
-        </button>
+        <div class="bad-control-group bad-control-right">
+            <button class="bad-control-btn bad-pin-btn" data-action="toggleAnchor">
+                <i class="fas {{#if isAttached}}fa-link{{else if isPinned}}fa-thumbtack{{else}}fa-unlink{{/if}}"></i>
+            </button>
+            <button class="bad-control-btn bad-close-btn" data-action="closeHUD">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
     </div>
 
     <!-- Left-side Slide-out Accordion Tabs (Item Types: Weapon, Spell, Feat, etc.) -->
@@ -220,12 +230,22 @@
 
     </div>
 
-    <!-- Footer / Filter Bar & Page Controls -->
+    <!-- Footer / Search Filter Bar & Page Controls -->
     <div class="bad-footer">
-        <label class="bad-filter-label">
-            <input type="checkbox" class="bad-filter-checkbox" data-action="toggleFilterResources" {{#if filterNoResources}}checked{{/if}} />
-            <span class="bad-filter-text">{{localize "BAD.core.filterNoResources"}}</span>
-        </label>
+        <div class="bad-search-container">
+            <i class="fas fa-search bad-search-icon"></i>
+            <input type="text" 
+                   class="bad-search-input" 
+                   placeholder="{{localize 'BAD.core.searchPlaceholder'}}" 
+                   value="{{searchQuery}}" 
+                   autocomplete="off" 
+                   spellcheck="false" />
+            {{#if searchQuery}}
+            <button class="bad-search-clear-btn" data-action="clearSearch">
+                <i class="fas fa-times"></i>
+            </button>
+            {{/if}}
+        </div>
         {{#if hasMultiplePages}}
         <!-- Page Controls (Bubbles indicator + left/right buttons) -->
         <div class="bad-page-controls">

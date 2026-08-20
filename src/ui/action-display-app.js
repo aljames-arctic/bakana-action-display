@@ -46,6 +46,12 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         // Dragging state
         this._dragData = null;
 
+        // Search filtering state
+        this.searchQuery = '';
+        this._isSearching = false;
+        this._searchSelectionStart = null;
+        this._searchSelectionEnd = null;
+
         // Bind listeners once for event delegation and capture phases to prevent GC churn
         this._boundOnPointerDownCapture = this._onPointerDownCapture.bind(this);
         this._boundOnContextMenuCapture = this._onContextMenuCapture.bind(this);
@@ -282,6 +288,8 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
             closeHUD: ActionDisplayApp.prototype._onCloseHUD,
             rollAction: ActionDisplayApp.prototype._onRollAction,
             toggleFilterResources: ActionDisplayApp.prototype._onToggleFilterResources,
+            recenterToken: ActionDisplayApp.prototype._onRecenterToken,
+            clearSearch: ActionDisplayApp.prototype._onClearSearch,
             previousPage: ActionDisplayApp.prototype._onPreviousPage,
             nextPage: ActionDisplayApp.prototype._onNextPage,
             changePage: ActionDisplayApp.prototype._onChangePage
@@ -517,8 +525,13 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
             }
         }
 
-        // 4. Filter actions based on state
-        const visibleActions = rawActions.filter(action => this._matchesFilters(action));
+        // 4. Filter actions based on state & search query
+        const query = (this.searchQuery ?? '').trim().toLowerCase();
+        const visibleActions = rawActions.filter(action => {
+            if (!this._matchesFilters(action)) return false;
+            if (!query) return true;
+            return this._matchesSearchQuery(action, query);
+        });
         this.displayedActions = visibleActions;
 
         context.itemTypes = itemTypes;
@@ -529,6 +542,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         context.isPinned = this.isPinned;
         context.isDetached = this.isDetached;
         context.filterNoResources = game.settings.get(MODULE_ID, 'filterNoResources');
+        context.searchQuery = this.searchQuery ?? '';
 
         // Synchronize favorites if system supports them and user is owner
         if (this.actor?.isOwner) {
@@ -641,6 +655,21 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
 
         const filterContext = this._getFilterContext();
         return adapter.matchesEconomyTabs(action, filterContext);
+    }
+
+    /**
+     * Helper method to evaluate if an action matches the active text search query.
+     * @param {Object} action The action to evaluate
+     * @param {string} query Lowercase search query string
+     * @returns {boolean} True if matching
+     * @private
+     */
+    _matchesSearchQuery(action, query) {
+        if (!action || !query) return true;
+        if (action.name?.toLowerCase().includes(query)) return true;
+        if (action.originalItem?.name?.toLowerCase().includes(query)) return true;
+        if (action.subactions?.some(sub => sub.name?.toLowerCase().includes(query))) return true;
+        return false;
     }
 
     /**
@@ -934,9 +963,79 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
      * Toggle the "Filter Out of Resources" setting.
      */
     async _onToggleFilterResources(event, target) {
-        const checked = target.checked;
-        await game.settings.set(MODULE_ID, 'filterNoResources', checked);
+        const current = game.settings.get(MODULE_ID, 'filterNoResources');
+        const next = typeof target?.checked === 'boolean' ? target.checked : !current;
+        await game.settings.set(MODULE_ID, 'filterNoResources', next);
         this.render();
+    }
+
+    /**
+     * Recenter the canvas view on the active HUD token.
+     */
+    async _onRecenterToken(event, target) {
+        if (!this.token) return;
+        const center = this.token.center ?? {
+            x: (this.token.x ?? 0) + ((this.token.w ?? 0) / 2),
+            y: (this.token.y ?? 0) + ((this.token.h ?? 0) / 2)
+        };
+        if (typeof canvas?.animatePan === 'function') {
+            await canvas.animatePan({ x: center.x, y: center.y });
+        } else if (typeof canvas?.pan === 'function') {
+            canvas.pan({ x: center.x, y: center.y });
+        }
+    }
+
+    /**
+     * Clear the search filter query and re-render.
+     */
+    _onClearSearch(event, target) {
+        this.searchQuery = '';
+        this._isSearching = false;
+        this.render();
+    }
+
+    /**
+     * Attach input listeners to the search input field for real-time filtering.
+     * @private
+     */
+    _attachSearchListeners() {
+        const searchInput = this.element?.querySelector('.bad-search-input');
+        if (!searchInput) return;
+
+        searchInput.addEventListener('input', (event) => {
+            const query = event.target.value ?? '';
+            this.searchQuery = query;
+            this._searchSelectionStart = event.target.selectionStart;
+            this._searchSelectionEnd = event.target.selectionEnd;
+            this._isSearching = true;
+            this.render();
+        });
+
+        searchInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                event.preventDefault();
+                event.stopPropagation();
+                this.searchQuery = '';
+                this._isSearching = false;
+                this.render();
+            }
+        });
+    }
+
+    /**
+     * Restore input focus and cursor selection range to the search input after re-render.
+     * @private
+     */
+    _restoreSearchFocus() {
+        if (!this._isSearching || !this.element) return;
+        const searchInput = this.element.querySelector('.bad-search-input');
+        if (searchInput) {
+            searchInput.focus();
+            if (typeof this._searchSelectionStart === 'number' && typeof this._searchSelectionEnd === 'number') {
+                searchInput.setSelectionRange(this._searchSelectionStart, this._searchSelectionEnd);
+            }
+        }
+        this._isSearching = false;
     }
 
 
@@ -981,6 +1080,9 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
      */
     _onRender(context, options) {
         super._onRender(context, options);
+
+        this._attachSearchListeners();
+        this._restoreSearchFocus();
 
         // Adjust min-height first so container dimensions reflect the full expanded layout
         this._adjustMinHeight();

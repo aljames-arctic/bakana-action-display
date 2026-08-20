@@ -90,7 +90,12 @@
             "removeFavorite": "Remove from Favorites"
         },
         "core": {
+            "recenterToken": "Recenter on Token",
             "filterNoResources": "Hide Depleted",
+            "searchPlaceholder": "Filter actions...",
+            "clearSearch": "Clear search",
+            "togglePin": "Toggle Pin / Anchor",
+            "closeHUD": "Close HUD",
             "hidden": "Hidden",
             "hideAction": "Hide Action",
             "unhideAction": "Unhide Action",
