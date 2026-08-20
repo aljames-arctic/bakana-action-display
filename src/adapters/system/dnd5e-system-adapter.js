@@ -394,8 +394,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
      * @returns {boolean}
      */
     #isItemDocument(doc) {
-        if (!doc || typeof doc !== 'object') return false;
-        return (typeof Item !== 'undefined' && doc instanceof Item) || doc.documentName === 'Item';
+        return doc?.documentName === 'Item';
     }
 
     /**
