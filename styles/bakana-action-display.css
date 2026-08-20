@@ -1005,6 +1005,12 @@ div#tooltip:has(.bad-expression-tooltip),
     color: #e2e8f0;
 }
 
+.bad-expression-tooltip-desc {
+    margin-bottom: 0.6em;
+    text-align: left !important;
+    color: #cbd5e1;
+}
+
 .bad-expression-tooltip-list {
     margin: 0;
     padding-left: 1.2em;
@@ -1020,11 +1026,13 @@ div#tooltip:has(.bad-expression-tooltip),
 }
 
 .bad-expression-tooltip code {
+    display: inline !important;
     background: rgba(0, 0, 0, 0.4);
     padding: 0.1em 0.35em;
     border-radius: 3px;
     font-family: var(--font-mono, monospace);
     font-size: 0.9em;
+    font-weight: 600;
     color: #f1f5f9;
     white-space: nowrap;
 }

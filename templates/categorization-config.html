@@ -8,7 +8,7 @@
             </label>
             <i class="fas fa-circle-question bad-config-help-icon" data-tooltip="{{localize 'BAD.categorization.expressionHelpTooltip'}}" data-tooltip-direction="RIGHT"></i>
         </div>
-        <button type="button" class="bad-config-btn bad-config-btn-primary" data-action="addCategory" title="{{localize 'BAD.categorization.addCategory'}}">
+        <button type="button" class="bad-config-btn bad-config-btn-primary" data-action="addCategory">
             <i class="fas fa-plus"></i> {{localize "BAD.categorization.addCategory"}}
         </button>
     </div>
@@ -20,15 +20,15 @@
             <div class="bad-config-cat-card" data-cat-index="{{catIndex}}">
                 <!-- Top-Level Category Row: [ Grip ] [ + Subitem ] [ Name ] [ Expression ] [ Delete ] -->
                 <div class="bad-config-cat-row" data-cat-index="{{catIndex}}">
-                    <div class="bad-config-drag-handle" data-drag-type="category" data-cat-index="{{catIndex}}" title="{{localize 'BAD.categorization.dragToReorder'}}">
+                    <div class="bad-config-drag-handle" data-drag-type="category" data-cat-index="{{catIndex}}">
                         <i class="fas fa-grip-vertical"></i>
                     </div>
-                    <button type="button" class="bad-config-btn" data-action="addSubCategory" data-cat-index="{{catIndex}}" title="{{localize 'BAD.categorization.addSubCategory'}}">
+                    <button type="button" class="bad-config-btn" data-action="addSubCategory" data-cat-index="{{catIndex}}">
                         <i class="fas fa-plus"></i>
                     </button>
                     <input type="text" class="bad-cat-name-input" data-cat-index="{{catIndex}}" value="{{cat.name}}" placeholder="{{localize 'BAD.categorization.categoryNamePlaceholder'}}" />
                     <input type="text" class="bad-cat-expr-input" data-cat-index="{{catIndex}}" value="{{cat.expression}}" placeholder="{{localize 'BAD.categorization.categoryExprPlaceholder'}}" />
-                    <button type="button" class="bad-config-btn bad-config-btn-danger" data-action="removeCategory" data-cat-index="{{catIndex}}" title="{{localize 'BAD.categorization.removeCategory'}}">
+                    <button type="button" class="bad-config-btn bad-config-btn-danger" data-action="removeCategory" data-cat-index="{{catIndex}}">
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>
@@ -38,12 +38,12 @@
                 <div class="bad-config-subcategories-list">
                     {{#each cat.subcategories as |sub subIndex|}}
                     <div class="bad-config-sub-row" data-cat-index="{{catIndex}}" data-sub-index="{{subIndex}}">
-                        <div class="bad-config-drag-handle" data-drag-type="subcategory" data-cat-index="{{catIndex}}" data-sub-index="{{subIndex}}" title="{{localize 'BAD.categorization.dragToReorder'}}">
+                        <div class="bad-config-drag-handle" data-drag-type="subcategory" data-cat-index="{{catIndex}}" data-sub-index="{{subIndex}}">
                             <i class="fas fa-grip-vertical"></i>
                         </div>
                         <input type="text" class="bad-sub-name-input" data-cat-index="{{catIndex}}" data-sub-index="{{subIndex}}" value="{{sub.name}}" placeholder="{{localize 'BAD.categorization.subCategoryNamePlaceholder'}}" />
                         <input type="text" class="bad-sub-expr-input" data-cat-index="{{catIndex}}" data-sub-index="{{subIndex}}" value="{{sub.expression}}" placeholder="{{localize 'BAD.categorization.subCategoryExprPlaceholder'}}" />
-                        <button type="button" class="bad-config-btn bad-config-btn-danger" data-action="removeSubCategory" data-cat-index="{{catIndex}}" data-sub-index="{{subIndex}}" title="{{localize 'BAD.categorization.removeSubCategory'}}">
+                        <button type="button" class="bad-config-btn bad-config-btn-danger" data-action="removeSubCategory" data-cat-index="{{catIndex}}" data-sub-index="{{subIndex}}">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
