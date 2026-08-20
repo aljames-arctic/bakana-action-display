@@ -299,3 +299,276 @@ test('Dnd5eSystemAdapter default categorization presets categorize ability and s
     assert.equal(dexSub.items.some(i => i.name === 'Stealth'), true);
 });
 
+test('Dnd5eSystemAdapter onTabRightClick toggles actor flags', () => {
+    const adapter = new Dnd5eSystemAdapter();
+    const flags = {};
+    const mockActor = {
+        isOwner: true,
+        getFlag: (mod, key) => flags[key] ?? false,
+        setFlag: async (mod, key, val) => { flags[key] = val; }
+    };
+    const mockApp = { actor: mockActor };
+
+    // Parent tab 'all' (All Items) - setting showAll sets all filter flags
+    const allParentEl = {
+        classList: { contains: (cls) => cls === 'bad-left-tab' },
+        dataset: { type: 'all' }
+    };
+    assert.equal(adapter.onTabRightClick(mockApp, allParentEl), true);
+    assert.equal(flags.showAll, true);
+    assert.equal(flags.showUnprepared, true);
+    assert.equal(flags.showUnequipped_weapon, true);
+    assert.equal(flags.showUnequipped_equipment, true);
+    assert.equal(flags.showUnequipped_consumable, true);
+    assert.equal(flags.showUnequipped_tool, true);
+    assert.equal(flags.showUnequipped_backpack, true);
+    assert.equal(flags.showUnequipped_loot, true);
+
+    // Clearing showAll clears all filter flags
+    assert.equal(adapter.onTabRightClick(mockApp, allParentEl), true);
+    assert.equal(flags.showAll, false);
+    assert.equal(flags.showUnprepared, false);
+    assert.equal(flags.showUnequipped_weapon, false);
+    assert.equal(flags.showUnequipped_equipment, false);
+    assert.equal(flags.showUnequipped_consumable, false);
+    assert.equal(flags.showUnequipped_tool, false);
+    assert.equal(flags.showUnequipped_backpack, false);
+    assert.equal(flags.showUnequipped_loot, false);
+
+    // Parent tab 'spell' (Spells)
+    const spellParentEl = {
+        classList: { contains: (cls) => cls === 'bad-left-tab' },
+        dataset: { type: 'spell' }
+    };
+    assert.equal(adapter.onTabRightClick(mockApp, spellParentEl), true);
+    assert.equal(flags.showUnprepared, true);
+
+    // Parent tab 'weapon'
+    const weaponParentEl = {
+        classList: { contains: (cls) => cls === 'bad-left-tab' },
+        dataset: { type: 'weapon' }
+    };
+    assert.equal(adapter.onTabRightClick(mockApp, weaponParentEl), true);
+    assert.equal(flags.showUnequipped_weapon, true);
+
+    // Parent tab 'equipment'
+    const equipParentEl = {
+        classList: { contains: (cls) => cls === 'bad-left-tab' },
+        dataset: { type: 'equipment' }
+    };
+    assert.equal(adapter.onTabRightClick(mockApp, equipParentEl), true);
+    assert.equal(flags.showUnequipped_equipment, true);
+
+    // Unhandled parent tab 'feat'
+    const featParentEl = {
+        classList: { contains: (cls) => cls === 'bad-left-tab' },
+        dataset: { type: 'feat' }
+    };
+    assert.equal(adapter.onTabRightClick(mockApp, featParentEl), false);
+
+    // Sub-tab 'all' under spell
+    const spellSubEl = {
+        classList: { contains: (cls) => cls === 'bad-left-sub-tab' },
+        dataset: { type: 'all' },
+        closest: () => ({
+            querySelector: () => ({ dataset: { type: 'spell' } })
+        })
+    };
+    assert.equal(adapter.onTabRightClick(mockApp, spellSubEl), true);
+    assert.equal(flags.showUnprepared, false);
+
+    // Non-owner actor should return false
+    const nonOwnerApp = { actor: { isOwner: false } };
+    assert.equal(adapter.onTabRightClick(nonOwnerApp, allParentEl), false);
+});
+
+test('Dnd5eSystemAdapter modifyActions showAll behavior', async () => {
+    const adapter = new Dnd5eSystemAdapter();
+
+    const preparedSpell = {
+        id: 'spell-prep',
+        name: 'Prepared Spell',
+        type: 'spell',
+        system: {
+            level: 1,
+            method: 'prepared',
+            prepared: true,
+            activities: [{ id: 'act-1', name: 'Cast', type: 'cast', activation: { type: 'action' } }]
+        }
+    };
+
+    const unpreparedSpell = {
+        id: 'spell-unprep',
+        name: 'Unprepared Spell',
+        type: 'spell',
+        system: {
+            level: 1,
+            method: 'prepared',
+            prepared: false,
+            activities: [{ id: 'act-2', name: 'Cast', type: 'cast', activation: { type: 'action' } }]
+        }
+    };
+
+    const equippedWeapon = {
+        id: 'wpn-eq',
+        name: 'Equipped Sword',
+        type: 'weapon',
+        system: {
+            equipped: true,
+            activities: [{ id: 'act-3', name: 'Attack', type: 'attack', activation: { type: 'action' } }]
+        }
+    };
+
+    const unequippedWeapon = {
+        id: 'wpn-uneq',
+        name: 'Unequipped Bow',
+        type: 'weapon',
+        system: {
+            equipped: false,
+            activities: [{ id: 'act-4', name: 'Shoot', type: 'attack', activation: { type: 'action' } }]
+        }
+    };
+
+    const unequippedConsumable = {
+        id: 'pot-uneq',
+        name: 'Unequipped Potion',
+        type: 'consumable',
+        system: {
+            equipped: false,
+            activities: [{ id: 'act-5', name: 'Drink', type: 'heal', activation: { type: 'action' } }]
+        }
+    };
+
+    const unequippedArmor = {
+        id: 'armor-uneq',
+        name: 'Unequipped Plate',
+        type: 'equipment',
+        system: {
+            equipped: false,
+            type: { value: 'heavy' }
+        }
+    };
+
+    const rawActions = [
+        { originalItem: preparedSpell },
+        { originalItem: unpreparedSpell },
+        { originalItem: equippedWeapon },
+        { originalItem: unequippedWeapon },
+        { originalItem: unequippedConsumable },
+        { originalItem: unequippedArmor }
+    ];
+
+    // Case 1: showAll = false, showUnprepared = false
+    const actorNormal = {
+        getFlag: (mod, key) => null,
+        system: { spells: { spell1: { value: 2, max: 2 } }, skills: {} }
+    };
+    const actionsNormal = await adapter.modifyActions(rawActions, actorNormal);
+    assert.equal(actionsNormal.some(a => a.name === 'Prepared Spell'), true);
+    assert.equal(actionsNormal.some(a => a.name === 'Unprepared Spell'), false);
+    assert.equal(actionsNormal.some(a => a.name === 'Equipped Sword'), true);
+    assert.equal(actionsNormal.some(a => a.name === 'Unequipped Bow'), false);
+    assert.equal(actionsNormal.some(a => a.name === 'Unequipped Potion'), false);
+    assert.equal(actionsNormal.some(a => a.name === 'Unequipped Plate'), false);
+
+    // Case 2: showAll = true -> reveals unprepared spells and unequipped items with available = false
+    const actorShowAll = {
+        getFlag: (mod, key) => key === 'showAll' ? true : null,
+        system: { spells: { spell1: { value: 2, max: 2 } }, skills: {} }
+    };
+    const actionsShowAll = await adapter.modifyActions(rawActions, actorShowAll);
+    const foundUnprep = actionsShowAll.find(a => a.name === 'Unprepared Spell');
+    assert.ok(foundUnprep);
+    assert.equal(foundUnprep.available, false);
+
+    const foundUneq = actionsShowAll.find(a => a.name === 'Unequipped Bow');
+    assert.ok(foundUneq);
+    assert.equal(foundUneq.available, false);
+
+    const foundConsumable = actionsShowAll.find(a => a.name === 'Unequipped Potion');
+    assert.ok(foundConsumable);
+    assert.equal(foundConsumable.available, false);
+
+    const foundArmor = actionsShowAll.find(a => a.name === 'Unequipped Plate');
+    assert.ok(foundArmor);
+    assert.equal(foundArmor.available, false);
+
+    const foundPrep = actionsShowAll.find(a => a.name === 'Prepared Spell');
+    assert.ok(foundPrep);
+    assert.equal(foundPrep.available, true);
+
+    const foundEq = actionsShowAll.find(a => a.name === 'Equipped Sword');
+    assert.ok(foundEq);
+    assert.equal(foundEq.available, true);
+});
+
+test('Dnd5eSystemAdapter modifyContext orange indicators for All Items and Spells tabs', () => {
+    const adapter = new Dnd5eSystemAdapter();
+
+    const makeContext = () => ({
+        itemTypes: [
+            { id: 'all', label: 'All Items', subTabs: [], addSubTab: function (st) { this.subTabs.push(st); }, updateOrder: () => {} },
+            { id: 'spell', label: 'Spells', subTabs: [{ id: 'level_1', label: '1st Level', subTabs: [] }], addSubTab: function (st) { this.subTabs.push(st); }, updateOrder: () => {} },
+            { id: 'weapon', label: 'Weapons', subTabs: [], addSubTab: function (st) { this.subTabs.push(st); }, updateOrder: () => {} }
+        ]
+    });
+
+    // 1. showAll = true: All Items, Spells, Weapons tabs should be orange (showUnprepared = true)
+    const context1 = makeContext();
+    const app1 = {
+        actor: { getFlag: (mod, key) => key === 'showAll' ? true : false },
+        leftTabs: { activeParents: new Set(['all']), activeSubTypes: new Set() }
+    };
+    adapter.modifyContext(context1, app1);
+
+    const allTab1 = context1.itemTypes.find(t => t.id === 'all');
+    assert.equal(allTab1.showUnprepared, true);
+
+    const spellTab1 = context1.itemTypes.find(t => t.id === 'spell');
+    assert.equal(spellTab1.showUnprepared, true);
+    const allSpellsSub1 = spellTab1.subTabs.find(s => s.id === 'all');
+    assert.ok(allSpellsSub1);
+    assert.equal(allSpellsSub1.showUnprepared, true);
+
+    const weaponTab1 = context1.itemTypes.find(t => t.id === 'weapon');
+    assert.equal(weaponTab1.showUnprepared, true);
+    const allWeaponsSub1 = weaponTab1.subTabs.find(s => s.id === 'all');
+    assert.ok(allWeaponsSub1);
+    assert.equal(allWeaponsSub1.showUnprepared, true);
+
+    // 2. showAll = false, showUnprepared = false: All Items and Spells tabs are normal
+    const context2 = makeContext();
+    const app2 = {
+        actor: { getFlag: () => false },
+        leftTabs: { activeParents: new Set(['all']), activeSubTypes: new Set() }
+    };
+    adapter.modifyContext(context2, app2);
+
+    const allTab2 = context2.itemTypes.find(t => t.id === 'all');
+    assert.equal(allTab2.showUnprepared, false);
+
+    const spellTab2 = context2.itemTypes.find(t => t.id === 'spell');
+    assert.equal(spellTab2.showUnprepared, false);
+    const allSpellsSub2 = spellTab2.subTabs.find(s => s.id === 'all');
+    assert.ok(allSpellsSub2);
+    assert.equal(allSpellsSub2.showUnprepared, false);
+
+    // 3. showAll = false, showUnprepared = true: Only Spells tab is orange
+    const context3 = makeContext();
+    const app3 = {
+        actor: { getFlag: (mod, key) => key === 'showUnprepared' ? true : false },
+        leftTabs: { activeParents: new Set(['spell']), activeSubTypes: new Set() }
+    };
+    adapter.modifyContext(context3, app3);
+
+    const allTab3 = context3.itemTypes.find(t => t.id === 'all');
+    assert.equal(allTab3.showUnprepared, false);
+
+    const spellTab3 = context3.itemTypes.find(t => t.id === 'spell');
+    assert.equal(spellTab3.showUnprepared, true);
+    const allSpellsSub3 = spellTab3.subTabs.find(s => s.id === 'all');
+    assert.ok(allSpellsSub3);
+    assert.equal(allSpellsSub3.showUnprepared, true);
+});
+
+

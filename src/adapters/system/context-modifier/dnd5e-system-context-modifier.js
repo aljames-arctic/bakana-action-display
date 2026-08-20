@@ -99,9 +99,58 @@ export class Dnd5eSystemContextModifier extends BaseSystemContextModifier {
     modifyContext(context, app) {
         const findParent = id => context.itemTypes?.find(t => t.id === id);
 
-        this.#ensureAllSubTab(findParent('spell'), app, localize('BAD.common.allSpells', 'All Spells'), 'showUnprepared', true);
-        this.#ensureAllSubTab(findParent('weapon'), app, localize('BAD.common.allWeapons', 'All Weapons'), 'showUnequipped_weapon');
-        this.#ensureAllSubTab(findParent('equipment'), app, localize('BAD.common.allEquipment', 'All Equipment'), 'showUnequipped_equipment');
+        const showAll = app.actor?.getFlag(MODULE_ID, 'showAll') ?? false;
+
+        const allParent = findParent('all');
+        if (allParent) {
+            allParent.showUnprepared = showAll;
+        }
+
+        const spellParent = findParent('spell');
+        if (spellParent) {
+            const showUnprepared = app.actor?.getFlag(MODULE_ID, 'showUnprepared') ?? false;
+            spellParent.showUnprepared = Boolean(showUnprepared || showAll);
+        }
+
+        const weaponParent = findParent('weapon');
+        if (weaponParent) {
+            const showUnequippedWeapon = app.actor?.getFlag(MODULE_ID, 'showUnequipped_weapon') ?? false;
+            weaponParent.showUnprepared = Boolean(showUnequippedWeapon || showAll);
+        }
+
+        const equipmentParent = findParent('equipment');
+        if (equipmentParent) {
+            const showUnequippedEquipment = app.actor?.getFlag(MODULE_ID, 'showUnequipped_equipment') ?? false;
+            equipmentParent.showUnprepared = Boolean(showUnequippedEquipment || showAll);
+        }
+
+        const consumableParent = findParent('consumable');
+        if (consumableParent) {
+            const showUnequippedConsumable = app.actor?.getFlag(MODULE_ID, 'showUnequipped_consumable') ?? false;
+            consumableParent.showUnprepared = Boolean(showUnequippedConsumable || showAll);
+        }
+
+        const toolParent = findParent('tool');
+        if (toolParent) {
+            const showUnequippedTool = app.actor?.getFlag(MODULE_ID, 'showUnequipped_tool') ?? false;
+            toolParent.showUnprepared = Boolean(showUnequippedTool || showAll);
+        }
+
+        const backpackParent = findParent('backpack');
+        if (backpackParent) {
+            const showUnequippedBackpack = app.actor?.getFlag(MODULE_ID, 'showUnequipped_backpack') ?? false;
+            backpackParent.showUnprepared = Boolean(showUnequippedBackpack || showAll);
+        }
+
+        const lootParent = findParent('loot');
+        if (lootParent) {
+            const showUnequippedLoot = app.actor?.getFlag(MODULE_ID, 'showUnequipped_loot') ?? false;
+            lootParent.showUnprepared = Boolean(showUnequippedLoot || showAll);
+        }
+
+        this.#ensureAllSubTab(findParent('spell'), app, localize('BAD.common.allSpells', 'All Spells'), 'showUnprepared', true, showAll);
+        this.#ensureAllSubTab(findParent('weapon'), app, localize('BAD.common.allWeapons', 'All Weapons'), 'showUnequipped_weapon', false, showAll);
+        this.#ensureAllSubTab(findParent('equipment'), app, localize('BAD.common.allEquipment', 'All Equipment'), 'showUnequipped_equipment', false, showAll);
     }
 
     /**
@@ -111,10 +160,12 @@ export class Dnd5eSystemContextModifier extends BaseSystemContextModifier {
      * @param {string} label Localized tab label
      * @param {string} flagKey Actor flag key for unprepared/unequipped display toggle
      * @param {boolean} [requireSubTabs=false] Only inject if parent has existing subtabs
+     * @param {boolean} [forceShow=false] Force orange indicator if showAll is true
      */
-    #ensureAllSubTab(parent, app, label, flagKey, requireSubTabs = false) {
+    #ensureAllSubTab(parent, app, label, flagKey, requireSubTabs = false, forceShow = false) {
         if (!parent || (requireSubTabs && parent.subTabs.length === 0)) return;
-        const showUnprepared = app.actor.getFlag(MODULE_ID, flagKey) ?? false;
+        const flagValue = app.actor?.getFlag(MODULE_ID, flagKey) ?? false;
+        const showUnprepared = Boolean(forceShow || flagValue);
         parent.addSubTab({
             id: 'all',
             label,

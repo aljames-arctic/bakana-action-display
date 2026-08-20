@@ -1100,7 +1100,12 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
             event.preventDefault();
             event.stopPropagation();
             event.stopImmediatePropagation();
-            this._onToggleLeftParent(leftParentTarget.dataset.type);
+
+            // Delegate to system adapter for custom right-click behavior (e.g. toggling showAll/unprepared/unequipped in dnd5e)
+            const handled = adapter.onTabRightClick(this, leftParentTarget, event);
+            if (!handled) {
+                this._onToggleLeftParent(leftParentTarget.dataset.type);
+            }
             return;
         }
 

@@ -197,4 +197,4 @@ Additional classes are appended dynamically to elements to represent their activ
 | **`.upcast`** | `.bad-action-uses` | Appended to spell slots that are being upcast. | The badge background and text turn a soft orange. |
 | **`.active`** | `.bad-left-tab` / `.bad-right-tab` | Appended to the currently selected tab. | Turns into a vibrant violet gradient with a strong shadow glow. |
 | **`.active-parent`** | `.bad-left-tab` | Appended to a parent tab (like "Spells") when one of its sub-tabs (like "1st Level") is active. | Receives a subtle violet highlight indicating the active sub-category. |
-| **`.unprepared-active`** | `.bad-left-sub-tab` | Appended to the "All Spells" tab when unprepared spells are toggled on. | Turns orange (if active) or receives a soft orange border (if inactive) to warn the user. |
+| **`.unprepared-active`** | `.bad-left-tab` / `.bad-left-sub-tab` | Appended to "All Items", "Spells", or item sub-tabs when unprepared spells or unequipped gear are toggled on. | Turns orange (if active) or receives a soft orange border (if inactive) to warn the user. |

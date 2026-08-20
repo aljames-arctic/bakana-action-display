@@ -408,23 +408,37 @@
     box-shadow: -2px 2px 8px rgba(124, 58, 237, 0.4);
 }
 
-/* Orange styling for 'All Spells' when unprepared spells are toggled on */
+/* Orange styling for parent tabs (All Items, Spells, etc.) and sub-tabs when unprepared/unequipped/all are toggled on */
+.bad-left-tab.active.unprepared-active,
 .bad-left-sub-tab.active.unprepared-active {
     background: linear-gradient(135deg, #f97316 0%, #c2410c 100%) !important;
     border-color: #fb923c !important;
-    box-shadow: -2px 2px 8px rgba(249, 115, 22, 0.4);
+    box-shadow: -3px 3px 12px rgba(249, 115, 22, 0.4);
+    color: #ffffff !important;
 }
 
+.bad-left-tab.active.unprepared-active .bad-left-tab-icon {
+    text-shadow: 0 0 8px rgba(255, 255, 255, 0.6);
+}
+
+.bad-left-tab.active-parent.unprepared-active {
+    background: rgba(249, 115, 22, 0.15) !important;
+    border-color: rgba(249, 115, 22, 0.4) !important;
+    color: #fdba74 !important;
+}
+
+.bad-left-tab.unprepared-active:not(.active):not(.active-parent),
 .bad-left-sub-tab.unprepared-active:not(.active) {
     border-color: rgba(249, 115, 22, 0.4) !important;
-    color: #ffedd5;
+    color: #ffedd5 !important;
     background: rgba(249, 115, 22, 0.05);
 }
 
+.bad-left-tab.unprepared-active:not(.active):not(.active-parent):hover,
 .bad-left-sub-tab.unprepared-active:not(.active):hover {
-    background: rgba(249, 115, 22, 0.15);
+    background: rgba(249, 115, 22, 0.15) !important;
     border-color: rgba(249, 115, 22, 0.6) !important;
-    color: #ffffff;
+    color: #ffffff !important;
 }
 
 /* Nested sub-tabs layout and indentation */

@@ -15,7 +15,7 @@
         {{#each itemTypes}}
         <div class="bad-left-tab-group {{#if this.expanded}}expanded{{/if}}">
             <!-- Parent Tab -->
-            <div class="bad-left-tab {{#if this.active}}active{{/if}} {{#if this.activeParent}}active-parent{{/if}}" 
+            <div class="bad-left-tab {{#if this.active}}active{{/if}} {{#if this.activeParent}}active-parent{{/if}} {{#if this.showUnprepared}}unprepared-active{{/if}}" 
                  data-action="changeLeftItemType" 
                  data-type="{{this.id}}" 
                  data-has-sub-tabs="{{#if this.subTabs.length}}true{{else}}false{{/if}}">

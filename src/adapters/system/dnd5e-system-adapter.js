@@ -63,10 +63,6 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
             log.debug(`Dnd5eSystemAdapter.shouldExtractItem | Skipping "${item.name}" (${type}, ID: ${item.id}) — item.flags.dnd5e.cachedFor is set (helper item)`);
             return false;
         }
-        if (['consumable', 'tool'].includes(type) && !this.getItemEquipped(item)) {
-            log.debug(`Dnd5eSystemAdapter.shouldExtractItem | Skipping "${item.name}" (${type}, ID: ${item.id}) — item.system.equipped === false`);
-            return false;
-        }
         return true;
     }
 
@@ -80,6 +76,9 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         this.init(actor);
         const modified = [];
         const filterNoResources = game.settings.get(MODULE_ID, 'filterNoResources');
+
+        const showAll = actor?.getFlag?.(MODULE_ID, 'showAll') ?? false;
+        const showUnprepared = Boolean((actor?.getFlag?.(MODULE_ID, 'showUnprepared') ?? false) || showAll);
 
         for (const action of actions) {
             const item = action.originalItem;
@@ -99,13 +98,12 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                 ? rawHidden.includes(item.id)
                 : Boolean(rawHidden?.[item.id]);
 
-            // 1. Filter out unprepared spells (unless innate/at-will/pact, showUnprepared is enabled, or item is user-hidden)
+            // 1. Filter out unprepared spells (unless innate/at-will/pact, showUnprepared/showAll is enabled, or item is user-hidden)
             let isSpellUnprepared = false;
             if (type === 'spell') {
                 const prepMode = item.system.method;
                 const isPrepared = Boolean(item.system.prepared);
                 isSpellUnprepared = !['innate', 'atwill', 'pact'].includes(prepMode) && !isPrepared;
-                const showUnprepared = actor?.getFlag?.(MODULE_ID, 'showUnprepared');
 
                 if (!showUnprepared && isSpellUnprepared && !isUserHidden) {
                     log.debug(`Dnd5eSystemAdapter.modifyActions | Filtering out spell "${item.name}" (ID: ${item.id}) — item.system.prepared === false and prepMode (${prepMode}) requires preparation; showUnprepared flag is not set`);
@@ -113,20 +111,21 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                 }
             }
 
-            // 2. Filter out unequipped weapons and equipment (unless showUnequipped is enabled or item is user-hidden)
+            // 2. Filter out unequipped gear (unless showUnequipped/showAll is enabled or item is user-hidden)
             let isUnequipped = false;
-            if (['weapon', 'equipment'].includes(type)) {
-                isUnequipped = !this.getItemEquipped(item);
-                const showUnequipped = actor?.getFlag?.(MODULE_ID, `showUnequipped_${type}`);
+            if (this.getItemEquipped(item) === false) {
+                isUnequipped = true;
+                const showUnequipped = Boolean((actor?.getFlag?.(MODULE_ID, `showUnequipped_${type}`) ?? false) || showAll);
 
-                if (!showUnequipped && isUnequipped && !isUserHidden) {
-                    log.debug(`Dnd5eSystemAdapter.modifyActions | Filtering out ${type} "${item.name}" (ID: ${item.id}) — item.system.equipped === false and showUnequipped_${type} flag is not set`);
+                if (!showUnequipped && !isUserHidden) {
+                    log.debug(`Dnd5eSystemAdapter.modifyActions | Filtering out ${type} "${item.name}" (ID: ${item.id}) — item.system.equipped === false and showUnequipped_${type} / showAll flag is not set`);
                     continue;
                 }
             }
 
             // 4. Process activities if they exist (D&D 5e v4+)
             const activities = this.getItemActivities(item);
+            let mappedActivities = [];
 
             if (activities.length > 0) {
                 // Map D&D 5e Activities to sub-actions for the generic HUD item model
@@ -155,9 +154,10 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                     });
                 }));
 
-                const mappedActivities = rawActivities.filter(Boolean);
-                if (mappedActivities.length === 0) continue;
+                mappedActivities = rawActivities.filter(Boolean);
+            }
 
+            if (mappedActivities.length > 0) {
                 // Extract spell components from linked spells on cast activities or item properties if present
                 for (const act of mappedActivities) {
                     const compTabs = this.#getComponentTabs(act);
@@ -210,15 +210,24 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                 });
 
                 modified.push(activityAction);
-            } else if (['equipment', 'weapon', 'backpack', 'loot'].includes(type)) {
-                // Passive items (armor, passive shields, containers, loot) are assigned right-side tab 'none' under 'economy'
+            } else if (['equipment', 'weapon', 'consumable', 'tool', 'backpack', 'loot'].includes(type)) {
+                // Passive items (armor, passive shields, containers, loot, passive consumables/tools) are assigned right-side tab 'none' under 'economy'
                 const subType = item.system.type?.value;
                 const passiveAction = new Action({
                     ...action,
+                    name: item.name,
+                    img: item.img,
                     available: !(isSpellUnprepared || isUnequipped),
                     right: [TabRef.from('economy', 'none')],
                     left: subType ? [type, subType] : [type],
-                    uses: { available: null, max: null }
+                    uses: { available: null, max: null },
+                    roll: async (event) => {
+                        if (activities[0]?.use) {
+                            const proxiedEvent = this._createRollEvent(event);
+                            return activities[0].use({ event: proxiedEvent }, { event: proxiedEvent });
+                        }
+                        return action.roll?.(event);
+                    }
                 });
                 modified.push(passiveAction);
             }
