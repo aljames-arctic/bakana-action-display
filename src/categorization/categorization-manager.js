@@ -99,7 +99,7 @@ export function evaluateBooleanExpression(expression, action, context = {}) {
     if (!expr) return false;
 
     try {
-        const item = action?.originalItem ?? action ?? {};
+        const item = action?.originalItem ?? action;
         const actor = context?.actor ?? action?.actor ?? null;
         const token = context?.token ?? action?.token ?? null;
         const user = context?.user ?? game.user ?? null;

@@ -25,7 +25,7 @@ export function isActorItemFavorite(actor, item, customAdapter = null) {
     if (!actor || !item?.id) return false;
 
     const favorites = getActorFavorites(actor);
-    if (favorites[item.id] === true) return true;
+    if (favorites[item.id]) return true;
 
     const sys = customAdapter ?? adapter.system;
     if (sys?.hasFavorites?.() && sys.isFavorite(actor, item)) {
@@ -98,7 +98,7 @@ export async function syncActorFavorites(actor, customAdapter = null) {
         const updatedFlags = {};
         let hasChanges = false;
 
-        const items = actor.items instanceof Map ? Array.from(actor.items.values()) : (Array.isArray(actor.items) ? actor.items : Array.from(actor.items || []));
+        const items = actor.items instanceof Map ? Array.from(actor.items.values()) : (Array.isArray(actor.items) ? actor.items : Array.from(actor.items ?? []));
         for (const item of items) {
             if (!item?.id) continue;
             const isSysFav = Boolean(sys.isFavorite(actor, item));
