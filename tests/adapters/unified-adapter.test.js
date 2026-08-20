@@ -1,32 +1,35 @@
 import '../setup.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { adapter, Adapter, FoundryCurrAdapter, BaseSystemAdapter } from '../../src/adapters/index.js';
+import { adapter, Adapter, BaseFoundryAdapter, FoundryCurrentAdapter, BaseSystemAdapter } from '../../src/adapters/index.js';
 import { initializeFoundryAdapter } from '../../src/adapters/foundry/index.js';
 import { initializeSystemAdapter } from '../../src/adapters/system/index.js';
 import { initializeModuleAdapters } from '../../src/adapters/module/index.js';
 import { MODULE_ID } from '../../src/constants.js';
 
-test('initializeFoundryAdapter returns FoundryCurrAdapter with dynamic generation', () => {
+test('initializeFoundryAdapter returns FoundryCurrentAdapter inheriting BaseFoundryAdapter with dynamic generation', () => {
     // V12
     globalThis.game.release = { generation: 12 };
     globalThis.game.version = '12.331';
     const v12 = initializeFoundryAdapter();
-    assert.ok(v12 instanceof FoundryCurrAdapter);
+    assert.ok(v12 instanceof FoundryCurrentAdapter);
+    assert.ok(v12 instanceof BaseFoundryAdapter);
     assert.equal(v12.generation, 12);
 
     // V13
     globalThis.game.release = { generation: 13 };
     globalThis.game.version = '13.300';
     const v13 = initializeFoundryAdapter();
-    assert.ok(v13 instanceof FoundryCurrAdapter);
+    assert.ok(v13 instanceof FoundryCurrentAdapter);
+    assert.ok(v13 instanceof BaseFoundryAdapter);
     assert.equal(v13.generation, 13);
 
     // V14
     globalThis.game.release = { generation: 14 };
     globalThis.game.version = '14.000';
     const v14 = initializeFoundryAdapter();
-    assert.ok(v14 instanceof FoundryCurrAdapter);
+    assert.ok(v14 instanceof FoundryCurrentAdapter);
+    assert.ok(v14 instanceof BaseFoundryAdapter);
     assert.equal(v14.generation, 14);
 });
 
@@ -66,7 +69,8 @@ test('Unified Adapter init initializes foundry, system, and module layers', asyn
     const testAdapter = new Adapter();
     await testAdapter.init();
 
-    assert.ok(testAdapter.foundry instanceof FoundryCurrAdapter);
+    assert.ok(testAdapter.foundry instanceof FoundryCurrentAdapter);
+    assert.ok(testAdapter.foundry instanceof BaseFoundryAdapter);
     assert.equal(testAdapter.foundry.generation, 12);
     assert.equal(testAdapter.system.systemId, 'dnd5e');
     assert.equal(testAdapter.modules.size, 0);
