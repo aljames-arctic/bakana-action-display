@@ -43,19 +43,17 @@ test('isActorItemFavorite checks actor flag map and adapter', () => {
     };
 
     // Item 1: favorite via actor flag
-    assert.equal(isActorItemFavorite(mockActor, 'item-1', mockAdapter), true);
     assert.equal(isActorItemFavorite(mockActor, { id: 'item-1' }, mockAdapter), true);
 
     // Item 2: favorite via adapter
-    assert.equal(isActorItemFavorite(mockActor, 'item-2', mockAdapter), true);
     assert.equal(isActorItemFavorite(mockActor, { id: 'item-2' }, mockAdapter), true);
 
     // Item 3: not favorite
-    assert.equal(isActorItemFavorite(mockActor, 'item-3', mockAdapter), false);
+    assert.equal(isActorItemFavorite(mockActor, { id: 'item-3' }, mockAdapter), false);
 
     // Without adapter supporting favorites
     const noFavAdapter = { hasFavorites: () => false, isFavorite: () => true };
-    assert.equal(isActorItemFavorite(mockActor, 'item-2', noFavAdapter), false);
+    assert.equal(isActorItemFavorite(mockActor, { id: 'item-2' }, noFavAdapter), false);
 });
 
 test('setActorItemFavorite updates adapter and actor flag correctly', async () => {

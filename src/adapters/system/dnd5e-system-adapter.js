@@ -945,27 +945,26 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
      * Check if an item is favorited on the actor using DnD5e logic.
      *
      * @param {Object} actor Actor document
-     * @param {Object} item Item document or action
+     * @param {Item} item Item document
      * @returns {boolean} True if favorited in dnd5e
      */
     isFavorite(actor, item) {
-        const rawItem = item?.originalItem ?? item;
-        if (!rawItem) return false;
+        if (!item) return false;
 
         // 1. Direct system.favorite property (dnd5e 3.x+)
-        if (rawItem.system && 'favorite' in rawItem.system) {
-            return Boolean(rawItem.system.favorite);
+        if (item.system && 'favorite' in item.system) {
+            return Boolean(item.system.favorite);
         }
 
         // 2. Legacy / flag-based favorite (dnd5e 2.x)
-        if (rawItem.flags?.dnd5e?.favorite !== undefined) {
-            return Boolean(rawItem.flags.dnd5e.favorite);
+        if (item.flags?.dnd5e?.favorite !== undefined) {
+            return Boolean(item.flags.dnd5e.favorite);
         }
 
         // 3. Actor system.favorites set/array (dnd5e 3.x+ actor favorites collection)
         if (Array.isArray(actor?.system?.favorites)) {
-            const relUuid = typeof rawItem.getRelativeUUID === 'function' ? rawItem.getRelativeUUID(actor) : null;
-            return actor.system.favorites.some(f => f?.id === rawItem.id || (relUuid && f?.id === relUuid) || f?.id === rawItem.uuid);
+            const relUuid = typeof item.getRelativeUUID === 'function' ? item.getRelativeUUID(actor) : null;
+            return actor.system.favorites.some(f => f?.id === item.id || (relUuid && f?.id === relUuid) || f?.id === item.uuid);
         }
 
         return false;
@@ -975,23 +974,22 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
      * Set or unset favorite status on an item in DnD5e.
      *
      * @param {Object} actor Actor document
-     * @param {Object} item Item document or action
+     * @param {Item} item Item document
      * @param {boolean} favorite True to favorite, false to unfavorite
      * @returns {Promise<any>|null} Result of update
      */
     async setFavorite(actor, item, favorite) {
-        const rawItem = item?.originalItem ?? item;
-        if (!rawItem) return null;
+        if (!item) return null;
         const isFav = Boolean(favorite);
 
         // 1. If item has system.favorite field (modern dnd5e 3.x+)
-        if (rawItem.system && 'favorite' in rawItem.system && typeof rawItem.update === 'function') {
-            return await rawItem.update({ 'system.favorite': isFav });
+        if (item.system && 'favorite' in item.system && typeof item.update === 'function') {
+            return await item.update({ 'system.favorite': isFav });
         }
 
         // 2. If actor has addFavorite / removeFavorite methods (dnd5e 3.x actor methods)
         if (typeof actor?.system?.addFavorite === 'function' && typeof actor?.system?.removeFavorite === 'function') {
-            const uuid = typeof rawItem.getRelativeUUID === 'function' ? rawItem.getRelativeUUID(actor) : rawItem.id;
+            const uuid = typeof item.getRelativeUUID === 'function' ? item.getRelativeUUID(actor) : item.id;
             if (isFav) {
                 return await actor.system.addFavorite({ id: uuid, type: 'item' });
             } else {
@@ -1000,8 +998,8 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         }
 
         // 3. Fallback to updating item flags
-        if (typeof rawItem.update === 'function') {
-            return await rawItem.update({ 'flags.dnd5e.favorite': isFav });
+        if (typeof item.update === 'function') {
+            return await item.update({ 'flags.dnd5e.favorite': isFav });
         }
 
         return null;

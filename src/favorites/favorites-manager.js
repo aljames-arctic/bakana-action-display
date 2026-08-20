@@ -17,24 +17,19 @@ export function getActorFavorites(actor) {
  * Check whether an item is favorited on an actor, checking both actor-level flag and system adapter.
  *
  * @param {Object} actor Actor document
- * @param {Object|string} item Item document, Action instance, or itemId string
+ * @param {Object} item Item document
  * @param {Object} [customAdapter=null] Optional adapter override (defaults to global adapter.system)
  * @returns {boolean} True if favorited
  */
 export function isActorItemFavorite(actor, item, customAdapter = null) {
-    if (!actor || !item) return false;
-    const itemId = typeof item === 'string' ? item : item.id;
-    if (!itemId) return false;
+    if (!actor || !item?.id) return false;
 
     const favorites = getActorFavorites(actor);
-    if (favorites[itemId] === true) return true;
+    if (favorites[item.id] === true) return true;
 
     const sys = customAdapter ?? adapter.system;
-    if (sys?.hasFavorites?.()) {
-        const itemDoc = typeof item === 'object' ? (item.originalItem ?? item) : actor.items?.get(itemId);
-        if (itemDoc && sys.isFavorite(actor, itemDoc)) {
-            return true;
-        }
+    if (sys?.hasFavorites?.() && sys.isFavorite(actor, item)) {
+        return true;
     }
 
     return false;
@@ -44,26 +39,23 @@ export function isActorItemFavorite(actor, item, customAdapter = null) {
  * Set or unset favorite state for an item on an actor, updating both the system-level state and actor flag map.
  *
  * @param {Object} actor Actor document
- * @param {Object|string} item Item document, Action instance, or itemId string
+ * @param {Object} item Item document
  * @param {boolean} isFavorite Target favorite state
  * @param {Object} [customAdapter=null] Optional adapter override (defaults to global adapter.system)
  * @returns {Promise<void>}
  */
 export async function setActorItemFavorite(actor, item, isFavorite, customAdapter = null) {
-    if (!actor || !item) return;
-    const itemId = typeof item === 'string' ? item : item.id;
-    if (!itemId) return;
+    if (!actor || !item?.id) return;
 
     const targetFavorite = Boolean(isFavorite);
-    const itemDoc = typeof item === 'object' ? (item.originalItem ?? item) : actor.items?.get(itemId);
     const sys = customAdapter ?? adapter.system;
 
     // 1. Update system level if supported
-    if (sys?.hasFavorites?.() && itemDoc) {
+    if (sys?.hasFavorites?.()) {
         try {
-            await sys.setFavorite(actor, itemDoc, targetFavorite);
+            await sys.setFavorite(actor, item, targetFavorite);
         } catch (err) {
-            log.error(`setActorItemFavorite | Failed to set system favorite for item "${itemDoc.name}":`, err);
+            log.error(`setActorItemFavorite | Failed to set system favorite for item "${item.name}":`, err);
         }
     }
 
@@ -71,22 +63,22 @@ export async function setActorItemFavorite(actor, item, isFavorite, customAdapte
     try {
         const current = { ...getActorFavorites(actor) };
         if (targetFavorite) {
-            current[itemId] = true;
+            current[item.id] = true;
             if (typeof actor.setFlag === 'function') {
                 await actor.setFlag(MODULE_ID, 'favorites', current);
             }
         } else {
-            delete current[itemId];
+            delete current[item.id];
             if (typeof actor.update === 'function') {
                 await actor.update({
-                    [`flags.${MODULE_ID}.favorites.-=${itemId}`]: null
+                    [`flags.${MODULE_ID}.favorites.-=${item.id}`]: null
                 });
             } else if (typeof actor.setFlag === 'function') {
                 await actor.setFlag(MODULE_ID, 'favorites', current);
             }
         }
     } catch (err) {
-        log.error(`setActorItemFavorite | Failed to update actor flag for item ID "${itemId}":`, err);
+        log.error(`setActorItemFavorite | Failed to update actor flag for item ID "${item.id}":`, err);
     }
 }
 

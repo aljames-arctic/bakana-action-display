@@ -297,7 +297,7 @@ export class BaseSystemAdapter {
      * Check if an item is favorited on the actor using system-specific logic.
      *
      * @param {Object} actor Actor document
-     * @param {Object} item Item document or action
+     * @param {Item} item Item document
      * @returns {boolean} True if the item is favorited
      */
     isFavorite(actor, item) {
@@ -308,7 +308,7 @@ export class BaseSystemAdapter {
      * Set or unset favorite status on an item in a system-specific manner.
      *
      * @param {Object} actor Actor document
-     * @param {Object} item Item document or action
+     * @param {Item} item Item document
      * @param {boolean} favorite True to favorite, false to unfavorite
      * @returns {Promise<any>|null} Result of update or null if unsupported
      */
