@@ -71,7 +71,6 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
                 defaultParent: 'all',
                 cached: this._cachedPages?.[key],
                 getDefaultSubTypes: () => {
-                    if (pageNum === 2) return side === 'right' ? ['all'] : [];
                     return side === 'left'
                         ? adapter.getDefaultActiveLeftSubTypes()
                         : adapter.getDefaultActiveSubTypes();

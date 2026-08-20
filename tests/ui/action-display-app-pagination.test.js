@@ -96,3 +96,29 @@ test('ActionDisplayApp _onCloseHUD calls close on the application', async () => 
     await app._onCloseHUD({ preventDefault: () => {}, stopPropagation: () => {} }, {});
     assert.equal(closeCalled, true);
 });
+
+test('ActionDisplayApp Page 2 right tab column initializes activeSubTypes to empty set and displays actions on parent tab selection', async () => {
+    const app = new ActionDisplayApp({ actor: { id: 'test-actor' } });
+    app.activePage = 2;
+    app._saveTabState = () => {};
+
+    const rightCol = app.getTabColumn('right', 2);
+    assert.deepEqual(Array.from(rightCol.activeSubTypes), []);
+
+    // Select 'ability' parent tab
+    const abilityTab = new HUDTab({
+        id: 'ability',
+        label: 'Ability',
+        subTabs: [
+            { id: 'all', label: 'All Actions' },
+            { id: 'str', label: 'Strength' },
+            { id: 'dex', label: 'Dexterity' }
+        ]
+    });
+    const parentGroups = { ability: abilityTab };
+    rightCol.selectParent('ability', parentGroups);
+
+    assert.equal(rightCol.activeParents.has('ability'), true);
+    assert.deepEqual(Array.from(rightCol.activeSubTypes), []);
+});
+
