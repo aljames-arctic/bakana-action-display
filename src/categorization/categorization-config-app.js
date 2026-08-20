@@ -43,7 +43,8 @@ export class CategorizationConfigApp extends adapter.foundry.HandlebarsApplicati
         const path = game.modules?.get(MODULE_ID)?.path ?? `modules/${MODULE_ID}`;
         return {
             config: {
-                template: `${path}/templates/categorization-config.html`
+                template: `${path}/templates/categorization-config.html`,
+                scrollable: ['.bad-config-categories-list']
             }
         };
     }
@@ -53,6 +54,7 @@ export class CategorizationConfigApp extends adapter.foundry.HandlebarsApplicati
         const stored = game.settings.get(MODULE_ID, 'categorizationConfig');
         this.config = normalizeCategorizationConfig(stored);
         this._dragState = null;
+        this._focusTarget = null;
     }
 
     /** @override */
@@ -67,6 +69,30 @@ export class CategorizationConfigApp extends adapter.foundry.HandlebarsApplicati
         super._onRender?.(context, options);
         this._attachDragListeners();
         this._attachInputListeners();
+        this._restoreFocus();
+    }
+
+    /**
+     * Restore focus and scroll newly added category or subcategory name inputs into view.
+     */
+    _restoreFocus() {
+        if (!this._focusTarget || !this.element) return;
+        const { type, id } = this._focusTarget;
+        this._focusTarget = null;
+
+        let input = null;
+        if (type === 'category') {
+            const card = this.element.querySelector(`.bad-config-cat-card[data-cat-id="${id}"]`);
+            input = card?.querySelector('.bad-cat-name-input') ?? null;
+        } else if (type === 'subcategory') {
+            const row = this.element.querySelector(`.bad-config-sub-row[data-sub-id="${id}"]`);
+            input = row?.querySelector('.bad-sub-name-input') ?? null;
+        }
+
+        if (input) {
+            input.focus?.();
+            input.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' });
+        }
     }
 
     /**
@@ -274,12 +300,14 @@ export class CategorizationConfigApp extends adapter.foundry.HandlebarsApplicati
     _onAddCategory(event, target) {
         event.preventDefault();
         this._syncFormData();
+        const newCatId = `cat_${Date.now()}_${this.config.categories.length}`;
         this.config.categories.push({
-            id: `cat_${Date.now()}_${this.config.categories.length}`,
+            id: newCatId,
             name: '',
             expression: '',
             subcategories: []
         });
+        this._focusTarget = { type: 'category', id: newCatId };
         this.render();
     }
 
@@ -298,11 +326,13 @@ export class CategorizationConfigApp extends adapter.foundry.HandlebarsApplicati
             this.config.categories[catIndex].subcategories = [];
         }
 
+        const newSubId = `sub_${Date.now()}_${this.config.categories[catIndex].subcategories.length}`;
         this.config.categories[catIndex].subcategories.push({
-            id: `sub_${Date.now()}_${this.config.categories[catIndex].subcategories.length}`,
+            id: newSubId,
             name: '',
             expression: ''
         });
+        this._focusTarget = { type: 'subcategory', id: newSubId };
         this.render();
     }
 

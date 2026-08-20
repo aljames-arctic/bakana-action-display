@@ -92,3 +92,67 @@ test('CategorizationConfigApp _onSaveConfig validates names and expressions and 
     assert.equal(saved.categories[0].name, 'Other Actions');
     assert.equal(saved.categories[1].name, 'Other Actions');
 });
+
+test('CategorizationConfigApp PARTS registers scrollable categories list', () => {
+    const parts = CategorizationConfigApp.PARTS;
+    assert.ok(parts.config);
+    assert.deepEqual(parts.config.scrollable, ['.bad-config-categories-list']);
+});
+
+test('CategorizationConfigApp _onAddCategory and _onAddSubCategory set _focusTarget and _restoreFocus focuses input', () => {
+    game.settings.set(MODULE_ID, 'categorizationConfig', { enabled: false, categories: [] });
+    const app = new CategorizationConfigApp();
+    app.render = () => {};
+
+    // 1. Add Category
+    app._onAddCategory({ preventDefault: () => {} }, {});
+    assert.equal(app._focusTarget?.type, 'category');
+    const newCatId = app._focusTarget.id;
+    assert.equal(typeof newCatId, 'string');
+
+    // Mock DOM elements for _restoreFocus
+    let focused = false;
+    let scrolled = false;
+    const mockInput = {
+        focus: () => { focused = true; },
+        scrollIntoView: () => { scrolled = true; }
+    };
+    const mockCard = {
+        querySelector: (sel) => sel === '.bad-cat-name-input' ? mockInput : null
+    };
+    app.element = {
+        querySelector: (sel) => sel === `.bad-config-cat-card[data-cat-id="${newCatId}"]` ? mockCard : null,
+        querySelectorAll: () => []
+    };
+
+    app._restoreFocus();
+    assert.equal(focused, true);
+    assert.equal(scrolled, true);
+    assert.equal(app._focusTarget, null);
+
+    // 2. Add Subcategory
+    app._onAddSubCategory({ preventDefault: () => {} }, { dataset: { catIndex: '0' } });
+    assert.equal(app._focusTarget?.type, 'subcategory');
+    const newSubId = app._focusTarget.id;
+    assert.equal(typeof newSubId, 'string');
+
+    focused = false;
+    scrolled = false;
+    const mockSubInput = {
+        focus: () => { focused = true; },
+        scrollIntoView: () => { scrolled = true; }
+    };
+    const mockRow = {
+        querySelector: (sel) => sel === '.bad-sub-name-input' ? mockSubInput : null
+    };
+    app.element = {
+        querySelector: (sel) => sel === `.bad-config-sub-row[data-sub-id="${newSubId}"]` ? mockRow : null,
+        querySelectorAll: () => []
+    };
+
+    app._restoreFocus();
+    assert.equal(focused, true);
+    assert.equal(scrolled, true);
+    assert.equal(app._focusTarget, null);
+});
+

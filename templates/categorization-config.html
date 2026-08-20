@@ -17,9 +17,9 @@
     <div class="bad-config-categories-list">
         {{#if config.categories.length}}
             {{#each config.categories as |cat catIndex|}}
-            <div class="bad-config-cat-card" data-cat-index="{{catIndex}}">
+            <div class="bad-config-cat-card" data-cat-index="{{catIndex}}" data-cat-id="{{cat.id}}">
                 <!-- Top-Level Category Row: [ Grip ] [ + Subitem ] [ Name ] [ Expression ] [ Delete ] -->
-                <div class="bad-config-cat-row" data-cat-index="{{catIndex}}">
+                <div class="bad-config-cat-row" data-cat-index="{{catIndex}}" data-cat-id="{{cat.id}}">
                     <div class="bad-config-drag-handle" data-drag-type="category" data-cat-index="{{catIndex}}">
                         <i class="fas fa-grip-vertical"></i>
                     </div>
@@ -37,7 +37,7 @@
                 {{#if cat.subcategories.length}}
                 <div class="bad-config-subcategories-list">
                     {{#each cat.subcategories as |sub subIndex|}}
-                    <div class="bad-config-sub-row" data-cat-index="{{catIndex}}" data-sub-index="{{subIndex}}">
+                    <div class="bad-config-sub-row" data-cat-index="{{catIndex}}" data-sub-index="{{subIndex}}" data-sub-id="{{sub.id}}">
                         <div class="bad-config-drag-handle" data-drag-type="subcategory" data-cat-index="{{catIndex}}" data-sub-index="{{subIndex}}">
                             <i class="fas fa-grip-vertical"></i>
                         </div>
