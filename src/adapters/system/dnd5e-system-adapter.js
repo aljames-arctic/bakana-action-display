@@ -1004,5 +1004,68 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         return null;
     }
 
+    /**
+     * Get the default HUD categorization structure for D&D 5e.
+     * Includes standard fantasy categories plus Base Ability Checks and Skill Checks / Saves with ability subcategories.
+     * @param {Object} [overrides={}] Generic category overrides
+     * @returns {Object[]} Array of category definition objects
+     */
+    getDefaultCategories(overrides = {}) {
+        const categories = super.getDefaultCategories(overrides);
+        const dnd5eCategories = [
+            {
+                id: 'cat_ability_checks',
+                name: 'Abilities',
+                expression: `action.type === "ability"`,
+                subcategories: []
+            },
+            {
+                id: 'cat_skill_checks',
+                name: 'Skills',
+                expression: `action.type === "skill"`,
+                subcategories: [
+                    {
+                        id: 'sub_strength',
+                        name: 'Strength',
+                        expression: `action.right.some(t => t.label === "str")`
+                    },
+                    {
+                        id: 'sub_dexterity',
+                        name: 'Dexterity',
+                        expression: `action.right.some(t => t.label === "dex")`
+                    },
+                    {
+                        id: 'sub_constitution',
+                        name: 'Constitution',
+                        expression: `action.right.some(t => t.label === "con")`
+                    },
+                    {
+                        id: 'sub_intelligence',
+                        name: 'Intelligence',
+                        expression: `action.right.some(t => t.label === "int")`
+                    },
+                    {
+                        id: 'sub_wisdom',
+                        name: 'Wisdom',
+                        expression: `action.right.some(t => t.label === "wis")`
+                    },
+                    {
+                        id: 'sub_charisma',
+                        name: 'Charisma',
+                        expression: `action.right.some(t => t.label === "cha")`
+                    }
+                ]
+            }
+        ];
+
+        for (const cat of dnd5eCategories) {
+            const key = cat.id.replace('cat_', '');
+            const catOverride = overrides[cat.id] ?? overrides[key] ?? {};
+            categories.push(foundry.utils.mergeObject(cat, catOverride, { inplace: false, overwrite: true }));
+        }
+
+        return categories;
+    }
+
     // #endregion
 }

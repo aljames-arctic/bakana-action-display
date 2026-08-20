@@ -2,6 +2,7 @@ import '../setup.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Dnd5eSystemAdapter } from '../../src/adapters/system/dnd5e-system-adapter.js';
+import { categorizeActions } from '../../src/categorization/categorization-manager.js';
 
 test('Dnd5eSystemAdapter initialization and labels', () => {
     const adapter = new Dnd5eSystemAdapter();
@@ -9,12 +10,30 @@ test('Dnd5eSystemAdapter initialization and labels', () => {
     assert.equal(adapter.getItemTypeIcon('weapon'), 'fas fa-sword');
     assert.equal(adapter.getItemTypeIcon('equipment'), 'fas fa-shield');
     const defaultCategories = adapter.getDefaultCategories();
-    assert.equal(defaultCategories.length, 4);
+    assert.equal(defaultCategories.length, 6);
     assert.equal(defaultCategories[0].name, 'Favorites');
     assert.equal(defaultCategories[1].name, 'Weapons');
     assert.equal(defaultCategories[2].name, 'Spells');
     assert.equal(defaultCategories[2].subcategories.length, 3);
     assert.equal(defaultCategories[3].name, 'Features');
+    assert.equal(defaultCategories[4].name, 'Abilities');
+    assert.equal(defaultCategories[4].expression, 'action.type === "ability"');
+    assert.equal(defaultCategories[4].subcategories.length, 0);
+    assert.equal(defaultCategories[5].name, 'Skills');
+    assert.equal(defaultCategories[5].expression, 'action.type === "skill"');
+    assert.equal(defaultCategories[5].subcategories.length, 6);
+    assert.equal(defaultCategories[5].subcategories[0].name, 'Strength');
+    assert.equal(defaultCategories[5].subcategories[0].expression, 'action.right.some(t => t.label === "str")');
+    assert.equal(defaultCategories[5].subcategories[1].name, 'Dexterity');
+    assert.equal(defaultCategories[5].subcategories[1].expression, 'action.right.some(t => t.label === "dex")');
+    assert.equal(defaultCategories[5].subcategories[2].name, 'Constitution');
+    assert.equal(defaultCategories[5].subcategories[2].expression, 'action.right.some(t => t.label === "con")');
+    assert.equal(defaultCategories[5].subcategories[3].name, 'Intelligence');
+    assert.equal(defaultCategories[5].subcategories[3].expression, 'action.right.some(t => t.label === "int")');
+    assert.equal(defaultCategories[5].subcategories[4].name, 'Wisdom');
+    assert.equal(defaultCategories[5].subcategories[4].expression, 'action.right.some(t => t.label === "wis")');
+    assert.equal(defaultCategories[5].subcategories[5].name, 'Charisma');
+    assert.equal(defaultCategories[5].subcategories[5].expression, 'action.right.some(t => t.label === "cha")');
 });
 
 test('Dnd5eSystemAdapter shouldExtractItem filtering', () => {
@@ -248,3 +267,35 @@ test('Dnd5eSystemAdapter favorites integration (hasFavorites, isFavorite, setFav
     await adapter.setFavorite(actorWithMethods, itemWithoutUpdate, false);
     assert.equal(removed, 'item5');
 });
+
+test('Dnd5eSystemAdapter default categorization presets categorize ability and skill actions', () => {
+    const adapter = new Dnd5eSystemAdapter();
+    const actor = {
+        getFlag: () => null,
+        system: {
+            skills: {
+                ath: { ability: 'str', label: 'Athletics' },
+                ste: { ability: 'dex', label: 'Stealth' }
+            }
+        }
+    };
+    const actions = adapter.extractCheckActions(actor);
+    const presets = adapter.getDefaultCategories();
+    const categorized = categorizeActions(actions, { enabled: true, categories: presets }, 'Other Actions', { actor });
+
+    assert.ok(categorized);
+    const abilitySection = categorized.find(c => c.name === 'Abilities');
+    assert.ok(abilitySection);
+    assert.equal(abilitySection.items.length, 6);
+
+    const skillSection = categorized.find(c => c.name === 'Skills');
+    assert.ok(skillSection);
+    const strSub = skillSection.subsections.find(s => s.name === 'Strength');
+    assert.ok(strSub);
+    assert.equal(strSub.items.some(i => i.name === 'Athletics'), true);
+
+    const dexSub = skillSection.subsections.find(s => s.name === 'Dexterity');
+    assert.ok(dexSub);
+    assert.equal(dexSub.items.some(i => i.name === 'Stealth'), true);
+});
+
