@@ -69,7 +69,13 @@ class Collection extends Map {
 globalThis.foundry = {
     helpers: {
         interaction: {
-            KeyboardManager: class KeyboardManager {}
+            KeyboardManager: class KeyboardManager {
+                static MODIFIER_KEYS = {
+                    ALT: 'Alt',
+                    CONTROL: 'Control',
+                    SHIFT: 'Shift'
+                };
+            }
         }
     },
     applications: {

@@ -1,5 +1,4 @@
 import { MODULE_ID } from '../../constants.js';
-import { KeyboardManager } from '../../lib/compat.js';
 import { BaseSystemContextMenuManager } from './context-menu/base-system-context-menu-manager.js';
 import { BaseSystemTabFilterManager } from './filter/base-system-tab-filter-manager.js';
 import { BaseSystemContextModifier } from './context-modifier/base-system-context-modifier.js';
@@ -38,10 +37,11 @@ export class BaseSystemAdapter {
     _createRollEvent(event) {
         if (!event) return {};
 
+        const KeyboardManagerClass = foundry?.helpers?.interaction?.KeyboardManager ?? (typeof KeyboardManager !== 'undefined' ? KeyboardManager : null);
         const modifierKeys = {
-            altKey: KeyboardManager.MODIFIER_KEYS.ALT,
-            ctrlKey: KeyboardManager.MODIFIER_KEYS.CONTROL,
-            shiftKey: KeyboardManager.MODIFIER_KEYS.SHIFT
+            altKey: KeyboardManagerClass?.MODIFIER_KEYS?.ALT ?? 'Alt',
+            ctrlKey: KeyboardManagerClass?.MODIFIER_KEYS?.CONTROL ?? 'Control',
+            shiftKey: KeyboardManagerClass?.MODIFIER_KEYS?.SHIFT ?? 'Shift'
         };
 
         return new Proxy(event, {
