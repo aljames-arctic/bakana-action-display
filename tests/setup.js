@@ -19,6 +19,53 @@ function getProperty(obj, path) {
     return current;
 }
 
+class Collection extends Map {
+    constructor(entries) {
+        super();
+        if (entries) {
+            if (Array.isArray(entries)) {
+                for (const item of entries) {
+                    if (item?.id) this.set(item.id, item);
+                }
+            } else if (entries instanceof Map) {
+                for (const [k, v] of entries) this.set(k, v);
+            }
+        }
+    }
+    get contents() { return Array.from(this.values()); }
+    find(fn) {
+        for (const item of this.values()) {
+            if (fn(item)) return item;
+        }
+        return undefined;
+    }
+    filter(fn) {
+        const results = [];
+        for (const item of this.values()) {
+            if (fn(item)) results.push(item);
+        }
+        return results;
+    }
+    some(fn) {
+        for (const item of this.values()) {
+            if (fn(item)) return true;
+        }
+        return false;
+    }
+    every(fn) {
+        for (const item of this.values()) {
+            if (!fn(item)) return false;
+        }
+        return true;
+    }
+    map(fn) {
+        return this.contents.map(fn);
+    }
+    [Symbol.iterator]() {
+        return this.values();
+    }
+}
+
 globalThis.foundry = {
     helpers: {
         interaction: {
@@ -53,6 +100,7 @@ globalThis.foundry = {
         }
     },
     utils: {
+        Collection,
         getProperty,
         mergeObject(original, other = {}, { inplace = true, overwrite = true, recursive = true } = {}) {
             const target = inplace ? original : structuredClone(original);

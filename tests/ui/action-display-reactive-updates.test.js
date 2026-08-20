@@ -14,7 +14,7 @@ test('Reactive document hooks re-render activeApp when item or actor mutates', a
             id: 'actor-hero',
             name: 'Hero Actor',
             isOwner: true,
-            items: []
+            items: new foundry.utils.Collection()
         }
     };
 

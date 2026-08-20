@@ -71,7 +71,7 @@ test('Pf1SystemAdapter modifyActions full transformation pipeline', async () => 
     };
 
     const actor = {
-        items: [spellItem, buffItem],
+        items: new foundry.utils.Collection([spellItem, buffItem]),
         system: {
             attributes: {
                 spells: {

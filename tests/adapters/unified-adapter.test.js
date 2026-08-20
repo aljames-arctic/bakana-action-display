@@ -82,10 +82,10 @@ test('Unified Adapter getActions executes base extraction -> system -> module ->
 
     const mockActor = {
         name: 'Hero',
-        items: [
+        items: new foundry.utils.Collection([
             { id: 'item-1', name: 'Longsword', type: 'weapon', img: 'icons/sword.png' },
             { id: 'item-2', name: 'Shield', type: 'equipment', img: 'icons/shield.png' }
-        ],
+        ]),
         getFlag: (mod, key) => {
             if (mod === MODULE_ID && key === 'hiddenItems') {
                 return { 'item-2': true };

@@ -114,7 +114,7 @@ class Adapter {
         const actions = [];
         if (!actor?.items) return actions;
 
-        const items = actor.items instanceof Map ? Array.from(actor.items.values()) : (Array.isArray(actor.items) ? actor.items : Array.from(actor.items));
+        const items = Array.from(actor.items.values());
         for (const item of items) {
             if (!item?.name) continue;
             if (typeof this.system.shouldExtractItem === 'function' && !this.system.shouldExtractItem(item)) continue;

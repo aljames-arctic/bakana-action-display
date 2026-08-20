@@ -76,7 +76,7 @@ test('Pf2eSystemAdapter modifyActions full transformation pipeline', async () =>
     };
 
     const actor = {
-        items: [],
+        items: new foundry.utils.Collection(),
         spellcasting: [spellcastingEntry],
         system: {
             actions: [strike]

@@ -73,10 +73,10 @@ test('ActionDisplayApp _toggleActionHidden normalizes legacy array format into o
 test('ActionDisplay getActions processes hiddenItems from object map and legacy array', async () => {
     const mockActor = {
         name: 'Hero Actor',
-        items: [
+        items: new foundry.utils.Collection([
             { id: 'item-1', name: 'Visible Sword', type: 'weapon' },
             { id: 'item-2', name: 'Hidden Shield', type: 'equipment' }
-        ],
+        ]),
         getFlag: (mod, key) => (mod === MODULE_ID && key === 'hiddenItems' ? { 'item-2': true } : undefined)
     };
 

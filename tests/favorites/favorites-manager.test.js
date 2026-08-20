@@ -105,7 +105,7 @@ test('syncActorFavorites synchronizes system favorites into actor flag map', asy
     const mockActor = {
         name: 'Hero',
         isOwner: true,
-        items,
+        items: new foundry.utils.Collection(items),
         getFlag: (moduleId, key) => (moduleId === MODULE_ID && key === 'favorites' ? flagState : undefined),
         setFlag: async (moduleId, key, val) => {
             if (moduleId === MODULE_ID && key === 'favorites') flagState = val;

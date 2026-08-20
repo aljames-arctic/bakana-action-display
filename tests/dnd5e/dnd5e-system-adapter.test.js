@@ -112,7 +112,7 @@ test('Dnd5eSystemAdapter modifyActions full transformation pipeline', async () =
     };
 
     const actor = {
-        items: [weaponItem, spellItem, featItem],
+        items: new foundry.utils.Collection([weaponItem, spellItem, featItem]),
         system: {
             spells: {
                 spell1: { value: 3, max: 4 }
