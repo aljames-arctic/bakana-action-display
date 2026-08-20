@@ -3,6 +3,12 @@ import { BaseSystemContextMenuManager } from './context-menu/base-system-context
 import { BaseSystemTabFilterManager } from './filter/base-system-tab-filter-manager.js';
 import { BaseSystemContextModifier } from './context-modifier/base-system-context-modifier.js';
 
+const MODIFIER_KEY_MAP = {
+    altKey: 'Alt',
+    ctrlKey: 'Control',
+    shiftKey: 'Shift'
+};
+
 /**
  * Base class for all system-specific adapters.
  * System adapters are responsible for modifying, filtering, and sorting
@@ -37,18 +43,10 @@ export class BaseSystemAdapter {
     _createRollEvent(event) {
         if (!event) return {};
 
-        const KeyboardManagerClass = foundry?.helpers?.interaction?.KeyboardManager ?? (typeof KeyboardManager !== 'undefined' ? KeyboardManager : null);
-        const modifierKeys = {
-            altKey: KeyboardManagerClass?.MODIFIER_KEYS?.ALT ?? 'Alt',
-            ctrlKey: KeyboardManagerClass?.MODIFIER_KEYS?.CONTROL ?? 'Control',
-            shiftKey: KeyboardManagerClass?.MODIFIER_KEYS?.SHIFT ?? 'Shift'
-        };
-
         return new Proxy(event, {
             get: (target, prop) => {
-                if (prop in modifierKeys) {
-                    const modifier = modifierKeys[prop];
-                    return Boolean(event[prop] || game.keyboard?.isModifierActive(modifier));
+                if (prop in MODIFIER_KEY_MAP) {
+                    return Boolean(event[prop] || game.keyboard?.isModifierActive(MODIFIER_KEY_MAP[prop]));
                 }
                 const val = Reflect.get(target, prop);
                 return typeof val === 'function' ? val.bind(target) : val;
