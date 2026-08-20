@@ -5,6 +5,9 @@ import { toSet } from '../../../lib/utils.js';
  * and resource depletion checks for a system adapter.
  */
 export class BaseSystemTabFilterManager {
+    /**
+     * @param {BaseSystemAdapter} adapter Owning system adapter instance
+     */
     constructor(adapter) {
         this.adapter = adapter;
     }
@@ -18,20 +21,38 @@ export class BaseSystemTabFilterManager {
         return action.uses?.available != null && action.uses.available <= 0;
     }
 
+    /**
+     * Determine the set combinator strategy for a right-side tab ('union' | 'intersection' | 'difference').
+     * @param {string} parentId Parent tab ID
+     * @returns {'union'|'intersection'|'difference'}
+     */
     getTabCombinator(parentId) {
         return 'union';
     }
 
+    /**
+     * Check if a parent tab acts as an exclusion / difference filter.
+     * @param {string} parentId Parent tab ID
+     * @returns {boolean}
+     */
     isExclusionTab(parentId) {
         return this.getTabCombinator(parentId) === 'difference';
     }
 
+    /**
+     * Check if a parent tab acts as an intersection / conjunction filter.
+     * @param {string} parentId Parent tab ID
+     * @returns {boolean}
+     */
     isIntersectionTab(parentId) {
         return this.getTabCombinator(parentId) === 'intersection';
     }
 
     /**
      * Set-algebraic filter tree evaluator.
+     * @param {Object} action Action card to evaluate
+     * @param {Object} filterContext Active filter state
+     * @returns {boolean} True if action matches active right-side tab filters
      */
     matchesEconomyTabs(action, filterContext) {
         if (!action) return false;
@@ -88,6 +109,11 @@ export class BaseSystemTabFilterManager {
         });
     }
 
+    /**
+     * Collect currently active sub-tabs under difference / exclusion parent tabs.
+     * @param {Object} filterContext Active filter state
+     * @returns {string[]} Array of active exclusion sub-tab IDs
+     */
     getActiveExclusionSubs(filterContext) {
         const rightContext = filterContext?.right ?? {};
         const activeParents = rightContext.activeParents ?? new Set();
@@ -113,6 +139,12 @@ export class BaseSystemTabFilterManager {
         return activeExclusionSubs;
     }
 
+    /**
+     * Filter subactions/activities based on active left/right tabs and resource availability.
+     * @param {Object[]} subactions Array of subaction items
+     * @param {Object} filterContext Active filter state
+     * @returns {Object[]} Qualifying subactions
+     */
     filterSubactions(subactions, filterContext) {
         if (!subactions?.length) return [];
         const { filterNoResources, left } = filterContext;

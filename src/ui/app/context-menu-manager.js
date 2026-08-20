@@ -6,11 +6,19 @@ import { isActorItemFavorite, setActorItemFavorite } from '../../favorites/favor
  * Manages UI context menus for action items inside ActionDisplayApp.
  */
 export class ContextMenuManager {
+    /**
+     * @param {ApplicationV2} app Active ActionDisplayApp instance
+     * @param {HTMLElement} element Root application DOM element
+     */
     constructor(app, element) {
         this.app = app;
         this.element = element;
     }
 
+    /**
+     * Build and bind the Foundry ContextMenu instance for action cards.
+     * @returns {ContextMenu} The created ContextMenu instance
+     */
     createActionContextMenu() {
         const menuItems = [
             {
@@ -133,6 +141,12 @@ export class ContextMenuManager {
     }
 }
 
+/**
+ * Factory helper to instantiate ContextMenuManager and construct the action context menu.
+ * @param {ApplicationV2} app Active ActionDisplayApp instance
+ * @param {HTMLElement} element Root application DOM element
+ * @returns {ContextMenu} The created ContextMenu instance
+ */
 export function createActionContextMenu(app, element) {
     const manager = new ContextMenuManager(app, element);
     return manager.createActionContextMenu();

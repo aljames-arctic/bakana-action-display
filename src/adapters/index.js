@@ -134,84 +134,190 @@ class Adapter {
     /*  System Layer Delegates                      */
     /* -------------------------------------------- */
 
+    /**
+     * Open the sheet for an item or activity.
+     * @param {Object} action
+     * @returns {void}
+     */
     openEditSheet(action) {
         return this.system?.openEditSheet?.(action);
     }
 
+    /**
+     * Retrieve system-specific context menu items.
+     * @param {ApplicationV2} app Active HUD application
+     * @returns {Object[]}
+     */
     getContextMenuItems(app) {
         return this.system?.getContextMenuItems?.(app) ?? [];
     }
 
+    /**
+     * Check if a parent tab acts as an exclusion filter.
+     * @param {string} parentId
+     * @returns {boolean}
+     */
     isExclusionTab(parentId) {
         return this.system?.isExclusionTab?.(parentId) ?? false;
     }
 
+    /**
+     * Delegate tab right-click handling to the system adapter.
+     * @param {ApplicationV2} app
+     * @param {HTMLElement} tab
+     * @param {Event} event
+     * @returns {boolean}
+     */
     onTabRightClick(app, tab, event) {
         return this.system?.onTabRightClick?.(app, tab, event) ?? false;
     }
 
+    /**
+     * Get the localized label for a left-side parent item tab.
+     * @param {string} id
+     * @returns {string}
+     */
     getItemTypeLabel(id) {
         return this.system?.getItemTypeLabel?.(id) ?? id;
     }
 
+    /**
+     * Get the CSS icon class for a left-side parent item tab.
+     * @param {string} id
+     * @returns {string}
+     */
     getItemTypeIcon(id) {
         return this.system?.getItemTypeIcon?.(id) ?? '';
     }
 
+    /**
+     * Get the sort priority order for a left-side parent item tab.
+     * @param {string} id
+     * @returns {number}
+     */
     getItemTypeSortOrder(id) {
         return this.system?.getItemTypeSortOrder?.(id) ?? 999;
     }
 
+    /**
+     * Get the localized label for a left-side item sub-tab.
+     * @param {string} parentId
+     * @param {string} subId
+     * @returns {string}
+     */
     getItemSubTabLabel(parentId, subId) {
         return this.system?.getItemSubTabLabel?.(parentId, subId) ?? subId;
     }
 
+    /**
+     * Get the sort priority order for a left-side item sub-tab.
+     * @param {string} parentId
+     * @param {string} subId
+     * @returns {number}
+     */
     getItemSubTabSortOrder(parentId, subId) {
         return this.system?.getItemSubTabSortOrder?.(parentId, subId) ?? 999;
     }
 
+    /**
+     * Get the localized label for a right-side action parent tab.
+     * @param {string} id
+     * @returns {string}
+     */
     getActionTypeLabel(id) {
         return this.system?.getActionTypeLabel?.(id) ?? id;
     }
 
+    /**
+     * Get the CSS icon class for a right-side action parent tab.
+     * @param {string} id
+     * @returns {string}
+     */
     getActionTypeIcon(id) {
         return this.system?.getActionTypeIcon?.(id) ?? '';
     }
 
+    /**
+     * Get the sort priority order for a right-side action parent tab.
+     * @param {string} id
+     * @returns {number}
+     */
     getActionTypeSortOrder(id) {
         return this.system?.getActionTypeSortOrder?.(id) ?? 999;
     }
 
+    /**
+     * Get the localized label for a right-side action sub-tab.
+     * @param {string} subId
+     * @returns {string}
+     */
     getActionSubTabLabel(subId) {
         return this.system?.getActionSubTabLabel?.(subId) ?? subId;
     }
 
+    /**
+     * Get the sort priority order for a right-side action sub-tab.
+     * @param {string} subId
+     * @returns {number}
+     */
     getActionSubTabSortOrder(subId) {
         return this.system?.getActionSubTabSortOrder?.(subId) ?? 999;
     }
 
+    /**
+     * Get default active left-side sub-tab IDs for initial HUD column state.
+     * @returns {string[]}
+     */
     getDefaultActiveLeftSubTypes() {
         return this.system?.getDefaultActiveLeftSubTypes?.() ?? [];
     }
 
+    /**
+     * Get default active right-side sub-tab IDs for initial HUD column state.
+     * @returns {string[]}
+     */
     getDefaultActiveSubTypes() {
         return this.system?.getDefaultActiveSubTypes?.() ?? [];
     }
 
+    /**
+     * Filter subactions through the system adapter.
+     * @param {Actor} actor
+     * @param {Object[]} subactions
+     * @param {string[]} leftTab
+     * @param {string[]} rightTab
+     * @returns {Object[]}
+     */
     filterSubactions(actor, subactions, leftTab, rightTab) {
         return this.system?.filterSubactions?.(actor, subactions, leftTab, rightTab) ?? subactions;
     }
 
+    /**
+     * Evaluate if an action matches active right-side economy/action tabs.
+     * @param {Object} action
+     * @param {Object} filterContext
+     * @returns {boolean}
+     */
     matchesEconomyTabs(action, filterContext) {
         return typeof this.system?.matchesEconomyTabs === 'function'
             ? this.system.matchesEconomyTabs(action, filterContext)
             : true;
     }
 
+    /**
+     * Allow system adapter to modify Handlebars context before rendering.
+     * @param {Object} context
+     * @param {Object} options
+     * @returns {void}
+     */
     modifyContext(context, options) {
         return this.system?.modifyContext?.(context, options);
     }
 
+    /**
+     * Get system-specific default preset categories.
+     * @returns {Object[]|null}
+     */
     getDefaultCategories() {
         if (typeof this.system?.getDefaultCategories === 'function') {
             return this.system.getDefaultCategories();

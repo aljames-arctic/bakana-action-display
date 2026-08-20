@@ -1,6 +1,11 @@
 import { BaseSystemAdapter } from './base-system-adapter.js';
 import { log } from '../../lib/logger.js';
 
+/**
+ * Convert hyphenated system ID strings to PascalCase class names (e.g. 'dnd5e' -> 'Dnd5e', 'custom-rpg' -> 'CustomRpg').
+ * @param {string} str
+ * @returns {string}
+ */
 function toPascalCase(str) {
     return str.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join('');
 }

@@ -104,6 +104,14 @@ export class Dnd5eSystemContextModifier extends BaseSystemContextModifier {
         this.#ensureAllSubTab(findParent('equipment'), app, localize('BAD.common.allEquipment', 'All Equipment'), 'showUnequipped_equipment');
     }
 
+    /**
+     * Helper to inject an "All" sub-tab into a parent tab group.
+     * @param {HUDTab} parent Parent tab group
+     * @param {ApplicationV2} app Active HUD application
+     * @param {string} label Localized tab label
+     * @param {string} flagKey Actor flag key for unprepared/unequipped display toggle
+     * @param {boolean} [requireSubTabs=false] Only inject if parent has existing subtabs
+     */
     #ensureAllSubTab(parent, app, label, flagKey, requireSubTabs = false) {
         if (!parent || (requireSubTabs && parent.subTabs.length === 0)) return;
         const showUnprepared = app.actor.getFlag(MODULE_ID, flagKey) ?? false;
@@ -116,23 +124,50 @@ export class Dnd5eSystemContextModifier extends BaseSystemContextModifier {
         parent.updateOrder(Object.keys(SORT_ORDERS.tabs[parent.id]));
     }
 
+    /**
+     * Get the sort priority order for a left-side parent item tab in D&D 5e.
+     * @param {string} parentId
+     * @returns {number}
+     */
     getItemTypeSortOrder(parentId) {
         return SORT_ORDERS.item_type[parentId] ?? super.getItemTypeSortOrder(parentId);
     }
 
+    /**
+     * Get the sort priority order for a right-side action sub-tab in D&D 5e.
+     * @param {string} parentId
+     * @param {string} subId
+     * @returns {number}
+     */
     getActionSubTabSortOrder(parentId, subId) {
         return SORT_ORDERS.tabs[parentId]?.[subId] ?? super.getActionSubTabSortOrder(parentId, subId);
     }
 
+    /**
+     * Get the localized display label for a left-side parent item tab in D&D 5e.
+     * @param {string} parentId
+     * @returns {string}
+     */
     getItemTypeLabel(parentId) {
         const config = LABEL_KEYS.item_type[parentId];
         return config ? localize(config[0], config[1]) : super.getItemTypeLabel(parentId);
     }
 
+    /**
+     * Get the CSS icon class for a left-side parent item tab in D&D 5e.
+     * @param {string} parentId
+     * @returns {string}
+     */
     getItemTypeIcon(parentId) {
         return ICONS.item_type[parentId] ?? super.getItemTypeIcon(parentId);
     }
 
+    /**
+     * Get the localized display label for a left-side item sub-tab in D&D 5e.
+     * @param {string} parentId
+     * @param {string} subId
+     * @returns {string}
+     */
     getItemSubTabLabel(parentId, subId) {
         if (parentId === 'spell') {
             if (subId === 'all') {
@@ -164,15 +199,30 @@ export class Dnd5eSystemContextModifier extends BaseSystemContextModifier {
         return super.getItemSubTabLabel(parentId, subId);
     }
 
+    /**
+     * Get the localized display label for a right-side action parent tab in D&D 5e.
+     * @param {string} parentId
+     * @returns {string}
+     */
     getActionTypeLabel(parentId) {
         const config = LABEL_KEYS.action_type[parentId];
         return config ? localize(config[0], config[1]) : super.getActionTypeLabel(parentId);
     }
 
+    /**
+     * Get the CSS icon class for a right-side action parent tab in D&D 5e.
+     * @param {string} parentId
+     * @returns {string}
+     */
     getActionTypeIcon(parentId) {
         return ICONS.action_type[parentId] ?? super.getActionTypeIcon(parentId);
     }
 
+    /**
+     * Get the localized display label for a right-side action sub-tab in D&D 5e.
+     * @param {string} subId
+     * @returns {string}
+     */
     getActionSubTabLabel(subId) {
         const config = LABEL_KEYS.action_subtab[subId];
         return config ? localize(config[0], config[1]) : super.getActionSubTabLabel(subId);

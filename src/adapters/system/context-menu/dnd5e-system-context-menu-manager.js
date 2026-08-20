@@ -2,16 +2,33 @@ import { BaseSystemContextMenuManager } from './base-system-context-menu-manager
 import { log } from '../../../lib/logger.js';
 import { MODULE_ID } from '../../../constants.js';
 
+/**
+ * Manages D&D 5e-specific context menu options (Equip/Unequip, Prepare/Unprepare).
+ */
 export class Dnd5eSystemContextMenuManager extends BaseSystemContextMenuManager {
+    /**
+     * @param {Dnd5eSystemAdapter} adapter Owning D&D 5e adapter instance
+     */
     constructor(adapter) {
         super(adapter);
     }
 
+    /**
+     * Resolve the Item document if owned by the current user.
+     * @param {ApplicationV2} app Active HUD application
+     * @param {HTMLElement} el Clicked DOM element
+     * @returns {Item|null}
+     */
     #getOwnerItem(app, el) {
         if (!app.actor?.isOwner) return null;
         return this.getContextItem(app, el);
     }
 
+    /**
+     * Retrieve system-specific context menu items for D&D 5e items.
+     * @param {ApplicationV2} app Active HUD application
+     * @returns {Object[]} Context menu items definition
+     */
     getContextMenuItems(app) {
         return [
             {
@@ -77,6 +94,13 @@ export class Dnd5eSystemContextMenuManager extends BaseSystemContextMenuManager 
         ];
     }
 
+    /**
+     * Handle right-click on "All" sub-tabs to toggle showUnprepared/showUnequipped actor flags.
+     * @param {ApplicationV2} app Active HUD application
+     * @param {HTMLElement} el Clicked DOM element
+     * @param {Event} event Triggering event
+     * @returns {boolean} True if handled
+     */
     onTabRightClick(app, el, event) {
         if (el.dataset.type !== 'all' || !app.actor?.isOwner) return false;
 

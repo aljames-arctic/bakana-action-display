@@ -207,6 +207,9 @@ export class CategorizationConfigApp extends adapter.foundry.HandlebarsApplicati
         });
     }
 
+    /**
+     * Clear drag-and-drop CSS hover classes and reset draggable attributes on category elements.
+     */
     _clearDragHighlights() {
         if (!this.element) return;
         this.element.querySelectorAll('.drag-over, .dragging').forEach(el => {
@@ -253,11 +256,21 @@ export class CategorizationConfigApp extends adapter.foundry.HandlebarsApplicati
     /*  Action Handlers                             */
     /* -------------------------------------------- */
 
+    /**
+     * Handle toggle checkbox for enabling/disabling categorization.
+     * @param {Event} event
+     * @param {HTMLInputElement} target
+     */
     _onToggleEnabled(event, target) {
         this._syncFormData();
         this.config.enabled = target.checked;
     }
 
+    /**
+     * Add a new empty category section to the configuration.
+     * @param {Event} event
+     * @param {HTMLElement} target
+     */
     _onAddCategory(event, target) {
         event.preventDefault();
         this._syncFormData();
@@ -270,6 +283,11 @@ export class CategorizationConfigApp extends adapter.foundry.HandlebarsApplicati
         this.render();
     }
 
+    /**
+     * Add a new empty subcategory to a specific category section.
+     * @param {Event} event
+     * @param {HTMLElement} target
+     */
     _onAddSubCategory(event, target) {
         event.preventDefault();
         this._syncFormData();
@@ -288,6 +306,11 @@ export class CategorizationConfigApp extends adapter.foundry.HandlebarsApplicati
         this.render();
     }
 
+    /**
+     * Remove a category section by index.
+     * @param {Event} event
+     * @param {HTMLElement} target
+     */
     _onRemoveCategory(event, target) {
         event.preventDefault();
         this._syncFormData();
@@ -298,6 +321,11 @@ export class CategorizationConfigApp extends adapter.foundry.HandlebarsApplicati
         this.render();
     }
 
+    /**
+     * Remove a subcategory row by category and subcategory index.
+     * @param {Event} event
+     * @param {HTMLElement} target
+     */
     _onRemoveSubCategory(event, target) {
         event.preventDefault();
         this._syncFormData();
@@ -309,12 +337,22 @@ export class CategorizationConfigApp extends adapter.foundry.HandlebarsApplicati
         this.render();
     }
 
+    /**
+     * Reset categories to the system-specific default preset categories.
+     * @param {Event} event
+     * @param {HTMLElement} target
+     */
     _onLoadPresets(event, target) {
         event.preventDefault();
         this.config.categories = getDefaultCategories();
         this.render();
     }
 
+    /**
+     * Validate and save the current categorization configuration to module settings.
+     * @param {Event} event
+     * @param {HTMLElement} target
+     */
     async _onSaveConfig(event, target) {
         event.preventDefault();
         this._syncFormData();
@@ -367,6 +405,11 @@ export class CategorizationConfigApp extends adapter.foundry.HandlebarsApplicati
         this.close();
     }
 
+    /**
+     * Close the configuration dialog without saving changes.
+     * @param {Event} event
+     * @param {HTMLElement} target
+     */
     _onCloseConfig(event, target) {
         event.preventDefault();
         this.close();

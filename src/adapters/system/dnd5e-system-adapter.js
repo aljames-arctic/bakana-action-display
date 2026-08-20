@@ -370,6 +370,12 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         return String(type).toLowerCase();
     }
 
+    /**
+     * Modify the Handlebars rendering context for D&D 5e (splits into ability/skill check layout on Page 2).
+     * @param {Object} context Handlebars template context
+     * @param {ApplicationV2} app Active HUD application
+     * @returns {Object}
+     */
     modifyContext(context, app) {
         super.modifyContext(context, app);
         if (Number(app?.activePage) === 2) {
@@ -382,11 +388,21 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
 
     // #region System Specific Data Extractors & Schema Helpers
 
+    /**
+     * Validate if an object is an Item Document.
+     * @param {Object} doc
+     * @returns {boolean}
+     */
     #isItemDocument(doc) {
         if (!doc || typeof doc !== 'object') return false;
         return (typeof Item !== 'undefined' && doc instanceof Item) || doc.documentName === 'Item';
     }
 
+    /**
+     * Extract the spell document from an activity or item reference.
+     * @param {Object} obj
+     * @returns {Item|null}
+     */
     #extractItemSpell(obj) {
         if (!obj) return null;
         if (obj.linkedAction !== undefined) return obj.linkedAction;
@@ -394,6 +410,12 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         return (this.#isItemDocument(spell) || spell?.type === 'spell') ? spell : null;
     }
 
+    /**
+     * Resolve the underlying root spell document for a given activity or linked action.
+     * @param {Object} sub Subaction or activity
+     * @param {Item} [parentItem] Parent item document
+     * @returns {Item|Object|null}
+     */
     resolveRootSpellDocument(sub, parentItem) {
         if (!sub) return null;
 
@@ -440,6 +462,12 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         return null;
     }
 
+    /**
+     * Resolve linked action document for a D&D 5e Activity.
+     * @param {Activity} activity
+     * @param {Actor} [actor]
+     * @returns {Promise<Document|Object>}
+     */
     async #resolveActivityLinkedAction(activity, actor) {
         if (activity.type === 'cast' && activity.spell?.uuid) {
             try {
@@ -459,10 +487,20 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         return activity;
     }
 
+    /**
+     * Get spell component TabRef objects required by a document.
+     * @param {Document} doc
+     * @returns {TabRef[]}
+     */
     #getComponentTabs(doc) {
         return this.filterManager.getComponentTabs(doc);
     }
 
+    /**
+     * Collect unique right-side tabs across a collection of activities.
+     * @param {Object[]} activities
+     * @returns {TabRef[]}
+     */
     #collectUniqueTabs(activities) {
         const uniqueTabsMap = new Map();
         for (const activity of activities) {
@@ -475,6 +513,13 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         return Array.from(uniqueTabsMap.values());
     }
 
+    /**
+     * Determine left-side item tab paths for an item.
+     * @param {Item} item
+     * @param {string} type
+     * @param {Object[]} filteredActivities
+     * @returns {string[]}
+     */
     #getItemTabTypes(item, type, filteredActivities) {
         if (type === 'spell') {
             return ['spell', `level_${item.system.level ?? 0}`];
@@ -531,6 +576,11 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         return this.#calculateUses(item);
     }
 
+    /**
+     * Internal implementation to calculate uses and charges for an item.
+     * @param {Item} item
+     * @returns {{available: number|null, max: number|null}}
+     */
     #calculateUses(item) {
         if (item.type === 'spell') {
             return this.#calculateSpellSlots(item);
@@ -584,7 +634,6 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
      * Check if an item has limited uses (either at the item level or activity level).
      * @param {Item} item The item to check
      * @returns {boolean} True if the item has limited uses
-     * @private
      */
     #hasLimitedUses(item) {
         if (this.#calculateLimitedUses(item.system?.uses)) return true;
@@ -594,7 +643,8 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
 
     /**
      * Parse and calculate limited uses configuration.
-     * @private
+     * @param {Object} uses
+     * @returns {{available: number|null, max: number|null}|null}
      */
     #calculateLimitedUses(uses) {
         if (uses && uses.max && uses.max !== "0") {
@@ -616,7 +666,10 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
 
     /**
      * Resolve target item reference using direct ID or relative UUID.
-     * @private
+     * @param {string} targetId
+     * @param {Item} item
+     * @param {Actor} actor
+     * @returns {Item|null}
      */
     #resolveTargetItem(targetId, item, actor) {
         if (!targetId) return null;
@@ -631,11 +684,10 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
      * Calculate available and maximum uses for a D&D 5e Activity.
      * @param {Activity} activity The activity instance
      * @param {Item} item The parent item
-     * @param {Actor} actor The actor
-     * @param {Map<string, number>} ammoQuantities Pre-calculated ammunition quantities
-     * @param {number} highestAvailableSlot The highest available spell slot level on the actor
+     * @param {Actor} [actor=this.#actor] The actor
+     * @param {Map<string, number>} [ammoQuantities=this.#ammoQuantities] Pre-calculated ammunition quantities
+     * @param {number} [highestAvailableSlot=this.#highestAvailableSlot] The highest available spell slot level on the actor
      * @returns {{available: number|null, max: number|null}} The uses count
-     * @private
      */
     #calculateActivityUses(activity, item, actor = this.#actor, ammoQuantities = this.#ammoQuantities, highestAvailableSlot = this.#highestAvailableSlot) {
         const targets = activity.consumption?.targets ?? [];
@@ -711,7 +763,10 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
 
     /**
      * Calculate spell slot uses (pact or standard) for a given slot level, including upcast logic.
-     * @private
+     * @param {Actor} actor
+     * @param {string|number} level
+     * @param {number} highestAvailableSlot
+     * @returns {{available: number|string|null, max: number|null, isUpcast?: boolean}}
      */
     #getSpellSlotUses(actor, level, highestAvailableSlot) {
         const actorSpells = actor?.system?.spells;
@@ -738,6 +793,13 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         return { available: 0, max };
     }
 
+    /**
+     * Calculate remaining spell slots for a spell item.
+     * @param {Item} item
+     * @param {Actor} [actor=this.#actor]
+     * @param {number} [highestAvailableSlot=this.#highestAvailableSlot]
+     * @returns {{available: number|string|null, max: number|null, isUpcast?: boolean}}
+     */
     #calculateSpellSlots(item, actor = this.#actor, highestAvailableSlot = this.#highestAvailableSlot) {
         const system = item.system;
         const prepMode = system.method;
@@ -751,6 +813,12 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         return { available: null, max: null };
     }
 
+    /**
+     * Calculate available ammunition quantity for a weapon.
+     * @param {Item} item
+     * @param {Map<string, number>} ammoQuantities
+     * @returns {{available: number, max: null}}
+     */
     #calculateWeaponAmmunition(item, ammoQuantities) {
         const ammoType = item.system.ammunition?.type;
         const quantity = ammoQuantities.get(ammoType) ?? 0;
@@ -760,6 +828,11 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         };
     }
 
+    /**
+     * Build map of ammunition quantities available on an actor.
+     * @param {Actor} actor
+     * @returns {Map<string, number>}
+     */
     #getAmmoQuantities(actor) {
         const ammoQuantities = new Map();
         for (const i of actor?.items ?? []) {
@@ -774,6 +847,11 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         return ammoQuantities;
     }
 
+    /**
+     * Find highest available spell slot level on an actor.
+     * @param {Actor} actor
+     * @returns {number}
+     */
     #getHighestAvailableSpellSlot(actor) {
         const actorSpells = actor?.system?.spells;
         if (!actorSpells) return 0;
@@ -791,11 +869,23 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         return highest;
     }
 
+    /**
+     * Normalize activation type string.
+     * @param {*} type
+     * @returns {string|null}
+     */
     #normalizeActivationType(type) {
         if (!type || typeof type === 'boolean' || type === 'none' || type === '') return null;
         return String(type).toLowerCase();
     }
 
+    /**
+     * Extract activation type for a D&D 5e activity.
+     * @param {Activity} activity
+     * @param {Item} item
+     * @param {Item|null} [linkedAction=null]
+     * @returns {string}
+     */
     #getActivityActivationType(activity, item, linkedAction = null) {
         const actOverride = Boolean(activity.activation?.override ?? activity.system?.activation?.override);
         if (actOverride) {

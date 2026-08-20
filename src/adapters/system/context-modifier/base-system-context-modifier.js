@@ -39,16 +39,35 @@ const SORT_ORDERS = {
  * for a system adapter.
  */
 export class BaseSystemContextModifier {
+    /**
+     * @param {BaseSystemAdapter} adapter Owning system adapter instance
+     */
     constructor(adapter) {
         this.adapter = adapter;
     }
 
+    /**
+     * Hook to modify the rendering context before template rendering.
+     * @param {Object} context The Handlebars rendering context
+     * @param {ApplicationV2} app Active HUD application
+     */
     modifyContext(context, app) {}
 
+    /**
+     * Get the sort priority order for a left-side parent item tab.
+     * @param {string} parentId
+     * @returns {number}
+     */
     getItemTypeSortOrder(parentId) {
         return SORT_ORDERS.item_type[parentId] ?? 999;
     }
 
+    /**
+     * Get the sort priority order for a left-side item sub-tab.
+     * @param {string} parentId
+     * @param {string} subId
+     * @returns {number}
+     */
     getItemSubTabSortOrder(parentId, subId) {
         if (subId === 'all') return 0;
         if (subId === 'itemCharges') return 99;
@@ -56,14 +75,30 @@ export class BaseSystemContextModifier {
         return Number.isNaN(num) ? 999 : num + 1;
     }
 
+    /**
+     * Get the sort priority order for a right-side action parent tab.
+     * @param {string} parentId
+     * @returns {number}
+     */
     getActionTypeSortOrder(parentId) {
         return SORT_ORDERS.action_type[parentId] ?? 999;
     }
 
+    /**
+     * Get the sort priority order for a right-side action sub-tab.
+     * @param {string} parentId
+     * @param {string} subId
+     * @returns {number}
+     */
     getActionSubTabSortOrder(parentId, subId) {
         return subId === 'all' ? 0 : 999;
     }
 
+    /**
+     * Get the localized display label for a left-side parent item tab.
+     * @param {string} parentId
+     * @returns {string}
+     */
     getItemTypeLabel(parentId) {
         switch (parentId) {
             case 'all': return localize('BAD.core.allItems', 'All Items');
@@ -75,16 +110,32 @@ export class BaseSystemContextModifier {
         }
     }
 
+    /**
+     * Get the CSS icon class for a left-side parent item tab.
+     * @param {string} parentId
+     * @returns {string}
+     */
     getItemTypeIcon(parentId) {
         if (parentId === 'savingThrow') return 'fas fa-shield-alt';
         if (parentId === 'abilityCheck') return 'fas fa-dice-d20';
         return ICONS.item_type[parentId] ?? 'fas fa-question';
     }
 
+    /**
+     * Get the localized display label for a left-side item sub-tab.
+     * @param {string} parentId
+     * @param {string} subId
+     * @returns {string}
+     */
     getItemSubTabLabel(parentId, subId) {
         return subId.toUpperCase();
     }
 
+    /**
+     * Get the localized display label for a right-side action parent tab.
+     * @param {string} parentId
+     * @returns {string}
+     */
     getActionTypeLabel(parentId) {
         switch (parentId) {
             case 'all': return localize('BAD.core.allActions', 'All Actions');
@@ -94,11 +145,21 @@ export class BaseSystemContextModifier {
         }
     }
 
+    /**
+     * Get the CSS icon class for a right-side action parent tab.
+     * @param {string} parentId
+     * @returns {string}
+     */
     getActionTypeIcon(parentId) {
         if (parentId === 'ability') return 'fas fa-fist-raised';
         return ICONS.action_type[parentId] ?? 'fas fa-question';
     }
 
+    /**
+     * Get the localized display label for a right-side action sub-tab.
+     * @param {string} subId
+     * @returns {string}
+     */
     getActionSubTabLabel(subId) {
         const abilityLabels = {
             all: localize('BAD.core.allActions', 'All'),

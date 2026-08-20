@@ -1,6 +1,12 @@
 import { log } from '../../lib/logger.js';
 import { adapter } from '../../adapters/index.js';
 
+/**
+ * Open a context submenu for an individual subaction/activity item (e.g. right-clicking an activity in the dropdown).
+ * @param {ApplicationV2} app Active HUD application
+ * @param {HTMLElement} targetLi Target activity list item element
+ * @param {Object} subaction The subaction or activity data object
+ */
 export function openActivitySubContextMenu(app, targetLi, subaction) {
     const menuItems = [
         {
@@ -38,6 +44,13 @@ export function openActivitySubContextMenu(app, targetLi, subaction) {
     }, 10);
 }
 
+/**
+ * Construct a menu item definition for an individual subaction inside the dropdown.
+ * @param {Object} sub The subaction data object
+ * @param {Event} event The triggering click event
+ * @param {ApplicationV2} [app=null] Active HUD application
+ * @returns {Object} Menu item configuration
+ */
 export function buildSubactionMenuItem(sub, event, app = null) {
     const uses = sub.uses;
     const iconHtml = sub.img
@@ -67,6 +80,13 @@ export function buildSubactionMenuItem(sub, event, app = null) {
     };
 }
 
+/**
+ * Display the subaction / activity selection dropdown menu anchored to the action card.
+ * @param {ApplicationV2} app Active HUD application
+ * @param {HTMLElement} target Action card target element
+ * @param {Object[]} subactions Array of qualifying subaction objects
+ * @param {Event} event Triggering click event
+ */
 export function showActivityDropdown(app, target, subactions, event) {
     event?.preventDefault?.();
     event?.stopPropagation?.();

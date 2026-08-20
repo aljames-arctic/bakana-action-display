@@ -54,6 +54,12 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         this._onDragEnd = this._onDragEnd.bind(this);
     }
 
+    /**
+     * Retrieve or initialize a HUDTabColumn instance for a given side and page number.
+     * @param {'left'|'right'} side Left or right side identifier
+     * @param {number} [page=this.activePage] Page number
+     * @returns {HUDTabColumn}
+     */
     getTabColumn(side, page = this.activePage) {
         const parsedPage = Number(page ?? 1);
         const pageNum = (!isNaN(parsedPage) && parsedPage > 0) ? parsedPage : 1;
@@ -75,14 +81,25 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         return this._tabColumns[key];
     }
 
+    /**
+     * Active left-side HUDTabColumn for the current active page.
+     * @type {HUDTabColumn}
+     */
     get leftTabs() {
         return this.getTabColumn('left', this.activePage);
     }
 
+    /**
+     * Active right-side HUDTabColumn for the current active page.
+     * @type {HUDTabColumn}
+     */
     get rightTabs() {
         return this.getTabColumn('right', this.activePage);
     }
 
+    /**
+     * Navigate to the previous HUD page and re-render.
+     */
     previousPage() {
         const parsed = Number(this.activePage ?? 1);
         const current = (!isNaN(parsed) && parsed > 0) ? parsed : 1;
@@ -97,6 +114,9 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         this.render();
     }
 
+    /**
+     * Navigate to the next HUD page and re-render.
+     */
     nextPage() {
         const parsed = Number(this.activePage ?? 1);
         const current = (!isNaN(parsed) && parsed > 0) ? parsed : 1;
@@ -669,6 +689,11 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         this.render();
     }
 
+    /**
+     * Handle left-side item sub-type selection clicks.
+     * @param {Event} event Click event
+     * @param {HTMLElement} target Clicked element
+     */
     async _onChangeLeftSubItemType(event, target) {
         event.preventDefault();
         this._clearMenuState();
@@ -679,12 +704,21 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         this.render();
     }
 
+    /**
+     * Handle right-click toggling of a left-side parent tab.
+     * @param {string} parentId The parent tab ID
+     */
     _onToggleLeftParent(parentId) {
         const tab = this.leftGroups?.[parentId];
         tab?.onRightClick(this, this.leftTabs, this.leftGroups);
         this.render();
     }
 
+    /**
+     * Handle right-click toggling of a left-side sub-tab.
+     * @param {HTMLElement} target Clicked DOM element
+     * @param {string} type Sub-tab identifier
+     */
     _onToggleLeftSub(target, type) {
         const parentGroup = target.closest('.bad-left-tab-group');
         const parentId = parentGroup?.querySelector('.bad-left-tab')?.dataset.type;
@@ -693,6 +727,11 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         this.render();
     }
 
+    /**
+     * Handle right-side action type (parent tab) selection clicks.
+     * @param {Event} event Click event
+     * @param {HTMLElement} target Clicked element
+     */
     async _onChangeActionType(event, target) {
         event.preventDefault();
         this._clearMenuState();
@@ -702,6 +741,11 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         this.render();
     }
 
+    /**
+     * Handle right-side action sub-tab selection clicks.
+     * @param {Event} event Click event
+     * @param {HTMLElement} target Clicked element
+     */
     async _onChangeSubActionType(event, target) {
         event.preventDefault();
         this._clearMenuState();
@@ -712,12 +756,21 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         this.render();
     }
 
+    /**
+     * Handle right-click toggling of a right-side parent tab.
+     * @param {string} parentId The parent tab ID
+     */
     _onToggleRightParent(parentId) {
         const tab = this.parentGroups?.[parentId];
         tab?.onRightClick(this, this.rightTabs, this.parentGroups);
         this.render();
     }
 
+    /**
+     * Handle right-click toggling of a right-side sub-tab.
+     * @param {HTMLElement} target Clicked DOM element
+     * @param {string} type Sub-tab identifier
+     */
     _onToggleRightSub(target, type) {
         const parentGroup = target.closest('.bad-right-tab-group');
         const parentId = parentGroup?.querySelector('.bad-right-tab')?.dataset.type;
@@ -778,18 +831,33 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         await this.close();
     }
 
+    /**
+     * Handle previous page button click.
+     * @param {Event} event Click event
+     * @param {HTMLElement} target Clicked element
+     */
     async _onPreviousPage(event, target) {
         event.preventDefault();
         this._clearMenuState();
         this.previousPage();
     }
 
+    /**
+     * Handle next page button click.
+     * @param {Event} event Click event
+     * @param {HTMLElement} target Clicked element
+     */
     async _onNextPage(event, target) {
         event.preventDefault();
         this._clearMenuState();
         this.nextPage();
     }
 
+    /**
+     * Handle specific page number selection click.
+     * @param {Event} event Click event
+     * @param {HTMLElement} target Clicked element
+     */
     async _onChangePage(event, target) {
         event.preventDefault();
         this._clearMenuState();
@@ -935,6 +1003,9 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         this.setPosition();
     }
 
+    /**
+     * Clear all active context menu and dropdown target styling and close any open menus.
+     */
     _clearMenuState() {
         log.debug("_clearMenuState | Clearing menu state and closing open menus");
 
@@ -1164,6 +1235,10 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
 
 
 
+    /**
+     * Initialize drag state on mousedown on the drag handle.
+     * @param {MouseEvent} event
+     */
     _onDragStart(event) {
         event.preventDefault();
         this._clearMenuState();
@@ -1184,6 +1259,10 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         log.debug("Drag started");
     }
 
+    /**
+     * Update HUD window position during active mouse drag.
+     * @param {MouseEvent} event
+     */
     _onDragMove(event) {
         event.preventDefault();
         const el = this.element;
@@ -1215,6 +1294,10 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         }
     }
 
+    /**
+     * Finalize window position and persist settings on mouseup after dragging.
+     * @param {MouseEvent} event
+     */
     async _onDragEnd(event) {
         event.preventDefault();
         document.removeEventListener('mousemove', this._onDragMove);
