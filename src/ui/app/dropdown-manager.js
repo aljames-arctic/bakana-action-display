@@ -39,7 +39,7 @@ export function openActivitySubContextMenu(app, targetLi, subaction) {
     });
     setTimeout(() => {
         if (typeof subMenu?.render === "function") {
-            subMenu.render(targetLi)?.catch?.(err => log.debug("SubContextMenu render error:", err));
+            subMenu.render(targetLi)?.catch?.(err => log.error("SubContextMenu render error:", err));
         }
     }, 10);
 }
@@ -90,7 +90,6 @@ export function buildSubactionMenuItem(sub, event, app = null) {
 export function showActivityDropdown(app, target, subactions, event) {
     event?.preventDefault?.();
     event?.stopPropagation?.();
-    log.debug(`showActivityDropdown | "${target.dataset.actionId}" with ${subactions.length} items:`, subactions.map(s => s.name));
     const menuItems = subactions.map(sub => buildSubactionMenuItem(sub, event, app));
 
     if (app._activeLeftClickMenu) {
@@ -101,10 +100,10 @@ export function showActivityDropdown(app, target, subactions, event) {
     if (app._contextMenu) {
         try {
             app._contextMenu.close()?.catch?.(err => {
-                log.debug("ContextMenu.close promise rejected:", err);
+                log.error("ContextMenu.close promise rejected:", err);
             });
         } catch (err) {
-            log.debug("ContextMenu.close threw synchronously:", err);
+            log.error("ContextMenu.close threw synchronously:", err);
         }
     }
     if (app._activeContextMenuTarget) {
@@ -119,7 +118,6 @@ export function showActivityDropdown(app, target, subactions, event) {
     const menu = new ContextMenuClass(app.element, ".bad-action-item", menuItems, {
         jQuery: false,
         onClose: () => {
-            log.debug("Left-click dropdown menu closed");
             target.classList.remove('bad-dropdown-active');
             app._activeLeftClickMenu = null;
             app._activeMenuTarget = null;
@@ -132,7 +130,7 @@ export function showActivityDropdown(app, target, subactions, event) {
         try {
             await menu.render(target);
         } catch (e) {
-            log.debug(`showActivityDropdown | menu.render error:`, e);
+            log.error(`showActivityDropdown | menu.render error:`, e);
         }
 
         const menuEl = document.querySelector('#context-menu');

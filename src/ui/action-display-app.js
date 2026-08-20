@@ -239,7 +239,6 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
      * Close the application, logging the transition.
      */
     async close(options = {}) {
-        log.debug(`ActionDisplayApp.close() initiated for token: ${this.token?.name}, state: ${this.state}`);
         // Hide the element instantly to prevent any default close animations/transitions
         // from causing visual glitches (like shifting and covering the token).
         if (this.element) {
@@ -255,7 +254,6 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         this.actions = []; // Reset actions array to release references
 
         const result = await super.close(options);
-        log.debug(`ActionDisplayApp.close() completed, new state: ${this.state}`);
         return result;
     }
 
@@ -813,7 +811,6 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         }
 
         await game.settings.set(MODULE_ID, 'hudPositionMode', this.positionMode);
-        log.debug(`Toggled HUD position mode to: ${this.positionMode}`);
 
         this.render();
     }
@@ -826,7 +823,6 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
     async _onCloseHUD(event, target) {
         event?.preventDefault?.();
         event?.stopPropagation?.();
-        log.debug("_onCloseHUD called");
         await this.close();
     }
 
@@ -877,7 +873,6 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         event.preventDefault();
 
         if (this._preventReopen) {
-            log.debug("_onRollAction | preventReopen is true, toggling off and closing menu");
             this._preventReopen = false;
             this._clearMenuState();
             return;
@@ -896,7 +891,6 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
             const user = game.user;
             log.info(`_onRollAction | Left-clicked action "${action.name}" (${action.id}):`, { action, item, actor, token, user });
             const itemActivities = action.subactions;
-            log.debug(`_onRollAction | Action subactions (${itemActivities?.length ?? 0}):`, itemActivities);
 
             if (itemActivities && itemActivities.length > 0) {
                 // Filter sub-actions to only those that match the currently active right-side tabs
@@ -918,7 +912,6 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
                     action.roll(event);
                 }
             } else {
-                log.debug(`_onRollAction | "${action.name}" (${action.id}) has no subactions (length 0)`);
                 // No sub-actions: roll directly
                 log.info(`_onRollAction | Rolling action "${action.name}":`, { action, item, actor, token, user });
                 action.roll(event);
@@ -943,7 +936,6 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
     async _onToggleFilterResources(event, target) {
         const checked = target.checked;
         await game.settings.set(MODULE_ID, 'filterNoResources', checked);
-        log.debug(`Toggled filterNoResources to: ${checked}`);
         this.render();
     }
 
@@ -958,7 +950,6 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
      */
     _onFirstRender(context, options) {
         super._onFirstRender(context, options);
-        log.debug(`_onFirstRender | token: ${this.token?.name}`);
 
         // Prevent clicks inside the HUD from bubbling up to the canvas/document
         this.element.addEventListener('click', (event) => event.stopPropagation());
@@ -990,7 +981,6 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
      */
     _onRender(context, options) {
         super._onRender(context, options);
-        log.debug(`_onRender | token: ${this.token?.name}, state: ${this.state}, isAttached: ${this.isAttached}`);
 
         // Adjust min-height first so container dimensions reflect the full expanded layout
         this._adjustMinHeight();
@@ -1006,17 +996,15 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
      * Clear all active context menu and dropdown target styling and close any open menus.
      */
     _clearMenuState() {
-        log.debug("_clearMenuState | Clearing menu state and closing open menus");
-
         // Close any open context menus if we have an active target
         if (this._activeContextMenuTarget || this._activeMenuTarget) {
             if (this._contextMenu) {
                 try {
                     this._contextMenu.close()?.catch?.(err => {
-                        log.debug("ContextMenu.close promise rejected (expected during re-render):", err);
+                        log.error("ContextMenu.close promise rejected (expected during re-render):", err);
                     });
                 } catch (err) {
-                    log.debug("ContextMenu.close threw synchronously:", err);
+                    log.error("ContextMenu.close threw synchronously:", err);
                 }
             }
         }
@@ -1055,8 +1043,6 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         const rightBottom = (rightTabs && rightTabs.children.length > 0) ? (rightTabs.offsetTop + rightTabs.offsetHeight) : 0;
         const maxTabBottom = Math.max(leftBottom, rightBottom);
 
-        log.debug(`_adjustMinHeight | leftBottom: ${leftBottom}px, rightBottom: ${rightBottom}px, maxTabBottom: ${maxTabBottom}px`);
-
         if (maxTabBottom > 0) {
             // Lazy-load and cache the container's bottom padding to prevent expensive getComputedStyle calls
             if (this._containerPaddingBottom === undefined) {
@@ -1066,7 +1052,6 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
             }
 
             const targetMinHeight = maxTabBottom + this._containerPaddingBottom;
-            log.debug(`_adjustMinHeight | Applying min-height: ${targetMinHeight}px to container (paddingBottom: ${this._containerPaddingBottom}px)`);
             container.style.minHeight = `${targetMinHeight}px`;
         }
     }
@@ -1084,10 +1069,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         const activeTarget = event.button === 2 ? this._activeContextMenuTarget : this._activeMenuTarget;
         const activeItem = activeTarget?.closest('.bad-action-item, .bad-left-sub-tab, .bad-left-tab') ?? activeTarget;
 
-        log.debug(`_onPointerDownCapture | button: ${event.button}, targetItem:`, targetItem, `activeItem:`, activeItem);
-
         if (targetItem && activeItem === targetItem) {
-            log.debug("Pointerdown click on active target, preparing to prevent reopen");
             this._preventReopen = true;
         }
     }
@@ -1100,9 +1082,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
      */
     _onContextMenuCapture(event) {
         if (event.target.closest('#context-menu, .context-menu, .context-item')) return;
-        log.debug(`_onContextMenuCapture | preventReopen: ${this._preventReopen}`);
         if (this._preventReopen) {
-            log.debug("Preventing context menu from reopening (toggled off)");
             this._preventReopen = false;
 
             // Safe close in capture phase (catch promise rejections)
@@ -1168,13 +1148,8 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         const activeTarget = this._activeContextMenuTarget;
         const activeItem = activeTarget?.closest('.bad-action-item, .bad-left-sub-tab, .bad-left-tab') ?? activeTarget;
 
-        log.debug(`_onContextMenuCapture | targetItem:`, targetItem, `activeItem:`, activeItem);
-
         if (targetItem && activeItem === targetItem) {
-            log.debug("Right-clicked the same item, toggling context menu off (fallback)");
-
             this._clearMenuState();
-
             event.preventDefault();
             event.stopPropagation();
             event.stopImmediatePropagation();
@@ -1213,13 +1188,11 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
 
         if (shouldHide) {
             currentHidden[itemId] = true;
-            log.debug(`Hiding item: ${action.name} (ID: ${itemId})`);
             if (typeof this.actor.setFlag === 'function') {
                 await this.actor.setFlag(MODULE_ID, 'hiddenItems', currentHidden);
             }
         } else {
             delete currentHidden[itemId];
-            log.debug(`Unhiding item: ${action.name} (ID: ${itemId})`);
             if (typeof this.actor.update === 'function') {
                 await this.actor.update({
                     [`flags.${MODULE_ID}.hiddenItems.-=${itemId}`]: null
@@ -1254,8 +1227,6 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
 
         document.addEventListener('mousemove', this._onDragMove);
         document.addEventListener('mouseup', this._onDragEnd);
-
-        log.debug("Drag started");
     }
 
     /**
@@ -1314,12 +1285,10 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
                 };
                 await game.settings.set(MODULE_ID, 'hudPinnedOffset', offset);
                 await game.settings.set(MODULE_ID, 'hudPositionMode', 'pinned');
-                log.debug("Drag ended in Pinned mode, saved offset:", offset);
             } else {
                 const pos = { left: rect.left, top: rect.top };
                 await game.settings.set(MODULE_ID, 'hudDetachedPosition', pos);
                 await game.settings.set(MODULE_ID, 'hudPositionMode', 'detached');
-                log.debug("Drag ended in Detached mode, saved position:", pos);
             }
         }
 

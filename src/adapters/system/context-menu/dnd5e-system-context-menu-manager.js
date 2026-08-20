@@ -41,7 +41,6 @@ export class Dnd5eSystemContextMenuManager extends BaseSystemContextMenuManager 
                 callback: async el => {
                     const item = this.#getOwnerItem(app, el);
                     if (item) {
-                        log.debug(`Preparing spell: ${item.name}`);
                         await item.update({ "system.prepared": 1 });
                     }
                 }
@@ -56,7 +55,6 @@ export class Dnd5eSystemContextMenuManager extends BaseSystemContextMenuManager 
                 callback: async el => {
                     const item = this.#getOwnerItem(app, el);
                     if (item) {
-                        log.debug(`Unpreparing spell: ${item.name}`);
                         await item.update({ "system.prepared": 0 });
                     }
                 }
@@ -71,7 +69,6 @@ export class Dnd5eSystemContextMenuManager extends BaseSystemContextMenuManager 
                 callback: async el => {
                     const item = this.#getOwnerItem(app, el);
                     if (item) {
-                        log.debug(`Equipping item: ${item.name}`);
                         await item.update({ "system.equipped": true });
                     }
                 }
@@ -86,7 +83,6 @@ export class Dnd5eSystemContextMenuManager extends BaseSystemContextMenuManager 
                 callback: async el => {
                     const item = this.#getOwnerItem(app, el);
                     if (item) {
-                        log.debug(`Unequipping item: ${item.name}`);
                         await item.update({ "system.equipped": false });
                     }
                 }

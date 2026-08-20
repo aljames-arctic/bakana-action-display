@@ -121,12 +121,11 @@ export async function syncActorFavorites(actor, customAdapter = null) {
         }
 
         if (hasChanges) {
-            log.debug(`syncActorFavorites | Synchronizing favorites flag for actor "${actor.name}"`);
             if (typeof actor.setFlag === 'function') {
                 await actor.setFlag(MODULE_ID, 'favorites', updatedFlags);
             }
         }
     } catch (err) {
-        log.error(`syncActorFavorites | Failed to synchronize favorites for actor "${actor.name}":`, err);
+        log.error(`Failed to synchronize favorites for actor "${actor.name}":`, err);
     }
 }

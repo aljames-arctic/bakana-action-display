@@ -33,7 +33,7 @@ export async function initializeSystemAdapter(systemId = game.system?.id) {
         log.warn(`Class ${systemClassName} not found in ${systemPath}. Falling back to default adapter.`);
     } catch (error) {
         log.warn(`No system adapter found for ${systemId} at ${systemPath}. Falling back to default adapter.`);
-        log.debug("System adapter load error:", error);
+        log.error("System adapter load error:", error);
     }
 
     return new BaseSystemAdapter(systemId);

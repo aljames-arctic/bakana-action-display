@@ -20,12 +20,10 @@ Hooks.once('init', async () => {
     const originalRightClick = TokenClass.prototype._onClickRight;
     if (typeof originalRightClick === 'function') {
         TokenClass.prototype._onClickRight = function (event) {
-            log.debug("Token.prototype._onClickRight called");
             const isTokenHUDOpen = Boolean(canvas?.hud?.token?.rendered && (canvas.hud.token.object === this || canvas.hud.token.object?.id === this.id));
             if (isTokenHUDOpen && activeApp && (activeApp.token === this || activeApp.token?.id === this.id)) {
                 const persist = game.settings.get(MODULE_ID, 'persistDetached');
                 if (persist && activeApp.isDetached) {
-                    log.debug("Right-clicked token with Token HUD open and detached Action Display. Setting closeDetachedHUD flag.");
                     closeDetachedHUD = true;
                 }
             }
@@ -51,17 +49,14 @@ function handleHUDClose() {
     if (activeApp) {
         const persist = game.settings.get(MODULE_ID, 'persistDetached');
         const shouldClose = activeApp.isTracked || !persist || closeDetachedHUD;
-        
+
         if (shouldClose) {
-            log.debug(`HUD Hook | Closing activeApp (state: ${activeApp.state})`);
             if (activeApp.element) {
                 activeApp.element.style.display = 'none';
             }
             activeApp.close();
             activeApp = null;
             actionDisplay.activeApp = null;
-        } else {
-            log.debug("HUD Hook | activeApp is detached and persist is enabled, keeping it open");
         }
     }
     closeDetachedHUD = false; // Always reset
@@ -107,7 +102,6 @@ function requestHUDRender() {
     renderDebounceTimer = setTimeout(() => {
         renderDebounceTimer = null;
         if (activeApp && (activeApp.rendered || activeApp.element)) {
-            log.debug("requestHUDRender | Re-rendering active HUD due to document mutation");
             activeApp.render();
         }
     }, 50);
@@ -122,17 +116,15 @@ Hooks.once('ready', async () => {
     if (canvas?.hud?.token) {
         const hudClass = canvas.hud.token.constructor;
         log.info(`Wrapping ${hudClass.name}.prototype.clear and close`);
-        
+
         const originalClear = hudClass.prototype.clear;
         hudClass.prototype.clear = function (...args) {
-            log.debug(`${hudClass.name}.prototype.clear called`);
             handleHUDClose();
             return originalClear.apply(this, args);
         };
 
         const originalClose = hudClass.prototype.close;
         hudClass.prototype.close = function (...args) {
-            log.debug(`${hudClass.name}.prototype.close called`);
             handleHUDClose();
             return originalClose.apply(this, args);
         };
@@ -144,7 +136,6 @@ Hooks.on('renderTokenHUD', (tokenHUD, html, data) => {
     const token = tokenHUD.object;
     if (!token || !token.document.isOwner) return;
 
-    log.debug("renderTokenHUD hook fired for token:", token.name);
     closeDetachedHUD = false;
 
     if (token.actor) {
@@ -153,13 +144,11 @@ Hooks.on('renderTokenHUD', (tokenHUD, html, data) => {
 
     // If we already have an active rendered app for this token, preserve it to keep its tab/scroll state
     if (activeApp && (activeApp.token === token || activeApp.token?.id === token.id) && (activeApp.rendered || activeApp.element)) {
-        log.debug("renderTokenHUD | activeApp already exists for this token, preserving instance");
         return;
     }
 
     // Close any existing app for a different token
     if (activeApp) {
-        log.debug(`renderTokenHUD | activeApp exists for a different token (state: ${activeApp.state}), closing it`);
         if (activeApp.element) {
             activeApp.element.style.display = 'none';
         }
@@ -169,7 +158,6 @@ Hooks.on('renderTokenHUD', (tokenHUD, html, data) => {
     }
 
     // Initialize and render the new Action Display App
-    log.info("Rendering ActionDisplayApp for token:", token.name);
     activeApp = new ActionDisplayApp(token);
     actionDisplay.activeApp = activeApp;
     activeApp.render(true);
@@ -177,7 +165,6 @@ Hooks.on('renderTokenHUD', (tokenHUD, html, data) => {
 
 // Hook into Token HUD closing to close our overlay if tracked or closed via token click
 Hooks.on('closeTokenHUD', (tokenHUD, html) => {
-    log.debug("closeTokenHUD hook fired");
     handleHUDClose();
 });
 
