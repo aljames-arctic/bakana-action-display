@@ -8,46 +8,42 @@ export class BaseFoundryAdapter {
      * @returns {number}
      */
     get generation() {
-        const rawGen = globalThis.game?.release?.generation;
-        if (typeof rawGen === 'number') return rawGen;
-        const versionStr = globalThis.game?.version ?? '12';
-        const parsed = parseInt(String(versionStr).split('.')[0], 10);
-        return isNaN(parsed) ? 12 : parsed;
+        return game.release.generation;
     }
 
     /**
      * The active ContextMenu constructor.
      */
     get ContextMenu() {
-        return globalThis.foundry?.applications?.ux?.ContextMenu ?? globalThis.ContextMenu ?? class {};
+        return foundry?.applications?.ux?.ContextMenu ?? (typeof ContextMenu !== 'undefined' ? ContextMenu : class {});
     }
 
     /**
      * The active KeyboardManager constructor.
      */
     get KeyboardManager() {
-        return globalThis.foundry?.helpers?.interaction?.KeyboardManager ?? globalThis.KeyboardManager ?? class {};
+        return foundry?.helpers?.interaction?.KeyboardManager ?? (typeof KeyboardManager !== 'undefined' ? KeyboardManager : class {});
     }
 
     /**
      * The active Token placeable constructor.
      */
     get Token() {
-        return globalThis.foundry?.canvas?.placeables?.Token ?? globalThis.Token ?? class {};
+        return foundry?.canvas?.placeables?.Token ?? (typeof Token !== 'undefined' ? Token : class {});
     }
 
     /**
      * The active ApplicationV2 constructor.
      */
     get ApplicationV2() {
-        return globalThis.foundry?.applications?.api?.ApplicationV2 ?? class {};
+        return foundry?.applications?.api?.ApplicationV2 ?? class {};
     }
 
     /**
      * The active HandlebarsApplicationMixin wrapper.
      */
     get HandlebarsApplicationMixin() {
-        return globalThis.foundry?.applications?.api?.HandlebarsApplicationMixin ?? ((cls) => cls);
+        return foundry?.applications?.api?.HandlebarsApplicationMixin ?? ((cls) => cls);
     }
 
     /**
@@ -57,8 +53,8 @@ export class BaseFoundryAdapter {
      * @returns {Document|null}
      */
     fromUuidSync(uuid, options = {}) {
-        if (typeof globalThis.foundry?.utils?.fromUuidSync === 'function') {
-            return globalThis.foundry.utils.fromUuidSync(uuid, options);
+        if (typeof foundry?.utils?.fromUuidSync === 'function') {
+            return foundry.utils.fromUuidSync(uuid, options);
         }
         return null;
     }
@@ -71,8 +67,8 @@ export class BaseFoundryAdapter {
      * @returns {Object}
      */
     mergeObject(original, other = {}, options = {}) {
-        if (typeof globalThis.foundry?.utils?.mergeObject === 'function') {
-            return globalThis.foundry.utils.mergeObject(original, other, options);
+        if (typeof foundry?.utils?.mergeObject === 'function') {
+            return foundry.utils.mergeObject(original, other, options);
         }
         return Object.assign(original, other);
     }
@@ -83,8 +79,8 @@ export class BaseFoundryAdapter {
      * @returns {Object}
      */
     duplicate(obj) {
-        if (typeof globalThis.foundry?.utils?.duplicate === 'function') {
-            return globalThis.foundry.utils.duplicate(obj);
+        if (typeof foundry?.utils?.duplicate === 'function') {
+            return foundry.utils.duplicate(obj);
         }
         return structuredClone(obj);
     }
@@ -96,8 +92,8 @@ export class BaseFoundryAdapter {
      * @returns {*}
      */
     getProperty(obj, path) {
-        if (typeof globalThis.foundry?.utils?.getProperty === 'function') {
-            return globalThis.foundry.utils.getProperty(obj, path);
+        if (typeof foundry?.utils?.getProperty === 'function') {
+            return foundry.utils.getProperty(obj, path);
         }
         return undefined;
     }
