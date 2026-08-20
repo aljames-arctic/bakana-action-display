@@ -29,6 +29,8 @@ globalThis.foundry = {
             HandlebarsApplicationMixin: (cls) => cls,
             ApplicationV2: class ApplicationV2 {
                 async _prepareContext(options = {}) { return { ...options }; }
+                async render(options = {}) { return this; }
+                async close(options = {}) { return this; }
             }
         },
         ux: {
@@ -86,11 +88,35 @@ globalThis.ui = {
     }
 };
 
+const hookListeners = new Map();
 globalThis.Hooks = {
-    once(event, fn) {},
-    on(event, fn) {},
-    callAll(event, ...args) {},
-    call(event, ...args) {}
+    events: hookListeners,
+    once(event, fn) {
+        if (!hookListeners.has(event)) hookListeners.set(event, []);
+        const wrapped = (...args) => {
+            const list = hookListeners.get(event) ?? [];
+            const idx = list.indexOf(wrapped);
+            if (idx !== -1) list.splice(idx, 1);
+            return fn(...args);
+        };
+        hookListeners.get(event).push(wrapped);
+    },
+    on(event, fn) {
+        if (!hookListeners.has(event)) hookListeners.set(event, []);
+        hookListeners.get(event).push(fn);
+    },
+    callAll(event, ...args) {
+        const listeners = hookListeners.get(event) ?? [];
+        for (const fn of [...listeners]) {
+            fn(...args);
+        }
+    },
+    call(event, ...args) {
+        const listeners = hookListeners.get(event) ?? [];
+        for (const fn of [...listeners]) {
+            fn(...args);
+        }
+    }
 };
 
 globalThis.document = globalThis.document ?? {

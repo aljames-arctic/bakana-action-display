@@ -9,6 +9,7 @@ import { syncActorFavorites } from './favorites/favorites-manager.js';
 
 let activeApp = null;
 let closeDetachedHUD = false;
+let renderDebounceTimer = null;
 
 // Initialize hook
 Hooks.once('init', async () => {
@@ -57,11 +58,58 @@ function handleHUDClose() {
             }
             activeApp.close();
             activeApp = null;
+            actionDisplay.activeApp = null;
         } else {
             log.debug("HUD Hook | activeApp is detached and persist is enabled, keeping it open");
         }
     }
     closeDetachedHUD = false; // Always reset
+}
+
+/**
+ * Check if an updated or modified document belongs to the active HUD's actor.
+ * Handles both standard linked actors and synthetic unlinked token actors.
+ * @param {Actor} [docActor]
+ * @param {Document} [docParent]
+ * @returns {boolean}
+ */
+function isMatchingActor(docActor, docParent) {
+    if (!activeApp || !activeApp.actor) return false;
+    const activeActor = activeApp.actor;
+    const activeToken = activeApp.token;
+
+    // Check direct actor ID or UUID match
+    if (docActor) {
+        if (docActor.id && activeActor.id && docActor.id === activeActor.id) return true;
+        if (docActor.uuid && activeActor.uuid && docActor.uuid === activeActor.uuid) return true;
+    }
+
+    // Check parent document match (for embedded items/activities)
+    if (docParent) {
+        if (docParent.id && activeActor.id && docParent.id === activeActor.id) return true;
+        if (docParent.uuid && activeActor.uuid && docParent.uuid === activeActor.uuid) return true;
+        if (activeToken && docParent.token) {
+            if (docParent.token.id && activeToken.id && docParent.token.id === activeToken.id) return true;
+            if (docParent.token.uuid && activeToken.uuid && docParent.token.uuid === activeToken.uuid) return true;
+        }
+    }
+
+    return false;
+}
+
+/**
+ * Request a debounced re-render of the active HUD when documents mutate.
+ */
+function requestHUDRender() {
+    if (!activeApp || (!activeApp.rendered && !activeApp.element)) return;
+    if (renderDebounceTimer) clearTimeout(renderDebounceTimer);
+    renderDebounceTimer = setTimeout(() => {
+        renderDebounceTimer = null;
+        if (activeApp && (activeApp.rendered || activeApp.element)) {
+            log.debug("requestHUDRender | Re-rendering active HUD due to document mutation");
+            activeApp.render();
+        }
+    }, 50);
 }
 
 // Ready hook
@@ -115,6 +163,7 @@ Hooks.on('renderTokenHUD', (tokenHUD, html, data) => {
         }
         activeApp.close();
         activeApp = null;
+        actionDisplay.activeApp = null;
     }
 
     // Initialize and render the new Action Display App
@@ -134,5 +183,38 @@ Hooks.on('closeTokenHUD', (tokenHUD, html) => {
 Hooks.on('canvasPan', (canvas, pan) => {
     if (activeApp && activeApp.isTracked) {
         activeApp.updatePosition();
+    }
+});
+
+// Hook into Item updates/creations/deletions on the active token's actor (e.g. ammo counts, uses, charges, item additions)
+Hooks.on('updateItem', (item, changes, options, userId) => {
+    if (isMatchingActor(item?.actor, item?.parent)) {
+        requestHUDRender();
+    }
+});
+
+Hooks.on('createItem', (item, options, userId) => {
+    if (isMatchingActor(item?.actor, item?.parent)) {
+        requestHUDRender();
+    }
+});
+
+Hooks.on('deleteItem', (item, options, userId) => {
+    if (isMatchingActor(item?.actor, item?.parent)) {
+        requestHUDRender();
+    }
+});
+
+// Hook into Actor updates (spell slots, resources, hp, flags) on the active token's actor
+Hooks.on('updateActor', (actor, changes, options, userId) => {
+    if (isMatchingActor(actor, null)) {
+        requestHUDRender();
+    }
+});
+
+// Hook into synthetic Token document updates (actor delta mutations)
+Hooks.on('updateToken', (tokenDoc, changes, options, userId) => {
+    if (activeApp && (tokenDoc?.id === activeApp.token?.id || tokenDoc?.actor?.id === activeApp.actor?.id)) {
+        requestHUDRender();
     }
 });
