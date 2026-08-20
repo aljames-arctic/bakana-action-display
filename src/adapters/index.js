@@ -86,10 +86,14 @@ class Adapter {
         const filtered = [];
 
         for (const action of actions) {
-            if (action.hidden) continue;
+            if (action.hidden) {
+                log.debug(`Adapter.getActions | Skipping "${action.name}" (ID: ${action.id}) — action.hidden === true`);
+                continue;
+            }
 
             const itemId = action.originalItem?.id ?? action.id;
             if (Boolean(hiddenMap[itemId])) {
+                log.debug(`Adapter.getActions | Marking "${action.name}" (ID: ${itemId}) as hidden — item is in actor's hiddenItems flag map`);
                 action.isHidden = true;
                 action.left = ['hidden'];
                 action.right = ['all'];
@@ -116,8 +120,14 @@ class Adapter {
 
         const items = Array.from(actor.items.values());
         for (const item of items) {
-            if (!item?.name) continue;
-            if (typeof this.system.shouldExtractItem === 'function' && !this.system.shouldExtractItem(item)) continue;
+            if (!item?.name) {
+                log.debug(`Adapter._extractBaseActions | Skipping item (ID: ${item?.id}) — item.name is missing or falsy`);
+                continue;
+            }
+            if (typeof this.system.shouldExtractItem === 'function' && !this.system.shouldExtractItem(item)) {
+                log.debug(`Adapter._extractBaseActions | Skipping "${item.name}" (${item.type}, ID: ${item.id}) — shouldExtractItem() returned false`);
+                continue;
+            }
             actions.push(new Action({
                 id: item.id,
                 name: item.name,

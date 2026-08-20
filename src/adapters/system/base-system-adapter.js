@@ -1,4 +1,5 @@
 import { MODULE_ID } from '../../constants.js';
+import { log } from '../../lib/logger.js';
 import { BaseSystemContextMenuManager } from './context-menu/base-system-context-menu-manager.js';
 import { BaseSystemTabFilterManager } from './filter/base-system-tab-filter-manager.js';
 import { BaseSystemContextModifier } from './context-modifier/base-system-context-modifier.js';
@@ -90,7 +91,11 @@ export class BaseSystemAdapter {
         return actions.filter(action => {
             // Never hide weapons, even if they are out of ammo or charges
             if (action.originalItem?.type === 'weapon') return true;
-            return !this._isResourceDepleted(action);
+            if (this._isResourceDepleted(action)) {
+                log.debug(`BaseSystemAdapter.modifyActions | Filtering out "${action.name}" (ID: ${action.id}) — action.uses.available (${action.uses?.available}) <= 0 and filterNoResources is enabled`);
+                return false;
+            }
+            return true;
         });
     }
 

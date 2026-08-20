@@ -110,7 +110,6 @@ export class ContextMenuManager {
         const options = {
             jQuery: false,
             onOpen: (target) => {
-                log.debug("Context menu opened on target:", target);
                 if (this.app._activeLeftClickMenu) {
                     this.app._activeLeftClickMenu.close();
                     this.app._activeLeftClickMenu = null;
@@ -127,7 +126,6 @@ export class ContextMenuManager {
                 this.element.querySelector('.bakana-action-display-container')?.classList.add('has-context-menu');
             },
             onClose: () => {
-                log.debug("Context menu closed");
                 if (this.app._activeContextMenuTarget) {
                     this.app._activeContextMenuTarget.classList.remove('bad-menu-active');
                 }

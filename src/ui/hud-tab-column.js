@@ -46,7 +46,6 @@ export class HUDTabColumn {
         for (const sub of defaults) {
             this.activeSubTypes.add(sub);
         }
-        log.debug(`Reset ${this.side} side column tabs to default state ('${this.defaultParent}')`);
     }
 
     /**
@@ -88,7 +87,6 @@ export class HUDTabColumn {
             // Already sole active parent with NO active subtabs: disable it and reset to default
             this.resetToDefault();
         }
-        log.debug(`[${this.side}] selectParent: ${parentId}, active:`, Array.from(this.activeParents), `focused: ${this.focusedParent}`);
     }
 
     /**
@@ -118,16 +116,13 @@ export class HUDTabColumn {
             this.activeParents.add(parentId);
             this.activeParents.delete('all');
             this.focusedParent = parentId;
-            log.debug(`[${this.side}] Cleared subtabs for parent ${parentId}`);
         } else {
             if (this.activeParents.has(parentId)) {
                 this.activeParents.delete(parentId);
-                log.debug(`[${this.side}] Toggled OFF parent ${parentId}`);
             } else {
                 this.activeParents.add(parentId);
                 this.activeParents.delete('all');
                 this.focusedParent = parentId;
-                log.debug(`[${this.side}] Toggled ON parent ${parentId}`);
             }
         }
         if (this.activeParents.size === 0) {
@@ -190,7 +185,6 @@ export class HUDTabColumn {
                 }
             }
         }
-        log.debug(`[${this.side}] selectSub: ${type}, activeSubs:`, Array.from(this.activeSubTypes));
     }
 
     /**
@@ -227,7 +221,6 @@ export class HUDTabColumn {
                 this.activeSubTypes.add(type);
             }
         }
-        log.debug(`[${this.side}] toggleSub: ${type}, activeSubs:`, Array.from(this.activeSubTypes));
     }
 
     /**

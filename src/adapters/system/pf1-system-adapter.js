@@ -72,7 +72,10 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
                 // 1. Spells in PF1e
                 const spellbookId = item.system.spellbook ?? 'primary';
                 const spellbook = this.#getSpellbook(actor, spellbookId);
-                if (!spellbook) continue;
+                if (!spellbook) {
+                    log.debug(`Pf1SystemAdapter.modifyActions | Filtering out spell "${item.name}" (ID: ${item.id}) — no spellbook found for spellbook ID "${spellbookId}" (item.system.spellbook)`);
+                    continue;
+                }
 
                 action.right = [TabRef.from('economy', 'action')];
                 action.activationType = 'action';
@@ -96,12 +99,18 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
                 }
 
                 const itemActions = this.#getItemActions(item);
-                if (itemActions.length === 0) continue;
+                if (itemActions.length === 0) {
+                    log.debug(`Pf1SystemAdapter.modifyActions | Filtering out attack "${item.name}" (ID: ${item.id}) — item.system.actions is empty`);
+                    continue;
+                }
 
                 const uses = this.#calculateUses(item, actor);
 
                 const subactions = this.#buildSubactions(item, itemActions, uses);
-                if (subactions.length === 0) continue;
+                if (subactions.length === 0) {
+                    log.debug(`Pf1SystemAdapter.modifyActions | Filtering out attack "${item.name}" (ID: ${item.id}) — no subactions had a recognized activationType`);
+                    continue;
+                }
 
                 this.#promoteFirstSubaction(action, subactions, ['weapon'], uses);
                 modified.push(action);
@@ -115,7 +124,10 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
                     ? this.#buildLinkedAttackSubactions(linkedAttacks, item, uses)
                     : this.#buildSubactions(item, this.#getItemActions(item), uses);
 
-                if (itemActionsList.length === 0) continue;
+                if (itemActionsList.length === 0) {
+                    log.debug(`Pf1SystemAdapter.modifyActions | Filtering out weapon "${item.name}" (ID: ${item.id}) — no subactions had a recognized activationType`);
+                    continue;
+                }
 
                 this.#promoteFirstSubaction(action, itemActionsList, ['weapon'], uses);
                 modified.push(action);
@@ -123,12 +135,18 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
             } else if (['consumable', 'feat'].includes(type)) {
                 // 4. Consumables and Feats
                 const itemActions = item.system.actions ?? [];
-                if (itemActions.length === 0) continue;
+                if (itemActions.length === 0) {
+                    log.debug(`Pf1SystemAdapter.modifyActions | Filtering out ${type} "${item.name}" (ID: ${item.id}) — item.system.actions is empty`);
+                    continue;
+                }
 
                 const uses = this.#calculateUses(item, actor);
 
                 const subactions = this.#buildSubactions(item, itemActions, uses);
-                if (subactions.length === 0) continue;
+                if (subactions.length === 0) {
+                    log.debug(`Pf1SystemAdapter.modifyActions | Filtering out ${type} "${item.name}" (ID: ${item.id}) — no subactions had a recognized activationType`);
+                    continue;
+                }
 
                 this.#promoteFirstSubaction(action, subactions, [item.type], uses);
                 modified.push(action);

@@ -1,5 +1,6 @@
 import { FantasySystemAdapter } from './genre/fantasy-system-adapter.js';
 import { localize } from '../../lib/utils.js';
+import { log } from '../../lib/logger.js';
 import { TabRef } from '../../ui/tab-ref.js';
 
 const SORT_ORDERS = {
@@ -296,7 +297,11 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
 
     #formatFeatAction(action, item) {
         const activationType = this.#getActionType(item);
-        if (!activationType) return false;
+        if (!activationType) {
+            const rawType = item.system.actionType?.value;
+            log.debug(`Pf2eSystemAdapter.#formatFeatAction | Filtering out "${item.name}" (${item.type}, ID: ${item.id}) — item.system.actionType.value ("${rawType}") is not in PF2E_ACTION_TYPE_MAP`);
+            return false;
+        }
 
         action.activationType = activationType;
         action.right = [TabRef.from('economy', activationType)];
@@ -307,7 +312,10 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
     }
 
     #formatSpellAction(action, item, entry) {
-        if (!entry) return false;
+        if (!entry) {
+            log.debug(`Pf2eSystemAdapter.#formatSpellAction | Filtering out spell "${item.name}" (ID: ${item.id}) — no spellcasting entry found in spellToEntryMap (spell is not registered in any spellcasting entry on this actor)`);
+            return false;
+        }
 
         const spellLevel = item.rank ?? 0;
         action.right = [TabRef.from('economy', 'action')];

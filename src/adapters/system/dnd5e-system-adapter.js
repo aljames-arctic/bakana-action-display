@@ -55,8 +55,19 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
      */
     shouldExtractItem(item) {
         const type = item.type;
-        if (!ALLOWED_TYPES.has(type) || item.getFlag?.('dnd5e', 'cachedFor')) return false;
-        return !(['consumable', 'tool'].includes(type) && !this.getItemEquipped(item));
+        if (!ALLOWED_TYPES.has(type)) {
+            log.debug(`Dnd5eSystemAdapter.shouldExtractItem | Skipping "${item.name}" (${type}, ID: ${item.id}) — type not in ALLOWED_TYPES`);
+            return false;
+        }
+        if (item.getFlag?.('dnd5e', 'cachedFor')) {
+            log.debug(`Dnd5eSystemAdapter.shouldExtractItem | Skipping "${item.name}" (${type}, ID: ${item.id}) — item.flags.dnd5e.cachedFor is set (helper item)`);
+            return false;
+        }
+        if (['consumable', 'tool'].includes(type) && !this.getItemEquipped(item)) {
+            log.debug(`Dnd5eSystemAdapter.shouldExtractItem | Skipping "${item.name}" (${type}, ID: ${item.id}) — item.system.equipped === false`);
+            return false;
+        }
+        return true;
     }
 
     /**
@@ -97,6 +108,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                 const showUnprepared = actor?.getFlag?.(MODULE_ID, 'showUnprepared');
 
                 if (!showUnprepared && isSpellUnprepared && !isUserHidden) {
+                    log.debug(`Dnd5eSystemAdapter.modifyActions | Filtering out spell "${item.name}" (ID: ${item.id}) — item.system.prepared === false and prepMode (${prepMode}) requires preparation; showUnprepared flag is not set`);
                     continue;
                 }
             }
@@ -108,6 +120,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                 const showUnequipped = actor?.getFlag?.(MODULE_ID, `showUnequipped_${type}`);
 
                 if (!showUnequipped && isUnequipped && !isUserHidden) {
+                    log.debug(`Dnd5eSystemAdapter.modifyActions | Filtering out ${type} "${item.name}" (ID: ${item.id}) — item.system.equipped === false and showUnequipped_${type} flag is not set`);
                     continue;
                 }
             }
@@ -157,10 +170,17 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                 // Single-pass Resource Filtering: Filter out depleted D&D 5e Activities if enabled
                 let filteredActivities = mappedActivities;
                 if (filterNoResources) {
-                    filteredActivities = mappedActivities.filter(act => !act.isDepleted);
+                    filteredActivities = mappedActivities.filter(act => {
+                        if (act.isDepleted) {
+                            log.debug(`Dnd5eSystemAdapter.modifyActions | Filtering out activity "${act.name}" on "${item.name}" (ID: ${item.id}) — act.isDepleted === true (uses.available <= 0) and filterNoResources is enabled`);
+                            return false;
+                        }
+                        return true;
+                    });
 
                     // If all activities are depleted, skip this item entirely!
                     if (filteredActivities.length === 0) {
+                        log.debug(`Dnd5eSystemAdapter.modifyActions | Filtering out item "${item.name}" (ID: ${item.id}) — all ${mappedActivities.length} activities are depleted and filterNoResources is enabled`);
                         continue;
                     }
                 }
