@@ -15,35 +15,35 @@ export class BaseFoundryAdapter {
      * The active ContextMenu constructor.
      */
     get ContextMenu() {
-        return foundry?.applications?.ux?.ContextMenu ?? (typeof ContextMenu !== 'undefined' ? ContextMenu : class {});
+        return foundry.applications.ux.ContextMenu;
     }
 
     /**
      * The active KeyboardManager constructor.
      */
     get KeyboardManager() {
-        return foundry?.helpers?.interaction?.KeyboardManager ?? (typeof KeyboardManager !== 'undefined' ? KeyboardManager : class {});
+        return foundry.helpers.interaction.KeyboardManager;
     }
 
     /**
      * The active Token placeable constructor.
      */
     get Token() {
-        return foundry?.canvas?.placeables?.Token ?? (typeof Token !== 'undefined' ? Token : class {});
+        return foundry.canvas.placeables.Token;
     }
 
     /**
      * The active ApplicationV2 constructor.
      */
     get ApplicationV2() {
-        return foundry?.applications?.api?.ApplicationV2 ?? class {};
+        return foundry.applications.api.ApplicationV2;
     }
 
     /**
      * The active HandlebarsApplicationMixin wrapper.
      */
     get HandlebarsApplicationMixin() {
-        return foundry?.applications?.api?.HandlebarsApplicationMixin ?? ((cls) => cls);
+        return foundry.applications.api.HandlebarsApplicationMixin;
     }
 
     /**
@@ -53,10 +53,7 @@ export class BaseFoundryAdapter {
      * @returns {Document|null}
      */
     fromUuidSync(uuid, options = {}) {
-        if (typeof foundry?.utils?.fromUuidSync === 'function') {
-            return foundry.utils.fromUuidSync(uuid, options);
-        }
-        return null;
+        return foundry.utils.fromUuidSync(uuid, options);
     }
 
     /**
@@ -67,10 +64,7 @@ export class BaseFoundryAdapter {
      * @returns {Object}
      */
     mergeObject(original, other = {}, options = {}) {
-        if (typeof foundry?.utils?.mergeObject === 'function') {
-            return foundry.utils.mergeObject(original, other, options);
-        }
-        return Object.assign(original, other);
+        return foundry.utils.mergeObject(original, other, options);
     }
 
     /**
@@ -79,10 +73,7 @@ export class BaseFoundryAdapter {
      * @returns {Object}
      */
     duplicate(obj) {
-        if (typeof foundry?.utils?.duplicate === 'function') {
-            return foundry.utils.duplicate(obj);
-        }
-        return structuredClone(obj);
+        return foundry.utils.duplicate(obj);
     }
 
     /**
@@ -92,9 +83,6 @@ export class BaseFoundryAdapter {
      * @returns {*}
      */
     getProperty(obj, path) {
-        if (typeof foundry?.utils?.getProperty === 'function') {
-            return foundry.utils.getProperty(obj, path);
-        }
-        return undefined;
+        return foundry.utils.getProperty(obj, path);
     }
 }

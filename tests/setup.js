@@ -126,6 +126,9 @@ globalThis.foundry = {
                 return options.relative.items.find(i => i.uuid === uuid || i.id === uuid) ?? null;
             }
             return null;
+        },
+        duplicate(obj) {
+            return structuredClone(obj);
         }
     }
 };
