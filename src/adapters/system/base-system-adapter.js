@@ -1,4 +1,3 @@
-import { localize, toSet } from '../../lib/utils.js';
 import { MODULE_ID } from '../../constants.js';
 import { KeyboardManager } from '../../lib/compat.js';
 import { BaseSystemContextMenuManager } from './context-menu/base-system-context-menu-manager.js';

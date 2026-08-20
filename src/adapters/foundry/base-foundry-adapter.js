@@ -1,5 +1,3 @@
-import { log } from '../../lib/logger.js';
-
 /**
  * Baseline Foundry VTT platform adapter.
  * Abstract interface for versioned Foundry Application, ContextMenu, interaction, and utility operations.

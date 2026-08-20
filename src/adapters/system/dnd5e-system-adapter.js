@@ -1,5 +1,5 @@
 import { FantasySystemAdapter } from './genre/fantasy-system-adapter.js';
-import { localize, toSet } from '../../lib/utils.js';
+import { localize } from '../../lib/utils.js';
 import { log } from '../../lib/logger.js';
 import { MODULE_ID } from '../../constants.js';
 import { TabRef } from '../../ui/tab-ref.js';

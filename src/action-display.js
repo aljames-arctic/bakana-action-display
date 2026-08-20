@@ -2,9 +2,6 @@ import { adapter } from './adapters/index.js';
 import { BaseSystemAdapter } from './adapters/system/base-system-adapter.js';
 import { BaseModuleAdapter } from './adapters/module/base-module-adapter.js';
 import { log } from './lib/logger.js';
-import { TabRef } from './ui/tab-ref.js';
-import { Action } from './ui/action.js';
-import { MODULE_ID } from './constants.js';
 
 /**
  * Core coordinator class for Bakana's Action Display.

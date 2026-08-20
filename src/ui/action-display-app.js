@@ -5,7 +5,6 @@ import { toSet } from '../lib/utils.js';
 import { MODULE_ID } from '../constants.js';
 import { HUDTabColumn } from './hud-tab-column.js';
 import { HUDTab } from './hud-tab.js';
-import { ContextMenu } from '../lib/compat.js';
 import { createActionContextMenu } from './app/context-menu-manager.js';
 import { showActivityDropdown } from './app/dropdown-manager.js';
 import { categorizeActions } from '../categorization/categorization-manager.js';
