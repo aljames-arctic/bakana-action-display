@@ -459,10 +459,6 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         return activity;
     }
 
-    #requiresComponent(sub, component) {
-        return this.filterManager.requiresComponent(sub, component);
-    }
-
     #getComponentTabs(doc) {
         return this.filterManager.getComponentTabs(doc);
     }
