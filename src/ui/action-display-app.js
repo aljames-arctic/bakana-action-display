@@ -1126,7 +1126,6 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
      * Toggle the hidden state of an action.
      * @param {string} actionId The ID of the action to toggle
      * @param {boolean} shouldHide Whether the action should be hidden
-     * @private
      */
     async _toggleActionHidden(actionId, shouldHide) {
         if (!actionId || !this.actor) return;
