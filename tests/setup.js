@@ -66,6 +66,32 @@ class Collection extends Map {
     }
 }
 
+class TokenHUD {
+    constructor() {
+        this.rendered = false;
+        this.object = null;
+    }
+    bind(token) {
+        this.object = token;
+        this.rendered = true;
+        Hooks.callAll('renderTokenHUD', this, {}, {});
+    }
+    clear() {
+        this.object = null;
+        this.rendered = false;
+        Hooks.callAll('closeTokenHUD', this, {});
+    }
+    close() {
+        return this.clear();
+    }
+}
+
+globalThis.canvas = {
+    hud: {
+        token: new TokenHUD()
+    }
+};
+
 globalThis.foundry = {
     helpers: {
         interaction: {
@@ -82,9 +108,27 @@ globalThis.foundry = {
         api: {
             HandlebarsApplicationMixin: (cls) => cls,
             ApplicationV2: class ApplicationV2 {
+                constructor() {
+                    this.rendered = false;
+                    this.state = 0;
+                    this.element = null;
+                }
                 async _prepareContext(options = {}) { return { ...options }; }
-                async render(options = {}) { return this; }
-                async close(options = {}) { return this; }
+                async render(options = {}) {
+                    this.rendered = true;
+                    this.state = 2;
+                    this.element = { style: {} };
+                    return this;
+                }
+                async close(options = {}) {
+                    this.rendered = false;
+                    this.state = 0;
+                    if (this.element) {
+                        this.element.style.display = 'none';
+                        this.element = null;
+                    }
+                    return this;
+                }
             }
         },
         ux: {
@@ -102,7 +146,15 @@ globalThis.foundry = {
     },
     canvas: {
         placeables: {
-            Token: class Token {}
+            Token: class Token {
+                _onClickRight(event) {
+                    if (globalThis.canvas?.hud?.token?.rendered && (globalThis.canvas.hud.token.object === this || globalThis.canvas.hud.token.object?.id === this.id)) {
+                        globalThis.canvas.hud.token.clear();
+                    } else {
+                        globalThis.canvas.hud.token.bind(this);
+                    }
+                }
+            }
         }
     },
     utils: {
@@ -197,6 +249,12 @@ globalThis.document = globalThis.document ?? {
 };
 
 globalThis.game = {
+    release: {
+        generation: 12
+    },
+    modules: new Map([
+        ['bakana-action-display', { id: 'bakana-action-display', active: true }]
+    ]),
     i18n: {
         has(key) { return true; },
         localize(key) { return key; },

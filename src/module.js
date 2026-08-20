@@ -21,10 +21,11 @@ Hooks.once('init', async () => {
     if (typeof originalRightClick === 'function') {
         TokenClass.prototype._onClickRight = function (event) {
             log.debug("Token.prototype._onClickRight called");
-            if (activeApp && activeApp.token === this) {
+            const isTokenHUDOpen = Boolean(canvas?.hud?.token?.rendered && (canvas.hud.token.object === this || canvas.hud.token.object?.id === this.id));
+            if (isTokenHUDOpen && activeApp && (activeApp.token === this || activeApp.token?.id === this.id)) {
                 const persist = game.settings.get(MODULE_ID, 'persistDetached');
                 if (persist && activeApp.isDetached) {
-                    log.debug("Right-clicked the same token with a detached HUD. Setting closeDetachedHUD flag.");
+                    log.debug("Right-clicked token with Token HUD open and detached Action Display. Setting closeDetachedHUD flag.");
                     closeDetachedHUD = true;
                 }
             }
@@ -144,13 +145,14 @@ Hooks.on('renderTokenHUD', (tokenHUD, html, data) => {
     if (!token || !token.document.isOwner) return;
 
     log.debug("renderTokenHUD hook fired for token:", token.name);
+    closeDetachedHUD = false;
 
     if (token.actor) {
         syncActorFavorites(token.actor);
     }
 
-    // If we already have an activeApp for this token, preserve it to keep its tab/scroll state
-    if (activeApp && activeApp.token.id === token.id) {
+    // If we already have an active rendered app for this token, preserve it to keep its tab/scroll state
+    if (activeApp && (activeApp.token === token || activeApp.token?.id === token.id) && (activeApp.rendered || activeApp.element)) {
         log.debug("renderTokenHUD | activeApp already exists for this token, preserving instance");
         return;
     }
