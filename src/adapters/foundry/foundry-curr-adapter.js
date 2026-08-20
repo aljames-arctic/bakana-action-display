@@ -1,8 +1,8 @@
 /**
- * Baseline Foundry VTT platform adapter.
- * Abstract interface for versioned Foundry Application, ContextMenu, interaction, and utility operations.
+ * Current Foundry VTT platform adapter.
+ * Encapsulates Foundry Application, ContextMenu, interaction, and utility operations for current releases.
  */
-export class BaseFoundryAdapter {
+export class FoundryCurrAdapter {
     /**
      * The major generation version of Foundry VTT (e.g. 12, 13, 14).
      * @returns {number}

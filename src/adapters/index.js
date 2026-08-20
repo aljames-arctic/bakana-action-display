@@ -1,4 +1,4 @@
-import { initializeFoundryAdapter, BaseFoundryAdapter } from './foundry/index.js';
+import { initializeFoundryAdapter, FoundryCurrAdapter } from './foundry/index.js';
 import { initializeSystemAdapter, BaseSystemAdapter } from './system/index.js';
 import { initializeModuleAdapters, BaseModuleAdapter } from './module/index.js';
 import { MODULE_ID } from '../constants.js';
@@ -11,7 +11,7 @@ import { Action } from '../ui/action.js';
  */
 class Adapter {
     constructor() {
-        this.foundry = new BaseFoundryAdapter();
+        this.foundry = new FoundryCurrAdapter();
         this.system = new BaseSystemAdapter('default');
         this.modules = new Map();
         this._initialized = false;
@@ -327,4 +327,4 @@ class Adapter {
 }
 
 export const adapter = new Adapter();
-export { Adapter, BaseFoundryAdapter, BaseSystemAdapter, BaseModuleAdapter };
+export { Adapter, FoundryCurrAdapter, BaseSystemAdapter, BaseModuleAdapter };
