@@ -101,7 +101,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
      * Navigate to the previous HUD page and re-render.
      */
     previousPage() {
-        const parsed = Number(this.activePage ?? 1);
+        const parsed = Number(this.activePage);
         const current = (!isNaN(parsed) && parsed > 0) ? parsed : 1;
         if (this.totalPages <= 1) {
             this.activePage = 1;
@@ -118,7 +118,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
      * Navigate to the next HUD page and re-render.
      */
     nextPage() {
-        const parsed = Number(this.activePage ?? 1);
+        const parsed = Number(this.activePage);
         const current = (!isNaN(parsed) && parsed > 0) ? parsed : 1;
         if (this.totalPages <= 1) {
             this.activePage = 1;
@@ -555,7 +555,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
             context.categorizedSections = null;
         }
 
-        const parsedActivePage = Number(this.activePage ?? 1);
+        const parsedActivePage = Number(this.activePage);
         const currentActivePage = (!isNaN(parsedActivePage) && parsedActivePage > 0) ? parsedActivePage : 1;
         const pages = [];
         for (let i = 1; i <= this.totalPages; i++) {
@@ -911,7 +911,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
                     this._showActivityDropdown(target, subsToShow, event);
                 } else if (subsToShow.length === 1) {
                     const chosenSub = subsToShow[0];
-                    const chosenItem = chosenSub.originalItem ?? action.originalItem ?? chosenSub;
+                    const chosenItem = chosenSub.originalItem ?? action.originalItem;
                     log.info(`_onRollAction | Rolling subaction "${chosenSub.name}":`, { action: chosenSub, item: chosenItem, actor, token, user });
                     chosenSub.roll(event);
                 } else {

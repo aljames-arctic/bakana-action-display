@@ -23,15 +23,15 @@ export function getActorFavorites(actor) {
  */
 export function isActorItemFavorite(actor, item, customAdapter = null) {
     if (!actor || !item) return false;
-    const itemId = typeof item === 'string' ? item : (item.id ?? item._id);
+    const itemId = typeof item === 'string' ? item : item.id;
     if (!itemId) return false;
 
     const favorites = getActorFavorites(actor);
     if (favorites[itemId] === true) return true;
 
-    const sys = customAdapter?.system ?? customAdapter ?? adapter.system;
+    const sys = customAdapter ?? adapter.system;
     if (sys?.hasFavorites?.()) {
-        const itemDoc = typeof item === 'object' ? (item.originalItem ?? item) : actor.items?.get?.(itemId);
+        const itemDoc = typeof item === 'object' ? (item.originalItem ?? item) : actor.items?.get(itemId);
         if (itemDoc && sys.isFavorite(actor, itemDoc)) {
             return true;
         }
@@ -51,12 +51,12 @@ export function isActorItemFavorite(actor, item, customAdapter = null) {
  */
 export async function setActorItemFavorite(actor, item, isFavorite, customAdapter = null) {
     if (!actor || !item) return;
-    const itemId = typeof item === 'string' ? item : (item.id ?? item._id);
+    const itemId = typeof item === 'string' ? item : item.id;
     if (!itemId) return;
 
     const targetFavorite = Boolean(isFavorite);
-    const itemDoc = typeof item === 'object' ? (item.originalItem ?? item) : actor.items?.get?.(itemId);
-    const sys = customAdapter?.system ?? customAdapter ?? adapter.system;
+    const itemDoc = typeof item === 'object' ? (item.originalItem ?? item) : actor.items?.get(itemId);
+    const sys = customAdapter ?? adapter.system;
 
     // 1. Update system level if supported
     if (sys?.hasFavorites?.() && itemDoc) {
@@ -98,7 +98,7 @@ export async function setActorItemFavorite(actor, item, isFavorite, customAdapte
  * @returns {Promise<void>}
  */
 export async function syncActorFavorites(actor, customAdapter = null) {
-    const sys = customAdapter?.system ?? customAdapter ?? adapter.system;
+    const sys = customAdapter ?? adapter.system;
     if (!actor || !sys?.hasFavorites?.() || !actor.isOwner) return;
 
     try {
@@ -106,7 +106,7 @@ export async function syncActorFavorites(actor, customAdapter = null) {
         const updatedFlags = {};
         let hasChanges = false;
 
-        const items = actor.items instanceof Map ? Array.from(actor.items.values()) : (Array.isArray(actor.items) ? actor.items : Array.from(actor.items ?? []));
+        const items = actor.items instanceof Map ? Array.from(actor.items.values()) : (Array.isArray(actor.items) ? actor.items : Array.from(actor.items || []));
         for (const item of items) {
             if (!item?.id) continue;
             const isSysFav = Boolean(sys.isFavorite(actor, item));

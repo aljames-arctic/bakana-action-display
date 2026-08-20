@@ -14,14 +14,14 @@ export function openActivitySubContextMenu(app, targetLi, subaction) {
             icon: '<i class="fas fa-edit"></i>',
             condition: () => {
                 if (!app.actor?.isOwner) return false;
-                const entity = subaction?.originalActivity ?? subaction?.originalItem ?? app.actor?.items?.get(subaction?.id);
+                const entity = subaction?.originalActivity ?? subaction?.originalItem;
                 return Boolean(entity && (typeof entity.sheet?.render === "function" || typeof entity.edit === "function"));
             },
             callback: () => {
                 if (adapter.openEditSheet) {
                     adapter.openEditSheet(subaction);
                 } else {
-                    const entity = subaction?.originalActivity ?? subaction?.originalItem ?? app.actor?.items?.get(subaction?.id);
+                    const entity = subaction?.originalActivity ?? subaction?.originalItem;
                     if (typeof entity?.sheet?.render === "function") {
                         entity.sheet.render(true);
                     } else if (typeof entity?.edit === "function") {
@@ -71,9 +71,9 @@ export function buildSubactionMenuItem(sub, event, app = null) {
         usesHtml: usesHtml,
         callback: () => {
             const item = sub.originalItem ?? sub;
-            const actor = app?.actor ?? item?.actor ?? null;
-            const token = app?.token ?? actor?.token ?? null;
-            const user = game?.user ?? null;
+            const actor = app?.actor ?? null;
+            const token = app?.token ?? null;
+            const user = game.user;
             log.info(`Rolling subaction "${sub.name}" via dropdown:`, { action: sub, item, actor, token, user });
             sub.roll(event);
         }

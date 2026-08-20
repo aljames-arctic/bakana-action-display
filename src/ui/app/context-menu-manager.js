@@ -27,7 +27,7 @@ export class ContextMenuManager {
                 condition: el => {
                     if (!this.app.actor?.isOwner) return false;
                     const action = this.app.actions?.find(a => a.id === el.dataset.actionId);
-                    const item = action?.originalItem ?? this.app.actor?.items?.get(action?.id ?? el.dataset.actionId);
+                    const item = action?.originalItem ?? this.app.actor?.items?.get(el.dataset.actionId);
                     return Boolean(item && typeof item.sheet?.render === "function");
                 },
                 callback: el => {
@@ -35,7 +35,7 @@ export class ContextMenuManager {
                     if (action && adapter.openEditSheet) {
                         adapter.openEditSheet(action);
                     } else {
-                        const item = action?.originalItem ?? this.app.actor?.items?.get(action?.id ?? el.dataset.actionId);
+                        const item = action?.originalItem ?? this.app.actor?.items?.get(el.dataset.actionId);
                         item?.sheet?.render(true);
                     }
                 }
@@ -46,12 +46,12 @@ export class ContextMenuManager {
                 condition: el => {
                     if (!this.app.actor?.isOwner) return false;
                     const action = this.app.actions?.find(a => a.id === el.dataset.actionId);
-                    const item = action?.originalItem ?? this.app.actor?.items?.get(action?.id ?? el.dataset.actionId);
+                    const item = action?.originalItem ?? this.app.actor?.items?.get(el.dataset.actionId);
                     return Boolean(item && !isActorItemFavorite(this.app.actor, item));
                 },
                 callback: async el => {
                     const action = this.app.actions?.find(a => a.id === el.dataset.actionId);
-                    const item = action?.originalItem ?? this.app.actor?.items?.get(action?.id ?? el.dataset.actionId);
+                    const item = action?.originalItem ?? this.app.actor?.items?.get(el.dataset.actionId);
                     if (item) {
                         await setActorItemFavorite(this.app.actor, item, true);
                         this.app.render();
@@ -64,12 +64,12 @@ export class ContextMenuManager {
                 condition: el => {
                     if (!this.app.actor?.isOwner) return false;
                     const action = this.app.actions?.find(a => a.id === el.dataset.actionId);
-                    const item = action?.originalItem ?? this.app.actor?.items?.get(action?.id ?? el.dataset.actionId);
+                    const item = action?.originalItem ?? this.app.actor?.items?.get(el.dataset.actionId);
                     return Boolean(item && isActorItemFavorite(this.app.actor, item));
                 },
                 callback: async el => {
                     const action = this.app.actions?.find(a => a.id === el.dataset.actionId);
-                    const item = action?.originalItem ?? this.app.actor?.items?.get(action?.id ?? el.dataset.actionId);
+                    const item = action?.originalItem ?? this.app.actor?.items?.get(el.dataset.actionId);
                     if (item) {
                         await setActorItemFavorite(this.app.actor, item, false);
                         this.app.render();

@@ -25,8 +25,8 @@ function containerHasComponent(container, component) {
 function docHasComponent(doc, component) {
     if (!doc) return false;
     return containerHasComponent(doc, component) ||
-           containerHasComponent(doc.system?.properties ?? doc.properties, component) ||
-           containerHasComponent(doc.system?.components ?? doc.components, component);
+           containerHasComponent(doc.system?.properties, component) ||
+           containerHasComponent(doc.system?.components, component);
 }
 
 /**
