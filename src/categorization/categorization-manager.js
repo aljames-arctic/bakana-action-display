@@ -1,5 +1,5 @@
 import { log } from '../lib/logger.js';
-import { actionDisplay } from '../action-display.js';
+import { adapter } from '../adapters/index.js';
 
 /**
  * @typedef {Object} SubCategory
@@ -100,8 +100,8 @@ export function evaluateBooleanExpression(expression, action, context = {}) {
 
     try {
         const item = action?.originalItem ?? action ?? {};
-        const actor = context?.actor ?? action?.actor ?? item?.actor ?? actionDisplay?.activeApp?.actor ?? null;
-        const token = context?.token ?? action?.token ?? actor?.token ?? actionDisplay?.activeApp?.token ?? null;
+        const actor = context?.actor ?? action?.actor ?? item?.actor ?? globalThis.actionDisplay?.activeApp?.actor ?? null;
+        const token = context?.token ?? action?.token ?? actor?.token ?? globalThis.actionDisplay?.activeApp?.token ?? null;
         const user = context?.user ?? game?.user ?? null;
 
         const evaluator = new Function(
@@ -239,14 +239,15 @@ export function categorizeActions(actions, config, catchAllLabel, context = {}) 
 }
 
 /**
- * Returns default preset categories, delegating to the provided or active system adapter.
+ * Returns default preset categories, delegating to the active system adapter.
  *
- * @param {Object} [adapter] Optional system adapter instance
+ * @param {Object} [customAdapter=null] Optional adapter override (defaults to global adapter.system)
  * @returns {Category[]} Default category list
  */
-export function getDefaultCategories(adapter = actionDisplay?.activeSystemAdapter) {
-    if (typeof adapter?.getDefaultCategories === 'function') {
-        return adapter.getDefaultCategories();
+export function getDefaultCategories(customAdapter = null) {
+    const sys = customAdapter?.system ?? customAdapter ?? adapter.system;
+    if (typeof sys?.getDefaultCategories === 'function') {
+        return sys.getDefaultCategories();
     }
     return [
         {

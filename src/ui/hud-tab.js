@@ -1,4 +1,4 @@
-import { actionDisplay } from '../action-display.js';
+import { adapter } from '../adapters/index.js';
 import { MODULE_ID } from '../constants.js';
 
 /**
@@ -176,7 +176,7 @@ export class HUDTab {
         if (this.isTopLevel) {
             tabColumn.selectParent(this.id, groups);
         } else {
-            const isExclusion = actionDisplay.activeSystemAdapter?.isExclusionTab(this.rootParent.id) ?? false;
+            const isExclusion = adapter.isExclusionTab(this.rootParent.id);
             tabColumn.selectSub(this.rootParent.id, this.id, groups, isExclusion);
         }
     }
@@ -196,7 +196,7 @@ export class HUDTab {
         if (this.isTopLevel) {
             tabColumn.toggleParent(this.id, groups);
         } else {
-            const isExclusion = actionDisplay.activeSystemAdapter?.isExclusionTab(this.rootParent.id) ?? false;
+            const isExclusion = adapter.isExclusionTab(this.rootParent.id);
             tabColumn.toggleSub(this.rootParent.id, this.id, groups, isExclusion);
         }
     }

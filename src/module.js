@@ -1,82 +1,38 @@
 // Main entry point for Bakana's Action Display
 import './settings.js';
+import { adapter } from './adapters/index.js';
 import { actionDisplay } from './action-display.js';
 import { ActionDisplayApp } from './ui/action-display-app.js';
 import { log } from './lib/logger.js';
-import { Token } from './lib/compat.js';
-
 import { MODULE_ID } from './constants.js';
-import { MODULE_ADAPTERS } from './adapters/module/module-adapters.js';
 import { syncActorFavorites } from './favorites/favorites-manager.js';
 
 let activeApp = null;
 let closeDetachedHUD = false;
-
-/**
- * Helper to convert hyphenated or lowercase IDs into PascalCase.
- * @param {string} str The string to convert
- * @returns {string} PascalCase string
- */
-function toPascalCase(str) {
-    return str.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join('');
-}
-
-/**
- * Dynamically loads and registers adapters based on the active system and enabled modules.
- * @returns {Promise<void>}
- */
-async function registerAdapters() {
-    const systemId = game.system.id;
-
-    const systemPath = `./adapters/system/${systemId}-system-adapter.js`;
-    const systemClassName = `${toPascalCase(systemId)}SystemAdapter`;
-
-    try {
-        const systemModule = await import(systemPath);
-        const AdapterClass = systemModule[systemClassName];
-        if (AdapterClass) {
-            actionDisplay.registerSystemAdapter(new AdapterClass());
-        } else {
-            log.error(`Class ${systemClassName} not found in ${systemPath}`);
-        }
-    } catch (error) {
-        // If the file doesn't exist (or fails to load), the coordinator will naturally fall back to BaseSystemAdapter
-        log.warn(`No system adapter found for ${systemId} at ${systemPath}. Falling back to default adapter.`);
-        log.debug("System adapter load error:", error);
-    }
-
-    // Register active module adapters from the central registry
-    for (const [moduleId, AdapterClass] of Object.entries(MODULE_ADAPTERS)) {
-        if (game.modules.get(moduleId)?.active) {
-            try {
-                actionDisplay.registerModuleAdapter(new AdapterClass());
-            } catch (error) {
-                log.error(`Failed to register module adapter for ${moduleId}:`, error);
-            }
-        }
-    }
-}
 
 // Initialize hook
 Hooks.once('init', async () => {
     log.info("Initializing Bakana's Action Display");
 
     // Wrap Token.prototype._onClickRight during init so it is bound correctly by all tokens' InteractionManagers
-    const originalRightClick = Token.prototype._onClickRight;
-    Token.prototype._onClickRight = function (event) {
-        log.debug("Token.prototype._onClickRight called");
-        if (activeApp && activeApp.token === this) {
-            const persist = game.settings.get(MODULE_ID, 'persistDetached');
-            if (persist && activeApp.isDetached) {
-                log.debug("Right-clicked the same token with a detached HUD. Setting closeDetachedHUD flag.");
-                closeDetachedHUD = true;
+    const TokenClass = adapter.foundry.Token;
+    const originalRightClick = TokenClass.prototype._onClickRight;
+    if (typeof originalRightClick === 'function') {
+        TokenClass.prototype._onClickRight = function (event) {
+            log.debug("Token.prototype._onClickRight called");
+            if (activeApp && activeApp.token === this) {
+                const persist = game.settings.get(MODULE_ID, 'persistDetached');
+                if (persist && activeApp.isDetached) {
+                    log.debug("Right-clicked the same token with a detached HUD. Setting closeDetachedHUD flag.");
+                    closeDetachedHUD = true;
+                }
             }
-        }
-        return originalRightClick.call(this, event);
-    };
+            return originalRightClick.call(this, event);
+        };
+    }
 
-    // Dynamically load and register active adapters
-    await registerAdapters();
+    // Initialize the unified adapter (Foundry, System, Module layers)
+    await adapter.init();
 
     // Initialize the core coordinator
     actionDisplay.init();
@@ -114,7 +70,7 @@ Hooks.once('ready', async () => {
 
     // Wrap the clear and close methods on the actual HUD class prototype (e.g. TokenHUD or TokenHUDPF)
     // to ensure it works across scene changes and supports custom system HUDs in all closing scenarios.
-    if (canvas.hud?.token) {
+    if (canvas?.hud?.token) {
         const hudClass = canvas.hud.token.constructor;
         log.info(`Wrapping ${hudClass.name}.prototype.clear and close`);
         
@@ -142,7 +98,7 @@ Hooks.on('renderTokenHUD', (tokenHUD, html, data) => {
     log.debug("renderTokenHUD hook fired for token:", token.name);
 
     if (token.actor) {
-        syncActorFavorites(token.actor, actionDisplay.activeSystemAdapter);
+        syncActorFavorites(token.actor);
     }
 
     // If we already have an activeApp for this token, preserve it to keep its tab/scroll state
@@ -158,57 +114,25 @@ Hooks.on('renderTokenHUD', (tokenHUD, html, data) => {
             activeApp.element.style.display = 'none';
         }
         activeApp.close();
+        activeApp = null;
     }
 
-    // Create and render the new app
+    // Initialize and render the new Action Display App
+    log.info("Rendering ActionDisplayApp for token:", token.name);
     activeApp = new ActionDisplayApp(token);
-    log.debug("renderTokenHUD: Created new ActionDisplayApp:", activeApp);
-    activeApp.render({ force: true });
+    actionDisplay.activeApp = activeApp;
+    activeApp.render(true);
 });
 
-// Static set of movement-related keys to avoid allocations and enable O(1) lookups during token updates
-const MOVEMENT_KEYS = new Set(['x', 'y', 'rotation', 'elevation', 'animation']);
-
-// Re-render the app if the token is updated, but skip full re-renders for movement/rotation/elevation
-Hooks.on('updateToken', (tokenDocument, change) => {
-    if (activeApp && activeApp.token.document.id === tokenDocument.id && activeApp.rendered) {
-        // If the HUD is detached, token document updates (movement, flags, etc.) never affect HUD contents
-        if (activeApp.isDetached) return;
-
-        // Skip full DOM re-renders if the update is only movement, rotation, or elevation.
-        // Positioning is already handled at 60fps by the refreshToken hook.
-        // We check the top-level keys of the change object directly, avoiding expensive object flattening.
-        const keys = Object.keys(change);
-        const isMovement = keys.every(k => MOVEMENT_KEYS.has(k));
-        if (isMovement) return;
-
-        log.debug("updateToken | Token properties updated, re-rendering HUD");
-        activeApp.render();
-    }
+// Hook into Token HUD closing to close our overlay if tracked or closed via token click
+Hooks.on('closeTokenHUD', (tokenHUD, html) => {
+    log.debug("closeTokenHUD hook fired");
+    handleHUDClose();
 });
 
-// Update HUD position in real-time when the token moves (for attached mode)
-Hooks.on('refreshToken', (token, options) => {
-    if (activeApp && activeApp.token === token && activeApp.isAttached && activeApp.rendered) {
-        activeApp.setPosition();
-    }
-});
-
-// Update HUD position when the canvas is panned or zoomed
+// Hook into canvas pan to update attached HUD position dynamically
 Hooks.on('canvasPan', (canvas, pan) => {
-    if (activeApp && activeApp.isTracked && activeApp.rendered) {
-        activeApp.setPosition();
-    }
-});
-
-Hooks.on('updateActor', (actor) => {
-    if (activeApp && activeApp.actor.id === actor.id && activeApp.rendered) {
-        activeApp.render();
-    }
-});
-
-Hooks.on('updateItem', (item) => {
-    if (activeApp && activeApp.actor.id === item.parent?.id && activeApp.rendered) {
-        activeApp.render();
+    if (activeApp && activeApp.isTracked) {
+        activeApp.updatePosition();
     }
 });

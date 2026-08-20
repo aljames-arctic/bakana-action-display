@@ -1,6 +1,5 @@
 import { log } from '../../lib/logger.js';
-import { actionDisplay } from '../../action-display.js';
-import { ContextMenu } from '../../lib/compat.js';
+import { adapter } from '../../adapters/index.js';
 import { isActorItemFavorite, setActorItemFavorite } from '../../favorites/favorites-manager.js';
 
 /**
@@ -25,8 +24,8 @@ export class ContextMenuManager {
                 },
                 callback: el => {
                     const action = this.app.actions?.find(a => a.id === el.dataset.actionId);
-                    if (action && actionDisplay.activeSystemAdapter?.openEditSheet) {
-                        actionDisplay.activeSystemAdapter.openEditSheet(action);
+                    if (action && adapter.openEditSheet) {
+                        adapter.openEditSheet(action);
                     } else {
                         const item = action?.originalItem ?? this.app.actor?.items?.get(action?.id ?? el.dataset.actionId);
                         item?.sheet?.render(true);
@@ -40,13 +39,13 @@ export class ContextMenuManager {
                     if (!this.app.actor?.isOwner) return false;
                     const action = this.app.actions?.find(a => a.id === el.dataset.actionId);
                     const item = action?.originalItem ?? this.app.actor?.items?.get(action?.id ?? el.dataset.actionId);
-                    return Boolean(item && !isActorItemFavorite(this.app.actor, item, actionDisplay.activeSystemAdapter));
+                    return Boolean(item && !isActorItemFavorite(this.app.actor, item));
                 },
                 callback: async el => {
                     const action = this.app.actions?.find(a => a.id === el.dataset.actionId);
                     const item = action?.originalItem ?? this.app.actor?.items?.get(action?.id ?? el.dataset.actionId);
                     if (item) {
-                        await setActorItemFavorite(this.app.actor, item, true, actionDisplay.activeSystemAdapter);
+                        await setActorItemFavorite(this.app.actor, item, true);
                         this.app.render();
                     }
                 }
@@ -58,13 +57,13 @@ export class ContextMenuManager {
                     if (!this.app.actor?.isOwner) return false;
                     const action = this.app.actions?.find(a => a.id === el.dataset.actionId);
                     const item = action?.originalItem ?? this.app.actor?.items?.get(action?.id ?? el.dataset.actionId);
-                    return Boolean(item && isActorItemFavorite(this.app.actor, item, actionDisplay.activeSystemAdapter));
+                    return Boolean(item && isActorItemFavorite(this.app.actor, item));
                 },
                 callback: async el => {
                     const action = this.app.actions?.find(a => a.id === el.dataset.actionId);
                     const item = action?.originalItem ?? this.app.actor?.items?.get(action?.id ?? el.dataset.actionId);
                     if (item) {
-                        await setActorItemFavorite(this.app.actor, item, false, actionDisplay.activeSystemAdapter);
+                        await setActorItemFavorite(this.app.actor, item, false);
                         this.app.render();
                     }
                 }
@@ -95,8 +94,8 @@ export class ContextMenuManager {
             }
         ];
 
-        if (actionDisplay.activeSystemAdapter?.getContextMenuItems) {
-            const systemItems = actionDisplay.activeSystemAdapter.getContextMenuItems(this.app);
+        const systemItems = adapter.getContextMenuItems(this.app);
+        if (systemItems.length > 0) {
             menuItems.push(...systemItems);
         }
 
@@ -129,7 +128,8 @@ export class ContextMenuManager {
             }
         };
 
-        return new ContextMenu(this.element, ".bad-action-item", menuItems, options);
+        const ContextMenuClass = adapter.foundry.ContextMenu;
+        return new ContextMenuClass(this.element, ".bad-action-item", menuItems, options);
     }
 }
 

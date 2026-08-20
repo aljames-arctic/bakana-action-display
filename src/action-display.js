@@ -1,3 +1,4 @@
+import { adapter } from './adapters/index.js';
 import { BaseSystemAdapter } from './adapters/system/base-system-adapter.js';
 import { BaseModuleAdapter } from './adapters/module/base-module-adapter.js';
 import { log } from './lib/logger.js';
@@ -7,147 +8,81 @@ import { MODULE_ID } from './constants.js';
 
 /**
  * Core coordinator class for Bakana's Action Display.
- * Manages the pipeline: Core Extraction -> System Adapter Layer -> Module Adapter Layer -> UI.
+ * Integrates directly with the unified Adapter singleton for Foundry, System, and Module layers.
  */
 class ActionDisplay {
-    constructor() {
-        this.moduleAdapters = new Map();
-        this.activeSystemAdapter = null;
+    /**
+     * Unified adapter instance.
+     * @type {Adapter}
+     */
+    get adapter() {
+        return adapter;
     }
 
     /**
-     * Initialize the coordinator by detecting the active system and registering adapters.
+     * Active system adapter delegate.
+     * @type {BaseSystemAdapter}
+     */
+    get activeSystemAdapter() {
+        return adapter.system;
+    }
+
+    set activeSystemAdapter(sys) {
+        adapter.system = sys;
+    }
+
+    /**
+     * Active module adapters map delegate.
+     * @type {Map<string, BaseModuleAdapter>}
+     */
+    get moduleAdapters() {
+        return adapter.modules;
+    }
+
+    /**
+     * Initialize the coordinator and verify adapter readiness.
      */
     init() {
         log.info("Initializing ActionDisplay core");
-        if (!this.activeSystemAdapter) {
-            const currentSystemId = game.system.id;
+        if (!adapter.system) {
+            const currentSystemId = globalThis.game?.system?.id ?? 'unknown';
             log.warn(`No system adapter registered for system: ${currentSystemId}. Falling back to default adapter.`);
-            this.activeSystemAdapter = new BaseSystemAdapter(currentSystemId);
+            adapter.system = new BaseSystemAdapter(currentSystemId);
         }
     }
 
     /**
-     * Register and activate the system adapter.
-     * @param {BaseSystemAdapter} adapter 
+     * Register and activate a system adapter.
+     * @param {BaseSystemAdapter} sysAdapter
      */
-    registerSystemAdapter(adapter) {
-        if (!(adapter instanceof BaseSystemAdapter)) {
+    registerSystemAdapter(sysAdapter) {
+        if (!(sysAdapter instanceof BaseSystemAdapter)) {
             throw new Error("System adapter must be an instance of BaseSystemAdapter");
         }
-        this.activeSystemAdapter = adapter;
-        log.info(`Activated system adapter for: ${adapter.systemId}`);
+        adapter.system = sysAdapter;
+        log.info(`Activated system adapter for: ${sysAdapter.systemId}`);
     }
 
     /**
      * Register a module adapter.
-     * @param {BaseModuleAdapter} adapter 
+     * @param {BaseModuleAdapter} modAdapter
      */
-    registerModuleAdapter(adapter) {
-        if (!(adapter instanceof BaseModuleAdapter)) {
+    registerModuleAdapter(modAdapter) {
+        if (!(modAdapter instanceof BaseModuleAdapter)) {
             throw new Error("Module adapter must be an instance of BaseModuleAdapter");
         }
-        this.moduleAdapters.set(adapter.moduleId, adapter);
-        log.info(`Registered module adapter for: ${adapter.moduleId}`);
+        adapter.modules.set(modAdapter.moduleId, modAdapter);
+        log.info(`Registered module adapter for: ${modAdapter.moduleId}`);
     }
 
     /**
-     * Run the pipeline to get actions for a given actor.
-     * Pipeline: Core Extraction -> System Adapter Layer -> Module Adapter Layer.
+     * Run the pipeline to get actions for a given actor via the unified adapter.
      * @param {Actor} actor The actor to extract actions for
      * @returns {Promise<Action[]>} The processed actions
      */
     async getActions(actor) {
         if (!actor) return [];
-
-        // 1. Core: Extract all items as base actions
-        let actions = this._extractBaseActions(actor);
-        const totalBase = actions.length;
-
-        // 2. System Adapter: Modify/Filter/Sort the base actions
-        if (this.activeSystemAdapter) {
-            try {
-                actions = await this.activeSystemAdapter.modifyActions(actions, actor);
-            } catch (error) {
-                log.error(`Error in system adapter "${this.activeSystemAdapter.systemId}":`, error);
-            }
-        }
-
-        // 3. Module Adapters: Run through active module adapters
-        for (const [moduleId, adapter] of this.moduleAdapters.entries()) {
-            try {
-                actions = await adapter.modifyActions(actions);
-            } catch (error) {
-                log.error(`Error in module adapter "${moduleId}":`, error);
-            }
-        }
-
-        // 4. Filter out system-hidden actions and apply user-hidden overrides in a single pass (O(1) lookups)
-        // NOTE(migration): hiddenItems transitioned from legacy string[] to Record<string, boolean> object map.
-        // Array normalization can be removed in a future cleanup once legacy world actor flags have migrated.
-        const rawHidden = actor.getFlag(MODULE_ID, 'hiddenItems');
-        const hiddenMap = Array.isArray(rawHidden)
-            ? rawHidden.reduce((acc, id) => { acc[id] = true; return acc; }, {})
-            : (rawHidden ?? {});
-        const filtered = [];
-
-        for (const action of actions) {
-            if (action.hidden) continue;
-
-            const itemId = action.originalItem?.id ?? action.id;
-            if (Boolean(hiddenMap[itemId])) {
-                action.isHidden = true;
-                action.left = ['hidden'];
-                // Ensure hidden actions are never skipped due to preparedness/equipped status
-                action.available = true;
-            }
-
-            filtered.push(action);
-        }
-
-        // 5. Sort actions alphabetically by name (locale-aware)
-        filtered.sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''));
-
-        log.debug(`getActions | actor: ${actor.name}, base actions: ${totalBase}, final actions: ${filtered.length} (activeSystemAdapter: ${this.activeSystemAdapter?.systemId})`);
-        
-        return filtered;
-    }
-
-    /**
-     * Extract a base list of actions from the actor's items.
-     * @param {Actor} actor 
-     * @returns {Object[]} Base action objects
-     */
-    _extractBaseActions(actor) {
-        const baseActions = [];
-        const adapter = this.activeSystemAdapter;
-        for (const item of actor.items) {
-            if (!item.name) continue;
-            if (!adapter.shouldExtractItem(item)) continue;
-
-            baseActions.push(new Action({
-                id: item.id,
-                name: item.name,
-                type: item.type,
-                img: item.img,
-                right: [TabRef.from('all')], // Default tab array
-                left: [item.type], // Default item type category
-                hidden: false,
-                uses: { available: null, max: null },
-                roll: (event) => {
-                    if (typeof item.use === 'function') {
-                        return item.use({ event });
-                    } else if (typeof item.roll === 'function') {
-                        return item.roll({ event });
-                    } else if (typeof item.toMessage === 'function') {
-                        return item.toMessage();
-                    }
-                },
-                originalItem: item,
-                extra: {}
-            }));
-        }
-        return baseActions;
+        return adapter.getActions(actor);
     }
 }
 

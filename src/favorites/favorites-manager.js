@@ -1,6 +1,6 @@
 import { MODULE_ID } from '../constants.js';
 import { log } from '../lib/logger.js';
-import { actionDisplay } from '../action-display.js';
+import { adapter } from '../adapters/index.js';
 
 /**
  * Get the favorites map from an actor document.
@@ -18,10 +18,10 @@ export function getActorFavorites(actor) {
  *
  * @param {Object} actor Actor document
  * @param {Object|string} item Item document, Action instance, or itemId string
- * @param {Object} [adapter=actionDisplay.activeSystemAdapter] System adapter
+ * @param {Object} [customAdapter=null] Optional adapter override (defaults to global adapter.system)
  * @returns {boolean} True if favorited
  */
-export function isActorItemFavorite(actor, item, adapter = actionDisplay?.activeSystemAdapter) {
+export function isActorItemFavorite(actor, item, customAdapter = null) {
     if (!actor || !item) return false;
     const itemId = typeof item === 'string' ? item : (item.id ?? item._id);
     if (!itemId) return false;
@@ -29,9 +29,10 @@ export function isActorItemFavorite(actor, item, adapter = actionDisplay?.active
     const favorites = getActorFavorites(actor);
     if (favorites[itemId] === true) return true;
 
-    if (adapter?.hasFavorites?.()) {
-        const itemDoc = typeof item === 'object' ? (item.originalItem ?? item) : actor.items?.get(itemId);
-        if (itemDoc && adapter.isFavorite(actor, itemDoc)) {
+    const sys = customAdapter?.system ?? customAdapter ?? adapter.system;
+    if (sys?.hasFavorites?.()) {
+        const itemDoc = typeof item === 'object' ? (item.originalItem ?? item) : actor.items?.get?.(itemId);
+        if (itemDoc && sys.isFavorite(actor, itemDoc)) {
             return true;
         }
     }
@@ -45,21 +46,22 @@ export function isActorItemFavorite(actor, item, adapter = actionDisplay?.active
  * @param {Object} actor Actor document
  * @param {Object|string} item Item document, Action instance, or itemId string
  * @param {boolean} isFavorite Target favorite state
- * @param {Object} [adapter=actionDisplay.activeSystemAdapter] System adapter
+ * @param {Object} [customAdapter=null] Optional adapter override (defaults to global adapter.system)
  * @returns {Promise<void>}
  */
-export async function setActorItemFavorite(actor, item, isFavorite, adapter = actionDisplay?.activeSystemAdapter) {
+export async function setActorItemFavorite(actor, item, isFavorite, customAdapter = null) {
     if (!actor || !item) return;
     const itemId = typeof item === 'string' ? item : (item.id ?? item._id);
     if (!itemId) return;
 
     const targetFavorite = Boolean(isFavorite);
-    const itemDoc = typeof item === 'object' ? (item.originalItem ?? item) : actor.items?.get(itemId);
+    const itemDoc = typeof item === 'object' ? (item.originalItem ?? item) : actor.items?.get?.(itemId);
+    const sys = customAdapter?.system ?? customAdapter ?? adapter.system;
 
     // 1. Update system level if supported
-    if (adapter?.hasFavorites?.() && itemDoc) {
+    if (sys?.hasFavorites?.() && itemDoc) {
         try {
-            await adapter.setFavorite(actor, itemDoc, targetFavorite);
+            await sys.setFavorite(actor, itemDoc, targetFavorite);
         } catch (err) {
             log.error(`setActorItemFavorite | Failed to set system favorite for item "${itemDoc.name}":`, err);
         }
@@ -92,20 +94,22 @@ export async function setActorItemFavorite(actor, item, isFavorite, adapter = ac
  * Synchronize the actor's favorites flag map with the system-level favorites if the system supports favorites.
  *
  * @param {Object} actor Actor document
- * @param {Object} [adapter=actionDisplay.activeSystemAdapter] System adapter
+ * @param {Object} [customAdapter=null] Optional adapter override (defaults to global adapter.system)
  * @returns {Promise<void>}
  */
-export async function syncActorFavorites(actor, adapter = actionDisplay?.activeSystemAdapter) {
-    if (!actor || !adapter?.hasFavorites?.() || !actor.isOwner) return;
+export async function syncActorFavorites(actor, customAdapter = null) {
+    const sys = customAdapter?.system ?? customAdapter ?? adapter.system;
+    if (!actor || !sys?.hasFavorites?.() || !actor.isOwner) return;
 
     try {
         const currentFlags = { ...getActorFavorites(actor) };
         const updatedFlags = {};
         let hasChanges = false;
 
-        for (const item of (actor.items ?? [])) {
+        const items = actor.items instanceof Map ? Array.from(actor.items.values()) : (Array.isArray(actor.items) ? actor.items : Array.from(actor.items ?? []));
+        for (const item of items) {
             if (!item?.id) continue;
-            const isSysFav = Boolean(adapter.isFavorite(actor, item));
+            const isSysFav = Boolean(sys.isFavorite(actor, item));
             if (isSysFav) {
                 updatedFlags[item.id] = true;
                 if (!currentFlags[item.id]) {

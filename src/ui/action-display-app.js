@@ -1,3 +1,4 @@
+import { adapter } from '../adapters/index.js';
 import { actionDisplay } from '../action-display.js';
 import { log } from '../lib/logger.js';
 import { toSet } from '../lib/utils.js';
@@ -20,7 +21,7 @@ let lastActiveTabState = null;
  * Positions itself dynamically relative to the selected token, or floats freely if detached.
  * Supports dragging and persists its position and attachment state.
  */
-export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplicationMixin(foundry.applications.api.ApplicationV2) {
+export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin(adapter.foundry.ApplicationV2) {
     // #region Application Initialization & Lifecycle
 
     constructor(token, options = {}) {
@@ -67,8 +68,8 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
                 getDefaultSubTypes: () => {
                     if (pageNum === 2) return side === 'right' ? ['all'] : [];
                     return side === 'left'
-                        ? actionDisplay?.activeSystemAdapter?.getDefaultActiveLeftSubTypes?.() ?? []
-                        : actionDisplay?.activeSystemAdapter?.getDefaultActiveSubTypes?.() ?? [];
+                        ? adapter.getDefaultActiveLeftSubTypes()
+                        : adapter.getDefaultActiveSubTypes();
                 }
             });
         }
@@ -289,11 +290,10 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
      */
     async _prepareContext(options) {
         const context = await super._prepareContext(options);
-        const allActions = await actionDisplay.getActions(this.actor);
+        const allActions = await (actionDisplay.getActions ? actionDisplay.getActions(this.actor) : adapter.getActions(this.actor));
         this.actions = allActions; // Cache all processed actions for high-performance UI lookups
         this.totalPages = allActions.reduce((max, a) => Math.max(max, a.page ?? 1), 1);
         const rawActions = allActions.filter(a => (a.page ?? 1) === this.activePage);
-        const adapter = actionDisplay.activeSystemAdapter;
 
         const existingItemCombinations = new Set();
         const existingCombinations = new Set();
@@ -516,7 +516,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
 
         // Synchronize favorites if system supports them and user is owner
         if (this.actor?.isOwner) {
-            syncActorFavorites(this.actor, actionDisplay.activeSystemAdapter);
+            syncActorFavorites(this.actor);
         }
 
         // Apply categorization if enabled
@@ -624,7 +624,6 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
         if (!action.right) return false;
 
         const filterContext = this._getFilterContext();
-        const adapter = actionDisplay.activeSystemAdapter;
         return adapter.matchesEconomyTabs(action, filterContext);
     }
 
@@ -836,9 +835,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             if (itemActivities && itemActivities.length > 0) {
                 // Filter sub-actions to only those that match the currently active right-side tabs
                 const filterContext = this._getFilterContext();
-
-                const adapter = actionDisplay?.activeSystemAdapter;
-                const qualifyingSubActions = adapter?.filterSubactions?.(itemActivities, filterContext, action.left) ?? itemActivities;
+                const qualifyingSubActions = adapter.system.filterSubactions(itemActivities, filterContext, action.left);
 
                 const subsToShow = qualifyingSubActions.length > 0 ? qualifyingSubActions : itemActivities;
                 const showDropdown = subsToShow.length > 1 || (!action.collapseDropdownIfSingle && itemActivities.length > 1 && subsToShow.length === 1);
@@ -1076,7 +1073,7 @@ export class ActionDisplayApp extends foundry.applications.api.HandlebarsApplica
             event.stopImmediatePropagation();
 
             // Delegate to system adapter for custom right-click behavior (e.g. toggling unprepared spells in dnd5e)
-            const handled = actionDisplay.activeSystemAdapter?.onTabRightClick?.(this, leftSubTarget, event) ?? false;
+            const handled = adapter.onTabRightClick(this, leftSubTarget, event);
             if (!handled) {
                 if (leftSubTarget.dataset.type !== 'all') {
                     // Default fallback: multi-select toggle for other sub-tabs

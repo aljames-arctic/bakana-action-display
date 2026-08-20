@@ -5,12 +5,13 @@ import {
     getDefaultCategories,
     validateExpression
 } from './categorization-manager.js';
+import { adapter } from '../adapters/index.js';
 import { actionDisplay } from '../action-display.js';
 
 /**
  * Modern ApplicationV2 configuration menu for HUD action categorization.
  */
-export class CategorizationConfigApp extends foundry.applications.api.HandlebarsApplicationMixin(foundry.applications.api.ApplicationV2) {
+export class CategorizationConfigApp extends adapter.foundry.HandlebarsApplicationMixin(adapter.foundry.ApplicationV2) {
     /** @override */
     static DEFAULT_OPTIONS = {
         id: 'bad-categorization-config-app',
@@ -310,7 +311,7 @@ export class CategorizationConfigApp extends foundry.applications.api.Handlebars
 
     _onLoadPresets(event, target) {
         event.preventDefault();
-        this.config.categories = getDefaultCategories(actionDisplay?.activeSystemAdapter);
+        this.config.categories = getDefaultCategories();
         this.render();
     }
 

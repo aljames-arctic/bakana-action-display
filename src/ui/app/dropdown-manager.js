@@ -1,5 +1,5 @@
 import { log } from '../../lib/logger.js';
-import { actionDisplay } from '../../action-display.js';
+import { adapter } from '../../adapters/index.js';
 
 export function openActivitySubContextMenu(app, targetLi, subaction) {
     const menuItems = [
@@ -12,8 +12,8 @@ export function openActivitySubContextMenu(app, targetLi, subaction) {
                 return Boolean(entity && (typeof entity.sheet?.render === "function" || typeof entity.edit === "function"));
             },
             callback: () => {
-                if (actionDisplay.activeSystemAdapter?.openEditSheet) {
-                    actionDisplay.activeSystemAdapter.openEditSheet(subaction);
+                if (adapter.openEditSheet) {
+                    adapter.openEditSheet(subaction);
                 } else {
                     const entity = subaction?.originalActivity ?? subaction?.originalItem ?? app.actor?.items?.get(subaction?.id);
                     if (typeof entity?.sheet?.render === "function") {
@@ -26,7 +26,7 @@ export function openActivitySubContextMenu(app, targetLi, subaction) {
         }
     ];
 
-    const ContextMenuClass = globalThis.foundry?.applications?.ux?.ContextMenu ?? globalThis.ContextMenu?.implementation ?? class {};
+    const ContextMenuClass = adapter.foundry.ContextMenu;
     const targetBody = app?.element?.ownerDocument?.body ?? globalThis.document?.body;
     const subMenu = new ContextMenuClass(targetBody, ".context-item", menuItems, {
         jQuery: false
@@ -95,7 +95,7 @@ export function showActivityDropdown(app, target, subactions, event) {
     app._activeMenuTarget = target;
     target.classList.add('bad-dropdown-active');
 
-    const ContextMenuClass = globalThis.foundry?.applications?.ux?.ContextMenu ?? globalThis.ContextMenu?.implementation ?? class {};
+    const ContextMenuClass = adapter.foundry.ContextMenu;
     const menu = new ContextMenuClass(app.element, ".bad-action-item", menuItems, {
         jQuery: false,
         onClose: () => {
@@ -131,8 +131,8 @@ export function showActivityDropdown(app, target, subactions, event) {
                         ev.stopImmediatePropagation();
                         app._activeLeftClickMenu?.close();
                         app._activeLeftClickMenu = null;
-                        if (actionDisplay.activeSystemAdapter?.openEditSheet) {
-                            actionDisplay.activeSystemAdapter.openEditSheet(sub);
+                        if (adapter.openEditSheet) {
+                            adapter.openEditSheet(sub);
                         } else {
                             const entity = sub.originalActivity ?? sub.originalItem;
                             entity?.sheet?.render?.(true);
