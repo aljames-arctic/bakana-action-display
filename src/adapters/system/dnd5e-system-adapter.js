@@ -185,13 +185,6 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                     }
                 }
 
-                log.debug(`Item "${item.name}" (${item.id}) activities (${filteredActivities.length}/${mappedActivities.length}):`, mappedActivities.map(a => ({
-                    name: a.name,
-                    uses: a.uses,
-                    isDepleted: a.isDepleted,
-                    right: a.right?.map(t => t.path)
-                })));
-
                 // Assign to hierarchical item types: [parentType, subType] (for left-side tabs)
                 const left = this.#getItemTabTypes(item, type, filteredActivities);
 

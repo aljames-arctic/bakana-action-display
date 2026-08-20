@@ -125,7 +125,6 @@ class Adapter {
                 continue;
             }
             if (typeof this.system.shouldExtractItem === 'function' && !this.system.shouldExtractItem(item)) {
-                log.debug(`Adapter._extractBaseActions | Skipping "${item.name}" (${item.type}, ID: ${item.id}) — shouldExtractItem() returned false`);
                 continue;
             }
             actions.push(new Action({
