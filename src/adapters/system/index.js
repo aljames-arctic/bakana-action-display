@@ -15,7 +15,7 @@ function toPascalCase(str) {
  * @param {string} [systemId]
  * @returns {Promise<BaseSystemAdapter>}
  */
-export async function initializeSystemAdapter(systemId = globalThis.game?.system?.id) {
+export async function initializeSystemAdapter(systemId = game.system?.id) {
     if (!systemId) {
         return new BaseSystemAdapter('unknown');
     }

@@ -81,8 +81,8 @@ class MockElement extends HTMLElement {
 }
 
 test('injectSettingsHeaders inserts world, user, and client headers into SettingsConfig DOM', () => {
-    const origCreateElement = globalThis.document.createElement;
-    globalThis.document.createElement = (tagName) => new MockElement(tagName);
+    const origCreateElement = document.createElement;
+    document.createElement = (tagName) => new MockElement(tagName);
 
     try {
         const root = new MockElement('div', { className: 'settings-list' });
@@ -125,6 +125,6 @@ test('injectSettingsHeaders inserts world, user, and client headers into Setting
         injectSettingsHeaders(root);
         assert.equal(root.children.length, 6, 'Should remain 6 items without duplicate headers');
     } finally {
-        globalThis.document.createElement = origCreateElement;
+        document.createElement = origCreateElement;
     }
 });

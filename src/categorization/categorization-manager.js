@@ -1,5 +1,6 @@
 import { log } from '../lib/logger.js';
 import { adapter } from '../adapters/index.js';
+import { actionDisplay } from '../action-display.js';
 
 /**
  * @typedef {Object} SubCategory
@@ -100,8 +101,8 @@ export function evaluateBooleanExpression(expression, action, context = {}) {
 
     try {
         const item = action?.originalItem ?? action ?? {};
-        const actor = context?.actor ?? action?.actor ?? item?.actor ?? globalThis.actionDisplay?.activeApp?.actor ?? null;
-        const token = context?.token ?? action?.token ?? actor?.token ?? globalThis.actionDisplay?.activeApp?.token ?? null;
+        const actor = context?.actor ?? action?.actor ?? item?.actor ?? actionDisplay.activeApp?.actor ?? null;
+        const token = context?.token ?? action?.token ?? actor?.token ?? actionDisplay.activeApp?.token ?? null;
         const user = context?.user ?? game?.user ?? null;
 
         const evaluator = new Function(

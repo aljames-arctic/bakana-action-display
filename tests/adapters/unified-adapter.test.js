@@ -9,24 +9,24 @@ import { MODULE_ID } from '../../src/constants.js';
 
 test('initializeFoundryAdapter returns FoundryCurrentAdapter inheriting BaseFoundryAdapter with dynamic generation', () => {
     // V12
-    globalThis.game.release = { generation: 12 };
-    globalThis.game.version = '12.331';
+    game.release = { generation: 12 };
+    game.version = '12.331';
     const v12 = initializeFoundryAdapter();
     assert.ok(v12 instanceof FoundryCurrentAdapter);
     assert.ok(v12 instanceof BaseFoundryAdapter);
     assert.equal(v12.generation, 12);
 
     // V13
-    globalThis.game.release = { generation: 13 };
-    globalThis.game.version = '13.300';
+    game.release = { generation: 13 };
+    game.version = '13.300';
     const v13 = initializeFoundryAdapter();
     assert.ok(v13 instanceof FoundryCurrentAdapter);
     assert.ok(v13 instanceof BaseFoundryAdapter);
     assert.equal(v13.generation, 13);
 
     // V14
-    globalThis.game.release = { generation: 14 };
-    globalThis.game.version = '14.000';
+    game.release = { generation: 14 };
+    game.version = '14.000';
     const v14 = initializeFoundryAdapter();
     assert.ok(v14 instanceof FoundryCurrentAdapter);
     assert.ok(v14 instanceof BaseFoundryAdapter);
@@ -50,7 +50,7 @@ test('initializeSystemAdapter loads matching system adapter or falls back to Bas
 });
 
 test('initializeModuleAdapters registers active modules from registry', () => {
-    globalThis.game.modules = new Map([
+    game.modules = new Map([
         ['midi-qol', { id: 'midi-qol', active: true }]
     ]);
 
@@ -59,10 +59,10 @@ test('initializeModuleAdapters registers active modules from registry', () => {
 });
 
 test('Unified Adapter init initializes foundry, system, and module layers', async () => {
-    globalThis.game.release = { generation: 12 };
-    globalThis.game.version = '12.331';
-    globalThis.game.system = { id: 'dnd5e' };
-    globalThis.game.modules = new Map([
+    game.release = { generation: 12 };
+    game.version = '12.331';
+    game.system = { id: 'dnd5e' };
+    game.modules = new Map([
         ['midi-qol', { id: 'midi-qol', active: false }]
     ]);
 

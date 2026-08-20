@@ -310,7 +310,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         }
 
         // 3. Skill Checks
-        const cfg = globalThis.CONFIG?.DND5E;
+        const cfg = CONFIG?.DND5E;
         const skills = actor.system?.skills ?? {};
         for (const [skillId, skill] of Object.entries(skills)) {
             const abl = skill.ability ?? 'dex';

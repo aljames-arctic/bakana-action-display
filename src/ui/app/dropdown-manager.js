@@ -33,7 +33,7 @@ export function openActivitySubContextMenu(app, targetLi, subaction) {
     ];
 
     const ContextMenuClass = adapter.foundry.ContextMenu;
-    const targetBody = app?.element?.ownerDocument?.body ?? globalThis.document?.body;
+    const targetBody = app?.element?.ownerDocument?.body ?? document.body;
     const subMenu = new ContextMenuClass(targetBody, ".context-item", menuItems, {
         jQuery: false
     });

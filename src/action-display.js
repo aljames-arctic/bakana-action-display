@@ -42,7 +42,7 @@ class ActionDisplay {
     init() {
         log.info("Initializing ActionDisplay core");
         if (!adapter.system) {
-            const currentSystemId = globalThis.game?.system?.id ?? 'unknown';
+            const currentSystemId = game.system?.id ?? 'unknown';
             log.warn(`No system adapter registered for system: ${currentSystemId}. Falling back to default adapter.`);
             adapter.system = new BaseSystemAdapter(currentSystemId);
         }

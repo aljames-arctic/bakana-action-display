@@ -9,7 +9,7 @@ import { log } from '../../lib/logger.js';
 export function initializeModuleAdapters() {
     const activeMap = new Map();
     for (const [moduleId, AdapterClass] of Object.entries(MODULE_ADAPTERS)) {
-        if (globalThis.game?.modules?.get(moduleId)?.active) {
+        if (game.modules?.get(moduleId)?.active) {
             try {
                 activeMap.set(moduleId, new AdapterClass());
                 log.info(`Initialized module adapter for: ${moduleId}`);

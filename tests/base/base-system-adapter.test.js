@@ -110,14 +110,13 @@ test('BaseSystemAdapter default active sub-types and HUDTabColumn initialization
     assert.deepEqual(adapter.getDefaultActiveLeftSubTypes(), []);
     assert.deepEqual(adapter.getDefaultActiveSubTypes(), []);
 
-    globalThis.actionDisplay = { activeSystemAdapter: adapter };
     const leftTabs = new HUDTabColumn({
         side: 'left',
-        getDefaultSubTypes: () => actionDisplay.activeSystemAdapter.getDefaultActiveLeftSubTypes()
+        getDefaultSubTypes: () => adapter.getDefaultActiveLeftSubTypes()
     });
     const rightTabs = new HUDTabColumn({
         side: 'right',
-        getDefaultSubTypes: () => actionDisplay.activeSystemAdapter.getDefaultActiveSubTypes()
+        getDefaultSubTypes: () => adapter.getDefaultActiveSubTypes()
     });
     assert.equal(leftTabs.side, 'left');
     assert.equal(rightTabs.side, 'right');

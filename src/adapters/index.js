@@ -35,7 +35,7 @@ class Adapter {
      */
     async init() {
         this.foundry = initializeFoundryAdapter();
-        this.system = await initializeSystemAdapter(globalThis.game?.system?.id);
+        this.system = await initializeSystemAdapter(game.system?.id);
         this.modules = initializeModuleAdapters();
         this._initialized = true;
         log.info(`Unified Adapter initialized [Foundry: v${this.foundry.generation}, System: ${this.system.systemId}, Modules: ${this.modules.size}]`);

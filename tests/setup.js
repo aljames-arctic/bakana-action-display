@@ -6,6 +6,7 @@
 globalThis.Item = class Item {};
 globalThis.Actor = class Actor {};
 globalThis.HTMLElement = class HTMLElement {};
+globalThis.CONFIG = globalThis.CONFIG ?? {};
 
 function getProperty(obj, path) {
     if (!obj || !path) return undefined;
