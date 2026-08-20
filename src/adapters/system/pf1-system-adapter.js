@@ -58,7 +58,6 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
      * @returns {Object[]} The modified actions list
      */
     async modifyActions(actions, actor) {
-        log.debug(`Pf1SystemAdapter.modifyActions | Starting for actor: ${actor.name}`);
         const modified = [];
 
         const { attackToWeaponMap, weaponLinkedAttacks } = this.#buildWeaponAttackLinks(actor);
@@ -66,7 +65,6 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
         for (const action of actions) {
             const item = action.originalItem;
             const type = item.type;
-            log.debug(`Pf1SystemAdapter.modifyActions | Processing action row: "${item.name}" (${type}, ID: ${item.id})`);
 
             if (item.type === 'spell') {
                 // 1. Spells in PF1e
@@ -79,14 +77,14 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
 
                 action.right = [TabRef.from('economy', 'action')];
                 action.activationType = 'action';
-                
+
                 const level = item.system.level ?? 0;
                 const subTab = this.#getSpellSubTab(spellbookId, spellbook, level);
                 action.left = ['spell', subTab];
-                
+
                 // Calculate uses (slots or prepared casts)
                 action.uses = this.#calculateSpellUses(spellbook, item);
-                
+
                 // Roll function
                 action.roll = (event) => this.#executeItemRoll(item, null, event);
 
@@ -156,12 +154,12 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
                 action.right = [TabRef.from('economy', 'other')];
                 action.activationType = 'other';
                 action.left = ['buff'];
-                
+
                 action.roll = async (event) => {
                     const active = this.#getBuffActiveState(item);
                     await item.update({ "system.active": !active });
                 };
-                
+
                 action.isActive = this.#getBuffActiveState(item);
                 action.uses = { available: null, max: null };
                 action.excludeFromAll = true; // Exclude buffs from the 'All Items' tab in PF1e
@@ -366,13 +364,9 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
         const weaponLinkedAttacks = new Map();
 
         const weapons = actor.items.filter(i => i.type === 'weapon');
-        log.debug(`Pf1SystemAdapter.modifyActions | Found ${weapons.length} weapons on actor`);
 
         for (const weapon of weapons) {
             const children = this.#getWeaponLinkChildren(weapon);
-            if (children.length > 0) {
-                log.debug(`Pf1SystemAdapter.modifyActions | Weapon "${weapon.name}" (${weapon.id}) has ${children.length} children in links:`, children);
-            }
             const linked = [];
             for (const child of children) {
                 if (!child.uuid) continue;
@@ -380,9 +374,6 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
                 let childItem = null;
                 try {
                     childItem = foundry.utils.fromUuidSync(child.uuid, { relative: actor });
-                    if (childItem) {
-                        log.debug(`Pf1SystemAdapter.modifyActions | Resolved child via fromUuidSync: "${childItem.name}" (${childItem.id})`);
-                    }
                 } catch (e) {
                     log.error(`Pf1SystemAdapter.modifyActions | Failed to resolve child UUID ${child.uuid}:`, e);
                 }
@@ -390,17 +381,13 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
                 if (childItem && childItem.type === 'attack') {
                     attackToWeaponMap.set(childItem.id, weapon);
                     linked.push(childItem);
-                } else if (childItem) {
-                    log.debug(`Pf1SystemAdapter.modifyActions | Resolved child "${childItem.name}" is not of type 'attack' (type: ${childItem.type})`);
                 }
             }
             if (linked.length > 0) {
                 weaponLinkedAttacks.set(weapon.id, linked);
-                log.debug(`Pf1SystemAdapter.modifyActions | Weapon "${weapon.name}" successfully linked to attacks: ${linked.map(i => i.name).join(', ')}`);
             }
         }
 
-        log.debug(`Pf1SystemAdapter.modifyActions | Final attackToWeaponMap keys (IDs to skip):`, Array.from(attackToWeaponMap.keys()));
         return { attackToWeaponMap, weaponLinkedAttacks };
     }
 
@@ -522,10 +509,10 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
      */
     getDefaultCategories() {
         return super.getDefaultCategories({
-            weapon: { 
+            weapon: {
                 expression: `item.type === 'weapon' || item.type === 'attack'`
             },
-            feature: { 
+            feature: {
                 expression: `item.type === 'feat' || item.type === 'buff'`
             }
         });
