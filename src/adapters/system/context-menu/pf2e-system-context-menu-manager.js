@@ -31,103 +31,91 @@ export class Pf2eSystemContextMenuManager extends BaseSystemContextMenuManager {
     }
 
     /**
-     * Retrieve system-specific context menu items for PF2e physical items (Hold 1H, Hold 2H, Wear, Stow, Drop).
+     * Retrieve system-specific context menu items for PF2e physical items (Update Equip State submenu).
      * @param {ApplicationV2} app Active HUD application
      * @returns {Object[]} Context menu items definition
      */
     getContextMenuItems(app) {
         return [
             {
-                name: "BAD.pf2e.carryTypeHeld1",
-                icon: '<i class="fas fa-hand"></i>',
+                name: "BAD.pf2e.updateEquipState",
+                icon: '<i class="fas fa-shield-halved"></i>',
                 condition: el => {
                     const item = this.#getOwnerItem(app, el);
-                    if (!item || !item.system?.equipped || item.type === 'armor') return false;
-                    const { carryType, handsHeld } = item.system.equipped;
-                    return !(carryType === 'held' && handsHeld === 1);
+                    return Boolean(item && item.system?.equipped);
                 },
-                callback: async el => {
-                    const item = this.#getOwnerItem(app, el);
-                    if (item) {
-                        await item.update({
-                            "system.equipped.carryType": "held",
-                            "system.equipped.handsHeld": 1
-                        });
+                submenu: [
+                    {
+                        name: "BAD.pf2e.carryTypeHeld1",
+                        icon: '<i class="fas fa-hand"></i>',
+                        active: (item) => item?.system?.equipped?.carryType === 'held' && item?.system?.equipped?.handsHeld === 1,
+                        condition: (item) => item?.type !== 'armor',
+                        callback: async (item) => {
+                            if (item) {
+                                await item.update({
+                                    "system.equipped.carryType": "held",
+                                    "system.equipped.handsHeld": 1
+                                });
+                            }
+                        }
+                    },
+                    {
+                        name: "BAD.pf2e.carryTypeHeld2",
+                        icon: '<i class="fas fa-hands"></i>',
+                        active: (item) => item?.system?.equipped?.carryType === 'held' && item?.system?.equipped?.handsHeld === 2,
+                        condition: (item) => ['weapon', 'equipment'].includes(item?.type),
+                        callback: async (item) => {
+                            if (item) {
+                                await item.update({
+                                    "system.equipped.carryType": "held",
+                                    "system.equipped.handsHeld": 2
+                                });
+                            }
+                        }
+                    },
+                    {
+                        name: "BAD.pf2e.carryTypeWorn",
+                        icon: '<i class="fas fa-shirt"></i>',
+                        active: (item) => item?.system?.equipped?.carryType === 'worn',
+                        condition: () => true,
+                        callback: async (item) => {
+                            if (item) {
+                                await item.update({
+                                    "system.equipped.carryType": "worn",
+                                    "system.equipped.handsHeld": 0
+                                });
+                            }
+                        }
+                    },
+                    {
+                        name: "BAD.pf2e.carryTypeStowed",
+                        icon: '<i class="fas fa-box-archive"></i>',
+                        active: (item) => item?.system?.equipped?.carryType === 'stowed',
+                        condition: () => true,
+                        callback: async (item) => {
+                            if (item) {
+                                await item.update({
+                                    "system.equipped.carryType": "stowed",
+                                    "system.equipped.handsHeld": 0
+                                });
+                            }
+                        }
+                    },
+                    {
+                        name: "BAD.pf2e.carryTypeDropped",
+                        icon: '<i class="fas fa-arrow-down"></i>',
+                        active: (item) => item?.system?.equipped?.carryType === 'dropped',
+                        condition: () => true,
+                        callback: async (item) => {
+                            if (item) {
+                                await item.update({
+                                    "system.equipped.carryType": "dropped",
+                                    "system.equipped.handsHeld": 0
+                                });
+                            }
+                        }
                     }
-                }
-            },
-            {
-                name: "BAD.pf2e.carryTypeHeld2",
-                icon: '<i class="fas fa-hands"></i>',
-                condition: el => {
-                    const item = this.#getOwnerItem(app, el);
-                    if (!item || !item.system?.equipped || !['weapon', 'equipment'].includes(item.type)) return false;
-                    const { carryType, handsHeld } = item.system.equipped;
-                    return !(carryType === 'held' && handsHeld === 2);
-                },
-                callback: async el => {
-                    const item = this.#getOwnerItem(app, el);
-                    if (item) {
-                        await item.update({
-                            "system.equipped.carryType": "held",
-                            "system.equipped.handsHeld": 2
-                        });
-                    }
-                }
-            },
-            {
-                name: "BAD.pf2e.carryTypeWorn",
-                icon: '<i class="fas fa-shirt"></i>',
-                condition: el => {
-                    const item = this.#getOwnerItem(app, el);
-                    if (!item || !item.system?.equipped) return false;
-                    return item.system.equipped.carryType !== 'worn';
-                },
-                callback: async el => {
-                    const item = this.#getOwnerItem(app, el);
-                    if (item) {
-                        await item.update({
-                            "system.equipped.carryType": "worn",
-                            "system.equipped.handsHeld": 0
-                        });
-                    }
-                }
-            },
-            {
-                name: "BAD.pf2e.carryTypeStowed",
-                icon: '<i class="fas fa-box-archive"></i>',
-                condition: el => {
-                    const item = this.#getOwnerItem(app, el);
-                    if (!item || !item.system?.equipped) return false;
-                    return item.system.equipped.carryType !== 'stowed';
-                },
-                callback: async el => {
-                    const item = this.#getOwnerItem(app, el);
-                    if (item) {
-                        await item.update({
-                            "system.equipped.carryType": "stowed",
-                            "system.equipped.handsHeld": 0
-                        });
-                    }
-                }
-            },
-            {
-                name: "BAD.pf2e.carryTypeDropped",
-                icon: '<i class="fas fa-arrow-down"></i>',
-                condition: el => {
-                    const item = this.#getOwnerItem(app, el);
-                    if (!item || !item.system?.equipped) return false;
-                    return item.system.equipped.carryType !== 'dropped';
-                },
-                callback: async el => {
-                    const item = this.#getOwnerItem(app, el);
-                    if (item) {
-                        await item.update({
-                            "system.equipped.carryType": "dropped",
-                            "system.equipped.handsHeld": 0
-                        });
-                    }
-                }
+                ]
             }
         ];
     }

@@ -118,14 +118,19 @@ export class ContextMenuManager {
                     this.app._activeMenuTarget.classList.remove('bad-dropdown-active');
                     this.app._activeMenuTarget = null;
                 }
+                this.closeSubmenu();
+
                 this.app._activeContextMenuTarget = target;
                 this.element.querySelectorAll('.bad-action-item').forEach(el => {
                     if (el !== target) el.classList.remove('bad-menu-active');
                 });
                 target.classList.add('bad-menu-active');
                 this.element.querySelector('.bakana-action-display-container')?.classList.add('has-context-menu');
+
+                this._bindSubmenus(target, menuItems);
             },
             onClose: () => {
+                this.closeSubmenu();
                 if (this.app._activeContextMenuTarget) {
                     this.app._activeContextMenuTarget.classList.remove('bad-menu-active');
                 }
@@ -136,6 +141,184 @@ export class ContextMenuManager {
 
         const ContextMenuClass = adapter.foundry.ContextMenu;
         return new ContextMenuClass(this.element, ".bad-action-item", menuItems, options);
+    }
+
+    /**
+     * Close any currently open submenu popout.
+     */
+    closeSubmenu() {
+        if (this._activeSubmenuEl) {
+            this._activeSubmenuEl.remove();
+            this._activeSubmenuEl = null;
+        }
+        if (this._submenuCloseTimeout) {
+            clearTimeout(this._submenuCloseTimeout);
+            this._submenuCloseTimeout = null;
+        }
+    }
+
+    /**
+     * Scan the opened context menu and bind submenu popout triggers.
+     * @param {HTMLElement} target Action card target
+     * @param {Object[]} menuItems List of menu item configurations
+     * @private
+     */
+    _bindSubmenus(target, menuItems) {
+        setTimeout(() => {
+            const contextMenuEl = globalThis.document?.querySelector?.('#context-menu, .context-menu');
+            if (!contextMenuEl || typeof contextMenuEl.querySelectorAll !== 'function') return;
+
+            const action = this.app.actions?.find(a => a.id === target?.dataset?.actionId);
+            const item = action?.originalItem ?? this.app.actor?.items?.get(target?.dataset?.actionId);
+
+            const itemLis = contextMenuEl.querySelectorAll('.context-item');
+            for (const li of itemLis) {
+                const text = li.textContent.trim();
+                const matchedItem = menuItems.find(m => {
+                    const localized = game.i18n.localize(m.name);
+                    return localized && text.includes(localized);
+                });
+
+                if (matchedItem?.submenu?.length) {
+                    if (!li.querySelector('.bad-menu-submenu-arrow')) {
+                        const arrow = document.createElement('i');
+                        arrow.className = 'fas fa-chevron-right bad-menu-submenu-arrow';
+                        li.appendChild(arrow);
+                    }
+
+                    const openThisSubmenu = (event) => {
+                        event?.stopPropagation?.();
+                        if (this._submenuCloseTimeout) {
+                            clearTimeout(this._submenuCloseTimeout);
+                            this._submenuCloseTimeout = null;
+                        }
+                        this._openSubmenu(li, target, item, matchedItem.submenu);
+                    };
+
+                    const scheduleClose = () => {
+                        if (this._submenuCloseTimeout) clearTimeout(this._submenuCloseTimeout);
+                        this._submenuCloseTimeout = setTimeout(() => {
+                            this.closeSubmenu();
+                        }, 180);
+                    };
+
+                    li.addEventListener('mouseenter', openThisSubmenu);
+                    li.addEventListener('click', openThisSubmenu);
+                    li.addEventListener('mouseleave', scheduleClose);
+                } else {
+                    li.addEventListener('mouseenter', () => {
+                        this.closeSubmenu();
+                    });
+                }
+            }
+        }, 10);
+    }
+
+    /**
+     * Open and position a submenu popup to the right of the triggering menu item.
+     * @param {HTMLElement} parentLi Triggering context menu item element
+     * @param {HTMLElement} target Target action item element
+     * @param {Item} item Resolved Foundry Item document
+     * @param {Object[]} submenuItems Submenu item specifications
+     * @private
+     */
+    _openSubmenu(parentLi, target, item, submenuItems) {
+        this.closeSubmenu();
+
+        const qualifying = submenuItems.filter(sub => {
+            if (typeof sub.condition === 'function') {
+                return Boolean(sub.condition(item));
+            }
+            return true;
+        });
+
+        if (qualifying.length === 0) return;
+
+        const nav = document.createElement('nav');
+        nav.className = 'context-menu bad-sub-context-menu';
+
+        const ol = document.createElement('ol');
+        ol.className = 'context-items';
+
+        for (const sub of qualifying) {
+            const li = document.createElement('li');
+            li.className = 'context-item';
+
+            const isActive = typeof sub.active === 'function' ? Boolean(sub.active(item)) : false;
+            if (isActive) {
+                li.classList.add('active-state');
+            }
+
+            const iconSpan = document.createElement('span');
+            iconSpan.className = 'bad-menu-icon-wrap';
+            iconSpan.innerHTML = sub.icon ?? '';
+            li.appendChild(iconSpan);
+
+            const titleSpan = document.createElement('span');
+            titleSpan.textContent = game.i18n.localize(sub.name);
+            li.appendChild(titleSpan);
+
+            if (isActive) {
+                const checkIcon = document.createElement('i');
+                checkIcon.className = 'fas fa-check bad-submenu-check';
+                li.appendChild(checkIcon);
+            }
+
+            li.addEventListener('click', async (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                this.closeSubmenu();
+
+                const parentMenu = document.querySelector('#context-menu, .context-menu');
+                parentMenu?.remove?.();
+                if (this.app._activeContextMenuTarget) {
+                    this.app._activeContextMenuTarget.classList.remove('bad-menu-active');
+                    this.app._activeContextMenuTarget = null;
+                }
+                this.element.querySelector('.bakana-action-display-container')?.classList.remove('has-context-menu');
+
+                if (typeof sub.callback === 'function') {
+                    await sub.callback(item);
+                }
+                if (this.app.rendered) {
+                    this.app.render();
+                }
+            });
+
+            ol.appendChild(li);
+        }
+
+        nav.appendChild(ol);
+        document.body.appendChild(nav);
+        this._activeSubmenuEl = nav;
+
+        nav.addEventListener('mouseenter', () => {
+            if (this._submenuCloseTimeout) {
+                clearTimeout(this._submenuCloseTimeout);
+                this._submenuCloseTimeout = null;
+            }
+        });
+        nav.addEventListener('mouseleave', () => {
+            if (this._submenuCloseTimeout) clearTimeout(this._submenuCloseTimeout);
+            this._submenuCloseTimeout = setTimeout(() => {
+                this.closeSubmenu();
+            }, 180);
+        });
+
+        const rect = parentLi.getBoundingClientRect();
+        let left = rect.right + 2;
+        let top = rect.top;
+
+        const subRect = nav.getBoundingClientRect();
+        if (left + subRect.width > window.innerWidth - 10) {
+            left = Math.max(10, rect.left - subRect.width - 2);
+        }
+        if (top + subRect.height > window.innerHeight - 10) {
+            top = Math.max(10, window.innerHeight - subRect.height - 10);
+        }
+
+        nav.style.left = `${left}px`;
+        nav.style.top = `${top}px`;
     }
 }
 

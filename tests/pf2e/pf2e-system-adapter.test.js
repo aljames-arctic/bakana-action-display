@@ -154,11 +154,15 @@ test('Pf2eSystemAdapter context menu manager provides carry type options and tab
     };
 
     const menuItems = adapter.getContextMenuItems(app);
-    const hold1Item = menuItems.find(m => m.name === 'BAD.pf2e.carryTypeHeld1');
-    const hold2Item = menuItems.find(m => m.name === 'BAD.pf2e.carryTypeHeld2');
-    const wearItem = menuItems.find(m => m.name === 'BAD.pf2e.carryTypeWorn');
-    const stowItem = menuItems.find(m => m.name === 'BAD.pf2e.carryTypeStowed');
-    const dropItem = menuItems.find(m => m.name === 'BAD.pf2e.carryTypeDropped');
+    const updateEquipItem = menuItems.find(m => m.name === 'BAD.pf2e.updateEquipState');
+    assert.ok(updateEquipItem);
+    assert.ok(Array.isArray(updateEquipItem.submenu));
+
+    const hold1Item = updateEquipItem.submenu.find(m => m.name === 'BAD.pf2e.carryTypeHeld1');
+    const hold2Item = updateEquipItem.submenu.find(m => m.name === 'BAD.pf2e.carryTypeHeld2');
+    const wearItem = updateEquipItem.submenu.find(m => m.name === 'BAD.pf2e.carryTypeWorn');
+    const stowItem = updateEquipItem.submenu.find(m => m.name === 'BAD.pf2e.carryTypeStowed');
+    const dropItem = updateEquipItem.submenu.find(m => m.name === 'BAD.pf2e.carryTypeDropped');
 
     assert.ok(hold1Item);
     assert.ok(hold2Item);
@@ -168,37 +172,37 @@ test('Pf2eSystemAdapter context menu manager provides carry type options and tab
 
     const mockEl = { dataset: { actionId: 'act-1' } };
 
-    // Item is stowed: hold1, hold2, wear, drop conditions are true; stow is false
-    assert.equal(hold1Item.condition(mockEl), true);
-    assert.equal(hold2Item.condition(mockEl), true);
-    assert.equal(wearItem.condition(mockEl), true);
-    assert.equal(stowItem.condition(mockEl), false);
-    assert.equal(dropItem.condition(mockEl), true);
+    // Parent item condition
+    assert.equal(updateEquipItem.condition(mockEl), true);
+
+    // Active state checks
+    assert.equal(hold1Item.active(weaponItem), false);
+    assert.equal(stowItem.active(weaponItem), true);
 
     // Test Hold 1H
-    await hold1Item.callback(mockEl);
+    await hold1Item.callback(weaponItem);
     assert.equal(updatedPayload['system.equipped.carryType'], 'held');
     assert.equal(updatedPayload['system.equipped.handsHeld'], 1);
 
     // Test Hold 2H
-    await hold2Item.callback(mockEl);
+    await hold2Item.callback(weaponItem);
     assert.equal(updatedPayload['system.equipped.carryType'], 'held');
     assert.equal(updatedPayload['system.equipped.handsHeld'], 2);
 
     // Test Wear
-    await wearItem.callback(mockEl);
+    await wearItem.callback(weaponItem);
     assert.equal(updatedPayload['system.equipped.carryType'], 'worn');
     assert.equal(updatedPayload['system.equipped.handsHeld'], 0);
 
     // Test Stow
     weaponItem.system.equipped = { carryType: 'held', handsHeld: 1 };
-    assert.equal(stowItem.condition(mockEl), true);
-    await stowItem.callback(mockEl);
+    assert.equal(stowItem.active(weaponItem), false);
+    await stowItem.callback(weaponItem);
     assert.equal(updatedPayload['system.equipped.carryType'], 'stowed');
     assert.equal(updatedPayload['system.equipped.handsHeld'], 0);
 
     // Test Drop
-    await dropItem.callback(mockEl);
+    await dropItem.callback(weaponItem);
     assert.equal(updatedPayload['system.equipped.carryType'], 'dropped');
     assert.equal(updatedPayload['system.equipped.handsHeld'], 0);
 

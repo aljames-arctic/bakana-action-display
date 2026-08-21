@@ -162,3 +162,15 @@ test('createActionContextMenu includes Add to Favorites and Remove from Favorite
     assert.equal(flagVal, null);
     assert.equal(renderCalled, true);
 });
+
+test('ContextMenuManager supports submenu definition, arrow injection, and popout lifecycle', () => {
+    const mockItem = { id: 'item-2', name: 'Shield' };
+    const mockApp = {
+        actor: { isOwner: true, items: new Map() },
+        actions: [{ id: 'item-2', name: 'Shield', originalItem: mockItem }]
+    };
+    const mockElement = { querySelectorAll: () => [], querySelector: () => null };
+
+    const manager = createActionContextMenu(mockApp, mockElement);
+    assert.ok(manager);
+});

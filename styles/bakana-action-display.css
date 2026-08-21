@@ -971,6 +971,65 @@
     opacity: 1;
 }
 
+/* Submenu Arrow & Popout Styling */
+#context-menu .bad-menu-submenu-arrow, .context-menu .bad-menu-submenu-arrow {
+    margin-left: auto !important;
+    padding-left: 12px !important;
+    font-size: 0.75em !important;
+    opacity: 0.7;
+}
+
+.bad-sub-context-menu {
+    position: fixed !important;
+    z-index: 1000001 !important;
+    min-width: 160px;
+    background: #1e1e2d !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    border-radius: 6px !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6) !important;
+    padding: 4px 0 !important;
+    pointer-events: all !important;
+}
+
+.bad-sub-context-menu ol,
+.bad-sub-context-menu ul,
+.bad-sub-context-menu menu {
+    list-style: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.bad-sub-context-menu .context-item {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    padding: 6px 12px !important;
+    font-size: 0.9em !important;
+    color: #e2e8f0 !important;
+    cursor: pointer !important;
+    gap: 8px !important;
+    transition: background 0.1s ease, color 0.1s ease;
+    white-space: nowrap !important;
+}
+
+.bad-sub-context-menu .context-item:hover {
+    background: rgba(255, 255, 255, 0.12) !important;
+    color: #ffffff !important;
+}
+
+.bad-sub-context-menu .context-item.active-state {
+    color: #38bdf8 !important;
+    font-weight: 600 !important;
+}
+
+.bad-sub-context-menu .context-item .bad-submenu-check {
+    margin-left: auto !important;
+    padding-left: 12px !important;
+    color: #38bdf8 !important;
+    font-size: 0.85em !important;
+}
+
 /* ==========================================================================
    UNPREPARED ITEMS STYLING (Orange)
    ========================================================================== */

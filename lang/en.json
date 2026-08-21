@@ -135,12 +135,14 @@
             "allSpells": "All Spells",
             "allWeapons": "All Weapons",
             "allEquipment": "All Equipment",
-            "spellComponents": "Spell Components"
+            "spellComponents": "Spell Components",
+            "updateEquipState": "Update Equip State"
         },
         "dnd5e": {
             "upcast": "Upcast"
         },
         "pf2e": {
+            "updateEquipState": "Update Equip State",
             "carryTypeHeld1": "Hold (1 Hand)",
             "carryTypeHeld2": "Hold (2 Hands)",
             "carryTypeWorn": "Wear Item",
