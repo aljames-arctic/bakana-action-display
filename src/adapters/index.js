@@ -35,7 +35,7 @@ class Adapter {
      */
     async init() {
         this.foundry = initializeFoundryAdapter();
-        this.system = await initializeSystemAdapter(game.system?.id);
+        this.system = await initializeSystemAdapter(game.system?.id, this.foundry);
         this.modules = initializeModuleAdapters();
         this._initialized = true;
         const systemLabel = this.system.isSupported ? this.system.systemId : `${this.system.systemId} (unsupported)`;

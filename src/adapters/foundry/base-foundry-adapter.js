@@ -47,6 +47,24 @@ export class BaseFoundryAdapter {
     }
 
     /**
+     * The active FilePicker constructor / implementation.
+     */
+    get FilePicker() {
+        return foundry.applications.apps.FilePicker.implementation;
+    }
+
+    /**
+     * Browse a directory using the active FilePicker implementation.
+     * @param {string} source Storage source (e.g. 'data', 'public', 'client')
+     * @param {string} target Directory target path
+     * @param {Object} [options={}] Browse options
+     * @returns {Promise<{ target: string, files: string[], dirs: string[] }>}
+     */
+    async browseDirectory(source, target, options = {}) {
+        return this.FilePicker.browse(source, target, options);
+    }
+
+    /**
      * Safely resolve a document from UUID synchronously.
      * @param {string} uuid Document UUID
      * @param {Object} [options={}] Resolution options

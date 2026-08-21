@@ -1,4 +1,5 @@
 import { BaseSystemAdapter } from './base-system-adapter.js';
+import { initializeFoundryAdapter } from '../foundry/index.js';
 import { MODULE_ID, GITHUB_ISSUES_URL } from '../../constants.js';
 import { log } from '../../lib/logger.js';
 
@@ -10,16 +11,17 @@ let adapterFileCache = null;
 
 /**
  * Inspect the system adapters directory to query all available adapter filenames.
- * Uses Foundry's FilePicker.browse to query the module directory at runtime.
+ * Uses the Foundry adapter layer to query the module directory at runtime.
+ * @param {BaseFoundryAdapter} foundryAdapter
  * @returns {Promise<Set<string>|null>}
  */
-async function getAvailableAdapterFiles() {
+async function getAvailableAdapterFiles(foundryAdapter) {
     if (adapterFileCache !== null) return adapterFileCache;
 
     const dirPath = `modules/${MODULE_ID}/src/adapters/system`;
     for (const source of ['data', 'public', 'client']) {
         try {
-            const result = await FilePicker.browse(source, dirPath);
+            const result = await foundryAdapter.browseDirectory(source, dirPath);
             if (result?.files?.length > 0) {
                 adapterFileCache = new Set(result.files.map(file => file.split('/').pop().toLowerCase()));
                 log.debug(`Discovered ${adapterFileCache.size} system adapters in directory [${source}:${dirPath}]`);
@@ -43,11 +45,12 @@ function toPascalCase(str) {
 
 /**
  * Dynamically loads and instantiates the active system adapter.
- * Automatically inspects the adapter directory and loads matching `./${systemId}-system-adapter.js`.
+ * Automatically inspects the adapter directory via the Foundry adapter layer and loads matching `./${systemId}-system-adapter.js`.
  * @param {string} [systemId]
+ * @param {BaseFoundryAdapter} [foundryAdapter]
  * @returns {Promise<BaseSystemAdapter>}
  */
-export async function initializeSystemAdapter(systemId = game.system?.id) {
+export async function initializeSystemAdapter(systemId = game.system?.id, foundryAdapter = initializeFoundryAdapter()) {
     if (!systemId) {
         return new BaseSystemAdapter('unknown', false);
     }
@@ -56,8 +59,8 @@ export async function initializeSystemAdapter(systemId = game.system?.id) {
     const systemPath = `./${systemId}-system-adapter.js`;
     const systemClassName = `${toPascalCase(systemId)}SystemAdapter`;
 
-    // Inspect directory to verify file presence before attempting dynamic import
-    const availableFiles = await getAvailableAdapterFiles();
+    // Inspect directory via Foundry adapter to verify file presence before attempting dynamic import
+    const availableFiles = await getAvailableAdapterFiles(foundryAdapter);
     if (availableFiles && !availableFiles.has(targetFileName)) {
         log.debug(`No system adapter found for "${systemId}" in adapter directory. Falling back to default adapter.`);
         const issuesUrl = game.modules?.get?.(MODULE_ID)?.bugs ?? GITHUB_ISSUES_URL;

@@ -120,21 +120,6 @@ globalThis.canvas = {
     }
 };
 
-globalThis.FilePicker = class FilePicker {
-    static async browse(source, target) {
-        if (target && target.includes('src/adapters/system')) {
-            return {
-                files: [
-                    'modules/bakana-action-display/src/adapters/system/dnd5e-system-adapter.js',
-                    'modules/bakana-action-display/src/adapters/system/pf1-system-adapter.js',
-                    'modules/bakana-action-display/src/adapters/system/pf2e-system-adapter.js'
-                ]
-            };
-        }
-        return { files: [] };
-    }
-};
-
 globalThis.foundry = {
     helpers: {
         interaction: {
@@ -148,6 +133,24 @@ globalThis.foundry = {
         }
     },
     applications: {
+        apps: {
+            FilePicker: {
+                implementation: class FilePicker {
+                    static async browse(source, target) {
+                        if (target && target.includes('src/adapters/system')) {
+                            return {
+                                files: [
+                                    'modules/bakana-action-display/src/adapters/system/dnd5e-system-adapter.js',
+                                    'modules/bakana-action-display/src/adapters/system/pf1-system-adapter.js',
+                                    'modules/bakana-action-display/src/adapters/system/pf2e-system-adapter.js'
+                                ]
+                            };
+                        }
+                        return { files: [] };
+                    }
+                }
+            }
+        },
         api: {
             HandlebarsApplicationMixin: (cls) => cls,
             ApplicationV2: class ApplicationV2 {
