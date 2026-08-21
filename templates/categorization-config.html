@@ -28,7 +28,7 @@
                     </button>
                     <input type="text" class="bad-cat-name-input" data-cat-index="{{catIndex}}" value="{{cat.name}}" placeholder="{{localize 'BAD.categorization.categoryNamePlaceholder'}}" />
                     <input type="text" class="bad-cat-expr-input" data-cat-index="{{catIndex}}" value="{{cat.expression}}" placeholder="{{localize 'BAD.categorization.categoryExprPlaceholder'}}" />
-                    <button type="button" class="bad-config-btn bad-config-btn-fallthrough {{#if cat.fallthrough}}active{{/if}}" data-action="toggleFallthrough" data-cat-index="{{catIndex}}" data-tooltip="{{localize 'BAD.categorization.fallthroughTooltip'}}" data-tooltip-direction="UP">
+                    <button type="button" class="bad-config-btn bad-config-btn-fallthrough {{#if cat.fallthrough}}active{{/if}}" data-action="toggleFallthrough" data-cat-index="{{catIndex}}">
                         <i class="fas fa-chevron-down"></i>
                     </button>
                     <button type="button" class="bad-config-btn bad-config-btn-danger" data-action="removeCategory" data-cat-index="{{catIndex}}">
