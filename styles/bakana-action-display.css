@@ -241,7 +241,6 @@
     color: #ffffff;
 }
 
-/* Action Economy Indicator Bars (Dedicated 1/6th of space to left of uses) */
 .bad-economy-bars {
     flex: 0 0 16.666%;
     width: 16.666%;
@@ -253,6 +252,10 @@
     flex-shrink: 0;
     box-sizing: border-box;
     height: 100%;
+}
+
+.bad-economy-bars:empty {
+    display: none !important;
 }
 
 .bad-economy-bar {

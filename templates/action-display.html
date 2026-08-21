@@ -87,17 +87,17 @@
                             
                             <span class="bad-action-name">{{this.name}}</span>
                             
+                            {{#if @root.showEconomyIndicators}}
                             <div class="bad-economy-bars">
-                                {{#if @root.showEconomyIndicators}}
-                                    {{#each this.economyIndicators}}
-                                        {{#if this.active}}
-                                        <span class="bad-economy-bar" style="background-color: {{this.color}};" title="{{this.label}}"></span>
-                                        {{else}}
-                                        <span class="bad-economy-bar bad-economy-bar-empty"></span>
-                                        {{/if}}
-                                    {{/each}}
-                                {{/if}}
+                                {{#each this.economyIndicators}}
+                                    {{#if this.active}}
+                                    <span class="bad-economy-bar" style="background-color: {{this.color}};" title="{{this.label}}"></span>
+                                    {{else}}
+                                    <span class="bad-economy-bar bad-economy-bar-empty"></span>
+                                    {{/if}}
+                                {{/each}}
                             </div>
+                            {{/if}}
 
                             <div class="bad-action-uses-slot">
                                 {{#unless (eq this.uses.available null)}}
@@ -124,17 +124,17 @@
                             
                             <span class="bad-action-name">{{this.name}}</span>
                             
+                            {{#if @root.showEconomyIndicators}}
                             <div class="bad-economy-bars">
-                                {{#if @root.showEconomyIndicators}}
-                                    {{#each this.economyIndicators}}
-                                        {{#if this.active}}
-                                        <span class="bad-economy-bar" style="background-color: {{this.color}};" title="{{this.label}}"></span>
-                                        {{else}}
-                                        <span class="bad-economy-bar bad-economy-bar-empty"></span>
-                                        {{/if}}
-                                    {{/each}}
-                                {{/if}}
+                                {{#each this.economyIndicators}}
+                                    {{#if this.active}}
+                                    <span class="bad-economy-bar" style="background-color: {{this.color}};" title="{{this.label}}"></span>
+                                    {{else}}
+                                    <span class="bad-economy-bar bad-economy-bar-empty"></span>
+                                    {{/if}}
+                                {{/each}}
                             </div>
+                            {{/if}}
 
                             <div class="bad-action-uses-slot">
                                 {{#unless (eq this.uses.available null)}}
@@ -164,17 +164,17 @@
                         {{/if}}
                         <span class="bad-action-name">{{this.name}}</span>
 
+                        {{#if @root.showEconomyIndicators}}
                         <div class="bad-economy-bars">
-                            {{#if @root.showEconomyIndicators}}
-                                {{#each this.economyIndicators}}
-                                    {{#if this.active}}
-                                    <span class="bad-economy-bar" style="background-color: {{this.color}};" title="{{this.label}}"></span>
-                                    {{else}}
-                                    <span class="bad-economy-bar bad-economy-bar-empty"></span>
-                                    {{/if}}
-                                {{/each}}
-                            {{/if}}
+                            {{#each this.economyIndicators}}
+                                {{#if this.active}}
+                                <span class="bad-economy-bar" style="background-color: {{this.color}};" title="{{this.label}}"></span>
+                                {{else}}
+                                <span class="bad-economy-bar bad-economy-bar-empty"></span>
+                                {{/if}}
+                            {{/each}}
                         </div>
+                        {{/if}}
 
                         <div class="bad-action-uses-slot">
                             {{#unless (eq this.uses.available null)}}
@@ -199,17 +199,17 @@
                         {{/if}}
                         <span class="bad-action-name">{{this.name}}</span>
 
+                        {{#if @root.showEconomyIndicators}}
                         <div class="bad-economy-bars">
-                            {{#if @root.showEconomyIndicators}}
-                                {{#each this.economyIndicators}}
-                                    {{#if this.active}}
-                                    <span class="bad-economy-bar" style="background-color: {{this.color}};" title="{{this.label}}"></span>
-                                    {{else}}
-                                    <span class="bad-economy-bar bad-economy-bar-empty"></span>
-                                    {{/if}}
-                                {{/each}}
-                            {{/if}}
+                            {{#each this.economyIndicators}}
+                                {{#if this.active}}
+                                <span class="bad-economy-bar" style="background-color: {{this.color}};" title="{{this.label}}"></span>
+                                {{else}}
+                                <span class="bad-economy-bar bad-economy-bar-empty"></span>
+                                {{/if}}
+                            {{/each}}
                         </div>
+                        {{/if}}
 
                         <div class="bad-action-uses-slot">
                             {{#unless (eq this.uses.available null)}}
@@ -238,17 +238,17 @@
                         
                         <span class="bad-action-name">{{this.name}}</span>
                         
+                        {{#if @root.showEconomyIndicators}}
                         <div class="bad-economy-bars">
-                            {{#if @root.showEconomyIndicators}}
-                                {{#each this.economyIndicators}}
-                                    {{#if this.active}}
-                                    <span class="bad-economy-bar" style="background-color: {{this.color}};" title="{{this.label}}"></span>
-                                    {{else}}
-                                    <span class="bad-economy-bar bad-economy-bar-empty"></span>
-                                    {{/if}}
-                                {{/each}}
-                            {{/if}}
+                            {{#each this.economyIndicators}}
+                                {{#if this.active}}
+                                <span class="bad-economy-bar" style="background-color: {{this.color}};" title="{{this.label}}"></span>
+                                {{else}}
+                                <span class="bad-economy-bar bad-economy-bar-empty"></span>
+                                {{/if}}
+                            {{/each}}
                         </div>
+                        {{/if}}
 
                         <div class="bad-action-uses-slot">
                             {{#unless (eq this.uses.available null)}}
