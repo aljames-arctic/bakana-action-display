@@ -257,10 +257,8 @@
     color: #fb923c;
 }
 
-/* Action Economy Indicator Bars (Dedicated to right 1/5 of item) */
+/* Action Economy Indicator Bars (Immediately to the left of remaining uses) */
 .bad-economy-bars {
-    width: 20%;
-    min-width: 1.6em;
     display: flex;
     align-items: center;
     justify-content: flex-end;
