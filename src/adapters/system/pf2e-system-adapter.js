@@ -63,7 +63,14 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
         if (!item?.system) return true;
         if (item.isPhysical === false) return true;
         if (item.category === 'unarmed' || item.system.category?.value === 'unarmed') return true;
-        if (item.system.traits?.value?.includes?.('unarmed')) return true;
+
+        const traits = item.system.traits?.value;
+        if (Array.isArray(traits) && (traits.includes('unarmed') || traits.includes('natural'))) {
+            return true;
+        }
+        if (traits instanceof Set && (traits.has('unarmed') || traits.has('natural'))) {
+            return true;
+        }
 
         const carryType = item.system.equipped?.carryType;
         if (carryType) {
@@ -119,6 +126,7 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
 
         const finalActions = [];
         for (const action of modified) {
+            action.available = true;
             const item = action.originalItem;
             if (item) {
                 const isEquipped = this.getItemEquipped(item);
@@ -388,6 +396,7 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
             right: [TabRef.from('economy', 'action')],
             left: ['weapon'],
             hidden: false,
+            available: true,
             uses: this.#getStrikeAmmoUses(strike, ammoQuantities),
             roll: (event) => this.#executeStrikeRoll(strike, event),
             originalItem: strike.item,

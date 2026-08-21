@@ -174,8 +174,12 @@ test('Pf2eSystemAdapter filters stowed and dropped items unless showUnequipped o
         system: { actions: strikes }
     };
     const modifiedDefault = await adapter.modifyActions([], actorDefault);
-    assert.equal(modifiedDefault.some(a => a.id === 'strike-held'), true);
-    assert.equal(modifiedDefault.some(a => a.id === 'strike-beak'), true);
+    const heldAction = modifiedDefault.find(a => a.id === 'strike-held');
+    const beakAction = modifiedDefault.find(a => a.id === 'strike-beak');
+    assert.ok(heldAction);
+    assert.equal(heldAction.available, true);
+    assert.ok(beakAction);
+    assert.equal(beakAction.available, true);
     assert.equal(modifiedDefault.some(a => a.id === 'strike-stowed'), false);
     assert.equal(modifiedDefault.some(a => a.id === 'strike-dropped'), false);
 
@@ -187,10 +191,13 @@ test('Pf2eSystemAdapter filters stowed and dropped items unless showUnequipped o
     const modifiedShowAll = await adapter.modifyActions([], actorShowAll);
     const stowedAction = modifiedShowAll.find(a => a.id === 'strike-stowed');
     const droppedAction = modifiedShowAll.find(a => a.id === 'strike-dropped');
+    const beakShowAllAction = modifiedShowAll.find(a => a.id === 'strike-beak');
     assert.ok(stowedAction);
     assert.equal(stowedAction.available, false);
     assert.ok(droppedAction);
     assert.equal(droppedAction.available, false);
+    assert.ok(beakShowAllAction);
+    assert.equal(beakShowAllAction.available, true);
 
     // Case 3: showUnequipped_weapon = true
     const actorShowWeapon = {
