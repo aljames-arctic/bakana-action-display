@@ -13,6 +13,7 @@ function toPascalCase(str) {
 
 /**
  * Dynamically loads and instantiates the active system adapter.
+ * Automatically resolves files matching `./${systemId}-system-adapter.js`.
  * @param {string} [systemId]
  * @returns {Promise<BaseSystemAdapter>}
  */
@@ -43,5 +44,7 @@ export async function initializeSystemAdapter(systemId = game.system?.id) {
 }
 
 export { BaseSystemAdapter };
+
+
 
 
