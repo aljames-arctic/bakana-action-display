@@ -87,15 +87,15 @@ const LABEL_KEYS = {
     },
     action_subtab: {
         'all': ['BAD.core.allActions', 'All Actions'],
-        'standard': ['DND5E.Standard', 'Standard'],
-        'time': ['DND5E.Time', 'Time'],
-        'rest': ['DND5E.Rest', 'Rest'],
-        'combat': ['DND5E.Combat', 'Combat'],
-        'monster': ['DND5E.Monster', 'Monster'],
-        'vehicle': ['DND5E.Vehicle', 'Vehicle'],
-        'action': ['DND5E.Action', 'Action'],
-        'bonus': ['DND5E.BonusAction', 'Bonus Action'],
-        'reaction': ['DND5E.Reaction', 'Reaction'],
+        'standard': ['DND5E.ActivityActivationStandard', 'Standard', 'DND5E.Standard'],
+        'time': ['DND5E.ActivityActivationTime', 'Time', 'DND5E.Time'],
+        'rest': ['DND5E.ActivityActivationRest', 'Rest', 'DND5E.Rest'],
+        'combat': ['DND5E.ActivityActivationCombat', 'Combat', 'DND5E.Combat'],
+        'monster': ['DND5E.ActivityActivationMonster', 'Monster', 'DND5E.Monster'],
+        'vehicle': ['DND5E.ActivityActivationVehicle', 'Vehicle', 'DND5E.Vehicle'],
+        'action': ['DND5E.Action', 'Action', 'DND5E.ActionAction'],
+        'bonus': ['DND5E.BonusAction', 'Bonus Action', 'DND5E.ActionBonus'],
+        'reaction': ['DND5E.Reaction', 'Reaction', 'DND5E.ActionReaction'],
         'minute': ['DND5E.TimeMinute', 'Minute'],
         'hour': ['DND5E.TimeHour', 'Hour'],
         'day': ['DND5E.TimeDay', 'Day'],
@@ -307,14 +307,25 @@ export class Dnd5eSystemContextModifier extends BaseSystemContextModifier {
         const fallback = config?.[1] ?? subId;
 
         const cfg = CONFIG?.DND5E;
-        const configLabel = cfg?.activityActivationTypes?.[subId]
-            ?? cfg?.abilityActivationTypes?.[subId]
-            ?? cfg?.activityActivationCategories?.[subId];
+        const configLabel = cfg?.activityActivationCategories?.[subId]
+            ?? cfg?.activityActivationTypes?.[subId]
+            ?? cfg?.abilityActivationTypes?.[subId];
         if (configLabel) {
             return typeof configLabel === 'string' ? localize(configLabel, fallback) : (configLabel.label ?? configLabel.name ?? fallback);
         }
 
-        return config ? localize(config[0], fallback) : super.getActionSubTabLabel(subId);
+        if (config) {
+            const primaryKey = config[0];
+            const localized = localize(primaryKey, null);
+            if (localized) return localized;
+            if (config[2]) {
+                const altLocalized = localize(config[2], null);
+                if (altLocalized) return altLocalized;
+            }
+            return localize(primaryKey, fallback);
+        }
+
+        return super.getActionSubTabLabel(subId);
     }
 }
 

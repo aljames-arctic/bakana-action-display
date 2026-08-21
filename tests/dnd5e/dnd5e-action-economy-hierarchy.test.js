@@ -104,14 +104,15 @@ test('Dnd5eSystemAdapter maps activities to nested Action Economy categories', a
 
 test('Dnd5eSystemAdapter localizations for right-side action economy tabs', () => {
     const origLocalize = game.i18n.localize;
+    const origHas = game.i18n.has;
     const dictionary = {
         'BAD.common.actionEconomy': 'Action Economy',
-        'DND5E.Standard': 'Standard',
-        'DND5E.Time': 'Time',
-        'DND5E.Rest': 'Rest',
-        'DND5E.Combat': 'Combat',
-        'DND5E.Monster': 'Monster',
-        'DND5E.Vehicle': 'Vehicle',
+        'DND5E.ActivityActivationStandard': 'Standard Act',
+        'DND5E.ActivityActivationTime': 'Time Act',
+        'DND5E.ActivityActivationRest': 'Rest Act',
+        'DND5E.ActivityActivationCombat': 'Combat Act',
+        'DND5E.ActivityActivationMonster': 'Monster Act',
+        'DND5E.ActivityActivationVehicle': 'Vehicle Act',
         'DND5E.Action': 'Action',
         'DND5E.BonusAction': 'Bonus Action',
         'DND5E.Reaction': 'Reaction',
@@ -128,19 +129,20 @@ test('Dnd5eSystemAdapter localizations for right-side action economy tabs', () =
         'DND5E.LairAction': 'Lair Action',
         'DND5E.CrewAction': 'Crew Action'
     };
+    game.i18n.has = key => key in dictionary;
     game.i18n.localize = key => dictionary[key] ?? key;
 
     try {
         const adapter = new Dnd5eSystemAdapter();
 
-        // Top-level / Category tabs
+        // Top-level / Category tabs (resolves via DND5E.ActivityActivation*)
         assert.equal(adapter.getActionTypeLabel('economy'), 'Action Economy');
-        assert.equal(adapter.getActionSubTabLabel('standard'), 'Standard');
-        assert.equal(adapter.getActionSubTabLabel('time'), 'Time');
-        assert.equal(adapter.getActionSubTabLabel('rest'), 'Rest');
-        assert.equal(adapter.getActionSubTabLabel('combat'), 'Combat');
-        assert.equal(adapter.getActionSubTabLabel('monster'), 'Monster');
-        assert.equal(adapter.getActionSubTabLabel('vehicle'), 'Vehicle');
+        assert.equal(adapter.getActionSubTabLabel('standard'), 'Standard Act');
+        assert.equal(adapter.getActionSubTabLabel('time'), 'Time Act');
+        assert.equal(adapter.getActionSubTabLabel('rest'), 'Rest Act');
+        assert.equal(adapter.getActionSubTabLabel('combat'), 'Combat Act');
+        assert.equal(adapter.getActionSubTabLabel('monster'), 'Monster Act');
+        assert.equal(adapter.getActionSubTabLabel('vehicle'), 'Vehicle Act');
 
         // Standard subtabs
         assert.equal(adapter.getActionSubTabLabel('action'), 'Action');
@@ -172,6 +174,7 @@ test('Dnd5eSystemAdapter localizations for right-side action economy tabs', () =
         assert.equal(adapter.getActionSubTabLabel('crew'), 'Crew Action');
     } finally {
         game.i18n.localize = origLocalize;
+        game.i18n.has = origHas;
     }
 });
 

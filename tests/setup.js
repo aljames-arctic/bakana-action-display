@@ -27,12 +27,12 @@ globalThis.CONFIG.DND5E = globalThis.CONFIG.DND5E ?? {
         special: 'DND5E.Special'
     },
     activityActivationCategories: {
-        standard: 'DND5E.Standard',
-        time: 'DND5E.Time',
-        rest: 'DND5E.Rest',
-        combat: 'DND5E.Combat',
-        monster: 'DND5E.Monster',
-        vehicle: 'DND5E.Vehicle'
+        standard: 'DND5E.ActivityActivationStandard',
+        time: 'DND5E.ActivityActivationTime',
+        rest: 'DND5E.ActivityActivationRest',
+        combat: 'DND5E.ActivityActivationCombat',
+        monster: 'DND5E.ActivityActivationMonster',
+        vehicle: 'DND5E.ActivityActivationVehicle'
     }
 };
 
