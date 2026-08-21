@@ -19,11 +19,10 @@ export class EconomyColorsConfigApp extends adapter.foundry.HandlebarsApplicatio
             resizable: true
         },
         position: {
-            width: 480,
+            width: 520,
             height: 'auto'
         },
         actions: {
-            selectPreset: EconomyColorsConfigApp.prototype._onSelectPreset,
             resetDefaults: EconomyColorsConfigApp.prototype._onResetDefaults,
             saveConfig: EconomyColorsConfigApp.prototype._onSaveConfig,
             closeConfig: EconomyColorsConfigApp.prototype._onCloseConfig
@@ -87,6 +86,14 @@ export class EconomyColorsConfigApp extends adapter.foundry.HandlebarsApplicatio
     _attachInputListeners() {
         if (!this.element) return;
 
+        // Preset dropdown selection
+        const presetSelect = this.element.querySelector('.bad-economy-preset-select');
+        if (presetSelect) {
+            presetSelect.addEventListener('change', (event) => {
+                this.applyPreset(event.target.value);
+            });
+        }
+
         // Sync color picker changes to text inputs and preview bars
         const colorPickers = this.element.querySelectorAll('.bad-economy-color-picker');
         for (const picker of colorPickers) {
@@ -123,10 +130,10 @@ export class EconomyColorsConfigApp extends adapter.foundry.HandlebarsApplicatio
     }
 
     /**
-     * Handle preset selection and populate color map.
+     * Apply a color palette preset to current colors and re-render.
+     * @param {string} presetId
      */
-    async _onSelectPreset(event, target) {
-        const presetId = target.value;
+    applyPreset(presetId) {
         this.selectedPreset = presetId;
         const preset = ECONOMY_COLOR_PRESETS[presetId];
         if (preset?.colors) {

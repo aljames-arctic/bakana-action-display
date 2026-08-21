@@ -8,7 +8,7 @@
         <label for="bad-preset-selector" class="bad-economy-preset-label">
             <i class="fas fa-swatchbook"></i> {{localize "BAD.economyColors.presetLabel"}}
         </label>
-        <select id="bad-preset-selector" class="bad-economy-preset-select" data-action="selectPreset">
+        <select id="bad-preset-selector" class="bad-economy-preset-select">
             <option value="">{{localize "BAD.economyColors.presets.select"}}</option>
             {{#each presets}}
             <option value="{{this.id}}" {{#if this.selected}}selected{{/if}}>{{this.label}}</option>
@@ -30,12 +30,12 @@
         {{/each}}
     </div>
 
-    <!-- Action Buttons (Reset to Defaults, Cancel, Save) -->
-    <div class="bad-config-footer-row">
+    <!-- Action Buttons (Reset to Defaults, Cancel, Save) on the same line -->
+    <div class="bad-config-footer">
         <button type="button" class="bad-config-btn bad-config-btn-secondary" data-action="resetDefaults">
             <i class="fas fa-undo"></i> {{localize "BAD.economyColors.resetDefaults"}}
         </button>
-        <div class="bad-config-actions-right">
+        <div class="bad-config-footer-actions">
             <button type="button" class="bad-config-btn" data-action="closeConfig">
                 {{localize "BAD.categorization.cancel"}}
             </button>

@@ -200,7 +200,7 @@ test('EconomyColorsConfigApp prepares economy context, saves colors, selects pre
     // Test select preset (e.g. protanopia)
     let rendered = false;
     configApp.render = () => { rendered = true; };
-    await configApp._onSelectPreset({ preventDefault() {} }, { value: 'protanopia' });
+    configApp.applyPreset('protanopia');
     assert.equal(configApp.selectedPreset, 'protanopia');
     assert.equal(configApp.colors.action, '#0072b2');
     assert.equal(configApp.colors.reaction, '#d55e00');
