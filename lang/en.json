@@ -139,6 +139,13 @@
         },
         "dnd5e": {
             "upcast": "Upcast"
+        },
+        "pf2e": {
+            "carryTypeHeld1": "Hold (1 Hand)",
+            "carryTypeHeld2": "Hold (2 Hands)",
+            "carryTypeWorn": "Wear Item",
+            "carryTypeStowed": "Stow Item",
+            "carryTypeDropped": "Drop Item"
         }
     }
 }

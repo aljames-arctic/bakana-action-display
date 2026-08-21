@@ -127,18 +127,18 @@ test('Pf2eSystemAdapter modifyActions full transformation pipeline', async () =>
     assert.equal(strikeAction.type, 'weapon');
 });
 
-test('Pf2eSystemAdapter context menu manager provides equip/unequip options and tab right-click handling', async () => {
+test('Pf2eSystemAdapter context menu manager provides carry type options and tab right-click handling', async () => {
     const adapter = new Pf2eSystemAdapter();
 
-    let updatedCarryType = null;
+    let updatedPayload = null;
     const weaponItem = {
         id: 'wpn-1',
         name: 'Greatsword',
         type: 'weapon',
         system: {
-            equipped: { carryType: 'stowed' }
+            equipped: { carryType: 'stowed', handsHeld: 0 }
         },
-        update: async (data) => { updatedCarryType = data['system.equipped.carryType']; }
+        update: async (data) => { updatedPayload = data; }
     };
 
     const flags = {};
@@ -154,28 +154,53 @@ test('Pf2eSystemAdapter context menu manager provides equip/unequip options and 
     };
 
     const menuItems = adapter.getContextMenuItems(app);
-    const equipItem = menuItems.find(m => m.name === 'BAD.common.equipItem');
-    const unequipItem = menuItems.find(m => m.name === 'BAD.common.unequipItem');
+    const hold1Item = menuItems.find(m => m.name === 'BAD.pf2e.carryTypeHeld1');
+    const hold2Item = menuItems.find(m => m.name === 'BAD.pf2e.carryTypeHeld2');
+    const wearItem = menuItems.find(m => m.name === 'BAD.pf2e.carryTypeWorn');
+    const stowItem = menuItems.find(m => m.name === 'BAD.pf2e.carryTypeStowed');
+    const dropItem = menuItems.find(m => m.name === 'BAD.pf2e.carryTypeDropped');
 
-    assert.ok(equipItem);
-    assert.ok(unequipItem);
+    assert.ok(hold1Item);
+    assert.ok(hold2Item);
+    assert.ok(wearItem);
+    assert.ok(stowItem);
+    assert.ok(dropItem);
 
     const mockEl = { dataset: { actionId: 'act-1' } };
 
-    // Item is stowed -> equip condition is true, unequip is false
-    assert.equal(equipItem.condition(mockEl), true);
-    assert.equal(unequipItem.condition(mockEl), false);
+    // Item is stowed: hold1, hold2, wear, drop conditions are true; stow is false
+    assert.equal(hold1Item.condition(mockEl), true);
+    assert.equal(hold2Item.condition(mockEl), true);
+    assert.equal(wearItem.condition(mockEl), true);
+    assert.equal(stowItem.condition(mockEl), false);
+    assert.equal(dropItem.condition(mockEl), true);
 
-    await equipItem.callback(mockEl);
-    assert.equal(updatedCarryType, 'held');
+    // Test Hold 1H
+    await hold1Item.callback(mockEl);
+    assert.equal(updatedPayload['system.equipped.carryType'], 'held');
+    assert.equal(updatedPayload['system.equipped.handsHeld'], 1);
 
-    // Change to held
-    weaponItem.system.equipped.carryType = 'held';
-    assert.equal(equipItem.condition(mockEl), false);
-    assert.equal(unequipItem.condition(mockEl), true);
+    // Test Hold 2H
+    await hold2Item.callback(mockEl);
+    assert.equal(updatedPayload['system.equipped.carryType'], 'held');
+    assert.equal(updatedPayload['system.equipped.handsHeld'], 2);
 
-    await unequipItem.callback(mockEl);
-    assert.equal(updatedCarryType, 'stowed');
+    // Test Wear
+    await wearItem.callback(mockEl);
+    assert.equal(updatedPayload['system.equipped.carryType'], 'worn');
+    assert.equal(updatedPayload['system.equipped.handsHeld'], 0);
+
+    // Test Stow
+    weaponItem.system.equipped = { carryType: 'held', handsHeld: 1 };
+    assert.equal(stowItem.condition(mockEl), true);
+    await stowItem.callback(mockEl);
+    assert.equal(updatedPayload['system.equipped.carryType'], 'stowed');
+    assert.equal(updatedPayload['system.equipped.handsHeld'], 0);
+
+    // Test Drop
+    await dropItem.callback(mockEl);
+    assert.equal(updatedPayload['system.equipped.carryType'], 'dropped');
+    assert.equal(updatedPayload['system.equipped.handsHeld'], 0);
 
     // Tab right click handling
     const tabElAll = {
