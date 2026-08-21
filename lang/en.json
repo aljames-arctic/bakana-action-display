@@ -133,7 +133,7 @@
             "midiQol": {
                 "filterAutomationOnly": {
                     "name": "Filter Automation-Only Activities",
-                    "hint": "When enabled, items and activities flagged as automation-only by Midi-QOL are hidden from the Action Display HUD."
+                    "hint": "When enabled, activities flagged as automation-only by Midi-QOL are ignored entirely by the Action Display HUD."
                 }
             }
         },
