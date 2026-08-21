@@ -1113,20 +1113,17 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
      * Clear all active context menu and dropdown target styling and close any open menus.
      */
     _clearMenuState() {
-        // Close any open context menus if we have an active target
-        if (this._activeContextMenuTarget || this._activeMenuTarget) {
+        // Close any open right-click context menu if we have an active context menu target
+        if (this._activeContextMenuTarget) {
             if (this._contextMenu) {
                 try {
                     this._contextMenu.close()?.catch?.(err => {
-                        log.error("ContextMenu.close promise rejected (expected during re-render):", err);
+                        log.debug("ContextMenu.close promise rejected (expected during re-render):", err);
                     });
                 } catch (err) {
-                    log.error("ContextMenu.close threw synchronously:", err);
+                    log.debug("ContextMenu.close threw synchronously:", err);
                 }
             }
-        }
-
-        if (this._activeContextMenuTarget) {
             this._activeContextMenuTarget.classList.remove('bad-menu-active');
             this._activeContextMenuTarget = null;
         }
@@ -1136,8 +1133,16 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
             this._activeMenuTarget = null;
         }
 
-        this._activeLeftClickMenu?.close();
-        this._activeLeftClickMenu = null;
+        if (this._activeLeftClickMenu) {
+            try {
+                this._activeLeftClickMenu.close()?.catch?.(err => {
+                    log.debug("LeftClickMenu.close promise rejected:", err);
+                });
+            } catch (err) {
+                log.debug("LeftClickMenu.close threw synchronously:", err);
+            }
+            this._activeLeftClickMenu = null;
+        }
         this._preventReopen = false;
     }
 

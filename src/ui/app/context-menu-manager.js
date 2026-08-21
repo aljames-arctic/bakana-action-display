@@ -111,7 +111,13 @@ export class ContextMenuManager {
             jQuery: false,
             onOpen: (target) => {
                 if (this.app._activeLeftClickMenu) {
-                    this.app._activeLeftClickMenu.close();
+                    try {
+                        this.app._activeLeftClickMenu.close()?.catch?.(err => {
+                            log.debug("LeftClickMenu.close promise rejected:", err);
+                        });
+                    } catch (err) {
+                        log.debug("LeftClickMenu.close threw synchronously:", err);
+                    }
                     this.app._activeLeftClickMenu = null;
                 }
                 if (this.app._activeMenuTarget) {

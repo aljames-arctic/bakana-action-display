@@ -93,20 +93,24 @@ export function showActivityDropdown(app, target, subactions, event) {
     const menuItems = subactions.map(sub => buildSubactionMenuItem(sub, event, app));
 
     if (app._activeLeftClickMenu) {
-        app._activeLeftClickMenu.close();
+        try {
+            app._activeLeftClickMenu.close()?.catch?.(err => {
+                log.debug("LeftClickMenu.close promise rejected:", err);
+            });
+        } catch (err) {
+            log.debug("LeftClickMenu.close threw synchronously:", err);
+        }
         app._activeLeftClickMenu = null;
     }
 
-    if (app._contextMenu) {
+    if (app._activeContextMenuTarget && app._contextMenu) {
         try {
             app._contextMenu.close()?.catch?.(err => {
-                log.error("ContextMenu.close promise rejected:", err);
+                log.debug("ContextMenu.close promise rejected:", err);
             });
         } catch (err) {
-            log.error("ContextMenu.close threw synchronously:", err);
+            log.debug("ContextMenu.close threw synchronously:", err);
         }
-    }
-    if (app._activeContextMenuTarget) {
         app._activeContextMenuTarget.classList.remove('bad-menu-active');
         app._activeContextMenuTarget = null;
     }
@@ -147,7 +151,13 @@ export function showActivityDropdown(app, target, subactions, event) {
                         ev.preventDefault();
                         ev.stopPropagation();
                         ev.stopImmediatePropagation();
-                        app._activeLeftClickMenu?.close();
+                        try {
+                            app._activeLeftClickMenu?.close()?.catch?.(err => {
+                                log.debug("LeftClickMenu.close promise rejected:", err);
+                            });
+                        } catch (err) {
+                            log.debug("LeftClickMenu.close threw synchronously:", err);
+                        }
                         app._activeLeftClickMenu = null;
                         if (adapter.openEditSheet) {
                             adapter.openEditSheet(sub);
