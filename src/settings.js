@@ -50,14 +50,14 @@ Hooks.once('init', () => {
         }
     });
 
-    // Register Action Economy Indicators Setting (World Scope, default enabled)
+    // Register Action Economy Indicators Setting (World Scope, default disabled)
     game.settings.register(MODULE_ID, 'enableEconomyIndicators', {
         name: game.i18n.localize('BAD.settings.enableEconomyIndicators.name'),
         hint: game.i18n.localize('BAD.settings.enableEconomyIndicators.hint'),
         scope: 'world',
         config: true,
         type: Boolean,
-        default: true,
+        default: false,
         onChange: () => {
             if (actionDisplay.activeApp && actionDisplay.activeApp.rendered) {
                 actionDisplay.activeApp.render();

@@ -198,7 +198,7 @@ test('ActionDisplayApp _prepareContext extracts economy indicators when enabled 
         assert.equal(contextDisabled.items[1].economyIndicators.length, 0);
     } finally {
         adapter.getActions = origGetActions;
-        game.settings.set(MODULE_ID, 'enableEconomyIndicators', true);
+        game.settings.set(MODULE_ID, 'enableEconomyIndicators', false);
     }
 });
 
