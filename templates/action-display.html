@@ -87,19 +87,21 @@
                             
                             <span class="bad-action-name">{{this.name}}</span>
                             
-                            {{#if @root.showEconomyIndicators}}
                             <div class="bad-economy-bars">
-                                {{#each this.economyIndicators}}
-                                <span class="bad-economy-bar" style="background-color: {{this.color}};"></span>
-                                {{/each}}
+                                {{#if @root.showEconomyIndicators}}
+                                    {{#each this.economyIndicators}}
+                                    <span class="bad-economy-bar" style="background-color: {{this.color}};"></span>
+                                    {{/each}}
+                                {{/if}}
                             </div>
-                            {{/if}}
 
-                            {{#unless (eq this.uses.available null)}}
-                            <span class="bad-action-uses {{#if (eq this.uses.available 0)}}depleted{{/if}} {{#if this.uses.isUpcast}}upcast{{/if}}">
-                                {{this.uses.available}}{{#if this.uses.max}} / {{this.uses.max}}{{/if}}
-                            </span>
-                            {{/unless}}
+                            <div class="bad-action-uses-slot">
+                                {{#unless (eq this.uses.available null)}}
+                                <span class="bad-action-uses {{#if (eq this.uses.available 0)}}depleted{{/if}} {{#if this.uses.isUpcast}}upcast{{/if}}">
+                                    {{this.uses.available}}{{#if this.uses.max}} / {{this.uses.max}}{{/if}}
+                                </span>
+                                {{/unless}}
+                            </div>
                         </div>
                         {{/each}}
                     {{/if}}
@@ -118,19 +120,21 @@
                             
                             <span class="bad-action-name">{{this.name}}</span>
                             
-                            {{#if @root.showEconomyIndicators}}
                             <div class="bad-economy-bars">
-                                {{#each this.economyIndicators}}
-                                <span class="bad-economy-bar" style="background-color: {{this.color}};"></span>
-                                {{/each}}
+                                {{#if @root.showEconomyIndicators}}
+                                    {{#each this.economyIndicators}}
+                                    <span class="bad-economy-bar" style="background-color: {{this.color}};"></span>
+                                    {{/each}}
+                                {{/if}}
                             </div>
-                            {{/if}}
 
-                            {{#unless (eq this.uses.available null)}}
-                            <span class="bad-action-uses {{#if (eq this.uses.available 0)}}depleted{{/if}} {{#if this.uses.isUpcast}}upcast{{/if}}">
-                                {{this.uses.available}}{{#if this.uses.max}} / {{this.uses.max}}{{/if}}
-                            </span>
-                            {{/unless}}
+                            <div class="bad-action-uses-slot">
+                                {{#unless (eq this.uses.available null)}}
+                                <span class="bad-action-uses {{#if (eq this.uses.available 0)}}depleted{{/if}} {{#if this.uses.isUpcast}}upcast{{/if}}">
+                                    {{this.uses.available}}{{#if this.uses.max}} / {{this.uses.max}}{{/if}}
+                                </span>
+                                {{/unless}}
+                            </div>
                         </div>
                         {{/each}}
                         {{/each}}
@@ -152,13 +156,21 @@
                         {{/if}}
                         <span class="bad-action-name">{{this.name}}</span>
 
-                        {{#if @root.showEconomyIndicators}}
                         <div class="bad-economy-bars">
-                            {{#each this.economyIndicators}}
-                            <span class="bad-economy-bar" style="background-color: {{this.color}};"></span>
-                            {{/each}}
+                            {{#if @root.showEconomyIndicators}}
+                                {{#each this.economyIndicators}}
+                                <span class="bad-economy-bar" style="background-color: {{this.color}};"></span>
+                                {{/each}}
+                            {{/if}}
                         </div>
-                        {{/if}}
+
+                        <div class="bad-action-uses-slot">
+                            {{#unless (eq this.uses.available null)}}
+                            <span class="bad-action-uses {{#if (eq this.uses.available 0)}}depleted{{/if}} {{#if this.uses.isUpcast}}upcast{{/if}}">
+                                {{this.uses.available}}{{#if this.uses.max}} / {{this.uses.max}}{{/if}}
+                            </span>
+                            {{/unless}}
+                        </div>
                     </div>
                     {{/each}}
                 {{/if}}
@@ -175,13 +187,21 @@
                         {{/if}}
                         <span class="bad-action-name">{{this.name}}</span>
 
-                        {{#if @root.showEconomyIndicators}}
                         <div class="bad-economy-bars">
-                            {{#each this.economyIndicators}}
-                            <span class="bad-economy-bar" style="background-color: {{this.color}};"></span>
-                            {{/each}}
+                            {{#if @root.showEconomyIndicators}}
+                                {{#each this.economyIndicators}}
+                                <span class="bad-economy-bar" style="background-color: {{this.color}};"></span>
+                                {{/each}}
+                            {{/if}}
                         </div>
-                        {{/if}}
+
+                        <div class="bad-action-uses-slot">
+                            {{#unless (eq this.uses.available null)}}
+                            <span class="bad-action-uses {{#if (eq this.uses.available 0)}}depleted{{/if}} {{#if this.uses.isUpcast}}upcast{{/if}}">
+                                {{this.uses.available}}{{#if this.uses.max}} / {{this.uses.max}}{{/if}}
+                            </span>
+                            {{/unless}}
+                        </div>
                     </div>
                     {{/each}}
                 {{/if}}
@@ -202,19 +222,21 @@
                         
                         <span class="bad-action-name">{{this.name}}</span>
                         
-                        {{#if @root.showEconomyIndicators}}
                         <div class="bad-economy-bars">
-                            {{#each this.economyIndicators}}
-                            <span class="bad-economy-bar" style="background-color: {{this.color}};"></span>
-                            {{/each}}
+                            {{#if @root.showEconomyIndicators}}
+                                {{#each this.economyIndicators}}
+                                <span class="bad-economy-bar" style="background-color: {{this.color}};"></span>
+                                {{/each}}
+                            {{/if}}
                         </div>
-                        {{/if}}
 
-                        {{#unless (eq this.uses.available null)}}
-                        <span class="bad-action-uses {{#if (eq this.uses.available 0)}}depleted{{/if}} {{#if this.uses.isUpcast}}upcast{{/if}}">
-                            {{this.uses.available}}{{#if this.uses.max}} / {{this.uses.max}}{{/if}}
-                        </span>
-                        {{/unless}}
+                        <div class="bad-action-uses-slot">
+                            {{#unless (eq this.uses.available null)}}
+                            <span class="bad-action-uses {{#if (eq this.uses.available 0)}}depleted{{/if}} {{#if this.uses.isUpcast}}upcast{{/if}}">
+                                {{this.uses.available}}{{#if this.uses.max}} / {{this.uses.max}}{{/if}}
+                            </span>
+                            {{/unless}}
+                        </div>
                     </div>
                     {{/each}}
                 {{else}}

@@ -222,7 +222,8 @@
 .bad-action-name {
     font-size: 0.85em; /* rem -> em */
     color: #f1f5f9;
-    flex-grow: 1;
+    flex: 1 1 auto;
+    min-width: 0;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -230,6 +231,42 @@
 
 .bakana-action-display-container:not(.has-context-menu) .bad-action-item:hover .bad-action-name {
     color: #ffffff;
+}
+
+/* Action Economy Indicator Bars (Dedicated 1/6th of space to left of uses) */
+.bad-economy-bars {
+    flex: 0 0 16.666%;
+    width: 16.666%;
+    max-width: 16.666%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    flex-shrink: 0;
+    box-sizing: border-box;
+    height: 100%;
+}
+
+.bad-economy-bar {
+    width: 3.5px;
+    height: 1.15em;
+    border-radius: 2px;
+    flex-shrink: 0;
+    box-shadow: 0 0 3px rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+/* Remaining Uses Slot (Dedicated 1/6th of space on far right) */
+.bad-action-uses-slot {
+    flex: 0 0 16.666%;
+    width: 16.666%;
+    max-width: 16.666%;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    box-sizing: border-box;
+    flex-shrink: 0;
+    height: 100%;
 }
 
 /* Remaining Uses Badge */
@@ -255,26 +292,6 @@
     background: rgba(249, 115, 22, 0.1);
     border-color: rgba(249, 115, 22, 0.3);
     color: #fb923c;
-}
-
-/* Action Economy Indicator Bars (Immediately to the left of remaining uses) */
-.bad-economy-bars {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 3px;
-    flex-shrink: 0;
-    margin-left: auto;
-    height: 100%;
-}
-
-.bad-economy-bar {
-    width: 3.5px;
-    height: 1.15em;
-    border-radius: 2px;
-    flex-shrink: 0;
-    box-shadow: 0 0 3px rgba(0, 0, 0, 0.4);
-    border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 /* Empty state message */
