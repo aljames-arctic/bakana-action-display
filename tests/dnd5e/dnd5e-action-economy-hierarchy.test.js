@@ -264,3 +264,75 @@ test('ActionDisplayApp builds nested sub-tabs under Action Economy and filters a
     assert.equal(ctxBonus.items.length, 1);
     assert.equal(ctxBonus.items[0].name, 'Healing Word');
 });
+
+test('HUDTabColumn right-click multi-select toggling of nested sub-tabs and category tabs', async () => {
+    const token = {
+        id: 'tok-2',
+        name: 'Hero',
+        actor: {
+            id: 'act-2',
+            name: 'Hero',
+            uuid: 'Actor.act-2',
+            isOwner: true,
+            getFlag: () => null
+        }
+    };
+
+    const app = new ActionDisplayApp(token);
+    app.activePage = 1;
+
+    const testActions = [
+        new Action({ id: '1', name: 'Strike', left: ['weapon'], right: [TabRef.from('economy', 'standard', 'action')], page: 1 }),
+        new Action({ id: '2', name: 'Healing Word', left: ['spell'], right: [TabRef.from('economy', 'standard', 'bonus')], page: 1 }),
+        new Action({ id: '3', name: 'Shield Reaction', left: ['spell'], right: [TabRef.from('economy', 'standard', 'reaction')], page: 1 }),
+        new Action({ id: '4', name: 'Prayer of Healing', left: ['spell'], right: [TabRef.from('economy', 'time', 'minute')], page: 1 })
+    ];
+
+    actionDisplay.getActions = async () => testActions;
+    app.rightTabs.resetToDefault();
+    await app._prepareContext();
+
+    // 1. Right-click Action
+    app.rightTabs.toggleSub('economy', 'action', app.parentGroups);
+    assert.deepEqual(Array.from(app.rightTabs.activeSubTypes), ['action']);
+
+    // 2. Right-click Reaction
+    app.rightTabs.toggleSub('economy', 'reaction', app.parentGroups);
+    assert.deepEqual(Array.from(app.rightTabs.activeSubTypes).sort(), ['action', 'reaction']);
+
+    // 3. Right-click Standard (selects category Standard, collapsing individual active children)
+    app.rightTabs.toggleSub('economy', 'standard', app.parentGroups);
+    assert.deepEqual(Array.from(app.rightTabs.activeSubTypes), ['standard']);
+
+    const ctxAllStd = await app._prepareContext();
+    const econGroup = app.parentGroups['economy'];
+    const stdCat = econGroup.subTabs.find(t => t.id === 'standard');
+    assert.equal(stdCat.active, true, 'Standard category should be active');
+    for (const sub of stdCat.subTabs) {
+        assert.equal(sub.active, true, `Child sub-tab ${sub.id} should be active when parent category is active`);
+    }
+    assert.equal(ctxAllStd.items.length, 3, 'All 3 standard actions should be visible');
+
+    // 4. Right-click Standard again -> unselects Standard AND clears all descendant sub-tabs
+    app.rightTabs.toggleSub('economy', 'standard', app.parentGroups);
+    assert.deepEqual(Array.from(app.rightTabs.activeSubTypes), [], 'activeSubTypes should be completely empty');
+
+    const ctxNone = await app._prepareContext();
+    const stdCatUnselected = app.parentGroups['economy'].subTabs.find(t => t.id === 'standard');
+    assert.equal(stdCatUnselected.active, false, 'Standard category should be inactive');
+    for (const sub of stdCatUnselected.subTabs) {
+        assert.equal(sub.active, false, `Child sub-tab ${sub.id} should be inactive`);
+    }
+
+    // 5. Right-click Standard (active), then Right-click Action (toggles Action off, leaving Bonus & Reaction active)
+    app.rightTabs.toggleSub('economy', 'standard', app.parentGroups);
+    assert.deepEqual(Array.from(app.rightTabs.activeSubTypes), ['standard']);
+
+    app.rightTabs.toggleSub('economy', 'action', app.parentGroups);
+    assert.deepEqual(Array.from(app.rightTabs.activeSubTypes).sort(), ['bonus', 'reaction']);
+
+    // 6. Right-click Action again -> all siblings under Standard are now active -> collapses back to Standard
+    app.rightTabs.toggleSub('economy', 'action', app.parentGroups);
+    assert.deepEqual(Array.from(app.rightTabs.activeSubTypes), ['standard']);
+});
+

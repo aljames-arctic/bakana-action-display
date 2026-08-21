@@ -147,9 +147,10 @@ export class HUDTabColumn {
             this.focusedParent = parentId;
         }
 
+        const group = groups?.[parentId];
         if (type === 'all') {
-            if (parentId && groups?.[parentId]) {
-                const validSubIds = groups[parentId].getAllSubTabIds ? groups[parentId].getAllSubTabIds() : toSet(groups[parentId].subTabs, t => t.id);
+            if (group) {
+                const validSubIds = group.getAllSubTabIds ? group.getAllSubTabIds() : toSet(group.subTabs, t => t.id);
                 for (const subId of this.activeSubTypes) {
                     if (validSubIds.has(subId)) {
                         this.activeSubTypes.delete(subId);
@@ -158,31 +159,45 @@ export class HUDTabColumn {
             } else {
                 this.activeSubTypes.clear();
             }
-        } else {
-            if (parentId && groups?.[parentId]) {
-                const validSubIds = groups[parentId].getAllSubTabIds ? groups[parentId].getAllSubTabIds() : toSet(groups[parentId].subTabs, t => t.id);
-                const activeSubsForParent = Array.from(this.activeSubTypes).filter(id => validSubIds.has(id));
+            return;
+        }
 
-                if (activeSubsForParent.length > 1) {
-                    for (const subId of activeSubsForParent) {
-                        if (subId !== type) this.activeSubTypes.delete(subId);
-                    }
-                    this.activeSubTypes.add(type);
-                } else if (activeSubsForParent.length === 1 && activeSubsForParent[0] === type) {
-                    this.activeSubTypes.delete(type);
-                } else {
-                    for (const subId of activeSubsForParent) {
-                        this.activeSubTypes.delete(subId);
-                    }
-                    this.activeSubTypes.add(type);
+        const targetTab = group?.getSubTab ? group.getSubTab(type) : null;
+        const descendantIds = targetTab?.getAllSubTabIds ? targetTab.getAllSubTabIds() : new Set();
+        const hasDescendants = descendantIds.size > 0;
+
+        if (group) {
+            const validSubIds = group.getAllSubTabIds ? group.getAllSubTabIds() : toSet(group.subTabs, t => t.id);
+            const activeSubsForParent = Array.from(this.activeSubTypes).filter(id => validSubIds.has(id));
+
+            const isCurrentActive = this.activeSubTypes.has(type) ||
+                (hasDescendants && Array.from(descendantIds).some(id => this.activeSubTypes.has(id)));
+
+            if (activeSubsForParent.length > 1) {
+                for (const subId of activeSubsForParent) {
+                    this.activeSubTypes.delete(subId);
                 }
+                this.activeSubTypes.add(type);
+            } else if (activeSubsForParent.length === 1 && isCurrentActive) {
+                for (const subId of activeSubsForParent) {
+                    this.activeSubTypes.delete(subId);
+                }
+                for (const childId of descendantIds) {
+                    this.activeSubTypes.delete(childId);
+                }
+                this.activeSubTypes.delete(type);
             } else {
-                if (this.activeSubTypes.has(type) && this.activeSubTypes.size === 1) {
-                    this.activeSubTypes.clear();
-                } else {
-                    this.activeSubTypes.clear();
-                    this.activeSubTypes.add(type);
+                for (const subId of activeSubsForParent) {
+                    this.activeSubTypes.delete(subId);
                 }
+                this.activeSubTypes.add(type);
+            }
+        } else {
+            if (this.activeSubTypes.has(type) && this.activeSubTypes.size === 1) {
+                this.activeSubTypes.clear();
+            } else {
+                this.activeSubTypes.clear();
+                this.activeSubTypes.add(type);
             }
         }
     }
@@ -203,9 +218,10 @@ export class HUDTabColumn {
             this.focusedParent = parentId;
         }
 
+        const group = groups?.[parentId];
         if (type === 'all') {
-            if (parentId && groups?.[parentId]) {
-                const validSubIds = groups[parentId].getAllSubTabIds ? groups[parentId].getAllSubTabIds() : toSet(groups[parentId].subTabs, t => t.id);
+            if (group) {
+                const validSubIds = group.getAllSubTabIds ? group.getAllSubTabIds() : toSet(group.subTabs, t => t.id);
                 for (const subId of this.activeSubTypes) {
                     if (validSubIds.has(subId)) {
                         this.activeSubTypes.delete(subId);
@@ -214,11 +230,56 @@ export class HUDTabColumn {
             } else {
                 this.activeSubTypes.clear();
             }
-        } else {
+            return;
+        }
+
+        const targetTab = group?.getSubTab ? group.getSubTab(type) : null;
+        const descendantIds = targetTab?.getAllSubTabIds ? targetTab.getAllSubTabIds() : new Set();
+        const hasDescendants = descendantIds.size > 0;
+
+        if (hasDescendants) {
+            // Case 1: Toggling an intermediate category tab (e.g. 'standard')
             if (this.activeSubTypes.has(type)) {
+                // Was active: unselect category and all its descendant sub-tabs
+                this.activeSubTypes.delete(type);
+                for (const childId of descendantIds) {
+                    this.activeSubTypes.delete(childId);
+                }
+            } else {
+                // Was inactive: select category and clean up any individual descendant sub-tabs
+                this.activeSubTypes.add(type);
+                for (const childId of descendantIds) {
+                    this.activeSubTypes.delete(childId);
+                }
+            }
+        } else {
+            // Case 2: Toggling a leaf sub-tab (e.g. 'action')
+            let ancestorCategory = targetTab?.parent && !targetTab.parent.isTopLevel ? targetTab.parent : null;
+            if (ancestorCategory && this.activeSubTypes.has(ancestorCategory.id)) {
+                // Ancestor category was active (all children were active).
+                // Toggling this leaf off removes ancestor category and adds all sibling children except this one.
+                this.activeSubTypes.delete(ancestorCategory.id);
+                for (const sibling of ancestorCategory.subTabs) {
+                    if (sibling.id !== type && sibling.id !== 'all') {
+                        this.activeSubTypes.add(sibling.id);
+                    }
+                }
+                this.activeSubTypes.delete(type);
+            } else if (this.activeSubTypes.has(type)) {
                 this.activeSubTypes.delete(type);
             } else {
                 this.activeSubTypes.add(type);
+                // If all siblings under ancestor category are now active, collapse them into the ancestor category
+                if (ancestorCategory && ancestorCategory.subTabs.length > 0) {
+                    const nonAllSiblings = ancestorCategory.subTabs.filter(s => s.id !== 'all');
+                    const allSiblingsActive = nonAllSiblings.every(s => this.activeSubTypes.has(s.id));
+                    if (allSiblingsActive) {
+                        for (const s of nonAllSiblings) {
+                            this.activeSubTypes.delete(s.id);
+                        }
+                        this.activeSubTypes.add(ancestorCategory.id);
+                    }
+                }
             }
         }
     }
