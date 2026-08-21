@@ -64,7 +64,7 @@ export async function initializeSystemAdapter(systemId = game.system?.id, foundr
     if (availableFiles && !availableFiles.has(targetFileName)) {
         log.debug(`No system adapter found for "${systemId}" in adapter directory. Falling back to default adapter.`);
         const issuesUrl = game.modules?.get?.(MODULE_ID)?.bugs ?? GITHUB_ISSUES_URL;
-        log.info(`System "${systemId}" is not natively supported and will use the default adapter. If you experience issues or would like to request support, please visit: ${issuesUrl}`);
+        log.warn(`System "${systemId}" is not currently supported and will use the default adapter. If you experience issues or would like to request support, please visit: ${issuesUrl} and request support for the system.`);
         return new BaseSystemAdapter(systemId, false);
     }
 
