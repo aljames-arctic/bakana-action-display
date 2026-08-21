@@ -9,7 +9,8 @@ test('Pf2eSystemAdapter initialization and extractable item types', () => {
     assert.equal(adapter.shouldExtractItem({ type: 'action' }), true);
     assert.equal(adapter.shouldExtractItem({ type: 'feat' }), true);
     assert.equal(adapter.shouldExtractItem({ type: 'spell' }), true);
-    assert.equal(adapter.shouldExtractItem({ type: 'equipment' }), false);
+    assert.equal(adapter.shouldExtractItem({ type: 'consumable' }), true);
+    assert.equal(adapter.shouldExtractItem({ type: 'equipment' }), true);
     const defaultCategories = adapter.getDefaultCategories();
     assert.equal(defaultCategories.length, 4);
     assert.equal(defaultCategories[0].name, 'Favorites');
@@ -26,6 +27,8 @@ test('Pf2eSystemAdapter label lookups', () => {
     assert.equal(adapter.getItemTypeLabel('feat'), 'PF2E.Item.Feat.Plural');
     assert.equal(adapter.getItemTypeLabel('spell'), 'PF2E.Item.Spell.Plural');
     assert.equal(adapter.getItemTypeLabel('weapon'), 'PF2E.TraitWeapons');
+    assert.equal(adapter.getItemTypeLabel('consumable'), 'PF2E.Item.Consumable.Plural');
+    assert.equal(adapter.getItemTypeLabel('equipment'), 'PF2E.Item.Physical.Equipment');
 
     assert.equal(adapter.getItemSubTabLabel('spell', 'focus'), 'PF2E.Focus.Spells');
     assert.equal(adapter.getItemSubTabLabel('spell', 'innate'), 'PF2E.PreparationTypeInnate');
@@ -38,6 +41,8 @@ test('Pf2eSystemAdapter sort order lookups', () => {
     const adapter = new Pf2eSystemAdapter();
 
     assert.equal(adapter.getItemTypeSortOrder('weapon'), 1);
+    assert.equal(adapter.getItemTypeSortOrder('equipment'), 2);
+    assert.equal(adapter.getItemTypeSortOrder('consumable'), 3);
     assert.equal(adapter.getItemTypeSortOrder('feat'), 4);
     assert.equal(adapter.getItemTypeSortOrder('spell'), 5);
 
@@ -101,14 +106,27 @@ test('Pf2eSystemAdapter modifyActions full transformation pipeline', async () =>
         system: {}
     };
 
+    let potionConsumed = false;
+    const consumableItem = {
+        id: 'item-potion',
+        name: 'Elixir of Life',
+        type: 'consumable',
+        system: {
+            quantity: 3,
+            equipped: { carryType: 'held', handsHeld: 1 }
+        },
+        consume: () => { potionConsumed = true; }
+    };
+
     const rawActions = [
         { id: 'act-1', originalItem: featItem },
-        { id: 'act-2', originalItem: spellItem }
+        { id: 'act-2', originalItem: spellItem },
+        { id: 'act-3', originalItem: consumableItem }
     ];
 
     const modified = await adapter.modifyActions(rawActions, actor);
 
-    assert.equal(modified.length, 3, 'Should format feat, spell, and injected Strike');
+    assert.equal(modified.length, 4, 'Should format feat, spell, consumable, and injected Strike');
 
     // Feat verification
     const featAction = modified.find(a => a.id === 'act-1');
@@ -120,6 +138,14 @@ test('Pf2eSystemAdapter modifyActions full transformation pipeline', async () =>
     assert.equal(spellAction.name, 'Fireball (Arcane Spells)');
     assert.deepEqual(spellAction.left, ['spell', '3']);
     assert.deepEqual(spellAction.uses, { available: 2, max: 3 });
+
+    // Consumable verification
+    const consumableAction = modified.find(a => a.id === 'act-3');
+    assert.equal(consumableAction.name, 'Elixir of Life');
+    assert.deepEqual(consumableAction.left, ['consumable']);
+    assert.deepEqual(consumableAction.uses, { available: 3, max: null });
+    consumableAction.roll({});
+    assert.equal(potionConsumed, true);
 
     // Injected Strike verification
     const strikeAction = modified.find(a => a.id === 'strike-longsword');

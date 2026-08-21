@@ -21,7 +21,7 @@ const SORT_ORDERS = {
     }
 };
 
-const EXTRACTABLE_TYPES = new Set(['action', 'feat', 'spell']);
+const EXTRACTABLE_TYPES = new Set(['action', 'feat', 'spell', 'consumable', 'equipment']);
 
 const PF2E_SPELL_SUB_TAB_ORDER = new Map(
     ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'focus', 'innate', 'ritual'].map((id, i) => [id, i])
@@ -150,6 +150,8 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
             case 'feat': return localize('PF2E.Item.Feat.Plural', 'Feats');
             case 'spell': return localize('PF2E.Item.Spell.Plural', 'Spells');
             case 'weapon': return localize('PF2E.TraitWeapons', 'Weapons');
+            case 'consumable': return localize('PF2E.Item.Consumable.Plural', localize('PF2E.Item.Physical.Consumable', 'Consumables'));
+            case 'equipment': return localize('PF2E.Item.Physical.Equipment', localize('PF2E.Actor.Inventory.Section.Equipment', 'Equipment'));
             default: return super.getItemTypeLabel(parentId);
         }
     }
@@ -237,6 +239,18 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
         if (weaponParent) {
             const showUnequippedWeapon = Boolean(app.actor?.getFlag?.(MODULE_ID, 'showUnequipped_weapon'));
             weaponParent.showUnprepared = Boolean(showUnequippedWeapon || showAll);
+        }
+
+        const consumableParent = context.itemTypes?.find(g => g.id === 'consumable');
+        if (consumableParent) {
+            const showUnequippedConsumable = Boolean(app.actor?.getFlag?.(MODULE_ID, 'showUnequipped_consumable'));
+            consumableParent.showUnprepared = Boolean(showUnequippedConsumable || showAll);
+        }
+
+        const equipmentParent = context.itemTypes?.find(g => g.id === 'equipment');
+        if (equipmentParent) {
+            const showUnequippedEquipment = Boolean(app.actor?.getFlag?.(MODULE_ID, 'showUnequipped_equipment'));
+            equipmentParent.showUnprepared = Boolean(showUnequippedEquipment || showAll);
         }
 
         const spellGroup = context.itemTypes?.find(g => g.id === 'spell');
@@ -344,6 +358,26 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
         }
     }
 
+    #executeConsumableRoll(item, event) {
+        const proxiedEvent = this._createRollEvent(event);
+        if (typeof item.consume === 'function') {
+            item.consume();
+        } else if (typeof item.toMessage === 'function') {
+            item.toMessage();
+        } else if (typeof item.use === 'function') {
+            item.use({ event: proxiedEvent });
+        }
+    }
+
+    #executeEquipmentRoll(item, event) {
+        const proxiedEvent = this._createRollEvent(event);
+        if (typeof item.toMessage === 'function') {
+            item.toMessage();
+        } else if (typeof item.use === 'function') {
+            item.use({ event: proxiedEvent });
+        }
+    }
+
     #createStrikeAction(strike, ammoQuantities) {
         return {
             id: `strike-${strike.slug ?? strike.label}`,
@@ -363,11 +397,18 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
 
     #formatActionRow(action, spellToEntryMap) {
         const item = action.originalItem;
+        if (!item) return false;
         if (item.type === 'action' || item.type === 'feat') {
             return this.#formatFeatAction(action, item);
         }
         if (item.type === 'spell') {
             return this.#formatSpellAction(action, item, spellToEntryMap.get(item.id));
+        }
+        if (item.type === 'consumable') {
+            return this.#formatConsumableAction(action, item);
+        }
+        if (item.type === 'equipment') {
+            return this.#formatEquipmentAction(action, item);
         }
         return false;
     }
@@ -402,6 +443,40 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
         action.uses = this.#getSpellUses(entry, item);
         action.name = `${item.name} (${entry.name})`;
         return true;
+    }
+
+    #formatConsumableAction(action, item) {
+        action.name = action.name ?? item.name;
+        const activationType = this.#getActionType(item) ?? 'action';
+        action.activationType = activationType;
+        action.right = [TabRef.from('economy', activationType)];
+        action.left = ['consumable'];
+        action.uses = this.#getConsumableUses(item);
+        action.roll = (event) => this.#executeConsumableRoll(item, event);
+        return true;
+    }
+
+    #formatEquipmentAction(action, item) {
+        action.name = action.name ?? item.name;
+        const activationType = this.#getActionType(item) ?? 'action';
+        action.activationType = activationType;
+        action.right = [TabRef.from('economy', activationType)];
+        action.left = ['equipment'];
+        action.uses = this.#getUses(item);
+        action.roll = (event) => this.#executeEquipmentRoll(item, event);
+        return true;
+    }
+
+    #getConsumableUses(item) {
+        const uses = item.system.uses;
+        if (uses && uses.max > 0) {
+            return { available: uses.value ?? 0, max: uses.max };
+        }
+        const quantity = item.system.quantity;
+        if (quantity !== undefined && quantity !== null) {
+            return { available: quantity, max: null };
+        }
+        return { available: null, max: null };
     }
 
     /**
