@@ -52,9 +52,9 @@
    CONTROL BAR (Grip + Pin Button)
    ========================================================================== */
 .bad-control-bar {
-    display: flex;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
     align-items: center;
-    justify-content: space-between;
     background: rgba(0, 0, 0, 0.2);
     border-radius: 0.43em; /* 6px -> 0.43em */
     padding: 0.14em 0.43em; /* 2px 6px -> 0.14em 0.43em */
@@ -68,6 +68,14 @@
     gap: 0.28em; /* 4px -> 0.28em */
 }
 
+.bad-control-group.bad-control-left {
+    justify-content: flex-start;
+}
+
+.bad-control-group.bad-control-right {
+    justify-content: flex-end;
+}
+
 .bad-drag-handle {
     cursor: move;
     color: #64748b;
@@ -75,8 +83,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    flex-grow: 1;
     height: 1.15em; /* 16px -> 1.15em */
+    padding: 0 0.5em;
     transition: color 0.2s ease;
 }
 
