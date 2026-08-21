@@ -17,6 +17,7 @@ const SORT_ORDERS = {
     },
     item_type: {
         'all': 0,
+        'save': 1,
         'savingThrow': 1,
         'abilityCheck': 2,
         'weapon': 3,
@@ -269,11 +270,11 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
                 const saveKey = saveMap[abl];
                 const saveSub = new Action({
                     id: `save-${abl}`,
-                    name: localize('BAD.page2.savingThrow', 'Saving Throw'),
-                    type: 'savingThrow',
+                    name: localize('BAD.page2.save', localize('BAD.page2.savingThrow', 'Saving Throw')),
+                    type: 'save',
                     img,
                     right: [TabRef.from('ability', abl)],
-                    left: ['savingThrow'],
+                    left: ['save'],
                     available: true,
                     roll: async (event) => {
                         const rollEvent = this._createRollEvent(event);
@@ -314,8 +315,8 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
                 type: 'ability',
                 img,
                 right: [TabRef.from('ability', abl)],
-                left: subactions.some(s => s.type === 'savingThrow') ? ['savingThrow'] : ['abilityCheck'],
-                itemCategories: subactions.some(s => s.type === 'savingThrow') ? [['savingThrow'], ['abilityCheck']] : [['abilityCheck']],
+                left: subactions.some(s => s.type === 'save') ? ['save'] : ['abilityCheck'],
+                itemCategories: subactions.some(s => s.type === 'save') ? [['save'], ['abilityCheck']] : [['abilityCheck']],
                 available: true,
                 uses: { available: null, max: null },
                 subactions,

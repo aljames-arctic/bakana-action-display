@@ -104,7 +104,8 @@ export class BaseSystemContextModifier {
             case 'all': return localize('BAD.core.allItems', 'All Items');
             case 'other': return localize('BAD.core.other', 'Other');
             case 'hidden': return localize('BAD.core.hidden', 'Hidden');
-            case 'savingThrow': return localize('BAD.page2.savingThrow', 'Saving Throw');
+            case 'save':
+            case 'savingThrow': return localize('BAD.page2.save', localize('BAD.page2.savingThrow', 'Saving Throw'));
             case 'abilityCheck': return localize('BAD.page2.abilityCheck', 'Ability Check');
             default: return parentId.toUpperCase();
         }
@@ -116,7 +117,7 @@ export class BaseSystemContextModifier {
      * @returns {string}
      */
     getItemTypeIcon(parentId) {
-        if (parentId === 'savingThrow') return 'fas fa-shield-alt';
+        if (parentId === 'save' || parentId === 'savingThrow') return 'fas fa-shield-alt';
         if (parentId === 'abilityCheck') return 'fas fa-dice-d20';
         return ICONS.item_type[parentId] ?? 'fas fa-question';
     }

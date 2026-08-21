@@ -43,6 +43,7 @@ test('Pf1SystemAdapter label lookups and spell sub-tab labels', () => {
 test('Pf1SystemAdapter sort orders', () => {
     const adapter = new Pf1SystemAdapter();
 
+    assert.equal(adapter.getItemTypeSortOrder('save'), 1);
     assert.equal(adapter.getItemTypeSortOrder('savingThrow'), 1);
     assert.equal(adapter.getItemTypeSortOrder('abilityCheck'), 2);
     assert.equal(adapter.getItemTypeSortOrder('weapon'), 3);

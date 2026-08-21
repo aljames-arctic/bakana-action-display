@@ -150,6 +150,7 @@
             "carryTypeDropped": "Drop Item"
         },
         "page2": {
+            "save": "Saving Throw",
             "savingThrow": "Saving Throw",
             "abilityCheck": "Ability Check",
             "ability": "Ability"

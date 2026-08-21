@@ -17,6 +17,7 @@ const SORT_ORDERS = {
     },
     item_type: {
         'all': 0,
+        'save': 1,
         'savingThrow': 1,
         'abilityCheck': 2,
         'weapon': 3,
@@ -175,10 +176,10 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
         const fortitude = new Action({
             id: 'save-fortitude',
             name: localize('PF2E.SavesFortitude', 'Fortitude'),
-            type: 'savingThrow',
+            type: 'save',
             img: 'icons/svg/shield.svg',
             right: [TabRef.from('ability', 'con')],
-            left: ['savingThrow'],
+            left: ['save'],
             available: true,
             uses: { available: null, max: null },
             roll: async (event) => {
@@ -198,10 +199,10 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
         const reflex = new Action({
             id: 'save-reflex',
             name: localize('PF2E.SavesReflex', 'Reflex'),
-            type: 'savingThrow',
+            type: 'save',
             img: 'icons/svg/wing.svg',
             right: [TabRef.from('ability', 'dex')],
-            left: ['savingThrow'],
+            left: ['save'],
             available: true,
             uses: { available: null, max: null },
             roll: async (event) => {
@@ -221,10 +222,10 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
         const will = new Action({
             id: 'save-will',
             name: localize('PF2E.SavesWill', 'Will'),
-            type: 'savingThrow',
+            type: 'save',
             img: 'icons/svg/eye.svg',
             right: [TabRef.from('ability', 'wis')],
-            left: ['savingThrow'],
+            left: ['save'],
             available: true,
             uses: { available: null, max: null },
             roll: async (event) => {
@@ -767,7 +768,7 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
             {
                 id: 'cat_saves',
                 name: 'Saving Throws',
-                expression: `action.type === "savingThrow"`,
+                expression: `action.type === "save"`,
                 subcategories: []
             },
             {

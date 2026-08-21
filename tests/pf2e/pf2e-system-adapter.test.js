@@ -43,6 +43,7 @@ test('Pf2eSystemAdapter label lookups', () => {
 test('Pf2eSystemAdapter sort order lookups', () => {
     const adapter = new Pf2eSystemAdapter();
 
+    assert.equal(adapter.getItemTypeSortOrder('save'), 1);
     assert.equal(adapter.getItemTypeSortOrder('savingThrow'), 1);
     assert.equal(adapter.getItemTypeSortOrder('abilityCheck'), 2);
     assert.equal(adapter.getItemTypeSortOrder('weapon'), 3);
