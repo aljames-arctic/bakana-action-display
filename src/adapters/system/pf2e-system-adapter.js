@@ -244,7 +244,7 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
         const perception = new Action({
             id: 'check-perception',
             name: localize('PF2E.PerceptionLabel', 'Perception'),
-            type: 'abilityCheck',
+            type: 'skill',
             img: 'icons/svg/eye.svg',
             right: [TabRef.from('ability', 'wis')],
             left: ['abilityCheck'],
@@ -773,7 +773,7 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
             {
                 id: 'cat_skill_checks',
                 name: 'Skills & Perception',
-                expression: `action.type === "skill" || action.id === "check-perception"`,
+                expression: `action.type === "skill"`,
                 subcategories: [
                     {
                         id: 'sub_strength',
