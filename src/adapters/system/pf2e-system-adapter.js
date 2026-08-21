@@ -54,6 +54,8 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
     /**
      * Check if a PF2e item is equipped.
      * Natural attacks, unarmed strikes, and non-physical items are always considered equipped.
+     * Items marked as 'stowed' or 'dropped' are unequipped.
+     * Items marked as 'held' or 'worn' are equipped.
      * @param {Item} item
      * @returns {boolean}
      */
@@ -63,11 +65,12 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
         if (item.category === 'unarmed' || item.system.category?.value === 'unarmed') return true;
         if (item.system.traits?.value?.includes?.('unarmed')) return true;
 
+        const carryType = item.system.equipped?.carryType;
+        if (carryType) {
+            return carryType !== 'stowed' && carryType !== 'dropped' && (carryType === 'held' || carryType === 'worn');
+        }
         if (item.isEquipped !== undefined) {
             return Boolean(item.isEquipped);
-        }
-        if (item.system.equipped?.carryType) {
-            return ['held', 'worn'].includes(item.system.equipped.carryType);
         }
         return true;
     }
@@ -106,8 +109,33 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
             modified.push(this.#createStrikeAction(strike, ammoQuantities));
         }
 
-        // 3. Apply default resource filtering (e.g. hiding depleted actions)
-        return super.modifyActions(modified, actor);
+        // 3. Filter unequipped items (stowed/dropped) unless showAll / showUnequipped flag is enabled
+        const showAll = Boolean(actor?.getFlag?.(MODULE_ID, 'showAll'));
+        const showUnequippedMap = {
+            weapon: Boolean(actor?.getFlag?.(MODULE_ID, 'showUnequipped_weapon')),
+            equipment: Boolean(actor?.getFlag?.(MODULE_ID, 'showUnequipped_equipment')),
+            consumable: Boolean(actor?.getFlag?.(MODULE_ID, 'showUnequipped_consumable'))
+        };
+
+        const finalActions = [];
+        for (const action of modified) {
+            const item = action.originalItem;
+            if (item) {
+                const isEquipped = this.getItemEquipped(item);
+                if (!isEquipped) {
+                    const type = item.type ?? action.type;
+                    const canShowUnequipped = Boolean(showAll || showUnequippedMap[type] || showUnequippedMap.weapon);
+                    if (!canShowUnequipped) {
+                        continue;
+                    }
+                    action.available = false;
+                }
+            }
+            finalActions.push(action);
+        }
+
+        // 4. Apply default resource filtering (e.g. hiding depleted actions)
+        return super.modifyActions(finalActions, actor);
     }
 
     // #endregion
@@ -225,7 +253,7 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
 
     #buildAmmoQuantitiesMap(actor) {
         const ammoQuantities = new Map();
-        for (const i of actor.items) {
+        for (const i of actor.items ?? []) {
             const { baseItem, quantity } = this.#getAmmoInfo(i);
             if (baseItem) {
                 ammoQuantities.set(baseItem, (ammoQuantities.get(baseItem) ?? 0) + quantity);

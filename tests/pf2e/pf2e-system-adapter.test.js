@@ -127,6 +127,55 @@ test('Pf2eSystemAdapter modifyActions full transformation pipeline', async () =>
     assert.equal(strikeAction.type, 'weapon');
 });
 
+test('Pf2eSystemAdapter filters stowed and dropped items unless showUnequipped or showAll is enabled', async () => {
+    const adapter = new Pf2eSystemAdapter();
+
+    const heldWeapon = { id: 'w-held', name: 'Dagger', type: 'weapon', system: { equipped: { carryType: 'held', handsHeld: 1 } } };
+    const stowedWeapon = { id: 'w-stowed', name: 'Crossbow', type: 'weapon', system: { equipped: { carryType: 'stowed', handsHeld: 0 } } };
+    const droppedWeapon = { id: 'w-dropped', name: 'Halberd', type: 'weapon', system: { equipped: { carryType: 'dropped', handsHeld: 0 } } };
+    const naturalAttack = { id: 'w-beak', name: 'Beak', type: 'weapon', isPhysical: false, category: 'unarmed', system: {} };
+
+    const strikes = [
+        { slug: 'held', label: 'Dagger', item: heldWeapon },
+        { slug: 'stowed', label: 'Crossbow', item: stowedWeapon },
+        { slug: 'dropped', label: 'Halberd', item: droppedWeapon },
+        { slug: 'beak', label: 'Beak', item: naturalAttack }
+    ];
+
+    // Case 1: Default (showAll = false, showUnequipped = false) -> stowed and dropped are filtered out
+    const actorDefault = {
+        getFlag: () => false,
+        system: { actions: strikes }
+    };
+    const modifiedDefault = await adapter.modifyActions([], actorDefault);
+    assert.equal(modifiedDefault.some(a => a.id === 'strike-held'), true);
+    assert.equal(modifiedDefault.some(a => a.id === 'strike-beak'), true);
+    assert.equal(modifiedDefault.some(a => a.id === 'strike-stowed'), false);
+    assert.equal(modifiedDefault.some(a => a.id === 'strike-dropped'), false);
+
+    // Case 2: showAll = true -> stowed and dropped appear with available = false
+    const actorShowAll = {
+        getFlag: (mod, key) => key === 'showAll',
+        system: { actions: strikes }
+    };
+    const modifiedShowAll = await adapter.modifyActions([], actorShowAll);
+    const stowedAction = modifiedShowAll.find(a => a.id === 'strike-stowed');
+    const droppedAction = modifiedShowAll.find(a => a.id === 'strike-dropped');
+    assert.ok(stowedAction);
+    assert.equal(stowedAction.available, false);
+    assert.ok(droppedAction);
+    assert.equal(droppedAction.available, false);
+
+    // Case 3: showUnequipped_weapon = true
+    const actorShowWeapon = {
+        getFlag: (mod, key) => key === 'showUnequipped_weapon',
+        system: { actions: strikes }
+    };
+    const modifiedShowWeapon = await adapter.modifyActions([], actorShowWeapon);
+    assert.equal(modifiedShowWeapon.some(a => a.id === 'strike-stowed'), true);
+    assert.equal(modifiedShowWeapon.some(a => a.id === 'strike-dropped'), true);
+});
+
 test('Pf2eSystemAdapter context menu manager provides carry type options and tab right-click handling', async () => {
     const adapter = new Pf2eSystemAdapter();
 
@@ -142,9 +191,11 @@ test('Pf2eSystemAdapter context menu manager provides carry type options and tab
     };
 
     const flags = {};
+    const itemsMap = new Map([['wpn-1', weaponItem]]);
     const app = {
         actor: {
             isOwner: true,
+            items: itemsMap,
             getFlag: (mod, key) => flags[key] ?? false,
             setFlag: (mod, key, val) => { flags[key] = val; }
         },
