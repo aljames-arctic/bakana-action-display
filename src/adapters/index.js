@@ -333,6 +333,34 @@ class Adapter {
         }
         return null;
     }
+
+    /**
+     * Get system-specific configurable action economy types and default colors.
+     * @returns {{ id: string, label: string, defaultColor: string }[]}
+     */
+    getEconomyTypes() {
+        return this.system?.getEconomyTypes?.() ?? [];
+    }
+
+    /**
+     * Get mapped color for an economy type.
+     * @param {string} type
+     * @param {Record<string, string>} [userColors]
+     * @returns {string|null}
+     */
+    getEconomyColor(type, userColors) {
+        return this.system?.getEconomyColor?.(type, userColors) ?? null;
+    }
+
+    /**
+     * Extract economy indicators for a given action.
+     * @param {Object} action
+     * @param {Record<string, string>} [userColors]
+     * @returns {{ type: string, color: string }[]}
+     */
+    extractEconomyIndicators(action, userColors) {
+        return this.system?.extractEconomyIndicators?.(action, userColors) ?? [];
+    }
 }
 
 export const adapter = new Adapter();

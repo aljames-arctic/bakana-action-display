@@ -252,6 +252,76 @@ export class BaseSystemAdapter {
     }
 
     /**
+     * Get the list of configurable action economy types and default colors for this system.
+     * @returns {{ id: string, label: string, defaultColor: string }[]}
+     */
+    getEconomyTypes() {
+        return [
+            { id: 'action', label: this.getActionSubTabLabel('action') ?? 'Action', defaultColor: '#3b82f6' },
+            { id: 'bonus', label: this.getActionSubTabLabel('bonus') ?? 'Bonus Action', defaultColor: '#14b8a6' },
+            { id: 'reaction', label: this.getActionSubTabLabel('reaction') ?? 'Reaction', defaultColor: '#ef4444' },
+            { id: 'special', label: this.getActionSubTabLabel('special') ?? 'Special', defaultColor: '#a855f7' },
+            { id: 'other', label: this.getActionSubTabLabel('other') ?? 'Other', defaultColor: '#64748b' }
+        ];
+    }
+
+    /**
+     * Get the mapped color for an action economy type.
+     * @param {string} type Economy type identifier
+     * @param {Record<string, string>} [userColors={}] User configured color overrides
+     * @returns {string|null} Hex color string or null if unmapped
+     */
+    getEconomyColor(type, userColors = {}) {
+        if (!type || type === 'none' || type === 'all') return null;
+        if (userColors?.[type]) return userColors[type];
+        const types = this.getEconomyTypes();
+        const found = types.find(t => t.id === type);
+        if (found?.defaultColor) return found.defaultColor;
+        return userColors?.['other'] ?? '#64748b';
+    }
+
+    /**
+     * Extract economy indicators for a given action.
+     * @param {Object} action HUD Action object
+     * @param {Record<string, string>} [userColors={}] User configured color overrides
+     * @returns {{ type: string, color: string }[]}
+     */
+    extractEconomyIndicators(action, userColors = {}) {
+        if (!action) return [];
+        const types = new Set();
+
+        if (action.subactions?.length) {
+            for (const sub of action.subactions) {
+                const econRef = sub.right?.find(r => r?.root === 'economy');
+                const subType = econRef?.label ?? econRef?.sub;
+                if (subType && subType !== 'economy' && subType !== 'none' && subType !== 'all') {
+                    types.add(subType);
+                }
+            }
+        } else if (action.right?.length) {
+            const econRef = action.right.find(r => r?.root === 'economy');
+            const subType = econRef?.label ?? econRef?.sub;
+            if (subType && subType !== 'economy' && subType !== 'none' && subType !== 'all') {
+                types.add(subType);
+            }
+        }
+
+        const indicators = [];
+        for (const type of types) {
+            const color = this.getEconomyColor(type, userColors);
+            if (color) {
+                indicators.push({ type, color });
+            }
+        }
+        indicators.sort((a, b) => {
+            const orderA = this.getActionSubTabSortOrder('economy', a.type) ?? 999;
+            const orderB = this.getActionSubTabSortOrder('economy', b.type) ?? 999;
+            return orderA - orderB;
+        });
+        return indicators;
+    }
+
+    /**
      * Get the default HUD categorization structure for this system.
      * @returns {Object[]} Array of category definition objects
      */

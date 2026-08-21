@@ -223,6 +223,19 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
     }
 
     /**
+     * Get the list of configurable action economy types and default colors for PF1.
+     * @returns {{ id: string, label: string, defaultColor: string }[]}
+     */
+    getEconomyTypes() {
+        return [
+            { id: 'action', label: this.getActionSubTabLabel('action') ?? 'Actions', defaultColor: '#3b82f6' },
+            { id: 'bonus', label: this.getActionSubTabLabel('bonus') ?? 'Swift', defaultColor: '#14b8a6' },
+            { id: 'reaction', label: this.getActionSubTabLabel('reaction') ?? 'Immediate', defaultColor: '#ef4444' },
+            { id: 'other', label: this.getActionSubTabLabel('other') ?? 'Free', defaultColor: '#64748b' }
+        ];
+    }
+
+    /**
      * Get the localized label for a left-side item type (parent tab) in PF1e.
      */
     getItemTypeLabel(parentId) {

@@ -257,6 +257,28 @@
     color: #fb923c;
 }
 
+/* Action Economy Indicator Bars (Dedicated to right 1/5 of item) */
+.bad-economy-bars {
+    width: 20%;
+    min-width: 1.6em;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 3px;
+    flex-shrink: 0;
+    margin-left: auto;
+    height: 100%;
+}
+
+.bad-economy-bar {
+    width: 3.5px;
+    height: 1.15em;
+    border-radius: 2px;
+    flex-shrink: 0;
+    box-shadow: 0 0 3px rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
 /* Empty state message */
 .bad-no-actions {
     text-align: center;
@@ -1311,3 +1333,123 @@ div#tooltip:has(.bad-expression-tooltip),
 .bad-settings-section-header:first-of-type {
     margin-top: 0.4em;
 }
+
+/* ==========================================================================
+   Action Economy Colors Configuration Modal
+   ========================================================================== */
+
+.bad-economy-config {
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
+    padding: 0.5em;
+    color: #e2e8f0;
+}
+
+.bad-economy-preset-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75em;
+    background: rgba(167, 139, 250, 0.08);
+    border: 1px solid rgba(167, 139, 250, 0.2);
+    border-radius: 0.35em;
+    padding: 0.5em 0.75em;
+}
+
+.bad-economy-preset-label {
+    display: flex;
+    align-items: center;
+    gap: 0.4em;
+    font-size: 0.9em;
+    font-weight: 600;
+    color: #f1f5f9;
+}
+
+.bad-economy-preset-label i {
+    color: #a78bfa;
+}
+
+.bad-economy-preset-select {
+    flex-grow: 1;
+    max-width: 250px;
+    background: rgba(0, 0, 0, 0.4) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 0.25em !important;
+    color: #f1f5f9 !important;
+    padding: 0.25em 0.5em !important;
+    font-size: 0.85em !important;
+}
+
+.bad-economy-preset-select:focus {
+    border-color: #a78bfa !important;
+    outline: none !important;
+}
+
+.bad-economy-colors-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5em;
+    max-height: 350px;
+    overflow-y: auto;
+    padding-right: 0.25em;
+}
+
+.bad-economy-color-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75em;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 0.35em;
+    padding: 0.5em 0.75em;
+}
+
+.bad-economy-color-row .bad-economy-preview {
+    width: 5px;
+    height: 1.6em;
+    border-radius: 2px;
+}
+
+.bad-economy-label {
+    flex-grow: 1;
+    font-size: 0.9em;
+    font-weight: 500;
+    color: #f1f5f9;
+}
+
+.bad-economy-color-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+}
+
+.bad-economy-color-picker {
+    width: 2.2em !important;
+    height: 2em !important;
+    padding: 0 !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 0.25em !important;
+    cursor: pointer;
+    background: transparent !important;
+}
+
+.bad-economy-color-input {
+    width: 6em !important;
+    height: 2em !important;
+    padding: 0.2em 0.5em !important;
+    background: rgba(0, 0, 0, 0.3) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    border-radius: 0.25em !important;
+    color: #f1f5f9 !important;
+    font-family: monospace !important;
+    font-size: 0.85em !important;
+    text-transform: uppercase;
+}
+
+.bad-economy-color-input:focus {
+    border-color: #a78bfa !important;
+    box-shadow: 0 0 6px rgba(167, 139, 250, 0.3) !important;
+    outline: none !important;
+}
+

@@ -393,6 +393,24 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
     }
 
     /**
+     * Get the list of configurable action economy types and default colors for D&D 5e.
+     * @returns {{ id: string, label: string, defaultColor: string }[]}
+     */
+    getEconomyTypes() {
+        return [
+            { id: 'action', label: this.getActionSubTabLabel('action') ?? 'Action', defaultColor: '#3b82f6' },
+            { id: 'bonus', label: this.getActionSubTabLabel('bonus') ?? 'Bonus Action', defaultColor: '#14b8a6' },
+            { id: 'reaction', label: this.getActionSubTabLabel('reaction') ?? 'Reaction', defaultColor: '#ef4444' },
+            { id: 'legendary', label: this.getActionSubTabLabel('legendary') ?? 'Legendary Action', defaultColor: '#18181b' },
+            { id: 'lair', label: this.getActionSubTabLabel('lair') ?? 'Lair Action', defaultColor: '#eab308' },
+            { id: 'special', label: this.getActionSubTabLabel('special') ?? 'Special', defaultColor: '#a855f7' },
+            { id: 'mythic', label: this.getActionSubTabLabel('mythic') ?? 'Mythic Action', defaultColor: '#ec4899' },
+            { id: 'crew', label: this.getActionSubTabLabel('crew') ?? 'Crew Action', defaultColor: '#6366f1' },
+            { id: 'other', label: this.getActionSubTabLabel('other') ?? 'Other', defaultColor: '#64748b' }
+        ];
+    }
+
+    /**
      * Modify the Handlebars rendering context for D&D 5e (splits into ability/skill check layout on Page 2).
      * @param {Object} context Handlebars template context
      * @param {ApplicationV2} app Active HUD application

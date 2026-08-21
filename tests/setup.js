@@ -188,6 +188,8 @@ globalThis.foundry = {
 const settingsStore = new Map([
     ['bakana-action-display.filterNoResources', false],
     ['bakana-action-display.enableCenterOnToken', false],
+    ['bakana-action-display.enableEconomyIndicators', true],
+    ['bakana-action-display.economyColors', {}],
     ['bakana-action-display.categorizationConfig', { enabled: false, categories: [] }]
 ]);
 

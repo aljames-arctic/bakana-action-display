@@ -92,6 +92,14 @@
                                 {{this.uses.available}}{{#if this.uses.max}} / {{this.uses.max}}{{/if}}
                             </span>
                             {{/unless}}
+
+                            {{#if @root.showEconomyIndicators}}
+                            <div class="bad-economy-bars">
+                                {{#each this.economyIndicators}}
+                                <span class="bad-economy-bar" style="background-color: {{this.color}};"></span>
+                                {{/each}}
+                            </div>
+                            {{/if}}
                         </div>
                         {{/each}}
                     {{/if}}
@@ -115,6 +123,14 @@
                                 {{this.uses.available}}{{#if this.uses.max}} / {{this.uses.max}}{{/if}}
                             </span>
                             {{/unless}}
+
+                            {{#if @root.showEconomyIndicators}}
+                            <div class="bad-economy-bars">
+                                {{#each this.economyIndicators}}
+                                <span class="bad-economy-bar" style="background-color: {{this.color}};"></span>
+                                {{/each}}
+                            </div>
+                            {{/if}}
                         </div>
                         {{/each}}
                         {{/each}}
@@ -135,6 +151,14 @@
                         <div class="bad-action-icon-placeholder"><i class="fas fa-dice-d20"></i></div>
                         {{/if}}
                         <span class="bad-action-name">{{this.name}}</span>
+
+                        {{#if @root.showEconomyIndicators}}
+                        <div class="bad-economy-bars">
+                            {{#each this.economyIndicators}}
+                            <span class="bad-economy-bar" style="background-color: {{this.color}};"></span>
+                            {{/each}}
+                        </div>
+                        {{/if}}
                     </div>
                     {{/each}}
                 {{/if}}
@@ -150,6 +174,14 @@
                         <div class="bad-action-icon-placeholder"><i class="fas fa-dice-d20"></i></div>
                         {{/if}}
                         <span class="bad-action-name">{{this.name}}</span>
+
+                        {{#if @root.showEconomyIndicators}}
+                        <div class="bad-economy-bars">
+                            {{#each this.economyIndicators}}
+                            <span class="bad-economy-bar" style="background-color: {{this.color}};"></span>
+                            {{/each}}
+                        </div>
+                        {{/if}}
                     </div>
                     {{/each}}
                 {{/if}}
@@ -175,6 +207,14 @@
                             {{this.uses.available}}{{#if this.uses.max}} / {{this.uses.max}}{{/if}}
                         </span>
                         {{/unless}}
+
+                        {{#if @root.showEconomyIndicators}}
+                        <div class="bad-economy-bars">
+                            {{#each this.economyIndicators}}
+                            <span class="bad-economy-bar" style="background-color: {{this.color}};"></span>
+                            {{/each}}
+                        </div>
+                        {{/if}}
                     </div>
                     {{/each}}
                 {{else}}

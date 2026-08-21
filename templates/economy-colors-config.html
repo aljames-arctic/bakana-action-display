@@ -1,0 +1,47 @@
+<div class="bad-economy-config">
+    <div class="bad-config-header-row">
+        <p class="bad-config-description">{{localize "BAD.economyColors.description"}}</p>
+    </div>
+
+    <!-- Presets Dropdown -->
+    <div class="bad-economy-preset-row">
+        <label for="bad-preset-selector" class="bad-economy-preset-label">
+            <i class="fas fa-swatchbook"></i> {{localize "BAD.economyColors.presetLabel"}}
+        </label>
+        <select id="bad-preset-selector" class="bad-economy-preset-select" data-action="selectPreset">
+            <option value="">{{localize "BAD.economyColors.presets.select"}}</option>
+            {{#each presets}}
+            <option value="{{this.id}}" {{#if this.selected}}selected{{/if}}>{{this.label}}</option>
+            {{/each}}
+        </select>
+    </div>
+
+    <!-- Economy Types List -->
+    <div class="bad-economy-colors-list">
+        {{#each economyTypes}}
+        <div class="bad-economy-color-row" data-type-id="{{this.id}}">
+            <span class="bad-economy-bar bad-economy-preview" style="background-color: {{this.color}};" data-type-id="{{this.id}}"></span>
+            <span class="bad-economy-label">{{this.label}}</span>
+            <div class="bad-economy-color-controls">
+                <input type="color" class="bad-economy-color-picker" data-type-id="{{this.id}}" value="{{this.color}}" />
+                <input type="text" class="bad-economy-color-input" data-type-id="{{this.id}}" value="{{this.color}}" maxlength="7" spellcheck="false" />
+            </div>
+        </div>
+        {{/each}}
+    </div>
+
+    <!-- Action Buttons (Reset to Defaults, Cancel, Save) -->
+    <div class="bad-config-footer-row">
+        <button type="button" class="bad-config-btn bad-config-btn-secondary" data-action="resetDefaults">
+            <i class="fas fa-undo"></i> {{localize "BAD.economyColors.resetDefaults"}}
+        </button>
+        <div class="bad-config-actions-right">
+            <button type="button" class="bad-config-btn" data-action="closeConfig">
+                {{localize "BAD.categorization.cancel"}}
+            </button>
+            <button type="button" class="bad-config-btn bad-config-btn-primary" data-action="saveConfig">
+                <i class="fas fa-save"></i> {{localize "BAD.categorization.save"}}
+            </button>
+        </div>
+    </div>
+</div>

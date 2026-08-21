@@ -2,6 +2,7 @@ import { MODULE_ID } from "./constants.js";
 import { log } from "./lib/logger.js";
 import { actionDisplay } from "./action-display.js";
 import { CategorizationConfigApp } from "./categorization/categorization-config-app.js";
+import { EconomyColorsConfigApp } from "./ui/economy-colors-config-app.js";
 
 Hooks.once('init', () => {
     // ==========================================
@@ -49,9 +50,47 @@ Hooks.once('init', () => {
         }
     });
 
+    // Register Action Economy Indicators Setting (World Scope, default enabled)
+    game.settings.register(MODULE_ID, 'enableEconomyIndicators', {
+        name: game.i18n.localize('BAD.settings.enableEconomyIndicators.name'),
+        hint: game.i18n.localize('BAD.settings.enableEconomyIndicators.hint'),
+        scope: 'world',
+        config: true,
+        type: Boolean,
+        default: true,
+        onChange: () => {
+            if (actionDisplay.activeApp && actionDisplay.activeApp.rendered) {
+                actionDisplay.activeApp.render();
+            }
+        }
+    });
+
     // ==========================================
-    // User Scope Settings
+    // User Scope Settings & Menus
     // ==========================================
+
+    // Register Economy Colors Menu Button (User Scope)
+    game.settings.registerMenu(MODULE_ID, 'economyColorsMenu', {
+        name: game.i18n.localize('BAD.settings.economyColorsMenu.name'),
+        label: game.i18n.localize('BAD.settings.economyColorsMenu.label'),
+        hint: game.i18n.localize('BAD.settings.economyColorsMenu.hint'),
+        icon: 'fas fa-palette',
+        type: EconomyColorsConfigApp,
+        restricted: false
+    });
+
+    // Register Action Economy Colors Configuration Storage (User Scope)
+    game.settings.register(MODULE_ID, 'economyColors', {
+        scope: 'user',
+        config: false,
+        type: Object,
+        default: {},
+        onChange: () => {
+            if (actionDisplay.activeApp && actionDisplay.activeApp.rendered) {
+                actionDisplay.activeApp.render();
+            }
+        }
+    });
 
     // Register HUD Opacity Setting (Slider)
     game.settings.register(MODULE_ID, 'hudOpacity', {

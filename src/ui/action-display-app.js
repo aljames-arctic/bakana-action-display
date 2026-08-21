@@ -525,7 +525,21 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
             }
         }
 
-        // 4. Filter actions based on state & search query
+        // 4. Extract action economy indicators and filter actions based on state & search query
+        const showEconomyIndicators = Boolean(game.settings.get(MODULE_ID, 'enableEconomyIndicators'));
+        context.showEconomyIndicators = showEconomyIndicators;
+
+        if (showEconomyIndicators) {
+            const userColors = game.settings.get(MODULE_ID, 'economyColors') ?? {};
+            for (const action of rawActions) {
+                action.economyIndicators = adapter.extractEconomyIndicators(action, userColors);
+            }
+        } else {
+            for (const action of rawActions) {
+                action.economyIndicators = [];
+            }
+        }
+
         const query = (this.searchQuery ?? '').trim().toLowerCase();
         const visibleActions = rawActions.filter(action => {
             if (!this._matchesFilters(action)) return false;

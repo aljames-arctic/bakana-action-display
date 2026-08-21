@@ -156,6 +156,18 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
     }
 
     /**
+     * Get the list of configurable action economy types and default colors for PF2e.
+     * @returns {{ id: string, label: string, defaultColor: string }[]}
+     */
+    getEconomyTypes() {
+        return [
+            { id: 'action', label: this.getActionSubTabLabel('action') ?? 'Actions', defaultColor: '#3b82f6' },
+            { id: 'reaction', label: this.getActionSubTabLabel('reaction') ?? 'Reactions', defaultColor: '#ef4444' },
+            { id: 'other', label: this.getActionSubTabLabel('other') ?? 'Free Actions', defaultColor: '#22c55e' }
+        ];
+    }
+
+    /**
      * Modify the rendering context before it is sent to the template.
      * Used here to sort the spell sub-tabs (Cantrips, Ranks 1-10, Focus, Innate, Rituals) in the correct order.
      */

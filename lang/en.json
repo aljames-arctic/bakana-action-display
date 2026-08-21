@@ -15,6 +15,15 @@
                 "name": "Center on Token Button",
                 "hint": "Display a button in the HUD control bar to recenter the canvas view on the active token."
             },
+            "enableEconomyIndicators": {
+                "name": "Action Economy Indicators",
+                "hint": "Display vertical colored indicator bars on the right side of item cards indicating their action economy."
+            },
+            "economyColorsMenu": {
+                "name": "Action Economy Colors",
+                "label": "Configure Colors",
+                "hint": "Customize the indicator bar color for each action economy type for this system."
+            },
             "hudOpacity": {
                 "name": "HUD Opacity",
                 "hint": "Controls the transparency of the Action Display HUD overlay."
@@ -92,6 +101,21 @@
         "actionMenu": {
             "addFavorite": "Add to Favorites",
             "removeFavorite": "Remove from Favorites"
+        },
+        "economyColors": {
+            "title": "Action Economy Colors",
+            "description": "Configure the colored vertical bars used to indicate action economy for each action type.",
+            "resetDefaults": "Reset to Defaults",
+            "saved": "Action economy colors saved successfully.",
+            "presetLabel": "Color Palette Preset",
+            "presets": {
+                "select": "Custom / Choose Preset...",
+                "default": "Default (Vibrant)",
+                "protanopia": "Protanopia / Deuteranopia (Red-Green Accessible)",
+                "tritanopia": "Tritanopia (Blue-Yellow Accessible)",
+                "highContrast": "High Contrast (Accessible)",
+                "pastel": "Pastel / Soft"
+            }
         },
         "core": {
             "searchPlaceholder": "Filter actions...",
