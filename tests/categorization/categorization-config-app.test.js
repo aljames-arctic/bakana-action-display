@@ -63,7 +63,7 @@ test('CategorizationConfigApp action handlers mutate configuration state', async
     assert.equal(app.config.categories.length, 3);
 });
 
-test('CategorizationConfigApp _onSaveConfig validates names and expressions and persists to settings', async () => {
+test('CategorizationConfigApp _onSaveConfig validates expressions, allows empty category names (bars), and persists to settings', async () => {
     const app = new CategorizationConfigApp();
     let closed = false;
     app.close = () => { closed = true; };
@@ -71,13 +71,14 @@ test('CategorizationConfigApp _onSaveConfig validates names and expressions and 
     let warned = false;
     ui.notifications.warn = () => { warned = true; };
 
-    // Test 1: Category with empty name is rejected
+    // Test 1: Category with empty name is allowed (creates dividing bar)
     app.config.categories = [{ id: 'c1', name: '', expression: 'item.type === "weapon"', subcategories: [] }];
     await app._onSaveConfig({ preventDefault: () => {} }, {});
-    assert.equal(warned, true);
-    assert.equal(closed, false);
+    assert.equal(warned, false);
+    assert.equal(closed, true);
 
     // Test 2: Category with syntax error expression is rejected
+    closed = false;
     warned = false;
     app.config.categories = [{ id: 'c1', name: 'Weapons', expression: 'item.type === +++', subcategories: [] }];
     await app._onSaveConfig({ preventDefault: () => {} }, {});

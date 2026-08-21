@@ -404,13 +404,8 @@ export class CategorizationConfigApp extends adapter.foundry.HandlebarsApplicati
         event.preventDefault();
         this._syncFormData();
 
-        // Validate category & subcategory names and expressions
+        // Validate category & subcategory expressions (empty names are allowed and render as dividing bars)
         for (const cat of this.config.categories) {
-            const trimmedName = (cat.name ?? '').trim();
-            if (!trimmedName) {
-                ui?.notifications?.warn?.(game.i18n.localize('BAD.categorization.emptyNameWarning'));
-                return;
-            }
             if (cat.expression) {
                 const check = validateExpression(cat.expression);
                 if (!check.valid) {
@@ -422,11 +417,6 @@ export class CategorizationConfigApp extends adapter.foundry.HandlebarsApplicati
             }
 
             for (const sub of (cat.subcategories ?? [])) {
-                const trimmedSubName = (sub.name ?? '').trim();
-                if (!trimmedSubName) {
-                    ui?.notifications?.warn?.(game.i18n.localize('BAD.categorization.emptyNameWarning'));
-                    return;
-                }
                 if (sub.expression) {
                     const check = validateExpression(sub.expression);
                     if (!check.valid) {

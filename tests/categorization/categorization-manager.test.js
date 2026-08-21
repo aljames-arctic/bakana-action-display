@@ -358,3 +358,18 @@ test('categorizeActions with fallthrough allows matched items to appear in multi
     assert.equal(result[2].name, 'Other Actions');
     assert.deepEqual(result[2].items, [potion]);
 });
+
+test('categorizeActions supports empty category name creating separator sections', () => {
+    const sword = new Action({ id: '1', name: 'Longsword', type: 'weapon' });
+    const config = {
+        enabled: true,
+        categories: [
+            { id: 'c1', name: '', expression: 'item.type === "weapon"', subcategories: [] }
+        ]
+    };
+
+    const result = categorizeActions([sword], config);
+    assert.equal(result.length, 1);
+    assert.equal(result[0].name, '');
+    assert.deepEqual(result[0].items, [sword]);
+});

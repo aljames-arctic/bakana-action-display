@@ -73,8 +73,10 @@
             {{#if isCategorized}}
                 {{#if categorizedSections.length}}
                     {{#each categorizedSections}}
-                    <div class="bad-category-header">
+                    <div class="bad-category-header {{#unless this.name}}bad-category-header-empty{{/unless}}">
+                        {{#if this.name}}
                         <span class="bad-category-title">{{this.name}}</span>
+                        {{/if}}
                     </div>
                     {{#if this.items.length}}
                         {{#each this.items}}
@@ -111,8 +113,10 @@
                     {{/if}}
                     {{#if this.subsections.length}}
                         {{#each this.subsections}}
-                        <div class="bad-subcategory-header">
+                        <div class="bad-subcategory-header {{#unless this.name}}bad-subcategory-header-empty{{/unless}}">
+                            {{#if this.name}}
                             <span class="bad-subcategory-title">{{this.name}}</span>
+                            {{/if}}
                         </div>
                         {{#each this.items}}
                         <div class="bad-action-item {{#if this.isHidden}}bad-item-hidden{{/if}} {{#if this.isActive}}bad-item-active{{/if}} {{#unless this.available}}unprepared{{/unless}}" data-action="rollAction" data-action-id="{{this.id}}">
