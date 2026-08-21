@@ -105,7 +105,7 @@ export class BaseSystemContextModifier {
             case 'other': return localize('BAD.core.other', 'Other');
             case 'hidden': return localize('BAD.core.hidden', 'Hidden');
             case 'save':
-            case 'savingThrow': return localize('BAD.page2.save', localize('BAD.page2.savingThrow', 'Saving Throw'));
+            case 'savingThrow': return localize('BAD.page2.savingThrow', 'Saving Throw');
             case 'abilityCheck': return localize('BAD.page2.abilityCheck', 'Ability Check');
             default: return parentId.toUpperCase();
         }

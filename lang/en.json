@@ -88,16 +88,13 @@
             "categoryExprPlaceholder": "Boolean Expression (e.g. item.type === 'weapon')",
             "subCategoryNamePlaceholder": "Subcategory Name (e.g. daggers)",
             "subCategoryExprPlaceholder": "Boolean Expression (e.g. item.name.toLowerCase().includes('dagger'))",
-            "dragToReorder": "Drag to reorder",
             "save": "Save Changes",
             "loadPresets": "Load Presets",
             "cancel": "Cancel",
             "saved": "Categorization configuration saved successfully.",
             "noCategories": "No custom categories defined. Click '+ Add Category' to start.",
-            "fallthrough": "Fallthrough",
             "fallthroughTooltip": "Enable Fallthrough: actions matching this category will appear here and continue evaluating into later categories rather than being consumed.",
             "others": "Other Actions",
-            "emptyNameWarning": "Category and subcategory names cannot be empty.",
             "invalidExpressionWarning": "The expression \"{expr}\" contains a syntax error.",
             "expressionHelpTooltip": "<div class=\"bad-expression-tooltip\"><div class=\"bad-expression-tooltip-desc\">Actions are evaluated against each category from top to bottom and placed in the first matching rule (<code>true</code>).<br/><strong>Fallthrough (<i class=\"fas fa-chevron-down\"></i>)</strong>: When enabled on a category, matching actions appear in that category and continue evaluating into later categories as though they haven't been matched yet.<br/>Unmatched actions appear in <strong>Other Actions</strong>.</div><div class=\"bad-expression-tooltip-title\">Available Variables in Boolean Expressions:</div><ul class=\"bad-expression-tooltip-list\"><li><strong>item</strong>: Foundry Item document (e.g. <code>item.type === 'weapon'</code>, <code>item.name</code>, <code>item.system</code>)</li><li><strong>action</strong>: HUD Action instance (e.g. <code>action.left</code>, <code>action.right</code>, <code>action.uses.available</code>)</li><li><strong>actor</strong>: Foundry Actor document (e.g. <code>actor.getFlag('bakana-action-display', 'favorites')?.[item.id]</code>)</li><li><strong>token</strong>: Foundry Token document (e.g. <code>token.name</code>)</li><li><strong>user</strong>: Current Foundry User document (e.g. <code>user.isGM</code>, <code>user.name</code>)</li></ul></div>"
         },
@@ -158,26 +155,10 @@
             "allSpells": "All Spells",
             "allWeapons": "All Weapons",
             "allEquipment": "All Equipment",
-            "spellComponents": "Spell Components",
-            "updateEquipState": "Update Equip State"
+            "spellComponents": "Spell Components"
         },
         "dnd5e": {
-            "upcast": "Upcast",
-            "standard": "Standard",
-            "time": "Time",
-            "rest": "Rest",
-            "combat": "Combat",
-            "monster": "Monster",
-            "vehicle": "Vehicle",
-            "shortRest": "End of a Short Rest",
-            "longRest": "End of a Long Rest",
-            "encounter": "Start of Encounter",
-            "turnStart": "Start of Turn",
-            "turnEnd": "End of Turn",
-            "legendary": "Legendary Action",
-            "mythic": "Mythic Action",
-            "lair": "Lair Action",
-            "crew": "Crew Action"
+            "upcast": "Upcast"
         },
         "pf2e": {
             "updateEquipState": "Update Equip State",
@@ -188,7 +169,6 @@
             "carryTypeDropped": "Drop Item"
         },
         "page2": {
-            "save": "Saving Throw",
             "savingThrow": "Saving Throw",
             "abilityCheck": "Ability Check",
             "ability": "Ability"
