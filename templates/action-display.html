@@ -1,16 +1,18 @@
 <div class="bakana-action-display-container">
-    <!-- Control Bar (Recenter + Filter Resources + Grip + Pin Button + Close Button) -->
+    <!-- Control Bar (Filter Resources + Grip + Recenter + Pin Button + Close Button) -->
     <div class="bad-control-bar">
         <div class="bad-control-group bad-control-left">
-            <button class="bad-control-btn bad-recenter-btn" data-action="recenterToken">
-                <i class="fas fa-crosshairs"></i>
-            </button>
             <button class="bad-control-btn bad-filter-resources-btn {{#if filterNoResources}}active{{/if}}" data-action="toggleFilterResources">
                 <i class="fas {{#if filterNoResources}}fa-eye-slash{{else}}fa-eye{{/if}}"></i>
             </button>
         </div>
         <div class="bad-drag-handle"><i class="fas fa-grip"></i></div>
         <div class="bad-control-group bad-control-right">
+            {{#if enableCenterOnToken}}
+            <button class="bad-control-btn bad-recenter-btn" data-action="recenterToken">
+                <i class="fas fa-crosshairs"></i>
+            </button>
+            {{/if}}
             <button class="bad-control-btn bad-pin-btn" data-action="toggleAnchor">
                 <i class="fas {{#if isAttached}}fa-link{{else if isPinned}}fa-thumbtack{{else}}fa-unlink{{/if}}"></i>
             </button>

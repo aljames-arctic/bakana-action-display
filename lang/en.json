@@ -11,6 +11,10 @@
                 "label": "Configure Categorization",
                 "hint": "Define custom category sections, sub-sections, and boolean expressions for filtering HUD items."
             },
+            "enableCenterOnToken": {
+                "name": "Center on Token Button",
+                "hint": "Display a button in the HUD control bar to recenter the canvas view on the active token."
+            },
             "hudOpacity": {
                 "name": "HUD Opacity",
                 "hint": "Controls the transparency of the Action Display HUD overlay."

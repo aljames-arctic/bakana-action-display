@@ -110,6 +110,10 @@
     text-shadow: 0 0 8px rgba(167, 139, 250, 0.6);
 }
 
+.bad-close-btn {
+    margin-left: 0.5em !important; /* Half an icon extra space from the attachment button */
+}
+
 .bad-close-btn:hover {
     color: #ef4444 !important; /* Soft red on close hover */
 }

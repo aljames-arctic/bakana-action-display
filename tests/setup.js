@@ -187,6 +187,7 @@ globalThis.foundry = {
 
 const settingsStore = new Map([
     ['bakana-action-display.filterNoResources', false],
+    ['bakana-action-display.enableCenterOnToken', false],
     ['bakana-action-display.categorizationConfig', { enabled: false, categories: [] }]
 ]);
 

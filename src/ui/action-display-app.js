@@ -542,6 +542,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         context.isPinned = this.isPinned;
         context.isDetached = this.isDetached;
         context.filterNoResources = game.settings.get(MODULE_ID, 'filterNoResources');
+        context.enableCenterOnToken = game.settings.get(MODULE_ID, 'enableCenterOnToken') ?? false;
         context.searchQuery = this.searchQuery ?? '';
 
         // Synchronize favorites if system supports them and user is owner

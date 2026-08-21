@@ -34,6 +34,21 @@ Hooks.once('init', () => {
         }
     });
 
+    // Register Center on Token Button Setting (World Scope, default disabled)
+    game.settings.register(MODULE_ID, 'enableCenterOnToken', {
+        name: game.i18n.localize('BAD.settings.enableCenterOnToken.name'),
+        hint: game.i18n.localize('BAD.settings.enableCenterOnToken.hint'),
+        scope: 'world',
+        config: true,
+        type: Boolean,
+        default: false,
+        onChange: () => {
+            if (actionDisplay.activeApp && actionDisplay.activeApp.rendered) {
+                actionDisplay.activeApp.render();
+            }
+        }
+    });
+
     // ==========================================
     // User Scope Settings
     // ==========================================

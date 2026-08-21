@@ -91,3 +91,24 @@ test('ActionDisplayApp search query filters actions in _prepareContext and clear
     assert.equal(app.searchQuery, '');
     assert.equal(renderCalled, true);
 });
+
+test('ActionDisplayApp _prepareContext reflects enableCenterOnToken world config setting', async () => {
+    actionDisplay.getActions = async () => [];
+
+    const app = new ActionDisplayApp({ actor: { id: 'test-actor' } });
+    app.activePage = 1;
+    app._saveTabState = () => {};
+
+    // Default disabled
+    await game.settings.set(MODULE_ID, 'enableCenterOnToken', false);
+    let context = await app._prepareContext({});
+    assert.equal(context.enableCenterOnToken, false);
+
+    // Enabled via world config
+    await game.settings.set(MODULE_ID, 'enableCenterOnToken', true);
+    context = await app._prepareContext({});
+    assert.equal(context.enableCenterOnToken, true);
+
+    // Reset back to false
+    await game.settings.set(MODULE_ID, 'enableCenterOnToken', false);
+});
