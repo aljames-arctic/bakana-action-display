@@ -26,7 +26,7 @@
     <div class="bad-economy-colors-list">
         {{#each economyTypes}}
         <div class="bad-economy-color-row {{#unless this.enabled}}bad-row-inactive{{/unless}}" data-type-id="{{this.id}}">
-            <input type="checkbox" id="bad-econ-toggle-{{this.id}}" class="bad-economy-type-toggle" data-type-id="{{this.id}}" {{#if this.enabled}}checked{{/if}} title="{{localize 'BAD.economyColors.toggleCategory'}}" />
+            <input type="checkbox" id="bad-econ-toggle-{{this.id}}" class="bad-economy-type-toggle" data-type-id="{{this.id}}" {{#if this.enabled}}checked{{/if}} />
             <label class="bad-economy-row-label-group" for="bad-econ-toggle-{{this.id}}">
                 <span class="bad-economy-bar bad-economy-preview" style="background-color: {{this.color}};" data-type-id="{{this.id}}"></span>
                 <span class="bad-economy-label">{{this.label}}</span>

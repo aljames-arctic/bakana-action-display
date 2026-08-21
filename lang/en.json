@@ -108,7 +108,6 @@
             "enable": "Enable Action Economy Indicators",
             "description": "Configure the colored vertical bars used to indicate action economy for each action type.",
             "resetDefaults": "Reset to Defaults",
-            "toggleCategory": "Toggle indicator for this category",
             "saved": "Action economy colors saved successfully.",
             "presetLabel": "Color Palette Preset",
             "presets": {
