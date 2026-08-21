@@ -1,0 +1,48 @@
+<div class="bad-module-integrations-config">
+    <div class="bad-config-header-row">
+        <p class="bad-config-desc">
+            {{localize "BAD.moduleIntegrations.description"}}
+        </p>
+    </div>
+
+    <div class="bad-module-integrations-list">
+        {{#if modules.midiQol.active}}
+        <div class="bad-module-card" data-module-id="midi-qol">
+            <div class="bad-module-card-header">
+                <div class="bad-module-card-title">
+                    <i class="fas fa-dice-d20"></i>
+                    <span>Midi-QOL</span>
+                </div>
+                <span class="bad-module-badge active">{{localize "BAD.moduleIntegrations.active"}}</span>
+            </div>
+            <div class="bad-module-card-body">
+                <div class="bad-config-setting-row">
+                    <label class="bad-config-toggle-label">
+                        <input type="checkbox" name="midiQolFilterAutomationOnly" class="bad-module-setting-checkbox" {{#if modules.midiQol.filterAutomationOnly}}checked{{/if}} />
+                        <span class="bad-setting-title">{{localize "BAD.moduleIntegrations.midiQol.filterAutomationOnly.name"}}</span>
+                    </label>
+                    <p class="bad-setting-hint">{{localize "BAD.moduleIntegrations.midiQol.filterAutomationOnly.hint"}}</p>
+                </div>
+            </div>
+        </div>
+        {{else}}
+        <div class="bad-config-empty-state">
+            <i class="fas fa-puzzle-piece"></i>
+            <p>{{localize "BAD.moduleIntegrations.noActiveModules"}}</p>
+        </div>
+        {{/if}}
+    </div>
+
+    <!-- Footer Controls -->
+    <div class="bad-config-footer">
+        <div></div>
+        <div class="bad-config-footer-actions">
+            <button type="button" class="bad-config-btn" data-action="closeConfig">
+                <i class="fas fa-times"></i> {{localize "BAD.moduleIntegrations.cancel"}}
+            </button>
+            <button type="button" class="bad-config-btn bad-config-btn-primary" data-action="saveConfig">
+                <i class="fas fa-save"></i> {{localize "BAD.moduleIntegrations.save"}}
+            </button>
+        </div>
+    </div>
+</div>

@@ -1,5 +1,6 @@
 import { BaseModuleAdapter } from './base-module-adapter.js';
 import { toSet } from '../../lib/utils.js';
+import { MODULE_ID } from '../../constants.js';
 
 /**
  * Module adapter for 'midi-qol' (D&D5e automation).
@@ -16,6 +17,11 @@ export class MidiQolModuleAdapter extends BaseModuleAdapter {
      * @returns {Object[]} The modified actions
      */
     async modifyActions(actions) {
+        const filterAutomationOnly = Boolean(game.settings?.get?.(MODULE_ID, 'midiQolFilterAutomationOnly') ?? true);
+        if (!filterAutomationOnly) {
+            return actions;
+        }
+
         const modified = [];
 
         for (const item of actions) {

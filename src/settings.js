@@ -3,6 +3,8 @@ import { log } from "./lib/logger.js";
 import { actionDisplay } from "./action-display.js";
 import { CategorizationConfigApp } from "./categorization/categorization-config-app.js";
 import { EconomyColorsConfigApp } from "./ui/economy-colors-config-app.js";
+import { ModuleIntegrationsConfigApp } from "./ui/module-integrations-config-app.js";
+import { hasActiveModuleAdapters } from "./adapters/module/index.js";
 
 Hooks.once('init', () => {
     // ==========================================
@@ -34,6 +36,31 @@ Hooks.once('init', () => {
             }
         }
     });
+
+    // Register Module Integration Configuration Storage (Midi-QOL filter automation-only)
+    game.settings.register(MODULE_ID, 'midiQolFilterAutomationOnly', {
+        scope: 'world',
+        config: false,
+        type: Boolean,
+        default: true,
+        onChange: () => {
+            if (actionDisplay.activeApp && actionDisplay.activeApp.rendered) {
+                actionDisplay.activeApp.render();
+            }
+        }
+    });
+
+    // Register Module Integration Configuration Menu Button (only visible if at least one adapter module is loaded)
+    if (hasActiveModuleAdapters()) {
+        game.settings.registerMenu(MODULE_ID, 'moduleIntegrationsMenu', {
+            name: game.i18n.localize('BAD.settings.moduleIntegrationsMenu.name'),
+            label: game.i18n.localize('BAD.settings.moduleIntegrationsMenu.label'),
+            hint: game.i18n.localize('BAD.settings.moduleIntegrationsMenu.hint'),
+            icon: 'fas fa-puzzle-piece',
+            type: ModuleIntegrationsConfigApp,
+            restricted: true
+        });
+    }
 
     // Register Center on Token Button Setting (World Scope, default disabled)
     game.settings.register(MODULE_ID, 'enableCenterOnToken', {
@@ -344,7 +371,7 @@ export function injectSettingsHeaders(html) {
     // 2. Insert section headers before the respective first setting in each scope
     const sections = [
         {
-            keys: ['categorizationMenu', 'enableCenterOnToken'],
+            keys: ['categorizationMenu', 'moduleIntegrationsMenu', 'enableCenterOnToken'],
             scope: 'world',
             title: game.i18n.localize('BAD.settingsSections.world') ?? 'World Settings',
             icon: 'fas fa-globe'

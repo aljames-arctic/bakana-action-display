@@ -11,6 +11,11 @@
                 "label": "Configure Categorization",
                 "hint": "Define custom category sections, sub-sections, and boolean expressions for filtering HUD items."
             },
+            "moduleIntegrationsMenu": {
+                "name": "Module Integration Configuration",
+                "label": "Configure Module Integrations",
+                "hint": "Configure options and behaviors for integrated third-party modules active in this world."
+            },
             "enableCenterOnToken": {
                 "name": "Center on Token Button",
                 "hint": "Display a button in the HUD control bar to recenter the canvas view on the active token."
@@ -114,6 +119,22 @@
                 "tritanopia": "Tritanopia (Blue-Yellow Accessible)",
                 "highContrast": "High Contrast (Accessible)",
                 "pastel": "Pastel / Soft"
+            }
+        },
+        "moduleIntegrations": {
+            "title": "Module Integration Configuration",
+            "description": "Configure options and feature toggles for supported third-party modules active in this world.",
+            "active": "Active",
+            "inactive": "Inactive",
+            "noActiveModules": "No supported module integrations are currently active in this world.",
+            "save": "Save Changes",
+            "cancel": "Cancel",
+            "saved": "Module integration configuration saved successfully.",
+            "midiQol": {
+                "filterAutomationOnly": {
+                    "name": "Filter Automation-Only Activities",
+                    "hint": "When enabled, items and activities flagged as automation-only by Midi-QOL are hidden from the Action Display HUD."
+                }
             }
         },
         "core": {
