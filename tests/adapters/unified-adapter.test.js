@@ -53,17 +53,20 @@ test('initializeSystemAdapter loads matching system adapter or falls back to Bas
     // Unknown/unsupported system fallback (e.g. tormenta20)
     const logs = [];
     const origLog = console.log;
+    const origWarn = console.warn;
     log.setVerbosity('debug');
     console.log = (...args) => logs.push(args.join(' '));
+    console.warn = (...args) => logs.push(args.join(' '));
     try {
         const tormenta = await initializeSystemAdapter('tormenta20');
         assert.ok(tormenta instanceof BaseSystemAdapter);
         assert.equal(tormenta.systemId, 'tormenta20');
         assert.equal(tormenta.isSupported, false);
-        assert.ok(logs.some(l => l.includes('tormenta20') && l.includes('not natively supported') && l.includes('github.com')));
-        assert.ok(logs.some(l => l.includes('Debug') && l.includes('No system adapter found for "tormenta20"')));
+        assert.ok(logs.some(l => l.includes('tormenta20') && l.includes('not currently supported') && l.includes('github.com')));
+        assert.ok(logs.some(l => l.includes('Debug') && l.includes('No system adapter registered for "tormenta20"')));
     } finally {
         console.log = origLog;
+        console.warn = origWarn;
         log.setVerbosity('warn');
     }
 
