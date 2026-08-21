@@ -592,7 +592,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         context.isAttached = this.isAttached;
         context.isPinned = this.isPinned;
         context.isDetached = this.isDetached;
-        context.filterNoResources = game.settings.get(MODULE_ID, 'filterNoResources');
+        context.showDepleted = game.settings.get(MODULE_ID, 'showDepleted') ?? false;
         context.enableCenterOnToken = game.settings.get(MODULE_ID, 'enableCenterOnToken') ?? false;
         context.searchQuery = this.searchQuery ?? '';
 
@@ -741,7 +741,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
                 activeSubTypes: this.rightTabs.activeSubTypes,
                 groups: this.parentGroups
             },
-            filterNoResources: game.settings.get(MODULE_ID, 'filterNoResources')
+            showDepleted: game.settings.get(MODULE_ID, 'showDepleted') ?? false
         };
     }
 
@@ -1012,12 +1012,12 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
     }
 
     /**
-     * Toggle the "Filter Out of Resources" setting.
+     * Toggle the "Show Depleted Items" setting.
      */
     async _onToggleFilterResources(event, target) {
-        const current = game.settings.get(MODULE_ID, 'filterNoResources');
+        const current = Boolean(game.settings.get(MODULE_ID, 'showDepleted'));
         const next = typeof target?.checked === 'boolean' ? target.checked : !current;
-        await game.settings.set(MODULE_ID, 'filterNoResources', next);
+        await game.settings.set(MODULE_ID, 'showDepleted', next);
         this.render();
     }
 

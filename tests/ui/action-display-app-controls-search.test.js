@@ -23,23 +23,24 @@ test('ActionDisplayApp _onRecenterToken recenters canvas view on token center', 
     assert.deepEqual(pannedCoords, { x: 500, y: 750 });
 });
 
-test('ActionDisplayApp _onToggleFilterResources toggles filterNoResources setting via button', async () => {
+test('ActionDisplayApp _onToggleFilterResources toggles showDepleted setting via button', async () => {
     let renderCalled = false;
     const app = new ActionDisplayApp({ actor: { id: 'test-actor' } });
     app.render = () => { renderCalled = true; };
 
-    // Initial state is false
-    await game.settings.set(MODULE_ID, 'filterNoResources', false);
+    // Initial state is false (default: hide depleted items, button disabled / not highlit)
+    await game.settings.set(MODULE_ID, 'showDepleted', false);
+    assert.equal(game.settings.get(MODULE_ID, 'showDepleted'), false);
 
-    // Toggle on (from button with no target.checked)
+    // Toggle on (from button with no target.checked -> show depleted items, button enabled / highlit)
     await app._onToggleFilterResources({}, {});
-    assert.equal(game.settings.get(MODULE_ID, 'filterNoResources'), true);
+    assert.equal(game.settings.get(MODULE_ID, 'showDepleted'), true);
     assert.equal(renderCalled, true);
 
-    // Toggle off
+    // Toggle off (back to hiding depleted items)
     renderCalled = false;
     await app._onToggleFilterResources({}, {});
-    assert.equal(game.settings.get(MODULE_ID, 'filterNoResources'), false);
+    assert.equal(game.settings.get(MODULE_ID, 'showDepleted'), false);
     assert.equal(renderCalled, true);
 });
 

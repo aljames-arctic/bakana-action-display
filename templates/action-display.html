@@ -2,8 +2,8 @@
     <!-- Control Bar (Filter Resources + Grip + Recenter + Pin Button + Close Button) -->
     <div class="bad-control-bar">
         <div class="bad-control-group bad-control-left">
-            <button class="bad-control-btn bad-filter-resources-btn {{#if filterNoResources}}active{{/if}}" data-action="toggleFilterResources">
-                <i class="fas {{#if filterNoResources}}fa-eye-slash{{else}}fa-eye{{/if}}"></i>
+            <button class="bad-control-btn bad-filter-resources-btn {{#if showDepleted}}active{{/if}}" data-action="toggleFilterResources">
+                <i class="fas {{#if showDepleted}}fa-eye{{else}}fa-eye-slash{{/if}}"></i>
             </button>
         </div>
         <div class="bad-drag-handle"><i class="fas fa-grip"></i></div>

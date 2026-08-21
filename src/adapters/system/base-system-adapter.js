@@ -86,13 +86,13 @@ export class BaseSystemAdapter {
      * @returns {Object[]} The modified/filtered/sorted actions list
      */
     async modifyActions(actions, actor) {
-        if (!game.settings.get(MODULE_ID, 'filterNoResources')) return actions;
+        if (Boolean(game.settings.get(MODULE_ID, 'showDepleted'))) return actions;
 
         return actions.filter(action => {
             // Never hide weapons, even if they are out of ammo or charges
             if (action.originalItem?.type === 'weapon') return true;
             if (this._isResourceDepleted(action)) {
-                log.debug(`BaseSystemAdapter.modifyActions | Filtering out "${action.name}" (ID: ${action.id}) — action.uses.available (${action.uses?.available}) <= 0 and filterNoResources is enabled`);
+                log.debug(`BaseSystemAdapter.modifyActions | Filtering out "${action.name}" (ID: ${action.id}) — action.uses.available (${action.uses?.available}) <= 0 and showDepleted is disabled`);
                 return false;
             }
             return true;

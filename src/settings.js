@@ -256,8 +256,8 @@ Hooks.once('init', () => {
         }
     });
 
-    // Register Filter Out of Resources Setting (hidden from config menu, managed via HUD footer)
-    game.settings.register(MODULE_ID, 'filterNoResources', {
+    // Register Show Depleted Items Setting (hidden from config menu, managed via HUD control bar)
+    game.settings.register(MODULE_ID, 'showDepleted', {
         scope: 'client',
         config: false,
         type: Boolean,

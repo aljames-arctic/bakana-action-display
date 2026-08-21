@@ -75,7 +75,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
     async modifyActions(actions, actor) {
         this.init(actor);
         const modified = [];
-        const filterNoResources = game.settings.get(MODULE_ID, 'filterNoResources');
+        const showDepleted = Boolean(game.settings.get(MODULE_ID, 'showDepleted'));
 
         const showAll = actor?.getFlag?.(MODULE_ID, 'showAll') ?? false;
         const showUnprepared = Boolean((actor?.getFlag?.(MODULE_ID, 'showUnprepared') ?? false) || showAll);
@@ -167,12 +167,12 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                     }
                 }
 
-                // Single-pass Resource Filtering: Filter out depleted D&D 5e Activities if enabled
+                // Single-pass Resource Filtering: Filter out depleted D&D 5e Activities unless showDepleted is enabled
                 let filteredActivities = mappedActivities;
-                if (filterNoResources) {
+                if (!showDepleted) {
                     filteredActivities = mappedActivities.filter(act => {
                         if (act.isDepleted) {
-                            log.debug(`Dnd5eSystemAdapter.modifyActions | Filtering out activity "${act.name}" on "${item.name}" (ID: ${item.id}) — act.isDepleted === true (uses.available <= 0) and filterNoResources is enabled`);
+                            log.debug(`Dnd5eSystemAdapter.modifyActions | Filtering out activity "${act.name}" on "${item.name}" (ID: ${item.id}) — act.isDepleted === true (uses.available <= 0) and showDepleted is disabled`);
                             return false;
                         }
                         return true;
@@ -180,7 +180,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
 
                     // If all activities are depleted, skip this item entirely!
                     if (filteredActivities.length === 0) {
-                        log.debug(`Dnd5eSystemAdapter.modifyActions | Filtering out item "${item.name}" (ID: ${item.id}) — all ${mappedActivities.length} activities are depleted and filterNoResources is enabled`);
+                        log.debug(`Dnd5eSystemAdapter.modifyActions | Filtering out item "${item.name}" (ID: ${item.id}) — all ${mappedActivities.length} activities are depleted and showDepleted is disabled`);
                         continue;
                     }
                 }

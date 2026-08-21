@@ -164,7 +164,7 @@ export class BaseSystemTabFilterManager {
      */
     filterSubactions(subactions, filterContext) {
         if (!subactions?.length) return [];
-        const { filterNoResources, left } = filterContext;
+        const { showDepleted, left } = filterContext;
 
         return subactions.filter(sub => {
             if (left && sub.left?.length > 0) {
@@ -176,7 +176,7 @@ export class BaseSystemTabFilterManager {
                 }
             }
             return this.matchesEconomyTabs(sub, filterContext) &&
-                (!filterNoResources || !this.isResourceDepleted(sub));
+                (Boolean(showDepleted) || !this.isResourceDepleted(sub));
         });
     }
 }

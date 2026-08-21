@@ -214,7 +214,7 @@ globalThis.foundry = {
 };
 
 const settingsStore = new Map([
-    ['bakana-action-display.filterNoResources', false],
+    ['bakana-action-display.showDepleted', false],
     ['bakana-action-display.enableCenterOnToken', false],
     ['bakana-action-display.enableEconomyIndicators', false],
     ['bakana-action-display.economyColors', {}],

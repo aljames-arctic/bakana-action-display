@@ -3,6 +3,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { BaseSystemAdapter } from '../../src/adapters/system/base-system-adapter.js';
 import { TabRef } from '../../src/ui/tab-ref.js';
+import { MODULE_ID } from '../../src/constants.js';
 
 test('BaseSystemAdapter initialization and metadata', () => {
     const adapter = new BaseSystemAdapter('test-system');
@@ -85,6 +86,30 @@ test('BaseSystemAdapter resource depletion check', () => {
     assert.equal(adapter._isResourceDepleted({ uses: { available: 0 } }), true);
     assert.equal(adapter._isResourceDepleted({ uses: { available: 1 } }), false);
     assert.equal(adapter._isResourceDepleted({ uses: null }), false);
+});
+
+test('BaseSystemAdapter modifyActions filters depleted actions when showDepleted is false (default) and includes when true', async () => {
+    const adapter = new BaseSystemAdapter('test-system');
+    const actions = [
+        { id: '1', name: 'Infinite Cantrip', uses: null, originalItem: { type: 'spell' } },
+        { id: '2', name: 'Depleted Spell', uses: { available: 0, max: 1 }, originalItem: { type: 'spell' } },
+        { id: '3', name: 'Available Spell', uses: { available: 1, max: 1 }, originalItem: { type: 'spell' } },
+        { id: '4', name: 'Weapon Out of Ammo', uses: { available: 0, max: 10 }, originalItem: { type: 'weapon' } } // Weapons are never hidden
+    ];
+
+    // 1. Default (showDepleted: false) -> hides depleted non-weapon items
+    await game.settings.set(MODULE_ID, 'showDepleted', false);
+    const filteredDefault = await adapter.modifyActions(actions, {});
+    assert.equal(filteredDefault.length, 3);
+    assert.deepEqual(filteredDefault.map(a => a.id), ['1', '3', '4']);
+
+    // 2. Toggled (showDepleted: true) -> shows all items including depleted
+    await game.settings.set(MODULE_ID, 'showDepleted', true);
+    const filteredShown = await adapter.modifyActions(actions, {});
+    assert.equal(filteredShown.length, 4);
+
+    // Reset back to default
+    await game.settings.set(MODULE_ID, 'showDepleted', false);
 });
 
 test('BaseSystemAdapter filterSubactions filtering and sorting', () => {
