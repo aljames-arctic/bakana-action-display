@@ -248,7 +248,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 3px;
+    gap: 2px;
     flex-shrink: 0;
     box-sizing: border-box;
     height: 100%;
@@ -258,23 +258,24 @@
     display: none !important;
 }
 
-.bad-economy-bar {
-    width: 3.5px;
+.bad-economy-slot {
+    flex: 1 1 0%;
+    min-width: 0;
     height: 1.15em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+}
+
+.bad-economy-bar {
+    width: 100%;
+    height: 100%;
     border-radius: 2px;
     flex-shrink: 0;
     box-shadow: 0 0 3px rgba(0, 0, 0, 0.4);
     border: 1px solid rgba(255, 255, 255, 0.15);
     box-sizing: border-box;
-}
-
-.bad-economy-bar.bad-economy-bar-empty {
-    opacity: 0 !important;
-    visibility: hidden !important;
-    pointer-events: none !important;
-    box-shadow: none !important;
-    border: none !important;
-    background: transparent !important;
 }
 
 /* Remaining Uses Slot (Dedicated 1/6th of space on far right) */

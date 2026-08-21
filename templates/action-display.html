@@ -92,11 +92,11 @@
                             {{#if @root.showEconomyIndicators}}
                             <div class="bad-economy-bars">
                                 {{#each this.economyIndicators}}
+                                <div class="bad-economy-slot {{#unless this.active}}bad-economy-slot-empty{{/unless}}">
                                     {{#if this.active}}
                                     <span class="bad-economy-bar" style="background-color: {{this.color}};" title="{{this.label}}"></span>
-                                    {{else}}
-                                    <span class="bad-economy-bar bad-economy-bar-empty"></span>
                                     {{/if}}
+                                </div>
                                 {{/each}}
                             </div>
                             {{/if}}
@@ -131,11 +131,11 @@
                             {{#if @root.showEconomyIndicators}}
                             <div class="bad-economy-bars">
                                 {{#each this.economyIndicators}}
+                                <div class="bad-economy-slot {{#unless this.active}}bad-economy-slot-empty{{/unless}}">
                                     {{#if this.active}}
                                     <span class="bad-economy-bar" style="background-color: {{this.color}};" title="{{this.label}}"></span>
-                                    {{else}}
-                                    <span class="bad-economy-bar bad-economy-bar-empty"></span>
                                     {{/if}}
+                                </div>
                                 {{/each}}
                             </div>
                             {{/if}}
@@ -171,11 +171,11 @@
                         {{#if @root.showEconomyIndicators}}
                         <div class="bad-economy-bars">
                             {{#each this.economyIndicators}}
+                            <div class="bad-economy-slot {{#unless this.active}}bad-economy-slot-empty{{/unless}}">
                                 {{#if this.active}}
                                 <span class="bad-economy-bar" style="background-color: {{this.color}};" title="{{this.label}}"></span>
-                                {{else}}
-                                <span class="bad-economy-bar bad-economy-bar-empty"></span>
                                 {{/if}}
+                            </div>
                             {{/each}}
                         </div>
                         {{/if}}
@@ -206,11 +206,11 @@
                         {{#if @root.showEconomyIndicators}}
                         <div class="bad-economy-bars">
                             {{#each this.economyIndicators}}
+                            <div class="bad-economy-slot {{#unless this.active}}bad-economy-slot-empty{{/unless}}">
                                 {{#if this.active}}
                                 <span class="bad-economy-bar" style="background-color: {{this.color}};" title="{{this.label}}"></span>
-                                {{else}}
-                                <span class="bad-economy-bar bad-economy-bar-empty"></span>
                                 {{/if}}
+                            </div>
                             {{/each}}
                         </div>
                         {{/if}}
@@ -245,11 +245,11 @@
                         {{#if @root.showEconomyIndicators}}
                         <div class="bad-economy-bars">
                             {{#each this.economyIndicators}}
+                            <div class="bad-economy-slot {{#unless this.active}}bad-economy-slot-empty{{/unless}}">
                                 {{#if this.active}}
                                 <span class="bad-economy-bar" style="background-color: {{this.color}};" title="{{this.label}}"></span>
-                                {{else}}
-                                <span class="bad-economy-bar bad-economy-bar-empty"></span>
                                 {{/if}}
+                            </div>
                             {{/each}}
                         </div>
                         {{/if}}
