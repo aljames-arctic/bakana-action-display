@@ -346,9 +346,19 @@ class Adapter {
     }
 
     /**
+     * Determine if an economy type is enabled.
+     * @param {Object} type
+     * @param {Record<string, any>} [userColors]
+     * @returns {boolean}
+     */
+    isEconomyTypeEnabled(type, userColors) {
+        return this.system?.isEconomyTypeEnabled?.(type, userColors) ?? false;
+    }
+
+    /**
      * Get mapped color for an economy type.
      * @param {string} type
-     * @param {Record<string, string>} [userColors]
+     * @param {Record<string, any>} [userColors]
      * @returns {string|null}
      */
     getEconomyColor(type, userColors) {
@@ -358,8 +368,8 @@ class Adapter {
     /**
      * Extract economy indicators for a given action.
      * @param {Object} action
-     * @param {Record<string, string>} [userColors]
-     * @returns {{ type: string, color: string }[]}
+     * @param {Record<string, any>} [userColors]
+     * @returns {{ type: string, label: string, active: boolean, color: string|null }[]}
      */
     extractEconomyIndicators(action, userColors) {
         return this.system?.extractEconomyIndicators?.(action, userColors) ?? [];

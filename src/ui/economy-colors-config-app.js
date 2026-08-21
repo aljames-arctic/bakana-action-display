@@ -23,7 +23,6 @@ export class EconomyColorsConfigApp extends adapter.foundry.HandlebarsApplicatio
             height: 'auto'
         },
         actions: {
-            toggleEnabled: EconomyColorsConfigApp.prototype._onToggleEnabled,
             resetDefaults: EconomyColorsConfigApp.prototype._onResetDefaults,
             saveConfig: EconomyColorsConfigApp.prototype._onSaveConfig,
             closeConfig: EconomyColorsConfigApp.prototype._onCloseConfig
@@ -45,6 +44,16 @@ export class EconomyColorsConfigApp extends adapter.foundry.HandlebarsApplicatio
         super(options);
         const stored = game.settings.get(MODULE_ID, 'economyColors') ?? {};
         this.colors = foundry.utils.duplicate(stored);
+        const rawDisabled = this.colors.disabled ?? {};
+        this.disabled = Array.isArray(rawDisabled)
+            ? Object.fromEntries(rawDisabled.map(id => [id, true]))
+            : foundry.utils.duplicate(rawDisabled);
+        const rawEnabled = this.colors.enabled ?? {};
+        this.enabledTypes = Array.isArray(rawEnabled)
+            ? Object.fromEntries(rawEnabled.map(id => [id, true]))
+            : foundry.utils.duplicate(rawEnabled);
+        delete this.colors.disabled;
+        delete this.colors.enabled;
         this.enabled = Boolean(game.settings.get(MODULE_ID, 'enableEconomyIndicators'));
         this.selectedPreset = '';
     }
@@ -53,14 +62,21 @@ export class EconomyColorsConfigApp extends adapter.foundry.HandlebarsApplicatio
     async _prepareContext(options) {
         const context = await super._prepareContext(options);
         const systemTypes = adapter.getEconomyTypes() ?? [];
+        const userColorsConfig = {
+            ...this.colors,
+            disabled: this.disabled,
+            enabled: this.enabledTypes
+        };
         
         const economyTypes = systemTypes.map(type => {
             const color = this.colors[type.id] ?? type.defaultColor;
+            const enabled = adapter.isEconomyTypeEnabled(type, userColorsConfig);
             return {
                 id: type.id,
                 label: type.label,
                 defaultColor: type.defaultColor,
-                color
+                color,
+                enabled
             };
         });
 
@@ -87,64 +103,112 @@ export class EconomyColorsConfigApp extends adapter.foundry.HandlebarsApplicatio
      * @private
      */
     _attachInputListeners() {
-        if (!this.element) return;
+        if (!this.element || this._listenersAttached) return;
+        this._listenersAttached = true;
 
-        // Enable checkbox toggle
-        const enableToggle = this.element.querySelector('.bad-economy-enable-toggle');
-        if (enableToggle) {
-            enableToggle.addEventListener('change', (event) => {
-                this.enabled = event.target.checked;
-            });
-        }
+        // Delegated change listener for toggles and presets
+        this.element.addEventListener('change', (event) => {
+            const enableToggle = event.target.closest('.bad-economy-enable-toggle');
+            if (enableToggle) {
+                this.enabled = Boolean(enableToggle.checked);
+                return;
+            }
 
-        // Preset dropdown selection
-        const presetSelect = this.element.querySelector('.bad-economy-preset-select');
-        if (presetSelect) {
-            presetSelect.addEventListener('change', (event) => {
-                this.applyPreset(event.target.value);
-            });
-        }
+            const presetSelect = event.target.closest('.bad-economy-preset-select');
+            if (presetSelect) {
+                this.applyPreset(presetSelect.value);
+                return;
+            }
 
-        // Sync color picker changes to text inputs and preview bars
-        const colorPickers = this.element.querySelectorAll('.bad-economy-color-picker');
-        for (const picker of colorPickers) {
-            picker.addEventListener('input', (event) => {
-                const typeId = event.target.dataset.typeId;
-                const value = event.target.value;
-                this.colors[typeId] = value;
-
-                const textInput = this.element.querySelector(`.bad-economy-color-input[data-type-id="${typeId}"]`);
-                if (textInput) textInput.value = value;
-
-                const preview = this.element.querySelector(`.bad-economy-preview[data-type-id="${typeId}"]`);
-                if (preview) preview.style.backgroundColor = value;
-            });
-        }
-
-        // Sync text input changes to color pickers and preview bars
-        const textInputs = this.element.querySelectorAll('.bad-economy-color-input');
-        for (const input of textInputs) {
-            input.addEventListener('input', (event) => {
-                const typeId = event.target.dataset.typeId;
-                const value = event.target.value.trim();
-                if (/^#[0-9A-Fa-f]{6}$/.test(value)) {
-                    this.colors[typeId] = value;
-
-                    const picker = this.element.querySelector(`.bad-economy-color-picker[data-type-id="${typeId}"]`);
-                    if (picker) picker.value = value;
-
-                    const preview = this.element.querySelector(`.bad-economy-preview[data-type-id="${typeId}"]`);
-                    if (preview) preview.style.backgroundColor = value;
+            const typeToggle = event.target.closest('.bad-economy-type-toggle');
+            if (typeToggle) {
+                const typeId = typeToggle.dataset.typeId;
+                if (!typeId) return;
+                const isEnabled = Boolean(typeToggle.checked);
+                if (isEnabled) {
+                    delete this.disabled[typeId];
+                    this.enabledTypes[typeId] = true;
+                } else {
+                    delete this.enabledTypes[typeId];
+                    this.disabled[typeId] = true;
                 }
-            });
-        }
+
+                const row = this.element.querySelector(`.bad-economy-color-row[data-type-id="${typeId}"]`);
+                if (row) {
+                    row.classList.toggle('bad-row-inactive', !isEnabled);
+                }
+            }
+        });
+
+        // Delegated input listener for color pickers & text inputs (auto-enables category)
+        this.element.addEventListener('input', (event) => {
+            const picker = event.target.closest('.bad-economy-color-picker');
+            if (picker) {
+                const typeId = picker.dataset.typeId;
+                const value = picker.value;
+                if (typeId && value) {
+                    this.colors[typeId] = value;
+                    delete this.disabled[typeId];
+                    this.enabledTypes[typeId] = true;
+
+                    const row = this.element.querySelector(`.bad-economy-color-row[data-type-id="${typeId}"]`);
+                    if (row) {
+                        row.classList.remove('bad-row-inactive');
+                        const toggle = row.querySelector('.bad-economy-type-toggle');
+                        if (toggle) toggle.checked = true;
+                        const textInput = row.querySelector('.bad-economy-color-input');
+                        if (textInput) textInput.value = value;
+                        const preview = row.querySelector('.bad-economy-preview');
+                        if (preview) preview.style.backgroundColor = value;
+                    }
+                }
+                return;
+            }
+
+            const input = event.target.closest('.bad-economy-color-input');
+            if (input) {
+                const typeId = input.dataset.typeId;
+                const value = input.value?.trim();
+                if (typeId && /^#[0-9A-Fa-f]{6}$/.test(value)) {
+                    this.colors[typeId] = value;
+                    delete this.disabled[typeId];
+                    this.enabledTypes[typeId] = true;
+
+                    const row = this.element.querySelector(`.bad-economy-color-row[data-type-id="${typeId}"]`);
+                    if (row) {
+                        row.classList.remove('bad-row-inactive');
+                        const toggle = row.querySelector('.bad-economy-type-toggle');
+                        if (toggle) toggle.checked = true;
+                        const colorPicker = row.querySelector('.bad-economy-color-picker');
+                        if (colorPicker) colorPicker.value = value;
+                        const preview = row.querySelector('.bad-economy-preview');
+                        if (preview) preview.style.backgroundColor = value;
+                    }
+                }
+            }
+        });
     }
 
     /**
-     * Handle enable checkbox toggling.
+     * Handle master enable checkbox toggling.
      */
     async _onToggleEnabled(event, target) {
         this.enabled = target.checked;
+    }
+
+    /**
+     * Handle individual category enable checkbox toggling.
+     */
+    async _onToggleTypeEnabled(event, target) {
+        const typeId = target.dataset.typeId;
+        if (!typeId) return;
+        if (target.checked) {
+            delete this.disabled[typeId];
+            this.enabledTypes[typeId] = true;
+        } else {
+            delete this.enabledTypes[typeId];
+            this.disabled[typeId] = true;
+        }
     }
 
     /**
@@ -171,6 +235,8 @@ export class EconomyColorsConfigApp extends adapter.foundry.HandlebarsApplicatio
     async _onResetDefaults(event, target) {
         event.preventDefault();
         this.colors = {};
+        this.disabled = {};
+        this.enabledTypes = {};
         this.selectedPreset = '';
         this.render();
     }
@@ -180,8 +246,44 @@ export class EconomyColorsConfigApp extends adapter.foundry.HandlebarsApplicatio
      */
     async _onSaveConfig(event, target) {
         event.preventDefault();
+
+        // Sync directly from DOM inputs if element exists
+        if (this.element) {
+            const enableToggle = this.element.querySelector('.bad-economy-enable-toggle');
+            if (enableToggle) {
+                this.enabled = Boolean(enableToggle.checked);
+            }
+
+            const typeToggles = this.element.querySelectorAll('.bad-economy-type-toggle');
+            for (const toggle of typeToggles) {
+                const typeId = toggle.dataset.typeId;
+                if (!typeId) continue;
+                if (toggle.checked) {
+                    this.enabledTypes[typeId] = true;
+                    delete this.disabled[typeId];
+                } else {
+                    delete this.enabledTypes[typeId];
+                    this.disabled[typeId] = true;
+                }
+            }
+
+            const colorInputs = this.element.querySelectorAll('.bad-economy-color-input');
+            for (const input of colorInputs) {
+                const typeId = input.dataset.typeId;
+                const val = input.value?.trim();
+                if (typeId && /^#[0-9A-Fa-f]{6}$/.test(val)) {
+                    this.colors[typeId] = val;
+                }
+            }
+        }
+
+        const payload = {
+            ...this.colors,
+            disabled: this.disabled,
+            enabled: this.enabledTypes
+        };
         await game.settings.set(MODULE_ID, 'enableEconomyIndicators', Boolean(this.enabled));
-        await game.settings.set(MODULE_ID, 'economyColors', this.colors);
+        await game.settings.set(MODULE_ID, 'economyColors', payload);
         ui.notifications?.info?.(game.i18n.localize('BAD.economyColors.saved'));
         if (actionDisplay.activeApp?.rendered) {
             actionDisplay.activeApp.render();

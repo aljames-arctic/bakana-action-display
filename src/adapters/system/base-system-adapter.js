@@ -254,72 +254,111 @@ export class BaseSystemAdapter {
 
     /**
      * Get the list of configurable action economy types and default colors for this system.
-     * @returns {{ id: string, label: string, defaultColor: string }[]}
+     * @returns {{ id: string, label: string, defaultColor: string, defaultEnabled: boolean }[]}
      */
     getEconomyTypes() {
         return [
-            { id: 'action', label: this.getActionSubTabLabel('action') ?? 'Action', defaultColor: '#3b82f6' },
-            { id: 'bonus', label: this.getActionSubTabLabel('bonus') ?? 'Bonus Action', defaultColor: '#14b8a6' },
-            { id: 'reaction', label: this.getActionSubTabLabel('reaction') ?? 'Reaction', defaultColor: '#ef4444' },
-            { id: 'special', label: this.getActionSubTabLabel('special') ?? 'Special', defaultColor: '#a855f7' },
-            { id: 'other', label: this.getActionSubTabLabel('other') ?? 'Other', defaultColor: '#64748b' }
+            { id: 'action', label: this.getActionSubTabLabel('action') ?? 'Action', defaultColor: '#3b82f6', defaultEnabled: true },
+            { id: 'bonus', label: this.getActionSubTabLabel('bonus') ?? 'Bonus Action', defaultColor: '#14b8a6', defaultEnabled: true },
+            { id: 'reaction', label: this.getActionSubTabLabel('reaction') ?? 'Reaction', defaultColor: '#ef4444', defaultEnabled: true },
+            { id: 'special', label: this.getActionSubTabLabel('special') ?? 'Special', defaultColor: '#a855f7', defaultEnabled: true },
+            { id: 'other', label: this.getActionSubTabLabel('other') ?? 'Other', defaultColor: '#64748b', defaultEnabled: false }
         ];
+    }
+
+    /**
+     * Determine if an economy type is currently enabled based on system defaults and user configuration.
+     * @param {Object} type Economy type definition from getEconomyTypes()
+     * @param {Record<string, any>} [userColors={}] User configured colors & enablement
+     * @returns {boolean}
+     */
+    isEconomyTypeEnabled(type, userColors = {}) {
+        if (!type?.id || type.id === 'none' || type.id === 'all') return false;
+
+        const disabledMap = userColors.disabled;
+        if (disabledMap) {
+            const isDisabled = Array.isArray(disabledMap)
+                ? disabledMap.includes(type.id)
+                : Boolean(disabledMap[type.id]);
+            if (isDisabled) return false;
+        }
+
+        const enabledMap = userColors.enabled;
+        if (enabledMap) {
+            const isExplicitlyEnabled = Array.isArray(enabledMap)
+                ? enabledMap.includes(type.id)
+                : Boolean(enabledMap[type.id]);
+            if (isExplicitlyEnabled) return true;
+        }
+
+        return Boolean(type.defaultEnabled);
     }
 
     /**
      * Get the mapped color for an action economy type.
      * @param {string} type Economy type identifier
-     * @param {Record<string, string>} [userColors={}] User configured color overrides
-     * @returns {string|null} Hex color string or null if unmapped
+     * @param {Record<string, any>} [userColors={}] User configured color overrides
+     * @returns {string|null} Hex color string or null if unmapped or disabled
      */
     getEconomyColor(type, userColors = {}) {
         if (!type || type === 'none' || type === 'all') return null;
-        if (userColors?.[type]) return userColors[type];
-        const types = this.getEconomyTypes();
+
+        const types = this.getEconomyTypes() ?? [];
         const found = types.find(t => t.id === type);
+        const otherDef = types.find(t => t.id === 'other') ?? { id: 'other', defaultColor: '#64748b', defaultEnabled: true };
+        const typeDef = found ?? otherDef;
+
+        if (!this.isEconomyTypeEnabled(typeDef, userColors)) {
+            return null;
+        }
+
+        if (userColors[type]) return userColors[type];
         if (found?.defaultColor) return found.defaultColor;
-        return userColors?.['other'] ?? '#64748b';
+        return userColors['other'] ?? otherDef.defaultColor ?? '#64748b';
     }
 
     /**
      * Extract economy indicators for a given action.
-     * Returns an array of fixed indicator slots for every economy type in canonical sort order,
-     * allowing each action economy type to maintain its exact horizontal column across all rows.
+     * Returns an array of fixed indicator slots for all enabled economy types in canonical sort order,
+     * allowing the allocated indicator space to be divided equally among all enabled bars.
      * @param {Object} action HUD Action object
-     * @param {Record<string, string>} [userColors={}] User configured color overrides
+     * @param {Record<string, any>} [userColors={}] User configured color overrides
      * @returns {{ type: string, label: string, active: boolean, color: string|null }[]}
      */
     extractEconomyIndicators(action, userColors = {}) {
         if (!action) return [];
-        const types = new Set();
 
+        const systemTypes = this.getEconomyTypes() ?? [];
+        const enabledTypes = systemTypes.filter(t => this.isEconomyTypeEnabled(t, userColors));
+        if (!enabledTypes.length) return [];
+
+        const activeTypes = new Set();
         if (action.subactions?.length) {
             for (const sub of action.subactions) {
                 const econRef = sub.right?.find(r => r?.root === 'economy');
-                const subType = econRef?.label ?? econRef?.sub;
+                const subType = econRef?.label;
                 if (subType && subType !== 'economy' && subType !== 'none' && subType !== 'all') {
-                    types.add(subType);
+                    activeTypes.add(subType);
                 }
             }
         } else if (action.right?.length) {
             const econRef = action.right.find(r => r?.root === 'economy');
-            const subType = econRef?.label ?? econRef?.sub;
+            const subType = econRef?.label;
             if (subType && subType !== 'economy' && subType !== 'none' && subType !== 'all') {
-                types.add(subType);
+                activeTypes.add(subType);
             }
         }
 
-        const systemTypes = this.getEconomyTypes() ?? [];
-
-        // Any action types on the item that are not in systemTypes map to 'other'
-        const hasUnmapped = Array.from(types).some(t => !systemTypes.some(st => st.id === t));
-        if (hasUnmapped) {
-            types.add('other');
+        // Map any unmapped active types to 'other' if 'other' is enabled
+        const otherDef = systemTypes.find(t => t.id === 'other') ?? { id: 'other', defaultColor: '#64748b', defaultEnabled: false };
+        const hasUnmapped = Array.from(activeTypes).some(t => !systemTypes.some(st => st.id === t));
+        if (hasUnmapped && this.isEconomyTypeEnabled(otherDef, userColors)) {
+            activeTypes.add('other');
         }
 
         const indicators = [];
-        for (const sysType of systemTypes) {
-            const isActive = types.has(sysType.id);
+        for (const sysType of enabledTypes) {
+            const isActive = activeTypes.has(sysType.id);
             const color = isActive ? this.getEconomyColor(sysType.id, userColors) : null;
             indicators.push({
                 type: sysType.id,

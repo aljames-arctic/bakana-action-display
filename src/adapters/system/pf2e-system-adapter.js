@@ -418,9 +418,9 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
      */
     getEconomyTypes() {
         return [
-            { id: 'action', label: this.getActionSubTabLabel('action') ?? 'Actions', defaultColor: '#3b82f6' },
-            { id: 'reaction', label: this.getActionSubTabLabel('reaction') ?? 'Reactions', defaultColor: '#ef4444' },
-            { id: 'other', label: this.getActionSubTabLabel('other') ?? 'Free Actions', defaultColor: '#22c55e' }
+            { id: 'action', label: this.getActionSubTabLabel('action') ?? 'Actions', defaultColor: '#3b82f6', defaultEnabled: true },
+            { id: 'reaction', label: this.getActionSubTabLabel('reaction') ?? 'Reactions', defaultColor: '#ef4444', defaultEnabled: true },
+            { id: 'other', label: this.getActionSubTabLabel('other') ?? 'Free Actions', defaultColor: '#22c55e', defaultEnabled: true }
         ];
     }
 

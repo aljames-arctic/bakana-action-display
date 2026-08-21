@@ -2,7 +2,7 @@
     <div class="bad-config-header-row">
         <div class="bad-config-toggle-group">
             <label class="bad-config-toggle-label">
-                <input type="checkbox" name="enableEconomyIndicators" class="bad-economy-enable-toggle" data-action="toggleEnabled" {{#if enabled}}checked{{/if}} />
+                <input type="checkbox" name="enableEconomyIndicators" class="bad-economy-enable-toggle" {{#if enabled}}checked{{/if}} />
                 <span>{{localize "BAD.economyColors.enable"}}</span>
             </label>
         </div>
@@ -25,12 +25,15 @@
     <!-- Economy Types List -->
     <div class="bad-economy-colors-list">
         {{#each economyTypes}}
-        <div class="bad-economy-color-row" data-type-id="{{this.id}}">
-            <span class="bad-economy-bar bad-economy-preview" style="background-color: {{this.color}};" data-type-id="{{this.id}}"></span>
-            <span class="bad-economy-label">{{this.label}}</span>
+        <div class="bad-economy-color-row {{#unless this.enabled}}bad-row-inactive{{/unless}}" data-type-id="{{this.id}}">
+            <input type="checkbox" id="bad-econ-toggle-{{this.id}}" class="bad-economy-type-toggle" data-type-id="{{this.id}}" {{#if this.enabled}}checked{{/if}} title="{{localize 'BAD.economyColors.toggleCategory'}}" />
+            <label class="bad-economy-row-label-group" for="bad-econ-toggle-{{this.id}}">
+                <span class="bad-economy-bar bad-economy-preview" style="background-color: {{this.color}};" data-type-id="{{this.id}}"></span>
+                <span class="bad-economy-label">{{this.label}}</span>
+            </label>
             <div class="bad-economy-color-controls">
-                <input type="color" class="bad-economy-color-picker" data-type-id="{{this.id}}" value="{{this.color}}" />
-                <input type="text" class="bad-economy-color-input" data-type-id="{{this.id}}" value="{{this.color}}" maxlength="7" spellcheck="false" />
+                <input type="color" class="bad-economy-color-picker" data-type-id="{{this.id}}" value="{{this.color}}" title="{{this.label}}" />
+                <input type="text" class="bad-economy-color-input" data-type-id="{{this.id}}" value="{{this.color}}" maxlength="7" spellcheck="false" title="{{this.label}}" />
             </div>
         </div>
         {{/each}}

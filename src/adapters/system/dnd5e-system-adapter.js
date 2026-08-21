@@ -470,23 +470,23 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
      */
     getEconomyTypes() {
         return [
-            { id: 'action', label: this.getActionSubTabLabel('action') ?? 'Action', defaultColor: '#3b82f6' },
-            { id: 'bonus', label: this.getActionSubTabLabel('bonus') ?? 'Bonus Action', defaultColor: '#14b8a6' },
-            { id: 'reaction', label: this.getActionSubTabLabel('reaction') ?? 'Reaction', defaultColor: '#ef4444' },
-            { id: 'minute', label: this.getActionSubTabLabel('minute') ?? 'Minute', defaultColor: '#0284c7' },
-            { id: 'hour', label: this.getActionSubTabLabel('hour') ?? 'Hour', defaultColor: '#0369a1' },
-            { id: 'day', label: this.getActionSubTabLabel('day') ?? 'Day', defaultColor: '#075985' },
-            { id: 'longRest', label: this.getActionSubTabLabel('longRest') ?? 'End of a Long Rest', defaultColor: '#059669' },
-            { id: 'shortRest', label: this.getActionSubTabLabel('shortRest') ?? 'End of a Short Rest', defaultColor: '#10b981' },
-            { id: 'encounter', label: this.getActionSubTabLabel('encounter') ?? 'Start of Encounter', defaultColor: '#f59e0b' },
-            { id: 'turnStart', label: this.getActionSubTabLabel('turnStart') ?? 'Start of Turn', defaultColor: '#84cc16' },
-            { id: 'turnEnd', label: this.getActionSubTabLabel('turnEnd') ?? 'End of Turn', defaultColor: '#e11d48' },
-            { id: 'legendary', label: this.getActionSubTabLabel('legendary') ?? 'Legendary Action', defaultColor: '#18181b' },
-            { id: 'mythic', label: this.getActionSubTabLabel('mythic') ?? 'Mythic Action', defaultColor: '#ec4899' },
-            { id: 'lair', label: this.getActionSubTabLabel('lair') ?? 'Lair Action', defaultColor: '#eab308' },
-            { id: 'crew', label: this.getActionSubTabLabel('crew') ?? 'Crew Action', defaultColor: '#6366f1' },
-            { id: 'special', label: this.getActionSubTabLabel('special') ?? 'Special', defaultColor: '#a855f7' },
-            { id: 'other', label: this.getActionSubTabLabel('other') ?? 'Other', defaultColor: '#64748b' }
+            { id: 'action', label: this.getActionSubTabLabel('action') ?? 'Action', defaultColor: '#3b82f6', defaultEnabled: true },
+            { id: 'bonus', label: this.getActionSubTabLabel('bonus') ?? 'Bonus Action', defaultColor: '#14b8a6', defaultEnabled: true },
+            { id: 'reaction', label: this.getActionSubTabLabel('reaction') ?? 'Reaction', defaultColor: '#ef4444', defaultEnabled: true },
+            { id: 'minute', label: this.getActionSubTabLabel('minute') ?? 'Minute', defaultColor: '#0284c7', defaultEnabled: false },
+            { id: 'hour', label: this.getActionSubTabLabel('hour') ?? 'Hour', defaultColor: '#0369a1', defaultEnabled: false },
+            { id: 'day', label: this.getActionSubTabLabel('day') ?? 'Day', defaultColor: '#075985', defaultEnabled: false },
+            { id: 'longRest', label: this.getActionSubTabLabel('longRest') ?? 'End of a Long Rest', defaultColor: '#059669', defaultEnabled: false },
+            { id: 'shortRest', label: this.getActionSubTabLabel('shortRest') ?? 'End of a Short Rest', defaultColor: '#10b981', defaultEnabled: false },
+            { id: 'encounter', label: this.getActionSubTabLabel('encounter') ?? 'Start of Encounter', defaultColor: '#f59e0b', defaultEnabled: false },
+            { id: 'turnStart', label: this.getActionSubTabLabel('turnStart') ?? 'Start of Turn', defaultColor: '#84cc16', defaultEnabled: false },
+            { id: 'turnEnd', label: this.getActionSubTabLabel('turnEnd') ?? 'End of Turn', defaultColor: '#e11d48', defaultEnabled: false },
+            { id: 'legendary', label: this.getActionSubTabLabel('legendary') ?? 'Legendary Action', defaultColor: '#18181b', defaultEnabled: false },
+            { id: 'mythic', label: this.getActionSubTabLabel('mythic') ?? 'Mythic Action', defaultColor: '#ec4899', defaultEnabled: false },
+            { id: 'lair', label: this.getActionSubTabLabel('lair') ?? 'Lair Action', defaultColor: '#eab308', defaultEnabled: false },
+            { id: 'crew', label: this.getActionSubTabLabel('crew') ?? 'Crew Action', defaultColor: '#6366f1', defaultEnabled: false },
+            { id: 'special', label: this.getActionSubTabLabel('special') ?? 'Special', defaultColor: '#a855f7', defaultEnabled: true },
+            { id: 'other', label: this.getActionSubTabLabel('other') ?? 'Other', defaultColor: '#64748b', defaultEnabled: false }
         ];
     }
 

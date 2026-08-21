@@ -23,13 +23,19 @@ test('BaseSystemAdapter provides default economy types, colors, and grey fallbac
     assert.equal(baseAdapter.getEconomyColor('action'), '#3b82f6');
     assert.equal(baseAdapter.getEconomyColor('bonus'), '#14b8a6');
     assert.equal(baseAdapter.getEconomyColor('reaction'), '#ef4444');
+    assert.equal(baseAdapter.getEconomyColor('special'), '#a855f7');
     
     // User color overrides
     assert.equal(baseAdapter.getEconomyColor('action', { action: '#ff00ff' }), '#ff00ff');
 
-    // Unmapped/undefined types fallback to other / grey
-    assert.equal(baseAdapter.getEconomyColor('unknown_type'), '#64748b');
-    assert.equal(baseAdapter.getEconomyColor('unknown_type', { other: '#333333' }), '#333333');
+    // Unmapped/undefined types fallback to other / grey when other is enabled
+    assert.equal(baseAdapter.getEconomyColor('unknown_type', { enabled: { other: true } }), '#64748b');
+    assert.equal(baseAdapter.getEconomyColor('unknown_type', { enabled: { other: true }, other: '#333333' }), '#333333');
+
+    // Disabled categories return null
+    assert.equal(baseAdapter.getEconomyColor('action', { disabled: { action: true } }), null);
+    assert.equal(baseAdapter.getEconomyColor('bonus', { disabled: ['bonus'] }), null);
+    assert.equal(baseAdapter.getEconomyColor('unknown_type', { disabled: { other: true } }), null);
 
     // 'none' or 'all' return null (no indicator)
     assert.equal(baseAdapter.getEconomyColor('none'), null);
@@ -63,22 +69,28 @@ test('Dnd5eSystemAdapter provides system-specific action economy types including
     assert.equal(lair.defaultColor, '#eab308', 'Lair action should be gold');
 });
 
-test('extractEconomyIndicators returns fixed-column slots with active indicators for single and multi-activity actions', () => {
+test('extractEconomyIndicators extracts fixed slots equally dividing allocated space across enabled economy types', () => {
     const dndAdapter = new Dnd5eSystemAdapter();
 
-    // 1. Single action item (e.g. standard action)
+    // 1. Single action item with default settings (empty userColors) -> exactly 4 default-enabled categories (action, bonus, reaction, special)
     const singleAction = {
         name: 'Longsword',
         right: [TabRef.from('economy', 'action')]
     };
-    const indicators1 = dndAdapter.extractEconomyIndicators(singleAction);
-    assert.ok(indicators1.length >= 5, 'Should return full fixed-slot array for all economy types');
-    const actSlot1 = indicators1.find(i => i.type === 'action');
-    const bonusSlot1 = indicators1.find(i => i.type === 'bonus');
-    assert.equal(actSlot1?.active, true);
-    assert.equal(actSlot1?.color, '#3b82f6');
-    assert.equal(bonusSlot1?.active, false);
-    assert.equal(bonusSlot1?.color, null);
+    const indicators1 = dndAdapter.extractEconomyIndicators(singleAction, {});
+    assert.equal(indicators1.length, 4, 'Should provide 4 slots for the 4 default-enabled categories (action, bonus, reaction, special)');
+    assert.equal(indicators1[0].type, 'action');
+    assert.equal(indicators1[0].active, true);
+    assert.equal(indicators1[0].color, '#3b82f6');
+    assert.equal(indicators1[1].type, 'bonus');
+    assert.equal(indicators1[1].active, false);
+    assert.equal(indicators1[1].color, null);
+    assert.equal(indicators1[2].type, 'reaction');
+    assert.equal(indicators1[2].active, false);
+    assert.equal(indicators1[2].color, null);
+    assert.equal(indicators1[3].type, 'special');
+    assert.equal(indicators1[3].active, false);
+    assert.equal(indicators1[3].color, null);
 
     // 2. Multi-activity item with differing economy types (Action + Bonus Action + Reaction)
     const multiAction = {
@@ -90,31 +102,55 @@ test('extractEconomyIndicators returns fixed-column slots with active indicators
             { name: 'Standard Cast 2', right: [TabRef.from('economy', 'action')] } // duplicate type
         ]
     };
-    const indicators2 = dndAdapter.extractEconomyIndicators(multiAction);
-    const actSlot2 = indicators2.find(i => i.type === 'action');
-    const bonusSlot2 = indicators2.find(i => i.type === 'bonus');
-    const reactSlot2 = indicators2.find(i => i.type === 'reaction');
-    const legendSlot2 = indicators2.find(i => i.type === 'legendary');
+    const indicators2 = dndAdapter.extractEconomyIndicators(multiAction, {});
+    assert.equal(indicators2.length, 4, 'Should provide 4 slots for the 4 enabled categories');
+    assert.equal(indicators2[0].type, 'action', 'Action should be first slot');
+    assert.equal(indicators2[0].active, true);
+    assert.equal(indicators2[0].color, '#3b82f6');
+    assert.equal(indicators2[1].type, 'bonus', 'Bonus Action should be second slot');
+    assert.equal(indicators2[1].active, true);
+    assert.equal(indicators2[1].color, '#14b8a6');
+    assert.equal(indicators2[2].type, 'reaction', 'Reaction should be third slot');
+    assert.equal(indicators2[2].active, true);
+    assert.equal(indicators2[2].color, '#ef4444');
+    assert.equal(indicators2[3].type, 'special', 'Special should be fourth slot');
+    assert.equal(indicators2[3].active, false);
 
-    assert.equal(actSlot2?.active, true);
-    assert.equal(bonusSlot2?.active, true);
-    assert.equal(reactSlot2?.active, true);
-    assert.equal(legendSlot2?.active, false);
-    assert.equal(actSlot2?.color, '#3b82f6');
-    assert.equal(bonusSlot2?.color, '#14b8a6');
-    assert.equal(reactSlot2?.color, '#ef4444');
+    // 3. Multi-activity item with disabled economy categories (Bonus Action and Special disabled, only Action + Reaction enabled)
+    const indicatorsWithDisabled = dndAdapter.extractEconomyIndicators(multiAction, { disabled: { bonus: true, special: true } });
+    assert.equal(indicatorsWithDisabled.length, 2, 'Should only allocate 2 slots for the 2 enabled categories');
+    assert.equal(indicatorsWithDisabled[0].type, 'action');
+    assert.equal(indicatorsWithDisabled[0].active, true);
+    assert.equal(indicatorsWithDisabled[1].type, 'reaction');
+    assert.equal(indicatorsWithDisabled[1].active, true);
 
-    // 3. Passive item with economy: 'none'
+    // 4. Item with an explicitly enabled secondary type (e.g. minute enabled via enabledTypes, giving 5 slots)
+    const indicatorsWithMinute = dndAdapter.extractEconomyIndicators(multiAction, { enabled: { minute: true } });
+    assert.equal(indicatorsWithMinute.length, 5, 'Should allocate 5 slots when minute is explicitly enabled');
+    assert.equal(indicatorsWithMinute[3].type, 'minute');
+    assert.equal(indicatorsWithMinute[3].active, false);
+    assert.equal(indicatorsWithMinute[4].type, 'special');
+    assert.equal(indicatorsWithMinute[4].active, false);
+
+    // 5. Passive item with economy: 'none'
     const passiveItem = {
         name: 'Shield of Faith (Passive)',
         right: [TabRef.from('economy', 'none')]
     };
-    const indicators3 = dndAdapter.extractEconomyIndicators(passiveItem);
-    assert.ok(indicators3.every(i => i.active === false), 'Passive items should have all inactive slots');
+    const indicators3 = dndAdapter.extractEconomyIndicators(passiveItem, {});
+    assert.equal(indicators3.length, 4);
+    assert.ok(indicators3.every(ind => ind.active === false && ind.color === null), 'All slots should be empty for passive items');
 });
 
-test('extractEconomyIndicators maintains exact horizontal column order of economy types', () => {
+test('extractEconomyIndicators sorts indicators in the exact order of the action economy list top-to-bottom', () => {
     const dndAdapter = new Dnd5eSystemAdapter();
+    const threeEnabledColors = {
+        disabled: {
+            minute: true, hour: true, day: true, longRest: true, shortRest: true,
+            encounter: true, turnStart: true, turnEnd: true, legendary: true,
+            mythic: true, lair: true, crew: true, special: true, other: true
+        }
+    };
 
     // Item with Bonus Action and Action defined in reverse order
     const reverseOrderAction = {
@@ -124,14 +160,15 @@ test('extractEconomyIndicators maintains exact horizontal column order of econom
             { name: 'Standard Slash', right: [TabRef.from('economy', 'action')] }
         ]
     };
-    const indicators = dndAdapter.extractEconomyIndicators(reverseOrderAction);
-    const actIndex = indicators.findIndex(i => i.type === 'action');
-    const bonusIndex = indicators.findIndex(i => i.type === 'bonus');
-    const reactIndex = indicators.findIndex(i => i.type === 'reaction');
-
-    // Action (slot 0/column 1) must be before Bonus Action (slot 1/column 2) which is before Reaction
-    assert.ok(actIndex < bonusIndex, 'Action column must precede Bonus Action column');
-    assert.ok(bonusIndex < reactIndex, 'Bonus Action column must precede Reaction column');
+    const indicators = dndAdapter.extractEconomyIndicators(reverseOrderAction, threeEnabledColors);
+    assert.equal(indicators.length, 3);
+    // Action (sort 1) must come before Bonus Action (sort 2)
+    assert.equal(indicators[0].type, 'action');
+    assert.equal(indicators[0].active, true);
+    assert.equal(indicators[1].type, 'bonus');
+    assert.equal(indicators[1].active, true);
+    assert.equal(indicators[2].type, 'reaction');
+    assert.equal(indicators[2].active, false);
 });
 
 test('ActionDisplayApp _prepareContext extracts economy indicators when enabled and suppresses when disabled', async () => {
@@ -170,27 +207,43 @@ test('ActionDisplayApp _prepareContext extracts economy indicators when enabled 
     const origGetActions = adapter.getActions;
     adapter.getActions = async () => mockActions;
 
+    const testColors = {
+        action: '#0000ff',
+        disabled: {
+            minute: true, hour: true, day: true, longRest: true, shortRest: true,
+            encounter: true, turnStart: true, turnEnd: true, legendary: true,
+            mythic: true, lair: true, crew: true, special: true, other: true
+        }
+    };
+
     try {
         // 1. When enableEconomyIndicators is true
         game.settings.set(MODULE_ID, 'enableEconomyIndicators', true);
-        game.settings.set(MODULE_ID, 'economyColors', { action: '#0000ff' });
+        game.settings.set(MODULE_ID, 'economyColors', testColors);
 
         const contextEnabled = await app._prepareContext({});
         assert.equal(contextEnabled.showEconomyIndicators, true);
-        assert.ok(contextEnabled.items[0].economyIndicators.length > 0);
-        const item1Action = contextEnabled.items[0].economyIndicators.find(i => i.type === 'action');
-        const item1Bonus = contextEnabled.items[0].economyIndicators.find(i => i.type === 'bonus');
-        assert.equal(item1Action?.active, true);
-        assert.equal(item1Action?.color, '#0000ff');
-        assert.equal(item1Bonus?.active, false);
+        assert.equal(contextEnabled.items[0].economyIndicators.length, 3);
+        assert.equal(contextEnabled.items[0].economyIndicators[0].active, true);
+        assert.equal(contextEnabled.items[0].economyIndicators[0].color, '#0000ff');
+        assert.equal(contextEnabled.items[0].economyIndicators[1].active, false);
+        assert.equal(contextEnabled.items[1].economyIndicators.length, 3);
+        assert.equal(contextEnabled.items[1].economyIndicators[0].active, false);
+        assert.equal(contextEnabled.items[1].economyIndicators[1].active, true);
+        assert.equal(contextEnabled.items[1].economyIndicators[1].color, '#14b8a6');
 
-        const item2Action = contextEnabled.items[1].economyIndicators.find(i => i.type === 'action');
-        const item2Bonus = contextEnabled.items[1].economyIndicators.find(i => i.type === 'bonus');
-        assert.equal(item2Action?.active, false);
-        assert.equal(item2Bonus?.active, true);
-        assert.equal(item2Bonus?.color, '#14b8a6');
+        // 2. When specific category is disabled (e.g. bonus action disabled)
+        game.settings.set(MODULE_ID, 'economyColors', {
+            ...testColors,
+            disabled: { ...testColors.disabled, bonus: true }
+        });
+        const contextCategoryDisabled = await app._prepareContext({});
+        assert.equal(contextCategoryDisabled.items[0].economyIndicators.length, 2);
+        assert.equal(contextCategoryDisabled.items[0].economyIndicators[0].active, true);
+        assert.equal(contextCategoryDisabled.items[1].economyIndicators.length, 2);
+        assert.equal(contextCategoryDisabled.items[1].economyIndicators.every(ind => !ind.active), true);
 
-        // 2. When enableEconomyIndicators is false
+        // 3. When enableEconomyIndicators is false
         game.settings.set(MODULE_ID, 'enableEconomyIndicators', false);
         const contextDisabled = await app._prepareContext({});
         assert.equal(contextDisabled.showEconomyIndicators, false);
@@ -204,7 +257,7 @@ test('ActionDisplayApp _prepareContext extracts economy indicators when enabled 
 
 test('EconomyColorsConfigApp prepares economy context, toggles enablement, saves colors, selects presets, and resets defaults', async () => {
     game.settings.set(MODULE_ID, 'enableEconomyIndicators', false);
-    game.settings.set(MODULE_ID, 'economyColors', { action: '#123456' });
+    game.settings.set(MODULE_ID, 'economyColors', { action: '#123456', disabled: { reaction: true } });
 
     const configApp = new EconomyColorsConfigApp();
     const context = await configApp._prepareContext({});
@@ -214,14 +267,25 @@ test('EconomyColorsConfigApp prepares economy context, toggles enablement, saves
     const actionType = context.economyTypes.find(t => t.id === 'action');
     assert.ok(actionType);
     assert.equal(actionType.color, '#123456');
+    assert.equal(actionType.enabled, true);
+
+    const reactionType = context.economyTypes.find(t => t.id === 'reaction');
+    assert.ok(reactionType);
+    assert.equal(reactionType.enabled, false);
 
     assert.ok(Array.isArray(context.presets));
     assert.ok(context.presets.some(p => p.id === 'protanopia'));
     assert.ok(context.presets.some(p => p.id === 'tritanopia'));
 
-    // Test toggle enablement
+    // Test toggle master enablement
     await configApp._onToggleEnabled({ preventDefault() {} }, { checked: true });
     assert.equal(configApp.enabled, true);
+
+    // Test toggle individual category enablement
+    await configApp._onToggleTypeEnabled({ preventDefault() {} }, { dataset: { typeId: 'action' }, checked: false });
+    assert.equal(configApp.disabled.action, true);
+    await configApp._onToggleTypeEnabled({ preventDefault() {} }, { dataset: { typeId: 'reaction' }, checked: true });
+    assert.equal(configApp.disabled.reaction, undefined);
 
     // Test select preset (e.g. protanopia)
     let rendered = false;
@@ -234,19 +298,23 @@ test('EconomyColorsConfigApp prepares economy context, toggles enablement, saves
 
     // Test save
     configApp.colors = { action: '#abcdef', bonus: '#654321' };
+    configApp.disabled = { minute: true };
     let closed = false;
     configApp.close = async () => { closed = true; };
     await configApp._onSaveConfig({ preventDefault() {} });
 
     assert.equal(game.settings.get(MODULE_ID, 'enableEconomyIndicators'), true);
-    assert.equal(game.settings.get(MODULE_ID, 'economyColors').action, '#abcdef');
-    assert.equal(game.settings.get(MODULE_ID, 'economyColors').bonus, '#654321');
+    const savedColors = game.settings.get(MODULE_ID, 'economyColors');
+    assert.equal(savedColors.action, '#abcdef');
+    assert.equal(savedColors.bonus, '#654321');
+    assert.deepEqual(savedColors.disabled, { minute: true });
     assert.equal(closed, true);
 
     // Test reset defaults
     rendered = false;
     await configApp._onResetDefaults({ preventDefault() {} });
     assert.deepEqual(configApp.colors, {});
+    assert.deepEqual(configApp.disabled, {});
     assert.equal(configApp.selectedPreset, '');
     assert.equal(rendered, true);
 

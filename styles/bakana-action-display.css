@@ -1609,12 +1609,49 @@ div#tooltip:has(.bad-expression-tooltip),
     border: 1px solid rgba(255, 255, 255, 0.06);
     border-radius: 0.35em;
     padding: 0.5em 0.75em;
+    transition: opacity 0.2s ease, background-color 0.2s ease;
+    pointer-events: auto !important;
+}
+
+.bad-economy-color-row.bad-row-inactive {
+    opacity: 0.6;
+}
+
+.bad-economy-row-label-group {
+    display: flex;
+    align-items: center;
+    gap: 0.75em;
+    flex-grow: 1;
+    cursor: pointer !important;
+    margin: 0 !important;
+    user-select: none;
+    pointer-events: auto !important;
+}
+
+.bad-economy-type-toggle {
+    cursor: pointer !important;
+    margin: 0 !important;
+    accent-color: #7c3aed;
+    width: 1.2em;
+    height: 1.2em;
+    flex-shrink: 0;
+    pointer-events: auto !important;
+}
+
+.bad-economy-color-row.bad-row-inactive .bad-economy-preview {
+    opacity: 0.4;
+}
+
+.bad-economy-color-row.bad-row-inactive .bad-economy-label {
+    color: #94a3b8;
 }
 
 .bad-economy-color-row .bad-economy-preview {
     width: 5px;
     height: 1.6em;
     border-radius: 2px;
+    flex-shrink: 0;
+    pointer-events: auto !important;
 }
 
 .bad-economy-label {
@@ -1622,12 +1659,14 @@ div#tooltip:has(.bad-expression-tooltip),
     font-size: 0.9em;
     font-weight: 500;
     color: #f1f5f9;
+    pointer-events: auto !important;
 }
 
 .bad-economy-color-controls {
     display: flex;
     align-items: center;
     gap: 0.5em;
+    pointer-events: auto !important;
 }
 
 .bad-economy-color-picker {
@@ -1636,8 +1675,9 @@ div#tooltip:has(.bad-expression-tooltip),
     padding: 0 !important;
     border: 1px solid rgba(255, 255, 255, 0.2) !important;
     border-radius: 0.25em !important;
-    cursor: pointer;
+    cursor: pointer !important;
     background: transparent !important;
+    pointer-events: auto !important;
 }
 
 .bad-economy-color-input {
@@ -1652,6 +1692,7 @@ div#tooltip:has(.bad-expression-tooltip),
     font-family: monospace !important;
     font-size: 0.85em !important;
     text-transform: uppercase;
+    pointer-events: auto !important;
 }
 
 .bad-economy-color-input:focus {

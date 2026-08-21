@@ -473,10 +473,10 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
      */
     getEconomyTypes() {
         return [
-            { id: 'action', label: this.getActionSubTabLabel('action') ?? 'Actions', defaultColor: '#3b82f6' },
-            { id: 'bonus', label: this.getActionSubTabLabel('bonus') ?? 'Swift', defaultColor: '#14b8a6' },
-            { id: 'reaction', label: this.getActionSubTabLabel('reaction') ?? 'Immediate', defaultColor: '#ef4444' },
-            { id: 'other', label: this.getActionSubTabLabel('other') ?? 'Free', defaultColor: '#64748b' }
+            { id: 'action', label: this.getActionSubTabLabel('action') ?? 'Actions', defaultColor: '#3b82f6', defaultEnabled: true },
+            { id: 'bonus', label: this.getActionSubTabLabel('bonus') ?? 'Swift', defaultColor: '#14b8a6', defaultEnabled: true },
+            { id: 'reaction', label: this.getActionSubTabLabel('reaction') ?? 'Immediate', defaultColor: '#ef4444', defaultEnabled: true },
+            { id: 'other', label: this.getActionSubTabLabel('other') ?? 'Free', defaultColor: '#64748b', defaultEnabled: true }
         ];
     }
 
