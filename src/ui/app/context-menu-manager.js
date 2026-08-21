@@ -171,8 +171,8 @@ export class ContextMenuManager {
      */
     _bindSubmenus(target, menuItems) {
         setTimeout(() => {
-            const contextMenuEl = globalThis.document?.querySelector?.('#context-menu, .context-menu');
-            if (!contextMenuEl || typeof contextMenuEl.querySelectorAll !== 'function') return;
+            const contextMenuEl = document.querySelector('#context-menu, .context-menu');
+            if (!contextMenuEl) return;
 
             const action = this.app.actions?.find(a => a.id === target?.dataset?.actionId);
             const item = action?.originalItem ?? this.app.actor?.items?.get(target?.dataset?.actionId);

@@ -16,20 +16,17 @@ let adapterFileCache = null;
 async function getAvailableAdapterFiles() {
     if (adapterFileCache !== null) return adapterFileCache;
 
-    const FilePickerClass = globalThis.FilePicker ?? globalThis.foundry?.applications?.apps?.FilePicker;
-    if (typeof FilePickerClass?.browse === 'function') {
-        const dirPath = `modules/${MODULE_ID}/src/adapters/system`;
-        for (const source of ['data', 'public', 'client']) {
-            try {
-                const result = await FilePickerClass.browse(source, dirPath);
-                if (Array.isArray(result?.files) && result.files.length > 0) {
-                    adapterFileCache = new Set(result.files.map(file => file.split('/').pop().toLowerCase()));
-                    log.debug(`Discovered ${adapterFileCache.size} system adapters in directory [${source}:${dirPath}]`);
-                    return adapterFileCache;
-                }
-            } catch {
-                // Ignore errors and try next source
+    const dirPath = `modules/${MODULE_ID}/src/adapters/system`;
+    for (const source of ['data', 'public', 'client']) {
+        try {
+            const result = await FilePicker.browse(source, dirPath);
+            if (result?.files?.length > 0) {
+                adapterFileCache = new Set(result.files.map(file => file.split('/').pop().toLowerCase()));
+                log.debug(`Discovered ${adapterFileCache.size} system adapters in directory [${source}:${dirPath}]`);
+                return adapterFileCache;
             }
+        } catch {
+            // Ignore errors and try next source
         }
     }
     return null;
