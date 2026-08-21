@@ -270,11 +270,11 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
                 const saveKey = saveMap[abl];
                 const saveSub = new Action({
                     id: `save-${abl}`,
-                    name: localize('BAD.page2.save', localize('BAD.page2.savingThrow', 'Saving Throw')),
+                    name: localize('BAD.page2.savingThrow', 'Saving Throw'),
                     type: 'save',
                     img,
                     right: [TabRef.from('ability', abl)],
-                    left: ['save'],
+                    left: ['savingThrow'],
                     available: true,
                     roll: async (event) => {
                         const rollEvent = this._createRollEvent(event);
@@ -315,8 +315,8 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
                 type: 'ability',
                 img,
                 right: [TabRef.from('ability', abl)],
-                left: subactions.some(s => s.type === 'save') ? ['save'] : ['abilityCheck'],
-                itemCategories: subactions.some(s => s.type === 'save') ? [['save'], ['abilityCheck']] : [['abilityCheck']],
+                left: subactions.some(s => s.type === 'save') ? ['savingThrow'] : ['abilityCheck'],
+                itemCategories: subactions.some(s => s.type === 'save') ? [['savingThrow'], ['abilityCheck']] : [['abilityCheck']],
                 available: true,
                 uses: { available: null, max: null },
                 subactions,

@@ -380,6 +380,8 @@ test('Pf2eSystemAdapter extractCheckActions generates abilities, saves, and skil
     assert.ok(fortAction);
     assert.equal(fortAction.page, 2);
     assert.equal(fortAction.section, 'core');
+    assert.equal(fortAction.type, 'save');
+    assert.deepEqual(fortAction.left, ['savingThrow']);
     await fortAction.roll({});
     assert.equal(rolledSave, 'fortitude');
 

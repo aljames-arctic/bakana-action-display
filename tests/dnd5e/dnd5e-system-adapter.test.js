@@ -169,8 +169,8 @@ test('Dnd5eSystemAdapter modifyActions full transformation pipeline', async () =
     const dexAbility = page2Actions.find(a => a.id === 'ability-dex');
     assert.equal(dexAbility.type, 'ability');
     assert.equal(dexAbility.section, 'core');
-    assert.deepEqual(dexAbility.left, ['save']);
-    assert.deepEqual(dexAbility.itemCategories, [['save'], ['abilityCheck']]);
+    assert.deepEqual(dexAbility.left, ['savingThrow']);
+    assert.deepEqual(dexAbility.itemCategories, [['savingThrow'], ['abilityCheck']]);
     assert.equal(dexAbility.subactions.length, 2);
     assert.equal(dexAbility.collapseDropdownIfSingle, true);
 });

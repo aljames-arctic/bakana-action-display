@@ -270,11 +270,11 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
 
             const saveSub = new Action({
                 id: `save-${abl}`,
-                name: localize('BAD.page2.save', localize('BAD.page2.savingThrow', 'Saving Throw')),
-                type: 'save',
+                name: localize('BAD.page2.savingThrow', 'Saving Throw'),
+                type: 'savingThrow',
                 img,
                 right: [TabRef.from('ability', abl)],
-                left: ['save'],
+                left: ['savingThrow'],
                 available: true,
                 roll: async (event) => {
                     const rollEvent = this._createRollEvent(event);
@@ -318,8 +318,8 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                 type: 'ability',
                 img,
                 right: [TabRef.from('ability', abl)],
-                left: ['save'],
-                itemCategories: [['save'], ['abilityCheck']],
+                left: ['savingThrow'],
+                itemCategories: [['savingThrow'], ['abilityCheck']],
                 available: true,
                 uses: { available: null, max: null },
                 subactions: [saveSub, checkSub],

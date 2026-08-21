@@ -179,7 +179,7 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
             type: 'save',
             img: 'icons/svg/shield.svg',
             right: [TabRef.from('ability', 'con')],
-            left: ['save'],
+            left: ['savingThrow'],
             available: true,
             uses: { available: null, max: null },
             roll: async (event) => {
@@ -202,7 +202,7 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
             type: 'save',
             img: 'icons/svg/wing.svg',
             right: [TabRef.from('ability', 'dex')],
-            left: ['save'],
+            left: ['savingThrow'],
             available: true,
             uses: { available: null, max: null },
             roll: async (event) => {
@@ -225,7 +225,7 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
             type: 'save',
             img: 'icons/svg/eye.svg',
             right: [TabRef.from('ability', 'wis')],
-            left: ['save'],
+            left: ['savingThrow'],
             available: true,
             uses: { available: null, max: null },
             roll: async (event) => {
