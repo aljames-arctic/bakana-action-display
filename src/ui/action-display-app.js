@@ -1249,8 +1249,13 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         columnElement.style.removeProperty?.('--bad-depth-2-width');
         columnElement.style.removeProperty?.('--bad-depth-3-width');
 
-        const depth2Tabs = columnElement.querySelectorAll?.(`${subTabSelector}:not(.bad-nested-sub-tab)`) ?? [];
-        const depth3Tabs = columnElement.querySelectorAll?.(`${subTabSelector}.bad-nested-sub-tab`) ?? [];
+        const expandedGroups = columnElement.querySelectorAll?.('.bad-left-tab-group.expanded, .bad-right-tab-group.expanded') ?? [];
+        const scope = expandedGroups.length > 0
+            ? `.bad-left-tab-group.expanded ${subTabSelector}, .bad-right-tab-group.expanded ${subTabSelector}`
+            : subTabSelector;
+
+        const depth2Tabs = columnElement.querySelectorAll?.(`${scope}:not(.bad-nested-sub-tab)`) ?? [];
+        const depth3Tabs = columnElement.querySelectorAll?.(`${scope}.bad-nested-sub-tab`) ?? [];
 
         let maxDepth2 = 0;
         for (const tab of depth2Tabs) {

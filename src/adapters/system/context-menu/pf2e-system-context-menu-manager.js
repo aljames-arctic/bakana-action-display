@@ -160,8 +160,16 @@ export class Pf2eSystemContextMenuManager extends BaseSystemContextMenuManager {
             if (parentType === 'all') {
                 const current = app.actor.getFlag(MODULE_ID, 'showAll') ?? false;
                 const nextState = !current;
+                const updates = {};
                 for (const key of ALL_FILTER_FLAGS) {
-                    app.actor.setFlag(MODULE_ID, key, nextState);
+                    updates[`flags.${MODULE_ID}.${key}`] = nextState;
+                }
+                if (typeof app.actor.update === 'function') {
+                    app.actor.update(updates);
+                } else {
+                    for (const key of ALL_FILTER_FLAGS) {
+                        app.actor.setFlag?.(MODULE_ID, key, nextState);
+                    }
                 }
                 return true;
             }
@@ -186,8 +194,16 @@ export class Pf2eSystemContextMenuManager extends BaseSystemContextMenuManager {
             if (parentType === 'all') {
                 const current = app.actor.getFlag(MODULE_ID, 'showAll') ?? false;
                 const nextState = !current;
+                const updates = {};
                 for (const key of ALL_FILTER_FLAGS) {
-                    app.actor.setFlag(MODULE_ID, key, nextState);
+                    updates[`flags.${MODULE_ID}.${key}`] = nextState;
+                }
+                if (typeof app.actor.update === 'function') {
+                    app.actor.update(updates);
+                } else {
+                    for (const key of ALL_FILTER_FLAGS) {
+                        app.actor.setFlag?.(MODULE_ID, key, nextState);
+                    }
                 }
                 return true;
             }

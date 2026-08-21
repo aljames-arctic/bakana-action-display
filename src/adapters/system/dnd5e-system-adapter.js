@@ -20,6 +20,8 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
     #actor = null;
     #highestAvailableSlot = 0;
     #ammoQuantities = new Map();
+    #resolvedSpellCache = new Map();
+    #cachedForMap = new Map();
 
     constructor() {
         super('dnd5e');
@@ -34,13 +36,25 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
 
     /**
      * Initialize adapter context for an actor.
-     * Pre-calculates ammo quantities and highest available spell slot for O(1) lookups during action modification.
+     * Pre-calculates ammo quantities, highest available spell slot, and cached item lookups for O(1) lookups during action modification.
      * @param {Actor} actor
      */
     init(actor) {
         this.#actor = actor;
         this.#highestAvailableSlot = actor ? this.#getHighestAvailableSpellSlot(actor) : 0;
         this.#ammoQuantities = actor ? this.#getAmmoQuantities(actor) : new Map();
+        this.#cachedForMap = new Map();
+        if (actor?.items) {
+            for (const item of actor.items.values()) {
+                const cachedFor = item.flags?.dnd5e?.cachedFor;
+                if (cachedFor) {
+                    const lastDot = cachedFor.lastIndexOf('.');
+                    const actId = lastDot !== -1 ? cachedFor.slice(lastDot + 1) : cachedFor;
+                    this.#cachedForMap.set(actId, item);
+                    this.#cachedForMap.set(cachedFor, item);
+                }
+            }
+        }
     }
 
     get highestAvailableSlot() {
@@ -575,15 +589,32 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
      */
     async #resolveActivityLinkedAction(activity, actor) {
         if (activity.type === 'cast' && activity.spell?.uuid) {
+            const uuid = activity.spell.uuid;
+            if (this.#resolvedSpellCache.has(uuid)) {
+                return this.#resolvedSpellCache.get(uuid);
+            }
+            if (typeof fromUuidSync === 'function') {
+                try {
+                    const doc = fromUuidSync(uuid);
+                    if (doc) {
+                        this.#resolvedSpellCache.set(uuid, doc);
+                        return doc;
+                    }
+                } catch (_) {}
+            }
             try {
-                const doc = await fromUuid(activity.spell.uuid);
-                if (doc) return doc;
+                const doc = await fromUuid(uuid);
+                if (doc) {
+                    this.#resolvedSpellCache.set(uuid, doc);
+                    return doc;
+                }
             } catch (e) {
-                log.warn(`Failed to resolve compendium spell UUID ${activity.spell.uuid}:`, e);
+                log.warn(`Failed to resolve compendium spell UUID ${uuid}:`, e);
             }
         }
         if (actor) {
-            const cached = actor.items?.find(i => i.flags?.dnd5e?.cachedFor?.endsWith(activity.id));
+            const cached = this.#cachedForMap.get(activity.id)
+                ?? actor.items?.find?.(i => i.flags?.dnd5e?.cachedFor?.endsWith(activity.id));
             if (cached) return cached;
         }
         if (activity.type === 'cast') {
