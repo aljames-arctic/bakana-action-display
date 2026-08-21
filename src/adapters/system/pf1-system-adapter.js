@@ -17,7 +17,6 @@ const SORT_ORDERS = {
     },
     item_type: {
         'all': 0,
-        'save': 1,
         'savingThrow': 1,
         'abilityCheck': 2,
         'weapon': 3,

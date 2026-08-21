@@ -104,7 +104,6 @@ export class BaseSystemContextModifier {
             case 'all': return localize('BAD.core.allItems', 'All Items');
             case 'other': return localize('BAD.core.other', 'Other');
             case 'hidden': return localize('BAD.core.hidden', 'Hidden');
-            case 'save':
             case 'savingThrow': return localize('BAD.page2.savingThrow', 'Saving Throw');
             case 'abilityCheck': return localize('BAD.page2.abilityCheck', 'Ability Check');
             default: {
@@ -124,7 +123,7 @@ export class BaseSystemContextModifier {
      * @returns {string}
      */
     getItemTypeIcon(parentId) {
-        if (parentId === 'save' || parentId === 'savingThrow') return 'fas fa-shield-alt';
+        if (parentId === 'savingThrow') return 'fas fa-shield-alt';
         if (parentId === 'abilityCheck') return 'fas fa-dice-d20';
         const typeMap = {
             arma: 'fas fa-sword',

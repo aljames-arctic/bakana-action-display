@@ -195,24 +195,24 @@ test('HUDTabColumn resets to default "all" when sole parent is deselected, but n
     const col = new HUDTabColumn({ side: 'left', defaultParent: 'all' });
     const groups = {
         all: { id: 'all', subTabs: [] },
-        save: { id: 'save', subTabs: [] },
+        savingThrow: { id: 'savingThrow', subTabs: [] },
         abilityCheck: { id: 'abilityCheck', subTabs: [] }
     };
 
-    col.selectParent('save', groups);
-    assert.ok(col.activeParents.has('save'));
+    col.selectParent('savingThrow', groups);
+    assert.ok(col.activeParents.has('savingThrow'));
 
     // Selecting all main parent tabs does NOT revert to 'all'
     col.toggleParent('abilityCheck', groups);
-    assert.ok(col.activeParents.has('save'));
+    assert.ok(col.activeParents.has('savingThrow'));
     assert.ok(col.activeParents.has('abilityCheck'));
     assert.ok(!col.activeParents.has('all'));
     assert.equal(col.activeParents.size, 2);
 
     // Deselecting the sole active parent reverts to 'all'
-    col.selectParent('save', groups);
-    assert.ok(col.activeParents.has('save'));
-    col.toggleParent('save', groups);
+    col.selectParent('savingThrow', groups);
+    assert.ok(col.activeParents.has('savingThrow'));
+    col.toggleParent('savingThrow', groups);
     assert.ok(col.activeParents.has('all'));
 });
 
@@ -225,7 +225,7 @@ test('ActionDisplayApp _onRollAction bypasses activity dropdown when only one su
         name: 'Strength',
         collapseDropdownIfSingle: true,
         subactions: [
-            { id: 'save-str', left: ['save'], roll: () => { rolled = true; } },
+            { id: 'save-str', left: ['savingThrow'], roll: () => { rolled = true; } },
             { id: 'check-str', left: ['abilityCheck'], roll: () => {} }
         ]
     };

@@ -285,7 +285,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
             const saveSub = new Action({
                 id: `save-${abl}`,
                 name: localize('BAD.page2.savingThrow', 'Saving Throw'),
-                type: 'savingThrow',
+                type: 'save',
                 img,
                 right: [TabRef.from('ability', abl)],
                 left: ['savingThrow'],

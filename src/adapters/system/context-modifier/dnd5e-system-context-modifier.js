@@ -40,7 +40,6 @@ const SORT_ORDERS = {
         'ability': { 'all': 0, 'str': 1, 'dex': 2, 'con': 3, 'int': 4, 'wis': 5, 'cha': 6 }
     },
     item_type: {
-        'save': 1,
         'savingThrow': 1,
         'abilityCheck': 2,
         'weapon': 3,
