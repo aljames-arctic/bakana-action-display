@@ -20,6 +20,7 @@ const SORT_ORDERS = {
 const ICONS = {
     item_type: {
         'weapon': 'fas fa-sword',
+        'equipment': 'fas fa-shield',
         'spell': 'fas fa-wand-magic-sparkles',
         'feat': 'fas fa-award',
         'consumable': 'fas fa-flask'

@@ -14,10 +14,11 @@ const SORT_ORDERS = {
     item_type: {
         'weapon': 1,
         'attack': 1,
-        'spell': 2,
-        'feat': 3,
-        'buff': 4,
-        'consumable': 5
+        'equipment': 2,
+        'spell': 3,
+        'feat': 4,
+        'buff': 5,
+        'consumable': 6
     }
 };
 
@@ -304,6 +305,7 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
     getItemTypeLabel(parentId) {
         switch (parentId) {
             case 'weapon': return localize('PF1.InventoryWeapons', 'Weapons');
+            case 'equipment': return localize('PF1.InventoryEquipment', localize('PF1.Equipment', 'Equipment'));
             case 'spell': return localize('PF1.Spells', 'Spells');
             case 'feat': return localize('PF1.Feats', 'Feats');
             case 'buff': return localize('PF1.Buffs', 'Buffs');
@@ -334,7 +336,9 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
      * Get the CSS icon class for a left-side item type (parent tab) in PF1e.
      */
     getItemTypeIcon(parentId) {
-        return parentId === 'buff' ? 'fas fa-sparkles' : super.getItemTypeIcon(parentId);
+        if (parentId === 'buff') return 'fas fa-sparkles';
+        if (parentId === 'equipment') return 'fas fa-shield';
+        return super.getItemTypeIcon(parentId);
     }
 
     getItemTypeSortOrder(parentId) {
@@ -586,7 +590,7 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
     getDefaultCategories() {
         return super.getDefaultCategories({
             weapon: {
-                expression: `item.type === 'weapon' || item.type === 'attack'`
+                expression: `item.type === 'weapon' || item.type === 'attack' || item.type === 'equipment'`
             },
             feature: {
                 expression: `item.type === 'feat' || item.type === 'buff'`

@@ -23,6 +23,11 @@ test('Pf1SystemAdapter initialization and extractable item types', () => {
 test('Pf1SystemAdapter label lookups and spell sub-tab labels', () => {
     const adapter = new Pf1SystemAdapter();
 
+    assert.equal(adapter.getItemTypeLabel('weapon'), 'PF1.InventoryWeapons');
+    assert.equal(adapter.getItemTypeLabel('equipment'), 'PF1.InventoryEquipment');
+    assert.equal(adapter.getItemTypeIcon('equipment'), 'fas fa-shield');
+    assert.equal(adapter.getItemTypeIcon('buff'), 'fas fa-sparkles');
+
     assert.equal(adapter.getItemSubTabLabel('spell', 'cantrip'), 'PF1.Cantrip');
     assert.equal(adapter.getItemSubTabLabel('spell', '1'), 'PF1.SpellLevels.1');
     assert.equal(adapter.getItemSubTabLabel('spell', 'sla'), 'PF1.SpellBookSpelllike');
@@ -35,6 +40,9 @@ test('Pf1SystemAdapter label lookups and spell sub-tab labels', () => {
 test('Pf1SystemAdapter sort orders', () => {
     const adapter = new Pf1SystemAdapter();
 
+    assert.equal(adapter.getItemTypeSortOrder('weapon'), 1);
+    assert.equal(adapter.getItemTypeSortOrder('equipment'), 2);
+    assert.equal(adapter.getItemTypeSortOrder('spell'), 3);
     assert.equal(adapter.getItemSubTabSortOrder('spell', 'cantrip'), 999);
     assert.equal(adapter.getItemSubTabSortOrder('spell', '1'), 2);
     assert.equal(adapter.getItemSubTabSortOrder('spell', 'sla'), 999);
