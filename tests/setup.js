@@ -7,6 +7,34 @@ globalThis.Item = class Item {};
 globalThis.Actor = class Actor {};
 globalThis.HTMLElement = class HTMLElement {};
 globalThis.CONFIG = globalThis.CONFIG ?? {};
+globalThis.CONFIG.DND5E = globalThis.CONFIG.DND5E ?? {
+    activityActivationTypes: {
+        action: 'DND5E.Action',
+        bonus: 'DND5E.BonusAction',
+        reaction: 'DND5E.Reaction',
+        minute: 'DND5E.TimeMinute',
+        hour: 'DND5E.TimeHour',
+        day: 'DND5E.TimeDay',
+        shortRest: 'DND5E.ActivityActivationShortRest',
+        longRest: 'DND5E.ActivityActivationLongRest',
+        encounter: 'DND5E.ActivityActivationStartEncounter',
+        turnStart: 'DND5E.ActivityActivationTurnStart',
+        turnEnd: 'DND5E.ActivityActivationTurnEnd',
+        legendary: 'DND5E.LegendaryAction',
+        mythic: 'DND5E.MythicAction',
+        lair: 'DND5E.LairAction',
+        crew: 'DND5E.CrewAction',
+        special: 'DND5E.Special'
+    },
+    activityActivationCategories: {
+        standard: 'DND5E.Standard',
+        time: 'DND5E.Time',
+        rest: 'DND5E.Rest',
+        combat: 'DND5E.Combat',
+        monster: 'DND5E.Monster',
+        vehicle: 'DND5E.Vehicle'
+    }
+};
 
 function getProperty(obj, path) {
     if (!obj || !path) return undefined;

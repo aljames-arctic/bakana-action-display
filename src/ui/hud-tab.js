@@ -158,6 +158,23 @@ export class HUDTab {
     }
 
     /**
+     * Recursively collect all descendant sub-tab IDs under this tab.
+     * @returns {Set<string>} Set of all sub-tab and nested sub-tab IDs
+     */
+    getAllSubTabIds() {
+        const ids = new Set();
+        for (const st of this.subTabs) {
+            ids.add(st.id);
+            const childIds = st.getAllSubTabIds();
+            for (const childId of childIds) {
+                ids.add(childId);
+            }
+        }
+        return ids;
+    }
+
+
+    /**
      * Handle left-click on this tab.
      * @param {ApplicationV2} app 
      * @param {HUDTabColumn} tabColumn 

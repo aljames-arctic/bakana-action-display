@@ -141,7 +141,22 @@
             "updateEquipState": "Update Equip State"
         },
         "dnd5e": {
-            "upcast": "Upcast"
+            "upcast": "Upcast",
+            "standard": "Standard",
+            "time": "Time",
+            "rest": "Rest",
+            "combat": "Combat",
+            "monster": "Monster",
+            "vehicle": "Vehicle",
+            "shortRest": "End of a Short Rest",
+            "longRest": "End of a Long Rest",
+            "encounter": "Start of Encounter",
+            "turnStart": "Start of Turn",
+            "turnEnd": "End of Turn",
+            "legendary": "Legendary Action",
+            "mythic": "Mythic Action",
+            "lair": "Lair Action",
+            "crew": "Crew Action"
         },
         "pf2e": {
             "updateEquipState": "Update Equip State",

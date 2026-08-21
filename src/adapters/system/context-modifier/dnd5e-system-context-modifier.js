@@ -19,10 +19,38 @@ const SORT_ORDERS = {
             'wondrous': 10, 'vehicle': 11, 'natural': 12
         },
         'economy': {
-            'all': 0, 'action': 1, 'bonus': 2, 'reaction': 3, 'other': 4,
-            'special': 5, 'legendary': 6, 'mythic': 7, 'crew': 8, 'lair': 9,
-            'minute': 10, 'hour': 11, 'day': 12, 'none': 13
+            'all': 0,
+            'standard': 1,
+            'time': 2,
+            'rest': 3,
+            'combat': 4,
+            'monster': 5,
+            'vehicle': 6,
+            'other': 7,
+            'special': 8,
+            'none': 9,
+            'action': 1,
+            'bonus': 2,
+            'reaction': 3,
+            'minute': 10,
+            'hour': 11,
+            'day': 12,
+            'shortRest': 13,
+            'longRest': 14,
+            'encounter': 15,
+            'turnStart': 16,
+            'turnEnd': 17,
+            'legendary': 18,
+            'mythic': 19,
+            'lair': 20,
+            'crew': 21
         },
+        'standard': { 'all': 0, 'action': 1, 'bonus': 2, 'reaction': 3 },
+        'time': { 'all': 0, 'minute': 1, 'hour': 2, 'day': 3 },
+        'rest': { 'all': 0, 'shortRest': 1, 'longRest': 2, 'short': 1, 'long': 2 },
+        'combat': { 'all': 0, 'encounter': 1, 'turnStart': 2, 'turnEnd': 3 },
+        'monster': { 'all': 0, 'legendary': 1, 'mythic': 2, 'lair': 3 },
+        'vehicle': { 'all': 0, 'crew': 1 },
         'components': { 'vocal': 0, 'somatic': 1, 'material': 2 },
         'ability': { 'all': 0, 'str': 1, 'dex': 2, 'con': 3, 'int': 4, 'wis': 5, 'cha': 6 }
     },
@@ -74,17 +102,31 @@ const LABEL_KEYS = {
     },
     action_subtab: {
         'all': ['BAD.core.allActions', 'All Actions'],
+        'standard': ['DND5E.Standard', 'Standard'],
+        'time': ['DND5E.Time', 'Time'],
+        'rest': ['DND5E.Rest', 'Rest'],
+        'combat': ['DND5E.Combat', 'Combat'],
+        'monster': ['DND5E.Monster', 'Monster'],
+        'vehicle': ['DND5E.Vehicle', 'Vehicle'],
         'action': ['DND5E.Action', 'Action'],
         'bonus': ['DND5E.BonusAction', 'Bonus Action'],
         'reaction': ['DND5E.Reaction', 'Reaction'],
         'minute': ['DND5E.TimeMinute', 'Minute'],
         'hour': ['DND5E.TimeHour', 'Hour'],
         'day': ['DND5E.TimeDay', 'Day'],
-        'legendary': ['DND5E.LegendaryAction', 'Legendary'],
-        'mythic': ['DND5E.MythicAction', 'Mythic'],
-        'lair': ['DND5E.LairAction', 'Lair'],
-        'crew': ['DND5E.CrewAction', 'Crew'],
+        'shortRest': ['DND5E.ActivityActivationShortRest', 'End of a Short Rest'],
+        'longRest': ['DND5E.ActivityActivationLongRest', 'End of a Long Rest'],
+        'short': ['DND5E.ActivityActivationShortRest', 'End of a Short Rest'],
+        'long': ['DND5E.ActivityActivationLongRest', 'End of a Long Rest'],
+        'encounter': ['DND5E.ActivityActivationStartEncounter', 'Start of Encounter'],
+        'turnStart': ['DND5E.ActivityActivationTurnStart', 'Start of Turn'],
+        'turnEnd': ['DND5E.ActivityActivationTurnEnd', 'End of Turn'],
+        'legendary': ['DND5E.LegendaryAction', 'Legendary Action'],
+        'mythic': ['DND5E.MythicAction', 'Mythic Action'],
+        'lair': ['DND5E.LairAction', 'Lair Action'],
+        'crew': ['DND5E.CrewAction', 'Crew Action'],
         'special': ['DND5E.Special', 'Special'],
+        'other': ['DND5E.ActionOther', 'Other'],
         'none': ['DND5E.None', 'None'],
         'vocal': ['DND5E.ComponentVerbal', 'Verbal'],
         'somatic': ['DND5E.ComponentSomatic', 'Somatic'],
@@ -277,6 +319,18 @@ export class Dnd5eSystemContextModifier extends BaseSystemContextModifier {
      */
     getActionSubTabLabel(subId) {
         const config = LABEL_KEYS.action_subtab[subId];
-        return config ? localize(config[0], config[1]) : super.getActionSubTabLabel(subId);
+        const fallback = config?.[1] ?? subId;
+
+        const cfg = CONFIG?.DND5E;
+        const configLabel = cfg?.activityActivationTypes?.[subId]
+            ?? cfg?.abilityActivationTypes?.[subId]
+            ?? cfg?.activityActivationCategories?.[subId];
+        if (configLabel) {
+            return typeof configLabel === 'string' ? localize(configLabel, fallback) : (configLabel.label ?? configLabel.name ?? fallback);
+        }
+
+        return config ? localize(config[0], fallback) : super.getActionSubTabLabel(subId);
     }
 }
+
+

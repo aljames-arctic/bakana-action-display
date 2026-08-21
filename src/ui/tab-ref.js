@@ -18,16 +18,21 @@ export class TabRef {
     }
 
     /**
-     * Helper to create a nested parent/child TabRef node.
+     * Helper to create a nested parent/child TabRef node supporting arbitrary depth.
      * @param {string} rootLabel Root tab label (e.g. 'economy', 'components')
-     * @param {string} [subLabel] Sub tab label (e.g. 'action', 'vocal')
+     * @param {...string} subLabels Sub tab labels (e.g. 'standard', 'action')
      * @returns {TabRef}
      */
-    static from(rootLabel, subLabel) {
-        if (!subLabel || subLabel === 'none') {
+    static from(rootLabel, ...subLabels) {
+        const filteredSubs = subLabels.filter(s => s && s !== 'none');
+        if (filteredSubs.length === 0) {
             return new TabRef({ label: rootLabel });
         }
-        const parent = new TabRef({ label: rootLabel });
-        return new TabRef({ label: subLabel, parent });
+        let current = new TabRef({ label: rootLabel });
+        for (const sub of filteredSubs) {
+            current = new TabRef({ label: sub, parent: current });
+        }
+        return current;
     }
 }
+

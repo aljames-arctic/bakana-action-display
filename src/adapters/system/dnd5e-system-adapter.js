@@ -134,9 +134,9 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                     const activationType = this.#getActivityActivationType(activity, item, linkedAction);
                     if (!activationType || activationType === 'none') return null;
 
-                    const parentId = this.#getParentTab(activationType);
-                    const subId = this.#getSubTab(activationType);
-                    const tabRef = TabRef.from(parentId, subId);
+                    const category = this.#getEconomyCategory(activationType);
+                    const subId = this.#getCanonicalSubTab(activationType);
+                    const tabRef = TabRef.from('economy', category, subId);
 
                     return new Action({
                         id: activity.id,
@@ -376,20 +376,76 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
     // #region Localizations & UI Formatting
 
     /**
-     * Determine the parent action tab based on DnD5e activation type.
+     * Map a D&D 5e activation type to its parent category under Action Economy.
+     * @param {string} type
+     * @returns {string} Category identifier ('standard', 'time', 'rest', 'combat', 'monster', 'vehicle', 'other')
      */
-    #getParentTab(type) {
-        // Everything (including times, actions, legendary, special, none)
-        // now goes under 'economy' (Action Economy)
-        return 'economy';
+    #getEconomyCategory(type) {
+        if (!type) return 'other';
+        const norm = String(type).toLowerCase();
+        switch (norm) {
+            case 'action':
+            case 'bonus':
+            case 'reaction':
+                return 'standard';
+            case 'minute':
+            case 'hour':
+            case 'day':
+                return 'time';
+            case 'shortrest':
+            case 'short':
+            case 'endshortrest':
+            case 'longrest':
+            case 'long':
+            case 'endlongrest':
+                return 'rest';
+            case 'encounter':
+            case 'startencounter':
+            case 'turnstart':
+            case 'startturn':
+            case 'turnend':
+            case 'endturn':
+                return 'combat';
+            case 'legendary':
+            case 'mythic':
+            case 'lair':
+                return 'monster';
+            case 'crew':
+                return 'vehicle';
+            default:
+                return 'other';
+        }
     }
 
     /**
-     * Determine the sub-action tab based on DnD5e activation type.
+     * Map a D&D 5e activation type to its canonical sub-tab identifier.
+     * @param {string} type
+     * @returns {string} Canonical sub-tab identifier
      */
-    #getSubTab(type) {
+    #getCanonicalSubTab(type) {
         if (!type) return 'none';
-        return String(type).toLowerCase();
+        const norm = String(type).toLowerCase();
+        switch (norm) {
+            case 'short':
+            case 'shortrest':
+            case 'endshortrest':
+                return 'shortRest';
+            case 'long':
+            case 'longrest':
+            case 'endlongrest':
+                return 'longRest';
+            case 'encounter':
+            case 'startencounter':
+                return 'encounter';
+            case 'turnstart':
+            case 'startturn':
+                return 'turnStart';
+            case 'turnend':
+            case 'endturn':
+                return 'turnEnd';
+            default:
+                return norm;
+        }
     }
 
     /**
@@ -401,11 +457,19 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
             { id: 'action', label: this.getActionSubTabLabel('action') ?? 'Action', defaultColor: '#3b82f6' },
             { id: 'bonus', label: this.getActionSubTabLabel('bonus') ?? 'Bonus Action', defaultColor: '#14b8a6' },
             { id: 'reaction', label: this.getActionSubTabLabel('reaction') ?? 'Reaction', defaultColor: '#ef4444' },
+            { id: 'minute', label: this.getActionSubTabLabel('minute') ?? 'Minute', defaultColor: '#0284c7' },
+            { id: 'hour', label: this.getActionSubTabLabel('hour') ?? 'Hour', defaultColor: '#0369a1' },
+            { id: 'day', label: this.getActionSubTabLabel('day') ?? 'Day', defaultColor: '#075985' },
+            { id: 'shortRest', label: this.getActionSubTabLabel('shortRest') ?? 'End of a Short Rest', defaultColor: '#10b981' },
+            { id: 'longRest', label: this.getActionSubTabLabel('longRest') ?? 'End of a Long Rest', defaultColor: '#059669' },
+            { id: 'encounter', label: this.getActionSubTabLabel('encounter') ?? 'Start of Encounter', defaultColor: '#f59e0b' },
+            { id: 'turnStart', label: this.getActionSubTabLabel('turnStart') ?? 'Start of Turn', defaultColor: '#84cc16' },
+            { id: 'turnEnd', label: this.getActionSubTabLabel('turnEnd') ?? 'End of Turn', defaultColor: '#e11d48' },
             { id: 'legendary', label: this.getActionSubTabLabel('legendary') ?? 'Legendary Action', defaultColor: '#18181b' },
-            { id: 'lair', label: this.getActionSubTabLabel('lair') ?? 'Lair Action', defaultColor: '#eab308' },
-            { id: 'special', label: this.getActionSubTabLabel('special') ?? 'Special', defaultColor: '#a855f7' },
             { id: 'mythic', label: this.getActionSubTabLabel('mythic') ?? 'Mythic Action', defaultColor: '#ec4899' },
+            { id: 'lair', label: this.getActionSubTabLabel('lair') ?? 'Lair Action', defaultColor: '#eab308' },
             { id: 'crew', label: this.getActionSubTabLabel('crew') ?? 'Crew Action', defaultColor: '#6366f1' },
+            { id: 'special', label: this.getActionSubTabLabel('special') ?? 'Special', defaultColor: '#a855f7' },
             { id: 'other', label: this.getActionSubTabLabel('other') ?? 'Other', defaultColor: '#64748b' }
         ];
     }

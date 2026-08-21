@@ -446,7 +446,6 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
             if (!combo || typeof combo !== 'string') continue;
             const parts = combo.split('/');
             const parentId = parts[0];
-            const subId = parts[1]; // might be undefined
 
             if (!parentGroups[parentId]) {
                 const isActive = this.rightTabs.activeParents.has(parentId);
@@ -461,16 +460,48 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
                 });
             }
 
-            if (subId) {
+            if (parts.length === 2) {
+                const subId = parts[1];
+                let subTab = parentGroups[parentId].subTabs.find(t => t.id === subId);
                 const isActive = this.rightTabs.activeParents.has(parentId);
                 const isSubActive = this.rightTabs.activeSubTypes.has(subId);
                 const isExclusion = adapter.isExclusionTab(parentId);
-                parentGroups[parentId].addSubTab({
-                    id: subId,
-                    label: adapter.getActionSubTabLabel(subId),
-                    active: !isExclusion && isActive && isSubActive,
-                    excluded: isExclusion && isActive && isSubActive
-                });
+
+                if (!subTab) {
+                    parentGroups[parentId].addSubTab({
+                        id: subId,
+                        label: adapter.getActionSubTabLabel(subId),
+                        active: !isExclusion && isActive && isSubActive,
+                        excluded: isExclusion && isActive && isSubActive
+                    });
+                }
+            } else if (parts.length >= 3) {
+                const categoryId = parts[1];
+                const subId = parts[2];
+                let catTab = parentGroups[parentId].subTabs.find(t => t.id === categoryId);
+                const isActive = this.rightTabs.activeParents.has(parentId);
+                const isCatActive = this.rightTabs.activeSubTypes.has(categoryId);
+                const isExclusion = adapter.isExclusionTab(parentId);
+
+                if (!catTab) {
+                    catTab = parentGroups[parentId].addSubTab({
+                        id: categoryId,
+                        label: adapter.getActionSubTabLabel(categoryId),
+                        active: !isExclusion && isActive && isCatActive,
+                        excluded: isExclusion && isActive && isCatActive
+                    });
+                }
+
+                let subTab = catTab.subTabs.find(t => t.id === subId);
+                if (!subTab) {
+                    const isSubActive = this.rightTabs.activeSubTypes.has(subId);
+                    catTab.addSubTab({
+                        id: subId,
+                        label: adapter.getActionSubTabLabel(subId),
+                        active: !isExclusion && isActive && (isSubActive || isCatActive),
+                        excluded: isExclusion && isActive && (isSubActive || isCatActive)
+                    });
+                }
             }
         }
 
@@ -484,7 +515,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
 
             if (parent.subTabs.length > 0 && !skipAll) {
                 const isActive = parent.id === this.rightTabs.focusedParent;
-                const validSubIds = toSet(parent.subTabs, t => t.id);
+                const validSubIds = parent.getAllSubTabIds ? parent.getAllSubTabIds() : toSet(parent.subTabs, t => t.id);
                 const activeSubsForParent = Array.from(this.rightTabs.activeSubTypes).filter(id => validSubIds.has(id));
 
                 parent.addSubTab({
@@ -493,13 +524,19 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
                     active: isActive && activeSubsForParent.length === 0
                 });
                 parent.subTabs.sort((a, b) => adapter.getActionSubTabSortOrder(parent.id, a.id) - adapter.getActionSubTabSortOrder(parent.id, b.id));
+
+                for (const sub of parent.subTabs) {
+                    if (sub.subTabs.length > 0) {
+                        sub.subTabs.sort((a, b) => adapter.getActionSubTabSortOrder(sub.id, a.id) - adapter.getActionSubTabSortOrder(sub.id, b.id));
+                    }
+                }
             }
         }
 
         // Post-process parentGroups to set active, expanded, and activeParent
         for (const parent of actionTypes) {
             if (adapter.isExclusionTab(parent.id)) continue; // Exclude exclusion tabs from activeParent calculation
-            const validSubIds = toSet(parent.subTabs, t => t.id);
+            const validSubIds = parent.getAllSubTabIds ? parent.getAllSubTabIds() : toSet(parent.subTabs, t => t.id);
             const activeSubsForParent = Array.from(this.rightTabs.activeSubTypes).filter(id => validSubIds.has(id));
 
             parent.active = this.rightTabs.activeParents.has(parent.id);
