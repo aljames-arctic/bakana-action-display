@@ -53,11 +53,16 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
 
     /**
      * Check if a PF2e item is equipped.
+     * Natural attacks, unarmed strikes, and non-physical items are always considered equipped.
      * @param {Item} item
      * @returns {boolean}
      */
     getItemEquipped(item) {
         if (!item?.system) return true;
+        if (item.isPhysical === false) return true;
+        if (item.category === 'unarmed' || item.system.category?.value === 'unarmed') return true;
+        if (item.system.traits?.value?.includes?.('unarmed')) return true;
+
         if (item.isEquipped !== undefined) {
             return Boolean(item.isEquipped);
         }

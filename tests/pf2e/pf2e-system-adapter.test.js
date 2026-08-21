@@ -206,6 +206,23 @@ test('Pf2eSystemAdapter context menu manager provides carry type options and tab
     assert.equal(updatedPayload['system.equipped.carryType'], 'dropped');
     assert.equal(updatedPayload['system.equipped.handsHeld'], 0);
 
+    // Natural attack (Beak) should NOT have updateEquipState option and is always equipped
+    const beakItem = {
+        id: 'beak-1',
+        name: 'Beak',
+        type: 'weapon',
+        isPhysical: false,
+        category: 'unarmed',
+        system: {
+            traits: { value: ['unarmed', 'finesse'] }
+        }
+    };
+    app.actions.push({ id: 'act-beak', originalItem: beakItem });
+    const beakEl = { dataset: { actionId: 'act-beak' } };
+
+    assert.equal(updateEquipItem.condition(beakEl), false);
+    assert.equal(adapter.getItemEquipped(beakItem), true);
+
     // Tab right click handling
     const tabElAll = {
         classList: { contains: (cls) => cls === 'bad-left-tab' },

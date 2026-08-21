@@ -31,6 +31,20 @@ export class Pf2eSystemContextMenuManager extends BaseSystemContextMenuManager {
     }
 
     /**
+     * Check if a PF2e item has an equip/carry state that can be updated.
+     * Natural attacks, unarmed strikes, and non-physical items do not have an equip state.
+     * @param {Item} item
+     * @returns {boolean}
+     */
+    #isEquippable(item) {
+        if (!item || !item.system) return false;
+        if (item.isPhysical === false) return false;
+        if (item.category === 'unarmed' || item.system?.category?.value === 'unarmed') return false;
+        if (item.system?.traits?.value?.includes?.('unarmed')) return false;
+        return Boolean(item.system.equipped?.carryType);
+    }
+
+    /**
      * Retrieve system-specific context menu items for PF2e physical items (Update Equip State submenu).
      * @param {ApplicationV2} app Active HUD application
      * @returns {Object[]} Context menu items definition
@@ -42,7 +56,7 @@ export class Pf2eSystemContextMenuManager extends BaseSystemContextMenuManager {
                 icon: '<i class="fas fa-shield-halved"></i>',
                 condition: el => {
                     const item = this.#getOwnerItem(app, el);
-                    return Boolean(item && item.system?.equipped);
+                    return this.#isEquippable(item);
                 },
                 submenu: [
                     {
