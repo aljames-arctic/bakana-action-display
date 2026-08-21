@@ -244,15 +244,15 @@ test('Pf2eSystemAdapter context menu manager provides carry type options and tab
     };
 
     const menuItems = adapter.getContextMenuItems(app);
-    const updateEquipItem = menuItems.find(m => m.name === 'BAD.pf2e.updateEquipState');
+    const updateEquipItem = menuItems.find(m => m.name === 'PF2E.Item.Physical.CarryType.Title');
     assert.ok(updateEquipItem);
     assert.ok(Array.isArray(updateEquipItem.submenu));
 
-    const hold1Item = updateEquipItem.submenu.find(m => m.name === 'BAD.pf2e.carryTypeHeld1');
-    const hold2Item = updateEquipItem.submenu.find(m => m.name === 'BAD.pf2e.carryTypeHeld2');
-    const wearItem = updateEquipItem.submenu.find(m => m.name === 'BAD.pf2e.carryTypeWorn');
-    const stowItem = updateEquipItem.submenu.find(m => m.name === 'BAD.pf2e.carryTypeStowed');
-    const dropItem = updateEquipItem.submenu.find(m => m.name === 'BAD.pf2e.carryTypeDropped');
+    const hold1Item = updateEquipItem.submenu.find(m => m.name === 'PF2E.Item.Physical.CarryType.Held1');
+    const hold2Item = updateEquipItem.submenu.find(m => m.name === 'PF2E.Item.Physical.CarryType.Held2');
+    const wearItem = updateEquipItem.submenu.find(m => m.name === 'PF2E.Item.Physical.CarryType.Worn');
+    const stowItem = updateEquipItem.submenu.find(m => m.name === 'PF2E.Item.Physical.CarryType.Stowed');
+    const dropItem = updateEquipItem.submenu.find(m => m.name === 'PF2E.Item.Physical.CarryType.Dropped');
 
     assert.ok(hold1Item);
     assert.ok(hold2Item);
