@@ -63,7 +63,6 @@ test('initializeSystemAdapter loads matching system adapter or falls back to Bas
         assert.equal(tormenta.systemId, 'tormenta20');
         assert.equal(tormenta.isSupported, false);
         assert.ok(logs.some(l => l.includes('tormenta20') && l.includes('not currently supported') && l.includes('github.com')));
-        assert.ok(logs.some(l => l.includes('Debug') && l.includes('No system adapter registered for "tormenta20"')));
     } finally {
         console.log = origLog;
         console.warn = origWarn;

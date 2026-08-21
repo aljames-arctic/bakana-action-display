@@ -12,7 +12,6 @@
                 "hint": "Define custom category sections, sub-sections, and boolean expressions for filtering HUD items."
             },
             "moduleIntegrationsMenu": {
-                "name": "Module Integration Configuration",
                 "label": "Configure Module Integrations",
                 "hint": "Configure options and behaviors for integrated third-party modules active in this world."
             },
@@ -21,7 +20,6 @@
                 "hint": "Display a button in the HUD control bar to recenter the canvas view on the active token."
             },
             "economyColorsMenu": {
-                "name": "Action Economy Colors",
                 "label": "Configure Colors",
                 "hint": "Customize the indicator bar color for each action economy type for this system."
             },
@@ -79,11 +77,7 @@
         "categorization": {
             "title": "Bakana's HUD Categorization Configuration",
             "enable": "Enable Custom Categorization",
-            "enableHint": "Organize HUD actions into categorized sections with custom divider bars utilizing user defined boolean expressions.",
             "addCategory": "Add Category",
-            "addSubCategory": "Add Subcategory",
-            "removeCategory": "Remove Category",
-            "removeSubCategory": "Remove Subcategory",
             "categoryNamePlaceholder": "(Optional) Category Name",
             "categoryExprPlaceholder": "Boolean Expression",
             "subCategoryNamePlaceholder": "(Optional) Subcategory Name",
@@ -91,10 +85,19 @@
             "loadPresets": "Load Presets",
             "saved": "Categorization configuration saved successfully.",
             "noCategories": "No custom categories defined. Click '+ Add Category' to start.",
-            "fallthroughTooltip": "Enable Fallthrough: actions matching this category will appear here and continue evaluating into later categories rather than being consumed.",
             "others": "Other Actions",
             "invalidExpressionWarning": "The expression \"{expr}\" contains a syntax error.",
-            "expressionHelpTooltip": "<div class=\"bad-expression-tooltip\"><div class=\"bad-expression-tooltip-desc\">Actions are evaluated against each category from top to bottom and placed in the first matching rule (<code>true</code>).<br/><strong>Fallthrough (<i class=\"fas fa-chevron-down\"></i>)</strong>: When enabled on a category, matching actions appear in that category and continue evaluating into later categories as though they haven't been matched yet.<br/>Unmatched actions appear in <strong>Other Actions</strong>.</div><div class=\"bad-expression-tooltip-title\">Available Variables in Boolean Expressions:</div><ul class=\"bad-expression-tooltip-list\"><li><strong>item</strong>: Foundry Item document (e.g. <code>item.type === 'weapon'</code>, <code>item.name</code>, <code>item.system</code>)</li><li><strong>action</strong>: HUD Action instance (e.g. <code>action.left</code>, <code>action.right</code>, <code>action.uses.available</code>)</li><li><strong>actor</strong>: Foundry Actor document (e.g. <code>actor.getFlag('bakana-action-display', 'favorites')?.[item.id]</code>)</li><li><strong>token</strong>: Foundry Token document (e.g. <code>token.name</code>)</li><li><strong>user</strong>: Current Foundry User document (e.g. <code>user.isGM</code>, <code>user.name</code>)</li></ul></div>"
+            "expressionHelp": {
+                "evaluation": "Actions are evaluated against each category from top to bottom and placed in the first matching rule ({true}).",
+                "fallthrough": "{fallthrough}: When enabled on a category, matching actions appear in that category and continue evaluating into later categories as though they haven't been matched yet.",
+                "unmatched": "Unmatched actions appear in {otherActions}.",
+                "variablesTitle": "Available Variables in Boolean Expressions:",
+                "item": "Foundry Item document (e.g. {example})",
+                "action": "HUD Action instance (e.g. {example})",
+                "actor": "Foundry Actor document (e.g. {example})",
+                "token": "Foundry Token document (e.g. {example})",
+                "user": "Current Foundry User document (e.g. {example})"
+            }
         },
         "actionMenu": {
             "addFavorite": "Add to Favorites",

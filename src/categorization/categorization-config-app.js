@@ -62,7 +62,44 @@ export class CategorizationConfigApp extends adapter.foundry.HandlebarsApplicati
     async _prepareContext(options) {
         const context = await super._prepareContext(options);
         context.config = this.config;
+        context.helpTooltip = this._getExpressionHelpTooltip();
         return context;
+    }
+
+    /**
+     * Build the localized HTML tooltip explaining boolean expression categorization rules and variables.
+     * Replaces stand-in variables in localized sentence strings with HTML tags and icons.
+     * @returns {string} HTML string for the tooltip
+     */
+    _getExpressionHelpTooltip() {
+        const localize = (key, fallback = '') => {
+            const loc = game.i18n.localize(key);
+            return (loc && loc !== key) ? loc : fallback;
+        };
+        const format = (key, data, fallback = '') => {
+            let str = game.i18n.localize(key);
+            if (!str || str === key) {
+                str = fallback;
+            }
+            return str.replace(/\{(\w+)\}/g, (match, p1) => data[p1] ?? match);
+        };
+
+        const trueCode = '<code>true</code>';
+        const fallthroughLabel = '<strong>Fallthrough (<i class="fas fa-chevron-down"></i>)</strong>';
+        const otherActionsLabel = `<strong>${localize('BAD.categorization.others', 'Other Actions')}</strong>`;
+
+        const descEvaluation = format('BAD.categorization.expressionHelp.evaluation', { true: trueCode }, 'Actions are evaluated against each category from top to bottom and placed in the first matching rule (<code>true</code>).');
+        const descFallthrough = format('BAD.categorization.expressionHelp.fallthrough', { fallthrough: fallthroughLabel }, '<strong>Fallthrough (<i class="fas fa-chevron-down"></i>)</strong>: When enabled on a category, matching actions appear in that category and continue evaluating into later categories as though they haven\'t been matched yet.');
+        const descUnmatched = format('BAD.categorization.expressionHelp.unmatched', { otherActions: otherActionsLabel }, 'Unmatched actions appear in <strong>Other Actions</strong>.');
+
+        const varTitle = localize('BAD.categorization.expressionHelp.variablesTitle', 'Available Variables in Boolean Expressions:');
+        const itemDesc = format('BAD.categorization.expressionHelp.item', { example: "<code>item.type === 'weapon'</code>, <code>item.name</code>, <code>item.system</code>" }, "Foundry Item document (e.g. <code>item.type === 'weapon'</code>, <code>item.name</code>, <code>item.system</code>)");
+        const actionDesc = format('BAD.categorization.expressionHelp.action', { example: '<code>action.left</code>, <code>action.right</code>, <code>action.uses.available</code>' }, 'HUD Action instance (e.g. <code>action.left</code>, <code>action.right</code>, <code>action.uses.available</code>)');
+        const actorDesc = format('BAD.categorization.expressionHelp.actor', { example: "<code>actor.getFlag('bakana-action-display', 'favorites')?.[item.id]</code>" }, "Foundry Actor document (e.g. <code>actor.getFlag('bakana-action-display', 'favorites')?.[item.id]</code>)");
+        const tokenDesc = format('BAD.categorization.expressionHelp.token', { example: '<code>token.name</code>' }, 'Foundry Token document (e.g. <code>token.name</code>)');
+        const userDesc = format('BAD.categorization.expressionHelp.user', { example: '<code>user.isGM</code>, <code>user.name</code>' }, 'Current Foundry User document (e.g. <code>user.isGM</code>, <code>user.name</code>)');
+
+        return `<div class="bad-expression-tooltip"><div class="bad-expression-tooltip-desc">${descEvaluation}<br/>${descFallthrough}<br/>${descUnmatched}</div><div class="bad-expression-tooltip-title">${varTitle}</div><ul class="bad-expression-tooltip-list"><li><strong>item</strong>: ${itemDesc}</li><li><strong>action</strong>: ${actionDesc}</li><li><strong>actor</strong>: ${actorDesc}</li><li><strong>token</strong>: ${tokenDesc}</li><li><strong>user</strong>: ${userDesc}</li></ul></div>`;
     }
 
     /** @override */

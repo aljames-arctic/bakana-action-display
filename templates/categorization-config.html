@@ -6,7 +6,7 @@
                 <input type="checkbox" name="categorizationEnabled" class="bad-config-enable-checkbox" data-action="toggleEnabled" {{#if config.enabled}}checked{{/if}} />
                 <span>{{localize "BAD.categorization.enable"}}</span>
             </label>
-            <i class="fas fa-circle-question bad-config-help-icon" data-tooltip="{{localize 'BAD.categorization.expressionHelpTooltip'}}" data-tooltip-direction="RIGHT"></i>
+            <i class="fas fa-circle-question bad-config-help-icon" data-tooltip="{{helpTooltip}}" data-tooltip-direction="RIGHT"></i>
         </div>
         <button type="button" class="bad-config-btn bad-config-btn-primary" data-action="addCategory">
             <i class="fas fa-plus"></i> {{localize "BAD.categorization.addCategory"}}

@@ -53,7 +53,7 @@ Hooks.once('init', () => {
     // Register Module Integration Configuration Menu Button (only visible if at least one adapter module is loaded)
     if (hasActiveModuleAdapters()) {
         game.settings.registerMenu(MODULE_ID, 'moduleIntegrationsMenu', {
-            name: game.i18n.localize('BAD.settings.moduleIntegrationsMenu.name'),
+            name: game.i18n.localize('BAD.moduleIntegrations.title'),
             label: game.i18n.localize('BAD.settings.moduleIntegrationsMenu.label'),
             hint: game.i18n.localize('BAD.settings.moduleIntegrationsMenu.hint'),
             icon: 'fas fa-puzzle-piece',
@@ -83,7 +83,7 @@ Hooks.once('init', () => {
 
     // Register Economy Colors Menu Button (User Scope)
     game.settings.registerMenu(MODULE_ID, 'economyColorsMenu', {
-        name: game.i18n.localize('BAD.settings.economyColorsMenu.name'),
+        name: game.i18n.localize('BAD.economyColors.title'),
         label: game.i18n.localize('BAD.settings.economyColorsMenu.label'),
         hint: game.i18n.localize('BAD.settings.economyColorsMenu.hint'),
         icon: 'fas fa-palette',

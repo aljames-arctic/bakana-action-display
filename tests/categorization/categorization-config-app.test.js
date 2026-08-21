@@ -18,6 +18,10 @@ test('CategorizationConfigApp initializes with stored settings', async () => {
     const context = await app._prepareContext({});
     assert.equal(context.config.enabled, true);
     assert.equal(context.config.categories.length, 1);
+    assert.ok(context.helpTooltip.includes('bad-expression-tooltip'));
+    assert.ok(context.helpTooltip.includes('<code>true</code>'));
+    assert.ok(context.helpTooltip.includes('fas fa-chevron-down'));
+    assert.ok(context.helpTooltip.includes('item.type === \'weapon\''));
 });
 
 test('CategorizationConfigApp action handlers mutate configuration state', async () => {
@@ -163,4 +167,36 @@ test('CategorizationConfigApp _onAddCategory and _onAddSubCategory set _focusTar
     assert.equal(scrolled, true);
     assert.equal(app._focusTarget, null);
 });
+
+test('CategorizationConfigApp _getExpressionHelpTooltip replaces stand-in variables in localized sentence strings', () => {
+    const app = new CategorizationConfigApp();
+    const origLocalize = game.i18n.localize;
+    try {
+        game.i18n.localize = (key) => {
+            const map = {
+                'BAD.categorization.expressionHelp.evaluation': 'Évalue de haut en bas ({true}).',
+                'BAD.categorization.expressionHelp.fallthrough': '{fallthrough}: passe au suivant.',
+                'BAD.categorization.expressionHelp.unmatched': 'Non assortis dans {otherActions}.',
+                'BAD.categorization.expressionHelp.variablesTitle': 'Variables disponibles:',
+                'BAD.categorization.expressionHelp.item': 'Doc Objet ({example})',
+                'BAD.categorization.expressionHelp.action': 'Instance Action ({example})',
+                'BAD.categorization.expressionHelp.actor': 'Doc Acteur ({example})',
+                'BAD.categorization.expressionHelp.token': 'Doc Jeton ({example})',
+                'BAD.categorization.expressionHelp.user': 'Doc Utilisateur ({example})',
+                'BAD.categorization.others': 'Autres Actions'
+            };
+            return map[key] ?? key;
+        };
+
+        const html = app._getExpressionHelpTooltip();
+        assert.ok(html.includes('Évalue de haut en bas (<code>true</code>).'));
+        assert.ok(html.includes('<strong>Fallthrough (<i class="fas fa-chevron-down"></i>)</strong>: passe au suivant.'));
+        assert.ok(html.includes('Non assortis dans <strong>Autres Actions</strong>.'));
+        assert.ok(html.includes('Variables disponibles:'));
+        assert.ok(html.includes('Doc Objet (<code>item.type === \'weapon\'</code>, <code>item.name</code>, <code>item.system</code>)'));
+    } finally {
+        game.i18n.localize = origLocalize;
+    }
+});
+
 
