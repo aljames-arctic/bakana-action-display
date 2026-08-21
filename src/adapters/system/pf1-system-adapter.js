@@ -2,6 +2,8 @@ import { FantasySystemAdapter } from './genre/fantasy-system-adapter.js';
 import { localize } from '../../lib/utils.js';
 import { log } from '../../lib/logger.js';
 import { TabRef } from '../../ui/tab-ref.js';
+import { MODULE_ID } from '../../constants.js';
+import { Pf1SystemContextMenuManager } from './context-menu/pf1-system-context-menu-manager.js';
 
 const SORT_ORDERS = {
     tabs: {
@@ -19,7 +21,7 @@ const SORT_ORDERS = {
     }
 };
 
-const EXTRACTABLE_TYPES = new Set(['spell', 'attack', 'weapon', 'consumable', 'feat', 'buff']);
+const EXTRACTABLE_TYPES = new Set(['spell', 'attack', 'weapon', 'consumable', 'feat', 'buff', 'equipment']);
 
 const SPELL_SUB_TAB_ORDER = new Map(
     ['cantrip', 'orison', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'sla'].map((id, i) => [id, i])
@@ -39,13 +41,27 @@ const ICONS = {
 export class Pf1SystemAdapter extends FantasySystemAdapter {
     constructor() {
         super('pf1');
+        this.contextMenuManager = new Pf1SystemContextMenuManager(this);
+    }
+
+    /**
+     * Check if a PF1e item is equipped.
+     * @param {Item} item
+     * @returns {boolean}
+     */
+    getItemEquipped(item) {
+        if (!item?.system) return true;
+        if (item.system.equipped !== undefined) {
+            return Boolean(item.system.equipped);
+        }
+        return true;
     }
 
     // #region Core Action Modification
 
     /**
      * Determine if a specific item should be extracted as a base action for PF1e.
-     * Prevents allocating objects for unhandled item types (like equipment/containers).
+     * Prevents allocating objects for unhandled item types (like containers).
      */
     shouldExtractItem(item) {
         return EXTRACTABLE_TYPES.has(item.type);
@@ -59,12 +75,26 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
      */
     async modifyActions(actions, actor) {
         const modified = [];
+        const showAll = Boolean(actor?.getFlag?.(MODULE_ID, 'showAll'));
 
         const { attackToWeaponMap, weaponLinkedAttacks } = this.#buildWeaponAttackLinks(actor);
 
         for (const action of actions) {
             const item = action.originalItem;
             const type = item.type;
+
+            let isUnequipped = false;
+            if (['weapon', 'equipment', 'consumable', 'loot', 'attack'].includes(type) && item.system?.equipped !== undefined) {
+                if (this.getItemEquipped(item) === false) {
+                    isUnequipped = true;
+                    const showUnequipped = Boolean((actor?.getFlag?.(MODULE_ID, `showUnequipped_${type}`) ?? false) || showAll);
+                    const isUserHidden = Boolean(actor?.getFlag?.(MODULE_ID, 'hiddenItems')?.[item.id]);
+                    if (!showUnequipped && !isUserHidden) {
+                        log.debug(`Pf1SystemAdapter.modifyActions | Filtering out unequipped ${type} "${item.name}" (ID: ${item.id}) — item.system.equipped === false and showUnequipped_${type} / showAll flag is not set`);
+                        continue;
+                    }
+                }
+            }
 
             if (item.type === 'spell') {
                 // 1. Spells in PF1e
@@ -111,6 +141,7 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
                 }
 
                 this.#promoteFirstSubaction(action, subactions, ['weapon'], uses);
+                if (isUnequipped) action.available = false;
                 modified.push(action);
 
             } else if (item.type === 'weapon') {
@@ -128,12 +159,24 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
                 }
 
                 this.#promoteFirstSubaction(action, itemActionsList, ['weapon'], uses);
+                if (isUnequipped) action.available = false;
                 modified.push(action);
 
-            } else if (['consumable', 'feat'].includes(type)) {
-                // 4. Consumables and Feats
+            } else if (['consumable', 'feat', 'equipment'].includes(type)) {
+                // 4. Consumables, Feats, and Equipment
                 const itemActions = item.system.actions ?? [];
                 if (itemActions.length === 0) {
+                    if (type === 'equipment') {
+                        // Passive or standard equipment item
+                        action.right = [TabRef.from('economy', 'other')];
+                        action.activationType = 'other';
+                        action.left = ['equipment'];
+                        action.uses = { available: null, max: null };
+                        action.available = !isUnequipped;
+                        action.roll = (event) => this.#executeItemRoll(item, null, event);
+                        modified.push(action);
+                        continue;
+                    }
                     log.debug(`Pf1SystemAdapter.modifyActions | Filtering out ${type} "${item.name}" (ID: ${item.id}) — item.system.actions is empty`);
                     continue;
                 }
@@ -147,6 +190,7 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
                 }
 
                 this.#promoteFirstSubaction(action, subactions, [item.type], uses);
+                if (isUnequipped) action.available = false;
                 modified.push(action);
 
             } else if (item.type === 'buff') {
@@ -178,10 +222,29 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
 
     /**
      * Modify the rendering context before it is sent to the template.
-     * Used here to sort the spell sub-tabs (Cantrips, Orisons, Levels, SLAs) in the correct order.
+     * Used here to sort the spell sub-tabs (Cantrips, Orisons, Levels, SLAs) and display showUnprepared indicators.
      */
     modifyContext(context, app) {
         super.modifyContext?.(context, app);
+
+        const showAll = Boolean(app.actor?.getFlag?.(MODULE_ID, 'showAll'));
+
+        const allParent = context.itemTypes?.find(g => g.id === 'all');
+        if (allParent) {
+            allParent.showUnprepared = showAll;
+        }
+
+        const weaponParent = context.itemTypes?.find(g => g.id === 'weapon');
+        if (weaponParent) {
+            const showUnequippedWeapon = Boolean(app.actor?.getFlag?.(MODULE_ID, 'showUnequipped_weapon'));
+            weaponParent.showUnprepared = Boolean(showUnequippedWeapon || showAll);
+        }
+
+        const equipmentParent = context.itemTypes?.find(g => g.id === 'equipment');
+        if (equipmentParent) {
+            const showUnequippedEquipment = Boolean(app.actor?.getFlag?.(MODULE_ID, 'showUnequipped_equipment'));
+            equipmentParent.showUnprepared = Boolean(showUnequippedEquipment || showAll);
+        }
 
         const spellGroup = context.itemTypes?.find(g => g.id === 'spell');
         if (spellGroup?.subTabs?.length) {

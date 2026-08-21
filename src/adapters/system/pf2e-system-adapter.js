@@ -2,6 +2,8 @@ import { FantasySystemAdapter } from './genre/fantasy-system-adapter.js';
 import { localize } from '../../lib/utils.js';
 import { log } from '../../lib/logger.js';
 import { TabRef } from '../../ui/tab-ref.js';
+import { MODULE_ID } from '../../constants.js';
+import { Pf2eSystemContextMenuManager } from './context-menu/pf2e-system-context-menu-manager.js';
 
 const SORT_ORDERS = {
     tabs: {
@@ -46,6 +48,23 @@ const PF2E_ACTION_TYPE_MAP = {
 export class Pf2eSystemAdapter extends FantasySystemAdapter {
     constructor() {
         super('pf2e');
+        this.contextMenuManager = new Pf2eSystemContextMenuManager(this);
+    }
+
+    /**
+     * Check if a PF2e item is equipped.
+     * @param {Item} item
+     * @returns {boolean}
+     */
+    getItemEquipped(item) {
+        if (!item?.system) return true;
+        if (item.isEquipped !== undefined) {
+            return Boolean(item.isEquipped);
+        }
+        if (item.system.equipped?.carryType) {
+            return ['held', 'worn'].includes(item.system.equipped.carryType);
+        }
+        return true;
     }
 
     // #region Core Action Modification
@@ -169,10 +188,23 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
 
     /**
      * Modify the rendering context before it is sent to the template.
-     * Used here to sort the spell sub-tabs (Cantrips, Ranks 1-10, Focus, Innate, Rituals) in the correct order.
+     * Used here to sort the spell sub-tabs (Cantrips, Ranks 1-10, Focus, Innate, Rituals) and display showUnprepared tab indicators.
      */
     modifyContext(context, app) {
         super.modifyContext?.(context, app);
+
+        const showAll = Boolean(app.actor?.getFlag?.(MODULE_ID, 'showAll'));
+
+        const allParent = context.itemTypes?.find(g => g.id === 'all');
+        if (allParent) {
+            allParent.showUnprepared = showAll;
+        }
+
+        const weaponParent = context.itemTypes?.find(g => g.id === 'weapon');
+        if (weaponParent) {
+            const showUnequippedWeapon = Boolean(app.actor?.getFlag?.(MODULE_ID, 'showUnequipped_weapon'));
+            weaponParent.showUnprepared = Boolean(showUnequippedWeapon || showAll);
+        }
 
         const spellGroup = context.itemTypes?.find(g => g.id === 'spell');
         if (spellGroup?.subTabs?.length) {

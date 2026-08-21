@@ -105,3 +105,136 @@ test('Pf1SystemAdapter modifyActions full transformation pipeline', async () => 
     assert.deepEqual(buffAction.left, ['buff']);
     assert.equal(buffAction.isActive, true);
 });
+
+test('Pf1SystemAdapter filters unequipped items unless showUnequipped or showAll is enabled', async () => {
+    const adapter = new Pf1SystemAdapter();
+
+    const equippedWeapon = {
+        id: 'wpn-1',
+        name: 'Longsword',
+        type: 'weapon',
+        system: {
+            equipped: true,
+            actions: [{ id: 'a1', name: 'Slash', activation: { type: 'standard' } }]
+        }
+    };
+
+    const unequippedWeapon = {
+        id: 'wpn-2',
+        name: 'Dagger',
+        type: 'weapon',
+        system: {
+            equipped: false,
+            actions: [{ id: 'a2', name: 'Stab', activation: { type: 'standard' } }]
+        }
+    };
+
+    const actor = {
+        items: new foundry.utils.Collection([equippedWeapon, unequippedWeapon]),
+        flags: {
+            'bakana-action-display': {
+                showUnequipped_weapon: false,
+                showAll: false
+            }
+        },
+        getFlag(module, key) {
+            return this.flags?.[module]?.[key] ?? false;
+        }
+    };
+
+    const rawActions = [
+        { id: 'act-w1', originalItem: equippedWeapon },
+        { id: 'act-w2', originalItem: unequippedWeapon }
+    ];
+
+    // 1. By default, unequipped weapon is filtered out
+    const modified1 = await adapter.modifyActions(rawActions, actor);
+    assert.equal(modified1.length, 1);
+    assert.equal(modified1[0].id, 'act-w1');
+
+    // 2. When showUnequipped_weapon is true, unequipped weapon is included with available: false
+    actor.flags['bakana-action-display'].showUnequipped_weapon = true;
+    const modified2 = await adapter.modifyActions(rawActions, actor);
+    assert.equal(modified2.length, 2);
+    const unequippedAction = modified2.find(a => a.id === 'act-w2');
+    assert.ok(unequippedAction);
+    assert.equal(unequippedAction.available, false);
+});
+
+test('Pf1SystemAdapter context menu manager provides equip/unequip options and tab right-click handling', async () => {
+    const adapter = new Pf1SystemAdapter();
+
+    let updatedEquipped = null;
+    const testItem = {
+        id: 'item-1',
+        name: 'Shield',
+        type: 'equipment',
+        system: { equipped: false },
+        update: async (data) => { updatedEquipped = data['system.equipped']; }
+    };
+
+    const flags = {};
+    const app = {
+        actor: {
+            isOwner: true,
+            getFlag: (mod, key) => flags[key] ?? false,
+            setFlag: (mod, key, val) => { flags[key] = val; }
+        },
+        actions: [
+            { id: 'act-1', originalItem: testItem }
+        ]
+    };
+
+    const menuItems = adapter.getContextMenuItems(app);
+    const equipItem = menuItems.find(m => m.name === 'BAD.common.equipItem');
+    const unequipItem = menuItems.find(m => m.name === 'BAD.common.unequipItem');
+
+    assert.ok(equipItem);
+    assert.ok(unequipItem);
+
+    const mockEl = { dataset: { actionId: 'act-1' } };
+
+    // Item is unequipped -> equip condition is true, unequip is false
+    assert.equal(equipItem.condition(mockEl), true);
+    assert.equal(unequipItem.condition(mockEl), false);
+
+    await equipItem.callback(mockEl);
+    assert.equal(updatedEquipped, true);
+
+    // Change to equipped
+    testItem.system.equipped = true;
+    assert.equal(equipItem.condition(mockEl), false);
+    assert.equal(unequipItem.condition(mockEl), true);
+
+    await unequipItem.callback(mockEl);
+    assert.equal(updatedEquipped, false);
+
+    // Tab right click handling
+    const tabElAll = {
+        classList: { contains: (cls) => cls === 'bad-left-tab' },
+        dataset: { type: 'all' }
+    };
+    const tabElWeapon = {
+        classList: { contains: (cls) => cls === 'bad-left-tab' },
+        dataset: { type: 'weapon' }
+    };
+
+    assert.equal(adapter.onTabRightClick(app, tabElAll, {}), true);
+    assert.equal(flags.showAll, true);
+    assert.equal(flags.showUnequipped_weapon, true);
+
+    assert.equal(adapter.onTabRightClick(app, tabElWeapon, {}), true);
+    assert.equal(flags.showUnequipped_weapon, false);
+
+    // Context modifier flags
+    const context = {
+        itemTypes: [
+            { id: 'all', showUnprepared: false },
+            { id: 'weapon', showUnprepared: false }
+        ]
+    };
+    adapter.modifyContext(context, app);
+    assert.equal(context.itemTypes.find(t => t.id === 'all').showUnprepared, true);
+    assert.equal(context.itemTypes.find(t => t.id === 'weapon').showUnprepared, true);
+});
+

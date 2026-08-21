@@ -126,3 +126,83 @@ test('Pf2eSystemAdapter modifyActions full transformation pipeline', async () =>
     assert.equal(strikeAction.name, 'Longsword Strike');
     assert.equal(strikeAction.type, 'weapon');
 });
+
+test('Pf2eSystemAdapter context menu manager provides equip/unequip options and tab right-click handling', async () => {
+    const adapter = new Pf2eSystemAdapter();
+
+    let updatedCarryType = null;
+    const weaponItem = {
+        id: 'wpn-1',
+        name: 'Greatsword',
+        type: 'weapon',
+        system: {
+            equipped: { carryType: 'stowed' }
+        },
+        update: async (data) => { updatedCarryType = data['system.equipped.carryType']; }
+    };
+
+    const flags = {};
+    const app = {
+        actor: {
+            isOwner: true,
+            getFlag: (mod, key) => flags[key] ?? false,
+            setFlag: (mod, key, val) => { flags[key] = val; }
+        },
+        actions: [
+            { id: 'act-1', originalItem: weaponItem }
+        ]
+    };
+
+    const menuItems = adapter.getContextMenuItems(app);
+    const equipItem = menuItems.find(m => m.name === 'BAD.common.equipItem');
+    const unequipItem = menuItems.find(m => m.name === 'BAD.common.unequipItem');
+
+    assert.ok(equipItem);
+    assert.ok(unequipItem);
+
+    const mockEl = { dataset: { actionId: 'act-1' } };
+
+    // Item is stowed -> equip condition is true, unequip is false
+    assert.equal(equipItem.condition(mockEl), true);
+    assert.equal(unequipItem.condition(mockEl), false);
+
+    await equipItem.callback(mockEl);
+    assert.equal(updatedCarryType, 'held');
+
+    // Change to held
+    weaponItem.system.equipped.carryType = 'held';
+    assert.equal(equipItem.condition(mockEl), false);
+    assert.equal(unequipItem.condition(mockEl), true);
+
+    await unequipItem.callback(mockEl);
+    assert.equal(updatedCarryType, 'stowed');
+
+    // Tab right click handling
+    const tabElAll = {
+        classList: { contains: (cls) => cls === 'bad-left-tab' },
+        dataset: { type: 'all' }
+    };
+    const tabElWeapon = {
+        classList: { contains: (cls) => cls === 'bad-left-tab' },
+        dataset: { type: 'weapon' }
+    };
+
+    assert.equal(adapter.onTabRightClick(app, tabElAll, {}), true);
+    assert.equal(flags.showAll, true);
+    assert.equal(flags.showUnequipped_weapon, true);
+
+    assert.equal(adapter.onTabRightClick(app, tabElWeapon, {}), true);
+    assert.equal(flags.showUnequipped_weapon, false);
+
+    // Context modifier flags
+    const context = {
+        itemTypes: [
+            { id: 'all', showUnprepared: false },
+            { id: 'weapon', showUnprepared: false }
+        ]
+    };
+    adapter.modifyContext(context, app);
+    assert.equal(context.itemTypes.find(t => t.id === 'all').showUnprepared, true);
+    assert.equal(context.itemTypes.find(t => t.id === 'weapon').showUnprepared, true);
+});
+
