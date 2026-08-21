@@ -1136,6 +1136,9 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         this._attachSearchListeners();
         this._restoreSearchFocus();
 
+        // Synchronize tab widths so tabs of a given depth share the maximal length of that depth
+        this._syncTabWidths();
+
         // Adjust min-height first so container dimensions reflect the full expanded layout
         this._adjustMinHeight();
 
@@ -1212,6 +1215,60 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
 
             const targetMinHeight = maxTabBottom + this._containerPaddingBottom;
             container.style.minHeight = `${targetMinHeight}px`;
+        }
+    }
+
+    /**
+     * Synchronize tab widths so that all tabs at a given depth level share the same width
+     * as the maximal width of a tab at that depth level.
+     */
+    _syncTabWidths() {
+        if (!this.element) return;
+
+        const leftTabs = this.element.querySelector?.('.bad-left-tabs');
+        if (leftTabs) {
+            this._syncColumnTabWidths(leftTabs, '.bad-left-sub-tab');
+        }
+
+        const rightTabs = this.element.querySelector?.('.bad-right-tabs');
+        if (rightTabs) {
+            this._syncColumnTabWidths(rightTabs, '.bad-right-sub-tab');
+        }
+    }
+
+    /**
+     * Measure natural widths of sub-tabs at Depth 2 and Depth 3 within a tab column
+     * and apply CSS custom properties (--bad-depth-2-width, --bad-depth-3-width) to enforce uniform widths.
+     * @param {HTMLElement} columnElement Tab column container (.bad-left-tabs or .bad-right-tabs)
+     * @param {string} subTabSelector CSS class selector for sub-tabs
+     */
+    _syncColumnTabWidths(columnElement, subTabSelector) {
+        if (!columnElement || !columnElement.style) return;
+
+        // Temporarily clear custom properties so natural/unconstrained dimensions can be measured
+        columnElement.style.removeProperty?.('--bad-depth-2-width');
+        columnElement.style.removeProperty?.('--bad-depth-3-width');
+
+        const depth2Tabs = columnElement.querySelectorAll?.(`${subTabSelector}:not(.bad-nested-sub-tab)`) ?? [];
+        const depth3Tabs = columnElement.querySelectorAll?.(`${subTabSelector}.bad-nested-sub-tab`) ?? [];
+
+        let maxDepth2 = 0;
+        for (const tab of depth2Tabs) {
+            const width = tab.offsetWidth ?? tab.scrollWidth ?? 0;
+            if (width > maxDepth2) maxDepth2 = width;
+        }
+
+        let maxDepth3 = 0;
+        for (const tab of depth3Tabs) {
+            const width = tab.offsetWidth ?? tab.scrollWidth ?? 0;
+            if (width > maxDepth3) maxDepth3 = width;
+        }
+
+        if (maxDepth2 > 0) {
+            columnElement.style.setProperty?.('--bad-depth-2-width', `${Math.ceil(maxDepth2)}px`);
+        }
+        if (maxDepth3 > 0) {
+            columnElement.style.setProperty?.('--bad-depth-3-width', `${Math.ceil(maxDepth3)}px`);
         }
     }
 

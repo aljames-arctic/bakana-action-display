@@ -113,3 +113,56 @@ test('ActionDisplayApp _prepareContext reflects enableCenterOnToken world config
     // Reset back to false
     await game.settings.set(MODULE_ID, 'enableCenterOnToken', false);
 });
+
+test('ActionDisplayApp _syncTabWidths synchronizes tab widths to maximal width per depth', () => {
+    const app = new ActionDisplayApp({ actor: { id: 'test-actor' } });
+
+    const createMockColumn = () => {
+        const properties = new Map();
+        const style = {
+            setProperty: (k, v) => properties.set(k, v),
+            removeProperty: (k) => properties.delete(k),
+            get: (k) => properties.get(k)
+        };
+        const depth2Elements = [
+            { offsetWidth: 60, scrollWidth: 60, classList: { contains: () => false } },
+            { offsetWidth: 110, scrollWidth: 110, classList: { contains: () => false } },
+            { offsetWidth: 75, scrollWidth: 75, classList: { contains: () => false } }
+        ];
+        const depth3Elements = [
+            { offsetWidth: 140, scrollWidth: 140, classList: { contains: () => true } },
+            { offsetWidth: 80, scrollWidth: 80, classList: { contains: () => true } }
+        ];
+
+        return {
+            style,
+            properties,
+            querySelectorAll: (sel) => {
+                if (sel.includes(':not(.bad-nested-sub-tab)')) return depth2Elements;
+                if (sel.includes('.bad-nested-sub-tab')) return depth3Elements;
+                return [];
+            }
+        };
+    };
+
+    const mockLeft = createMockColumn();
+    const mockRight = createMockColumn();
+
+    app.element = {
+        querySelector: (sel) => {
+            if (sel === '.bad-left-tabs') return mockLeft;
+            if (sel === '.bad-right-tabs') return mockRight;
+            return null;
+        }
+    };
+
+    app._syncTabWidths();
+
+    // Verify depth 2 width is set to max depth 2 width (110px)
+    assert.equal(mockRight.properties.get('--bad-depth-2-width'), '110px');
+    assert.equal(mockLeft.properties.get('--bad-depth-2-width'), '110px');
+
+    // Verify depth 3 width is set to max depth 3 width (140px)
+    assert.equal(mockRight.properties.get('--bad-depth-3-width'), '140px');
+    assert.equal(mockLeft.properties.get('--bad-depth-3-width'), '140px');
+});

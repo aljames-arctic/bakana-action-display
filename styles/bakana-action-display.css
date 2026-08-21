@@ -438,6 +438,13 @@
     align-items: flex-end; /* Align sub-tabs to the right */
     gap: 0.28em; /* 4px -> 0.28em */
     margin-top: 0.28em;
+    width: max-content;
+}
+
+.bad-left-sub-tab-group {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
     width: 100%;
 }
 
@@ -447,7 +454,7 @@
     animation: bad-fade-in-slide 0.2s ease-out;
 }
 
-/* Sub-tab Button */
+/* Sub-tab Button (Depth 2) */
 .bad-left-sub-tab {
     background: rgba(22, 22, 29, 0.88);
     backdrop-filter: blur(12px);
@@ -462,7 +469,10 @@
     cursor: pointer;
     transition: all 0.2s ease;
     white-space: nowrap;
-    width: fit-content;
+    width: var(--bad-depth-2-width, max-content);
+    min-width: var(--bad-depth-2-width, max-content);
+    box-sizing: border-box;
+    text-align: right;
     box-shadow: -2px 2px 6px rgba(0, 0, 0, 0.2);
     height: auto !important;
     line-height: normal !important;
@@ -514,18 +524,34 @@
     color: #ffffff !important;
 }
 
-/* Nested sub-tabs layout and indentation */
+/* Nested sub-tabs layout and indentation (Depth 3) */
 .bad-nested-sub-tabs {
     margin-left: 0.75em;
     margin-top: 0.25em;
     display: flex;
     flex-direction: column;
+    align-items: flex-start;
     gap: 0.25em;
+    width: max-content;
+}
+
+.bad-left-tabs .bad-nested-sub-tabs {
+    margin-right: 0.75em;
+    margin-left: 0;
+    align-items: flex-end;
 }
 
 .bad-nested-sub-tab {
     font-size: 0.85em;
     padding: 0.2em 0.5em;
+    width: var(--bad-depth-3-width, max-content) !important;
+    min-width: var(--bad-depth-3-width, max-content) !important;
+    box-sizing: border-box;
+    text-align: left;
+}
+
+.bad-left-tabs .bad-nested-sub-tab {
+    text-align: right;
 }
 
 
@@ -625,8 +651,16 @@
 .bad-right-sub-tabs {
     display: none; /* Hidden by default */
     flex-direction: column;
+    align-items: flex-start;
     gap: 0.28em; /* 4px -> 0.28em */
     margin-top: 0.28em;
+    width: max-content;
+}
+
+.bad-right-sub-tab-group {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
     width: 100%;
 }
 
@@ -636,7 +670,7 @@
     animation: bad-fade-in-slide 0.2s ease-out;
 }
 
-/* Sub-tab Button */
+/* Sub-tab Button (Depth 2) */
 .bad-right-sub-tab {
     background: rgba(22, 22, 29, 0.88);
     backdrop-filter: blur(12px);
@@ -651,7 +685,10 @@
     cursor: pointer;
     transition: all 0.2s ease;
     white-space: nowrap;
-    width: fit-content;
+    width: var(--bad-depth-2-width, max-content);
+    min-width: var(--bad-depth-2-width, max-content);
+    box-sizing: border-box;
+    text-align: left;
     box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.2);
     height: auto !important;
     line-height: normal !important;
