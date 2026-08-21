@@ -195,42 +195,58 @@ test('ActionDisplayApp builds nested sub-tabs under Action Economy and filters a
         new Action({ id: '1', name: 'Strike', left: ['weapon'], right: [TabRef.from('economy', 'standard', 'action')], page: 1 }),
         new Action({ id: '2', name: 'Healing Word', left: ['spell'], right: [TabRef.from('economy', 'standard', 'bonus')], page: 1 }),
         new Action({ id: '3', name: 'Shield Reaction', left: ['spell'], right: [TabRef.from('economy', 'standard', 'reaction')], page: 1 }),
-        new Action({ id: '4', name: 'Prayer of Healing', left: ['spell'], right: [TabRef.from('economy', 'time', 'minute')], page: 1 }),
-        new Action({ id: '5', name: 'Long Rest Buff', left: ['feat'], right: [TabRef.from('economy', 'rest', 'longRest')], page: 1 }),
-        new Action({ id: '6', name: 'Turn Start Regen', left: ['feat'], right: [TabRef.from('economy', 'combat', 'turnStart')], page: 1 }),
-        new Action({ id: '7', name: 'Dragon Breath (Legendary)', left: ['feat'], right: [TabRef.from('economy', 'monster', 'legendary')], page: 1 }),
-        new Action({ id: '8', name: 'Fire Ballista', left: ['equipment'], right: [TabRef.from('economy', 'vehicle', 'crew')], page: 1 }),
-        new Action({ id: '9', name: 'Special Feature', left: ['feat'], right: [TabRef.from('economy', 'special')], page: 1 })
+        new Action({ id: '4', name: 'Prayer of Healing (Minute)', left: ['spell'], right: [TabRef.from('economy', 'time', 'minute')], page: 1 }),
+        new Action({ id: '5', name: 'Mage Armor (Hour)', left: ['spell'], right: [TabRef.from('economy', 'time', 'hour')], page: 1 }),
+        new Action({ id: '6', name: 'Heroism (Day)', left: ['spell'], right: [TabRef.from('economy', 'time', 'day')], page: 1 }),
+        new Action({ id: '7', name: 'Long Rest Buff', left: ['feat'], right: [TabRef.from('economy', 'rest', 'longRest')], page: 1 }),
+        new Action({ id: '8', name: 'Short Rest Recovery', left: ['feat'], right: [TabRef.from('economy', 'rest', 'shortRest')], page: 1 }),
+        new Action({ id: '9', name: 'Initiative Surge (Encounter)', left: ['feat'], right: [TabRef.from('economy', 'combat', 'encounter')], page: 1 }),
+        new Action({ id: '10', name: 'Turn Start Regen', left: ['feat'], right: [TabRef.from('economy', 'combat', 'turnStart')], page: 1 }),
+        new Action({ id: '11', name: 'Turn End Tick', left: ['feat'], right: [TabRef.from('economy', 'combat', 'turnEnd')], page: 1 }),
+        new Action({ id: '12', name: 'Dragon Breath (Legendary)', left: ['feat'], right: [TabRef.from('economy', 'monster', 'legendary')], page: 1 }),
+        new Action({ id: '13', name: 'Mythic Phase', left: ['feat'], right: [TabRef.from('economy', 'monster', 'mythic')], page: 1 }),
+        new Action({ id: '14', name: 'Lair Quake', left: ['feat'], right: [TabRef.from('economy', 'monster', 'lair')], page: 1 }),
+        new Action({ id: '15', name: 'Fire Ballista', left: ['equipment'], right: [TabRef.from('economy', 'vehicle', 'crew')], page: 1 }),
+        new Action({ id: '16', name: 'Special Feature', left: ['feat'], right: [TabRef.from('economy', 'special')], page: 1 })
     ];
 
     actionDisplay.getActions = async () => testActions;
 
     // 1. Initial render context: all actions visible under 'all'
     const ctx = await app._prepareContext();
-    assert.equal(ctx.items.length, 9);
+    assert.equal(ctx.items.length, 16);
 
-    // Verify parentGroups['economy'] hierarchy
+    // Verify parentGroups['economy'] hierarchy and subcategory order
     const econGroup = app.parentGroups['economy'];
     assert.ok(econGroup);
     const subCategories = econGroup.subTabs.map(t => t.id);
-    assert.ok(subCategories.includes('standard'), 'Should have standard category');
-    assert.ok(subCategories.includes('time'), 'Should have time category');
-    assert.ok(subCategories.includes('rest'), 'Should have rest category');
-    assert.ok(subCategories.includes('combat'), 'Should have combat category');
-    assert.ok(subCategories.includes('monster'), 'Should have monster category');
-    assert.ok(subCategories.includes('vehicle'), 'Should have vehicle category');
-    assert.ok(subCategories.includes('special'), 'Should have direct special sub-tab');
+    assert.deepEqual(subCategories, ['all', 'standard', 'time', 'rest', 'combat', 'monster', 'vehicle', 'special']);
 
-    // Verify nested sub-tabs under standard
+    // Verify nested sub-tabs under categories
     const stdCat = econGroup.subTabs.find(t => t.id === 'standard');
     assert.ok(stdCat);
-    const stdSubIds = stdCat.subTabs.map(t => t.id);
-    assert.deepEqual(stdSubIds, ['action', 'bonus', 'reaction']);
+    assert.deepEqual(stdCat.subTabs.map(t => t.id), ['action', 'bonus', 'reaction']);
 
-    // 2. Select 'economy' parent tab: all 9 economy actions visible
+    const timeCat = econGroup.subTabs.find(t => t.id === 'time');
+    assert.ok(timeCat);
+    assert.deepEqual(timeCat.subTabs.map(t => t.id), ['minute', 'hour', 'day']);
+
+    const restCat = econGroup.subTabs.find(t => t.id === 'rest');
+    assert.ok(restCat);
+    assert.deepEqual(restCat.subTabs.map(t => t.id), ['longRest', 'shortRest']);
+
+    const combatCat = econGroup.subTabs.find(t => t.id === 'combat');
+    assert.ok(combatCat);
+    assert.deepEqual(combatCat.subTabs.map(t => t.id), ['encounter', 'turnStart', 'turnEnd']);
+
+    const monsterCat = econGroup.subTabs.find(t => t.id === 'monster');
+    assert.ok(monsterCat);
+    assert.deepEqual(monsterCat.subTabs.map(t => t.id), ['legendary', 'mythic', 'lair']);
+
+    // 2. Select 'economy' parent tab: all 16 economy actions visible
     app.rightTabs.selectParent('economy', app.parentGroups);
     const ctxEcon = await app._prepareContext();
-    assert.equal(ctxEcon.items.length, 9);
+    assert.equal(ctxEcon.items.length, 16);
 
     // 3. Select 'standard' category tab: only Action, Bonus Action, Reaction actions visible
     app.rightTabs.selectSub('economy', 'standard', app.parentGroups);
@@ -238,29 +254,29 @@ test('ActionDisplayApp builds nested sub-tabs under Action Economy and filters a
     assert.equal(ctxStandard.items.length, 3);
     assert.deepEqual(ctxStandard.items.map(i => i.name).sort(), ['Healing Word', 'Shield Reaction', 'Strike']);
 
-    // 4. Select 'time' category tab: only Minute action visible
+    // 4. Select 'time' category tab: Minute, Hour, Day actions visible
     app.rightTabs.selectSub('economy', 'time', app.parentGroups);
     const ctxTime = await app._prepareContext();
-    assert.equal(ctxTime.items.length, 1);
-    assert.equal(ctxTime.items[0].name, 'Prayer of Healing');
+    assert.equal(ctxTime.items.length, 3);
+    assert.deepEqual(ctxTime.items.map(i => i.name).sort(), ['Heroism (Day)', 'Mage Armor (Hour)', 'Prayer of Healing (Minute)']);
 
-    // 5. Select 'rest' category tab: only Long Rest action visible
+    // 5. Select 'rest' category tab: Long Rest and Short Rest actions visible
     app.rightTabs.selectSub('economy', 'rest', app.parentGroups);
     const ctxRest = await app._prepareContext();
-    assert.equal(ctxRest.items.length, 1);
-    assert.equal(ctxRest.items[0].name, 'Long Rest Buff');
+    assert.equal(ctxRest.items.length, 2);
+    assert.deepEqual(ctxRest.items.map(i => i.name).sort(), ['Long Rest Buff', 'Short Rest Recovery']);
 
-    // 6. Select 'combat' category tab: only Turn Start Regen action visible
+    // 6. Select 'combat' category tab: Encounter, Turn Start, Turn End actions visible
     app.rightTabs.selectSub('economy', 'combat', app.parentGroups);
     const ctxCombat = await app._prepareContext();
-    assert.equal(ctxCombat.items.length, 1);
-    assert.equal(ctxCombat.items[0].name, 'Turn Start Regen');
+    assert.equal(ctxCombat.items.length, 3);
+    assert.deepEqual(ctxCombat.items.map(i => i.name).sort(), ['Initiative Surge (Encounter)', 'Turn End Tick', 'Turn Start Regen']);
 
-    // 7. Select 'monster' category tab: only Dragon Breath action visible
+    // 7. Select 'monster' category tab: Legendary, Mythic, Lair actions visible
     app.rightTabs.selectSub('economy', 'monster', app.parentGroups);
     const ctxMonster = await app._prepareContext();
-    assert.equal(ctxMonster.items.length, 1);
-    assert.equal(ctxMonster.items[0].name, 'Dragon Breath (Legendary)');
+    assert.equal(ctxMonster.items.length, 3);
+    assert.deepEqual(ctxMonster.items.map(i => i.name).sort(), ['Dragon Breath (Legendary)', 'Lair Quake', 'Mythic Phase']);
 
     // 8. Select 'vehicle' category tab: only Fire Ballista action visible
     app.rightTabs.selectSub('economy', 'vehicle', app.parentGroups);

@@ -266,11 +266,12 @@ class Adapter {
 
     /**
      * Get the sort priority order for a right-side action sub-tab.
+     * @param {string} parentId
      * @param {string} subId
      * @returns {number}
      */
-    getActionSubTabSortOrder(subId) {
-        return this.system?.getActionSubTabSortOrder?.(subId) ?? 999;
+    getActionSubTabSortOrder(parentId, subId) {
+        return this.system?.getActionSubTabSortOrder?.(parentId, subId) ?? 999;
     }
 
     /**
