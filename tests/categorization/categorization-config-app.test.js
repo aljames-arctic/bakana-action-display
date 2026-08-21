@@ -32,16 +32,23 @@ test('CategorizationConfigApp action handlers mutate configuration state', async
     // 2. Add Category
     app._onAddCategory({ preventDefault: () => {} }, {});
     assert.equal(app.config.categories.length, 1);
+    assert.equal(app.config.categories[0].fallthrough, false);
     app.config.categories[0].name = 'Spells';
     app.config.categories[0].expression = 'item.type === "spell"';
 
-    // 3. Add Subcategory
+    // 3. Toggle Fallthrough
+    app._onToggleFallthrough({ preventDefault: () => {} }, { dataset: { catIndex: '0' } });
+    assert.equal(app.config.categories[0].fallthrough, true);
+    app._onToggleFallthrough({ preventDefault: () => {} }, { dataset: { catIndex: '0' } });
+    assert.equal(app.config.categories[0].fallthrough, false);
+
+    // 4. Add Subcategory
     app._onAddSubCategory({ preventDefault: () => {} }, { dataset: { catIndex: '0' } });
     assert.equal(app.config.categories[0].subcategories.length, 1);
     app.config.categories[0].subcategories[0].name = 'Cantrips';
     app.config.categories[0].expression = 'item.system.level === 0';
 
-    // 4. Load Presets
+    // 5. Load Presets
     app._onLoadPresets({ preventDefault: () => {} }, {});
     assert.equal(app.config.categories.length, 4);
     assert.equal(app.config.categories[0].name, 'Favorites');

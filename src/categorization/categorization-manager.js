@@ -13,6 +13,7 @@ import { adapter } from '../adapters/index.js';
  * @property {string} id Unique identifier for the category
  * @property {string} name Display name
  * @property {string} expression Boolean test expression string
+ * @property {boolean} [fallthrough=false] Canonical boolean flag indicating whether matching actions fall through to subsequent categories
  * @property {SubCategory[]} subcategories Array of child subcategories
  */
 
@@ -37,6 +38,7 @@ export function normalizeCategorizationConfig(raw) {
         const catId = typeof cat?.id === 'string' && cat.id.length > 0 ? cat.id : `cat_${Date.now()}_${catIndex}`;
         const name = typeof cat?.name === 'string' ? cat.name : '';
         const expression = typeof cat?.expression === 'string' ? cat.expression : '';
+        const fallthrough = Boolean(cat?.fallthrough);
         const rawSubs = Array.isArray(cat?.subcategories) ? cat.subcategories : [];
 
         const subcategories = rawSubs.map((sub, subIndex) => {
@@ -54,6 +56,7 @@ export function normalizeCategorizationConfig(raw) {
             id: catId,
             name,
             expression,
+            fallthrough,
             subcategories
         };
     });
@@ -155,40 +158,42 @@ export function categorizeActions(actions, config, catchAllLabel, context = {}) 
 
     const topLevelOthers = [];
 
-    // Distribute each action into its matching category / subcategory
+    // Distribute each action into matching categories / subcategories
     for (const action of (actions ?? [])) {
-        let matchedCategoryBucket = null;
+        let consumed = false;
 
         for (const [catId, bucket] of categoryMap.entries()) {
             if (evaluateBooleanExpression(bucket.category.expression, action, context)) {
-                matchedCategoryBucket = bucket;
-                break;
+                const hasSubcategories = bucket.category.subcategories.length > 0;
+                if (hasSubcategories) {
+                    let matchedSubBucket = null;
+                    for (const [subId, subEntry] of bucket.subBuckets.entries()) {
+                        if (evaluateBooleanExpression(subEntry.subcategory.expression, action, context)) {
+                            matchedSubBucket = subEntry;
+                            break;
+                        }
+                    }
+
+                    if (matchedSubBucket) {
+                        matchedSubBucket.items.push(action);
+                    } else {
+                        // Remainder at subcategory level
+                        bucket.othersItems.push(action);
+                    }
+                } else {
+                    // No subcategories defined for this category
+                    bucket.directItems.push(action);
+                }
+
+                if (!bucket.category.fallthrough) {
+                    consumed = true;
+                    break;
+                }
             }
         }
 
-        if (matchedCategoryBucket) {
-            const hasSubcategories = matchedCategoryBucket.category.subcategories.length > 0;
-            if (hasSubcategories) {
-                let matchedSubBucket = null;
-                for (const [subId, subEntry] of matchedCategoryBucket.subBuckets.entries()) {
-                    if (evaluateBooleanExpression(subEntry.subcategory.expression, action, context)) {
-                        matchedSubBucket = subEntry;
-                        break;
-                    }
-                }
-
-                if (matchedSubBucket) {
-                    matchedSubBucket.items.push(action);
-                } else {
-                    // Remainder at subcategory level
-                    matchedCategoryBucket.othersItems.push(action);
-                }
-            } else {
-                // No subcategories defined for this category
-                matchedCategoryBucket.directItems.push(action);
-            }
-        } else {
-            // Remainder at top level
+        if (!consumed) {
+            // Remainder at top level (not matched by any category, or only matched by fallthrough categories)
             topLevelOthers.push(action);
         }
     }

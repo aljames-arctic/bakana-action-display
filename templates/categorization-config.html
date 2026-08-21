@@ -18,7 +18,7 @@
         {{#if config.categories.length}}
             {{#each config.categories as |cat catIndex|}}
             <div class="bad-config-cat-card" data-cat-index="{{catIndex}}" data-cat-id="{{cat.id}}">
-                <!-- Top-Level Category Row: [ Grip ] [ + Subitem ] [ Name ] [ Expression ] [ Delete ] -->
+                <!-- Top-Level Category Row: [ Grip ] [ + Subitem ] [ Name ] [ Expression ] [ Fallthrough ] [ Delete ] -->
                 <div class="bad-config-cat-row" data-cat-index="{{catIndex}}" data-cat-id="{{cat.id}}">
                     <div class="bad-config-drag-handle" data-drag-type="category" data-cat-index="{{catIndex}}">
                         <i class="fas fa-grip-vertical"></i>
@@ -28,6 +28,9 @@
                     </button>
                     <input type="text" class="bad-cat-name-input" data-cat-index="{{catIndex}}" value="{{cat.name}}" placeholder="{{localize 'BAD.categorization.categoryNamePlaceholder'}}" />
                     <input type="text" class="bad-cat-expr-input" data-cat-index="{{catIndex}}" value="{{cat.expression}}" placeholder="{{localize 'BAD.categorization.categoryExprPlaceholder'}}" />
+                    <button type="button" class="bad-config-btn bad-config-btn-fallthrough {{#if cat.fallthrough}}active{{/if}}" data-action="toggleFallthrough" data-cat-index="{{catIndex}}" data-tooltip="{{localize 'BAD.categorization.fallthroughTooltip'}}" data-tooltip-direction="UP">
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
                     <button type="button" class="bad-config-btn bad-config-btn-danger" data-action="removeCategory" data-cat-index="{{catIndex}}">
                         <i class="fas fa-trash"></i>
                     </button>

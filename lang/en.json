@@ -89,6 +89,8 @@
             "cancel": "Cancel",
             "saved": "Categorization configuration saved successfully.",
             "noCategories": "No custom categories defined. Click '+ Add Category' to start.",
+            "fallthrough": "Fallthrough",
+            "fallthroughTooltip": "Enable Fallthrough: actions matching this category will appear here and continue evaluating into later categories rather than being consumed.",
             "others": "Other Actions",
             "emptyNameWarning": "Category and subcategory names cannot be empty.",
             "invalidExpressionWarning": "The expression \"{expr}\" contains a syntax error.",

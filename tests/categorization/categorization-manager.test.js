@@ -21,6 +21,7 @@ test('normalizeCategorizationConfig creates strict contract from arbitrary input
             {
                 name: 'Weapons',
                 expression: 'item.type === "weapon"',
+                fallthrough: true,
                 subcategories: [
                     { name: 'Daggers', expression: 'item.name.includes("dagger")' }
                 ]
@@ -32,6 +33,7 @@ test('normalizeCategorizationConfig creates strict contract from arbitrary input
     assert.equal(partialConfig.categories.length, 1);
     assert.equal(partialConfig.categories[0].name, 'Weapons');
     assert.equal(partialConfig.categories[0].expression, 'item.type === "weapon"');
+    assert.equal(partialConfig.categories[0].fallthrough, true);
     assert.ok(partialConfig.categories[0].id.startsWith('cat_'));
     assert.equal(partialConfig.categories[0].subcategories.length, 1);
     assert.equal(partialConfig.categories[0].subcategories[0].name, 'Daggers');
@@ -313,4 +315,46 @@ test('getDefaultCategories provides standard preset configuration and delegates 
     const delegated = getDefaultCategories(customAdapter);
     assert.equal(delegated.length, 1);
     assert.equal(delegated[0].name, 'Custom Cat');
+});
+
+test('categorizeActions with fallthrough allows matched items to appear in multiple categories or fall through to remainder', () => {
+    const dagger = new Action({ id: '1', name: 'Dagger', type: 'weapon' });
+    const potion = new Action({ id: '2', name: 'Healing Potion', type: 'consumable' });
+
+    const config = {
+        enabled: true,
+        categories: [
+            // Category 1: Fallthrough category that matches everything with 'Dagger' or 'Potion' in the name
+            {
+                id: 'c1',
+                name: 'QUICK ACCESS',
+                expression: 'item.name.includes("Dagger") || item.name.includes("Potion")',
+                fallthrough: true,
+                subcategories: []
+            },
+            // Category 2: Consumes weapons
+            {
+                id: 'c2',
+                name: 'WEAPONS',
+                expression: 'item.type === "weapon"',
+                fallthrough: false,
+                subcategories: []
+            }
+        ]
+    };
+
+    const result = categorizeActions([dagger, potion], config);
+    assert.equal(result.length, 3);
+
+    // 1. QUICK ACCESS (fallthrough) contains both dagger and potion
+    assert.equal(result[0].name, 'QUICK ACCESS');
+    assert.deepEqual(result[0].items, [dagger, potion]);
+
+    // 2. WEAPONS (non-fallthrough) matched and consumed dagger
+    assert.equal(result[1].name, 'WEAPONS');
+    assert.deepEqual(result[1].items, [dagger]);
+
+    // 3. Other Actions contains potion because it fell through Quick Access and was not consumed by Weapons
+    assert.equal(result[2].name, 'Other Actions');
+    assert.deepEqual(result[2].items, [potion]);
 });

@@ -1351,6 +1351,29 @@ div#tooltip:has(.bad-expression-tooltip),
     color: #fca5a5 !important;
 }
 
+.bad-config-btn-fallthrough {
+    color: #64748b;
+}
+
+.bad-config-btn-fallthrough:hover {
+    color: #cbd5e1;
+    border-color: rgba(167, 139, 250, 0.4);
+}
+
+.bad-config-btn-fallthrough.active {
+    background: rgba(167, 139, 250, 0.3) !important;
+    border-color: #a78bfa !important;
+    color: #a78bfa !important;
+    box-shadow: 0 0 6px rgba(167, 139, 250, 0.4);
+}
+
+.bad-config-btn-fallthrough.active:hover {
+    background: rgba(167, 139, 250, 0.45) !important;
+    border-color: #c4b5fd !important;
+    color: #fff !important;
+    box-shadow: 0 0 8px rgba(167, 139, 250, 0.6);
+}
+
 .bad-config-btn-primary {
     background: rgba(124, 58, 237, 0.4);
     border-color: rgba(167, 139, 250, 0.6);

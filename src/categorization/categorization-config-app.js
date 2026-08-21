@@ -32,6 +32,7 @@ export class CategorizationConfigApp extends adapter.foundry.HandlebarsApplicati
             addSubCategory: CategorizationConfigApp.prototype._onAddSubCategory,
             removeCategory: CategorizationConfigApp.prototype._onRemoveCategory,
             removeSubCategory: CategorizationConfigApp.prototype._onRemoveSubCategory,
+            toggleFallthrough: CategorizationConfigApp.prototype._onToggleFallthrough,
             loadPresets: CategorizationConfigApp.prototype._onLoadPresets,
             saveConfig: CategorizationConfigApp.prototype._onSaveConfig,
             closeConfig: CategorizationConfigApp.prototype._onCloseConfig
@@ -305,9 +306,25 @@ export class CategorizationConfigApp extends adapter.foundry.HandlebarsApplicati
             id: newCatId,
             name: '',
             expression: '',
+            fallthrough: false,
             subcategories: []
         });
         this._focusTarget = { type: 'category', id: newCatId };
+        this.render();
+    }
+
+    /**
+     * Toggle fallthrough state for a category.
+     * @param {Event} event
+     * @param {HTMLElement} target
+     */
+    _onToggleFallthrough(event, target) {
+        event.preventDefault();
+        this._syncFormData();
+        const catIndex = Number(target.dataset.catIndex);
+        if (isNaN(catIndex) || !this.config.categories[catIndex]) return;
+
+        this.config.categories[catIndex].fallthrough = !this.config.categories[catIndex].fallthrough;
         this.render();
     }
 
