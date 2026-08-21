@@ -32,8 +32,6 @@ export async function initializeSystemAdapter(systemId = game.system?.id) {
         return new AdapterClass();
     }
 
-    log.debug(`No system adapter registered for "${systemId}". Falling back to default adapter.`);
-
     const issuesUrl = game.modules?.get?.(MODULE_ID)?.bugs ?? GITHUB_ISSUES_URL;
     log.warn(`System "${systemId}" is not currently supported and will use the default adapter. If you experience issues or would like to request support, please visit: ${issuesUrl} and request support for the system.`);
 
