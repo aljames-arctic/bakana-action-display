@@ -1371,17 +1371,34 @@ div#tooltip:has(.bad-expression-tooltip),
 .bad-economy-preset-select {
     flex-grow: 1;
     max-width: 250px;
-    background: rgba(0, 0, 0, 0.4) !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
-    border-radius: 0.25em !important;
-    color: #f1f5f9 !important;
-    padding: 0.25em 0.5em !important;
-    font-size: 0.85em !important;
+    background-color: #1a162b !important;
+    background: #1a162b !important;
+    border: 1px solid rgba(167, 139, 250, 0.35) !important;
+    border-radius: 0.35em !important;
+    color: #f8fafc !important;
+    padding: 0.35em 0.6em !important;
+    font-size: 0.9em !important;
+    cursor: pointer;
 }
 
 .bad-economy-preset-select:focus {
     border-color: #a78bfa !important;
+    box-shadow: 0 0 6px rgba(167, 139, 250, 0.4) !important;
     outline: none !important;
+}
+
+.bad-economy-preset-select option {
+    background-color: #1a162b !important;
+    background: #1a162b !important;
+    color: #f8fafc !important;
+    padding: 0.35em 0.5em !important;
+}
+
+.bad-economy-preset-select option:hover,
+.bad-economy-preset-select option:focus,
+.bad-economy-preset-select option:checked {
+    background-color: #7c3aed !important;
+    color: #ffffff !important;
 }
 
 .bad-economy-colors-list {
@@ -1436,10 +1453,11 @@ div#tooltip:has(.bad-expression-tooltip),
     width: 6em !important;
     height: 2em !important;
     padding: 0.2em 0.5em !important;
-    background: rgba(0, 0, 0, 0.3) !important;
-    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    background-color: #1a162b !important;
+    background: #1a162b !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
     border-radius: 0.25em !important;
-    color: #f1f5f9 !important;
+    color: #f8fafc !important;
     font-family: monospace !important;
     font-size: 0.85em !important;
     text-transform: uppercase;
