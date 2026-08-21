@@ -162,104 +162,109 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
 
     /**
      * Extract Page 2 ability checks, saving throws, and skill checks for PF2e.
+     * In PF2e, saving throws are Fortitude, Reflex, and Will, and perception is a core check.
+     * Raw ability checks do not exist in PF2e (skills are rolled instead).
      * @param {Actor} actor
      * @returns {Action[]}
      */
     extractCheckActions(actor) {
         if (!actor) return [];
         const checkActions = [];
-        const abilities = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
-        const abilityNames = {
-            str: ['PF2E.AbilityStr', 'Strength'],
-            dex: ['PF2E.AbilityDex', 'Dexterity'],
-            con: ['PF2E.AbilityCon', 'Constitution'],
-            int: ['PF2E.AbilityInt', 'Intelligence'],
-            wis: ['PF2E.AbilityWis', 'Wisdom'],
-            cha: ['PF2E.AbilityCha', 'Charisma']
-        };
-        const abilityIcons = {
-            str: 'icons/svg/sword.svg',
-            dex: 'icons/svg/wing.svg',
-            con: 'icons/svg/shield.svg',
-            int: 'icons/svg/book.svg',
-            wis: 'icons/svg/eye.svg',
-            cha: 'icons/svg/paralysis.svg'
-        };
 
-        for (const abl of abilities) {
-            const labelKey = abilityNames[abl];
-            const name = localize(labelKey[0], labelKey[1]);
-            const img = abilityIcons[abl];
-
-            const saveSub = new Action({
-                id: `save-${abl}`,
-                name: localize('BAD.page2.savingThrow', 'Saving Throw'),
-                type: 'savingThrow',
-                img,
-                right: [TabRef.from('ability', abl)],
-                left: ['savingThrow'],
-                available: true,
-                roll: async (event) => {
-                    const rollEvent = this._createRollEvent(event);
-                    if (abl === 'con' || abl === 'dex' || abl === 'wis') {
-                        const saveMap = { con: 'fortitude', dex: 'reflex', wis: 'will' };
-                        const saveKey = saveMap[abl];
-                        if (actor.saves?.[saveKey]?.roll) {
-                            return actor.saves[saveKey].roll({ event: rollEvent });
-                        } else if (actor.system?.saves?.[saveKey]?.roll) {
-                            return actor.system.saves[saveKey].roll({ event: rollEvent });
-                        }
-                    }
-                    if (typeof actor.rollSave === 'function') {
-                        return actor.rollSave({ save: abl, event: rollEvent });
-                    } else if (typeof actor.rollSavingThrow === 'function') {
-                        return actor.rollSavingThrow(abl, { event: rollEvent });
-                    }
+        // 1. Core Saves (Fortitude, Reflex, Will) and Perception
+        const fortitude = new Action({
+            id: 'save-fortitude',
+            name: localize('PF2E.SavesFortitude', 'Fortitude'),
+            type: 'savingThrow',
+            img: 'icons/svg/shield.svg',
+            right: [TabRef.from('ability', 'con')],
+            left: ['savingThrow'],
+            available: true,
+            uses: { available: null, max: null },
+            roll: async (event) => {
+                const rollEvent = this._createRollEvent(event);
+                if (actor.saves?.fortitude?.roll) {
+                    return actor.saves.fortitude.roll({ event: rollEvent });
+                } else if (actor.system?.saves?.fortitude?.roll) {
+                    return actor.system.saves.fortitude.roll({ event: rollEvent });
                 }
-            });
+            },
+            extra: { section: 'core', page: 2, ability: 'con' }
+        });
+        fortitude.section = 'core';
+        fortitude.page = 2;
+        checkActions.push(fortitude);
 
-            const checkSub = new Action({
-                id: `check-${abl}`,
-                name: localize('BAD.page2.abilityCheck', 'Ability Check'),
-                type: 'abilityCheck',
-                img,
-                right: [TabRef.from('ability', abl)],
-                left: ['abilityCheck'],
-                available: true,
-                roll: async (event) => {
-                    const rollEvent = this._createRollEvent(event);
-                    if (typeof actor.rollAbilityCheck === 'function') {
-                        return actor.rollAbilityCheck(abl, { event: rollEvent });
-                    } else if (actor.system?.abilities?.[abl]?.roll) {
-                        return actor.system.abilities[abl].roll({ event: rollEvent });
-                    } else if (typeof actor.rollAttribute === 'function') {
-                        return actor.rollAttribute({ attribute: abl, event: rollEvent });
-                    } else if (typeof actor.rollAbilityTest === 'function') {
-                        return actor.rollAbilityTest(abl, { event: rollEvent });
-                    }
+        const reflex = new Action({
+            id: 'save-reflex',
+            name: localize('PF2E.SavesReflex', 'Reflex'),
+            type: 'savingThrow',
+            img: 'icons/svg/wing.svg',
+            right: [TabRef.from('ability', 'dex')],
+            left: ['savingThrow'],
+            available: true,
+            uses: { available: null, max: null },
+            roll: async (event) => {
+                const rollEvent = this._createRollEvent(event);
+                if (actor.saves?.reflex?.roll) {
+                    return actor.saves.reflex.roll({ event: rollEvent });
+                } else if (actor.system?.saves?.reflex?.roll) {
+                    return actor.system.saves.reflex.roll({ event: rollEvent });
                 }
-            });
+            },
+            extra: { section: 'core', page: 2, ability: 'dex' }
+        });
+        reflex.section = 'core';
+        reflex.page = 2;
+        checkActions.push(reflex);
 
-            const coreAction = new Action({
-                id: `ability-${abl}`,
-                name,
-                type: 'ability',
-                img,
-                right: [TabRef.from('ability', abl)],
-                left: ['savingThrow'],
-                itemCategories: [['savingThrow'], ['abilityCheck']],
-                available: true,
-                uses: { available: null, max: null },
-                subactions: [saveSub, checkSub],
-                collapseDropdownIfSingle: true,
-                extra: { section: 'core', page: 2, ability: abl }
-            });
-            coreAction.section = 'core';
-            coreAction.page = 2;
-            checkActions.push(coreAction);
-        }
+        const will = new Action({
+            id: 'save-will',
+            name: localize('PF2E.SavesWill', 'Will'),
+            type: 'savingThrow',
+            img: 'icons/svg/eye.svg',
+            right: [TabRef.from('ability', 'wis')],
+            left: ['savingThrow'],
+            available: true,
+            uses: { available: null, max: null },
+            roll: async (event) => {
+                const rollEvent = this._createRollEvent(event);
+                if (actor.saves?.will?.roll) {
+                    return actor.saves.will.roll({ event: rollEvent });
+                } else if (actor.system?.saves?.will?.roll) {
+                    return actor.system.saves.will.roll({ event: rollEvent });
+                }
+            },
+            extra: { section: 'core', page: 2, ability: 'wis' }
+        });
+        will.section = 'core';
+        will.page = 2;
+        checkActions.push(will);
 
-        // Skills
+        const perception = new Action({
+            id: 'check-perception',
+            name: localize('PF2E.PerceptionLabel', 'Perception'),
+            type: 'abilityCheck',
+            img: 'icons/svg/eye.svg',
+            right: [TabRef.from('ability', 'wis')],
+            left: ['abilityCheck'],
+            available: true,
+            uses: { available: null, max: null },
+            roll: async (event) => {
+                const rollEvent = this._createRollEvent(event);
+                if (typeof actor.perception?.roll === 'function') {
+                    return actor.perception.roll({ event: rollEvent });
+                } else if (typeof actor.system?.attributes?.perception?.roll === 'function') {
+                    return actor.system.attributes.perception.roll({ event: rollEvent });
+                }
+            },
+            extra: { section: 'core', page: 2, ability: 'wis' }
+        });
+        perception.section = 'core';
+        perception.page = 2;
+        checkActions.push(perception);
+
+        // 2. Skills
         const PF2E_SKILL_ABILITY_MAP = {
             acrobatics: 'dex',
             arcana: 'int',
@@ -277,6 +282,15 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
             stealth: 'dex',
             survival: 'wis',
             thievery: 'dex'
+        };
+
+        const abilityIcons = {
+            str: 'icons/svg/sword.svg',
+            dex: 'icons/svg/wing.svg',
+            con: 'icons/svg/shield.svg',
+            int: 'icons/svg/book.svg',
+            wis: 'icons/svg/eye.svg',
+            cha: 'icons/svg/paralysis.svg'
         };
 
         const skills = actor.skills ?? actor.system?.skills ?? {};
@@ -751,15 +765,15 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
 
         const pf2eCategories = [
             {
-                id: 'cat_ability_checks',
-                name: 'Abilities',
-                expression: `action.type === "ability"`,
+                id: 'cat_saves',
+                name: 'Saving Throws',
+                expression: `action.type === "savingThrow"`,
                 subcategories: []
             },
             {
                 id: 'cat_skill_checks',
-                name: 'Skills',
-                expression: `action.type === "skill"`,
+                name: 'Skills & Perception',
+                expression: `action.type === "skill" || action.id === "check-perception"`,
                 subcategories: [
                     {
                         id: 'sub_strength',

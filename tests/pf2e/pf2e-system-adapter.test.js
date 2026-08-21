@@ -19,8 +19,8 @@ test('Pf2eSystemAdapter initialization and extractable item types', () => {
     assert.equal(defaultCategories[2].subcategories[0].name, 'Cantrips');
     assert.equal(defaultCategories[2].subcategories[1].name, 'Ranked Spells');
     assert.equal(defaultCategories[3].name, 'Feats & Actions');
-    assert.equal(defaultCategories[4].name, 'Abilities');
-    assert.equal(defaultCategories[5].name, 'Skills');
+    assert.equal(defaultCategories[4].name, 'Saving Throws');
+    assert.equal(defaultCategories[5].name, 'Skills & Perception');
     assert.equal(defaultCategories[5].subcategories.length, 6);
 });
 
@@ -131,7 +131,7 @@ test('Pf2eSystemAdapter modifyActions full transformation pipeline', async () =>
 
     const modified = await adapter.modifyActions(rawActions, actor);
 
-    assert.equal(modified.length, 10, 'Should format feat, spell, consumable, injected Strike, and 6 ability actions');
+    assert.equal(modified.length, 8, 'Should format feat, spell, consumable, injected Strike, and 4 core actions');
 
     // Feat verification
     const featAction = modified.find(a => a.id === 'act-1');
@@ -345,7 +345,7 @@ test('Pf2eSystemAdapter extractCheckActions generates abilities, saves, and skil
     const adapter = new Pf2eSystemAdapter();
 
     let rolledSave = null;
-    let rolledAbility = null;
+    let rolledPerception = false;
     let rolledSkill = null;
 
     const actor = {
@@ -354,7 +354,7 @@ test('Pf2eSystemAdapter extractCheckActions generates abilities, saves, and skil
             reflex: { roll: () => { rolledSave = 'reflex'; } },
             will: { roll: () => { rolledSave = 'will'; } }
         },
-        rollAbilityCheck: (abl) => { rolledAbility = abl; },
+        perception: { roll: () => { rolledPerception = true; } },
         skills: {
             athletics: {
                 slug: 'athletics',
@@ -372,24 +372,35 @@ test('Pf2eSystemAdapter extractCheckActions generates abilities, saves, and skil
     };
 
     const checkActions = adapter.extractCheckActions(actor);
-    assert.equal(checkActions.length, 8); // 6 abilities + 2 skills (Athletics + Stealth)
+    assert.equal(checkActions.length, 6); // 4 core (Fortitude, Reflex, Will, Perception) + 2 skills (Athletics, Stealth)
 
-    const strAction = checkActions.find(a => a.id === 'ability-str');
-    assert.ok(strAction);
-    assert.equal(strAction.page, 2);
-    assert.equal(strAction.section, 'core');
-    assert.equal(strAction.subactions.length, 2);
-
-    // Save subaction (Fortitude on CON)
-    const conAction = checkActions.find(a => a.id === 'ability-con');
-    const conSave = conAction.subactions.find(s => s.id === 'save-con');
-    await conSave.roll({});
+    // Save action (Fortitude on CON)
+    const fortAction = checkActions.find(a => a.id === 'save-fortitude');
+    assert.ok(fortAction);
+    assert.equal(fortAction.page, 2);
+    assert.equal(fortAction.section, 'core');
+    await fortAction.roll({});
     assert.equal(rolledSave, 'fortitude');
 
-    // Ability check subaction
-    const strCheck = strAction.subactions.find(s => s.id === 'check-str');
-    await strCheck.roll({});
-    assert.equal(rolledAbility, 'str');
+    // Reflex save
+    const reflexAction = checkActions.find(a => a.id === 'save-reflex');
+    assert.ok(reflexAction);
+    await reflexAction.roll({});
+    assert.equal(rolledSave, 'reflex');
+
+    // Will save
+    const willAction = checkActions.find(a => a.id === 'save-will');
+    assert.ok(willAction);
+    await willAction.roll({});
+    assert.equal(rolledSave, 'will');
+
+    // Perception check
+    const perceptionAction = checkActions.find(a => a.id === 'check-perception');
+    assert.ok(perceptionAction);
+    assert.equal(perceptionAction.page, 2);
+    assert.equal(perceptionAction.section, 'core');
+    await perceptionAction.roll({});
+    assert.equal(rolledPerception, true);
 
     // Skill action
     const athSkill = checkActions.find(a => a.id === 'skill-athletics');
@@ -403,7 +414,6 @@ test('Pf2eSystemAdapter extractCheckActions generates abilities, saves, and skil
     const context = { items: checkActions };
     adapter.modifyContext(context, { activePage: 2, actor });
     assert.equal(context.layout, 'split');
-    assert.equal(context.coreItems.length, 6);
+    assert.equal(context.coreItems.length, 4);
     assert.equal(context.otherItems.length, 2);
 });
-

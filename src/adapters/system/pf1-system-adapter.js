@@ -262,34 +262,30 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
             const name = localize(labelKey[0], labelKey[1]);
             const img = abilityIcons[abl];
 
-            const saveSub = new Action({
-                id: `save-${abl}`,
-                name: localize('BAD.page2.savingThrow', 'Saving Throw'),
-                type: 'savingThrow',
-                img,
-                right: [TabRef.from('ability', abl)],
-                left: ['savingThrow'],
-                available: true,
-                roll: async (event) => {
-                    const rollEvent = this._createRollEvent(event);
-                    if (abl === 'con' || abl === 'dex' || abl === 'wis') {
-                        const saveMap = { con: 'fort', dex: 'ref', wis: 'will' };
-                        const saveKey = saveMap[abl];
+            const subactions = [];
+
+            if (abl === 'con' || abl === 'dex' || abl === 'wis') {
+                const saveMap = { con: 'fort', dex: 'ref', wis: 'will' };
+                const saveKey = saveMap[abl];
+                const saveSub = new Action({
+                    id: `save-${abl}`,
+                    name: localize('BAD.page2.savingThrow', 'Saving Throw'),
+                    type: 'savingThrow',
+                    img,
+                    right: [TabRef.from('ability', abl)],
+                    left: ['savingThrow'],
+                    available: true,
+                    roll: async (event) => {
+                        const rollEvent = this._createRollEvent(event);
                         if (typeof actor.rollSavingThrow === 'function') {
                             return actor.rollSavingThrow(saveKey, { event: rollEvent });
                         } else if (typeof actor.rollSave === 'function') {
                             return actor.rollSave(saveKey, { event: rollEvent });
                         }
                     }
-                    if (typeof actor.rollAbilitySave === 'function') {
-                        return actor.rollAbilitySave(abl, { event: rollEvent });
-                    } else if (typeof actor.rollSavingThrow === 'function') {
-                        return actor.rollSavingThrow(abl, { event: rollEvent });
-                    } else if (typeof actor.rollSave === 'function') {
-                        return actor.rollSave(abl, { event: rollEvent });
-                    }
-                }
-            });
+                });
+                subactions.push(saveSub);
+            }
 
             const checkSub = new Action({
                 id: `check-${abl}`,
@@ -310,6 +306,7 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
                     }
                 }
             });
+            subactions.push(checkSub);
 
             const coreAction = new Action({
                 id: `ability-${abl}`,
@@ -317,11 +314,11 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
                 type: 'ability',
                 img,
                 right: [TabRef.from('ability', abl)],
-                left: ['savingThrow'],
-                itemCategories: [['savingThrow'], ['abilityCheck']],
+                left: subactions.some(s => s.type === 'savingThrow') ? ['savingThrow'] : ['abilityCheck'],
+                itemCategories: subactions.some(s => s.type === 'savingThrow') ? [['savingThrow'], ['abilityCheck']] : [['abilityCheck']],
                 available: true,
                 uses: { available: null, max: null },
-                subactions: [saveSub, checkSub],
+                subactions,
                 collapseDropdownIfSingle: true,
                 extra: { section: 'core', page: 2, ability: abl }
             });

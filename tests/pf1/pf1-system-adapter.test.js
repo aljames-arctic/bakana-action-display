@@ -283,10 +283,11 @@ test('Pf1SystemAdapter extractCheckActions generates abilities, saves, and skill
     assert.ok(strAction);
     assert.equal(strAction.page, 2);
     assert.equal(strAction.section, 'core');
-    assert.equal(strAction.subactions.length, 2);
+    assert.equal(strAction.subactions.length, 1); // Strength has only ability check, no save
 
-    // Save subaction (e.g. Fortitude on CON)
+    // Save subaction on CON (Fortitude)
     const conAction = checkActions.find(a => a.id === 'ability-con');
+    assert.equal(conAction.subactions.length, 2); // Con has both save and check
     const conSave = conAction.subactions.find(s => s.id === 'save-con');
     await conSave.roll({});
     assert.equal(rolledSave, 'fort');
