@@ -134,7 +134,8 @@ class Adapter {
                 img: item.img,
                 type: item.type,
                 originalItem: item,
-                roll: (event) => item.use?.({}, { event }) ?? item.roll?.({ event })
+                left: item.type ? [item.type] : ['other'],
+                roll: (event) => item.use?.({}, { event }) ?? item.roll?.({ event }) ?? item.sheet?.render(true)
             }));
         }
         return actions;

@@ -107,7 +107,14 @@ export class BaseSystemContextModifier {
             case 'save':
             case 'savingThrow': return localize('BAD.page2.savingThrow', 'Saving Throw');
             case 'abilityCheck': return localize('BAD.page2.abilityCheck', 'Ability Check');
-            default: return parentId.toUpperCase();
+            default: {
+                const configLabel = CONFIG.Item?.typeLabels?.[parentId];
+                if (configLabel) {
+                    const localized = localize(configLabel, '');
+                    if (localized) return localized;
+                }
+                return parentId.charAt(0).toUpperCase() + parentId.slice(1);
+            }
         }
     }
 
@@ -119,7 +126,20 @@ export class BaseSystemContextModifier {
     getItemTypeIcon(parentId) {
         if (parentId === 'save' || parentId === 'savingThrow') return 'fas fa-shield-alt';
         if (parentId === 'abilityCheck') return 'fas fa-dice-d20';
-        return ICONS.item_type[parentId] ?? 'fas fa-question';
+        const typeMap = {
+            arma: 'fas fa-sword',
+            armadura: 'fas fa-shield-halved',
+            magia: 'fas fa-wand-magic-sparkles',
+            poder: 'fas fa-award',
+            equipamento: 'fas fa-shield-halved',
+            consumivel: 'fas fa-flask-potion',
+            weapon: 'fas fa-sword',
+            spell: 'fas fa-wand-magic-sparkles',
+            feat: 'fas fa-award',
+            equipment: 'fas fa-shield-halved',
+            consumable: 'fas fa-flask-potion'
+        };
+        return ICONS.item_type[parentId] ?? typeMap[parentId] ?? 'fas fa-question';
     }
 
     /**

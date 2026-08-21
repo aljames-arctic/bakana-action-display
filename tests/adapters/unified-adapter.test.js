@@ -148,6 +148,7 @@ test('Unified Adapter getActions executes base extraction -> system -> module ->
 
     assert.ok(swordAction);
     assert.equal(swordAction.isHidden, false);
+    assert.deepEqual(swordAction.left, ['weapon']);
 
     assert.ok(shieldAction);
     assert.equal(shieldAction.isHidden, true);
@@ -159,5 +160,5 @@ test('Unified Adapter delegates facade methods to layers', () => {
     assert.ok(Array.isArray(testAdapter.getDefaultActiveLeftSubTypes()));
     assert.ok(Array.isArray(testAdapter.getDefaultActiveSubTypes()));
     assert.equal(testAdapter.isExclusionTab('unknown'), false);
-    assert.equal(testAdapter.getItemTypeLabel('weapon'), 'WEAPON');
+    assert.equal(testAdapter.getItemTypeLabel('weapon'), 'Weapon');
 });
