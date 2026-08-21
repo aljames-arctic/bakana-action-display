@@ -282,9 +282,11 @@ export class BaseSystemAdapter {
 
     /**
      * Extract economy indicators for a given action.
+     * Returns an array of fixed indicator slots for every economy type in canonical sort order,
+     * allowing each action economy type to maintain its exact horizontal column across all rows.
      * @param {Object} action HUD Action object
      * @param {Record<string, string>} [userColors={}] User configured color overrides
-     * @returns {{ type: string, color: string }[]}
+     * @returns {{ type: string, label: string, active: boolean, color: string|null }[]}
      */
     extractEconomyIndicators(action, userColors = {}) {
         if (!action) return [];
@@ -306,18 +308,30 @@ export class BaseSystemAdapter {
             }
         }
 
-        const indicators = [];
-        for (const type of types) {
-            const color = this.getEconomyColor(type, userColors);
-            if (color) {
-                indicators.push({ type, color });
-            }
-        }
-        indicators.sort((a, b) => {
-            const orderA = this.getActionSubTabSortOrder('economy', a.type) ?? 999;
-            const orderB = this.getActionSubTabSortOrder('economy', b.type) ?? 999;
+        const systemTypes = this.getEconomyTypes() ?? [];
+        const sortedTypes = [...systemTypes].sort((a, b) => {
+            const orderA = this.getActionSubTabSortOrder('economy', a.id) ?? 999;
+            const orderB = this.getActionSubTabSortOrder('economy', b.id) ?? 999;
             return orderA - orderB;
         });
+
+        // Any action types on the item that are not in systemTypes map to 'other'
+        const hasUnmapped = Array.from(types).some(t => !sortedTypes.some(st => st.id === t));
+        if (hasUnmapped) {
+            types.add('other');
+        }
+
+        const indicators = [];
+        for (const sysType of sortedTypes) {
+            const isActive = types.has(sysType.id);
+            const color = isActive ? this.getEconomyColor(sysType.id, userColors) : null;
+            indicators.push({
+                type: sysType.id,
+                label: sysType.label,
+                active: isActive,
+                color
+            });
+        }
         return indicators;
     }
 

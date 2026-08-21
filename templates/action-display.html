@@ -90,7 +90,11 @@
                             <div class="bad-economy-bars">
                                 {{#if @root.showEconomyIndicators}}
                                     {{#each this.economyIndicators}}
-                                    <span class="bad-economy-bar" style="background-color: {{this.color}};"></span>
+                                        {{#if this.active}}
+                                        <span class="bad-economy-bar" style="background-color: {{this.color}};" title="{{this.label}}"></span>
+                                        {{else}}
+                                        <span class="bad-economy-bar bad-economy-bar-empty"></span>
+                                        {{/if}}
                                     {{/each}}
                                 {{/if}}
                             </div>
@@ -123,7 +127,11 @@
                             <div class="bad-economy-bars">
                                 {{#if @root.showEconomyIndicators}}
                                     {{#each this.economyIndicators}}
-                                    <span class="bad-economy-bar" style="background-color: {{this.color}};"></span>
+                                        {{#if this.active}}
+                                        <span class="bad-economy-bar" style="background-color: {{this.color}};" title="{{this.label}}"></span>
+                                        {{else}}
+                                        <span class="bad-economy-bar bad-economy-bar-empty"></span>
+                                        {{/if}}
                                     {{/each}}
                                 {{/if}}
                             </div>
@@ -159,7 +167,11 @@
                         <div class="bad-economy-bars">
                             {{#if @root.showEconomyIndicators}}
                                 {{#each this.economyIndicators}}
-                                <span class="bad-economy-bar" style="background-color: {{this.color}};"></span>
+                                    {{#if this.active}}
+                                    <span class="bad-economy-bar" style="background-color: {{this.color}};" title="{{this.label}}"></span>
+                                    {{else}}
+                                    <span class="bad-economy-bar bad-economy-bar-empty"></span>
+                                    {{/if}}
                                 {{/each}}
                             {{/if}}
                         </div>
@@ -190,7 +202,11 @@
                         <div class="bad-economy-bars">
                             {{#if @root.showEconomyIndicators}}
                                 {{#each this.economyIndicators}}
-                                <span class="bad-economy-bar" style="background-color: {{this.color}};"></span>
+                                    {{#if this.active}}
+                                    <span class="bad-economy-bar" style="background-color: {{this.color}};" title="{{this.label}}"></span>
+                                    {{else}}
+                                    <span class="bad-economy-bar bad-economy-bar-empty"></span>
+                                    {{/if}}
                                 {{/each}}
                             {{/if}}
                         </div>
@@ -225,7 +241,11 @@
                         <div class="bad-economy-bars">
                             {{#if @root.showEconomyIndicators}}
                                 {{#each this.economyIndicators}}
-                                <span class="bad-economy-bar" style="background-color: {{this.color}};"></span>
+                                    {{#if this.active}}
+                                    <span class="bad-economy-bar" style="background-color: {{this.color}};" title="{{this.label}}"></span>
+                                    {{else}}
+                                    <span class="bad-economy-bar bad-economy-bar-empty"></span>
+                                    {{/if}}
                                 {{/each}}
                             {{/if}}
                         </div>

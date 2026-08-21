@@ -63,7 +63,7 @@ test('Dnd5eSystemAdapter provides system-specific action economy types including
     assert.equal(lair.defaultColor, '#eab308', 'Lair action should be gold');
 });
 
-test('extractEconomyIndicators extracts and deduplicates economy types for single and multi-activity actions', () => {
+test('extractEconomyIndicators returns fixed-column slots with active indicators for single and multi-activity actions', () => {
     const dndAdapter = new Dnd5eSystemAdapter();
 
     // 1. Single action item (e.g. standard action)
@@ -72,9 +72,13 @@ test('extractEconomyIndicators extracts and deduplicates economy types for singl
         right: [TabRef.from('economy', 'action')]
     };
     const indicators1 = dndAdapter.extractEconomyIndicators(singleAction);
-    assert.equal(indicators1.length, 1);
-    assert.equal(indicators1[0].type, 'action');
-    assert.equal(indicators1[0].color, '#3b82f6');
+    assert.ok(indicators1.length >= 5, 'Should return full fixed-slot array for all economy types');
+    const actSlot1 = indicators1.find(i => i.type === 'action');
+    const bonusSlot1 = indicators1.find(i => i.type === 'bonus');
+    assert.equal(actSlot1?.active, true);
+    assert.equal(actSlot1?.color, '#3b82f6');
+    assert.equal(bonusSlot1?.active, false);
+    assert.equal(bonusSlot1?.color, null);
 
     // 2. Multi-activity item with differing economy types (Action + Bonus Action + Reaction)
     const multiAction = {
@@ -87,13 +91,18 @@ test('extractEconomyIndicators extracts and deduplicates economy types for singl
         ]
     };
     const indicators2 = dndAdapter.extractEconomyIndicators(multiAction);
-    assert.equal(indicators2.length, 3, 'Should deduplicate identical action types');
-    assert.equal(indicators2[0].type, 'action', 'Action should be first (leftmost)');
-    assert.equal(indicators2[1].type, 'bonus', 'Bonus Action should be second');
-    assert.equal(indicators2[2].type, 'reaction', 'Reaction should be third');
-    assert.equal(indicators2[0].color, '#3b82f6');
-    assert.equal(indicators2[1].color, '#14b8a6');
-    assert.equal(indicators2[2].color, '#ef4444');
+    const actSlot2 = indicators2.find(i => i.type === 'action');
+    const bonusSlot2 = indicators2.find(i => i.type === 'bonus');
+    const reactSlot2 = indicators2.find(i => i.type === 'reaction');
+    const legendSlot2 = indicators2.find(i => i.type === 'legendary');
+
+    assert.equal(actSlot2?.active, true);
+    assert.equal(bonusSlot2?.active, true);
+    assert.equal(reactSlot2?.active, true);
+    assert.equal(legendSlot2?.active, false);
+    assert.equal(actSlot2?.color, '#3b82f6');
+    assert.equal(bonusSlot2?.color, '#14b8a6');
+    assert.equal(reactSlot2?.color, '#ef4444');
 
     // 3. Passive item with economy: 'none'
     const passiveItem = {
@@ -101,10 +110,10 @@ test('extractEconomyIndicators extracts and deduplicates economy types for singl
         right: [TabRef.from('economy', 'none')]
     };
     const indicators3 = dndAdapter.extractEconomyIndicators(passiveItem);
-    assert.equal(indicators3.length, 0, 'Passive items with economy: none should have no indicators');
+    assert.ok(indicators3.every(i => i.active === false), 'Passive items should have all inactive slots');
 });
 
-test('extractEconomyIndicators sorts indicators in the exact order of the action economy list top-to-bottom', () => {
+test('extractEconomyIndicators maintains exact horizontal column order of economy types', () => {
     const dndAdapter = new Dnd5eSystemAdapter();
 
     // Item with Bonus Action and Action defined in reverse order
@@ -116,10 +125,13 @@ test('extractEconomyIndicators sorts indicators in the exact order of the action
         ]
     };
     const indicators = dndAdapter.extractEconomyIndicators(reverseOrderAction);
-    assert.equal(indicators.length, 2);
-    // Action (sort 1) must come before Bonus Action (sort 2)
-    assert.equal(indicators[0].type, 'action');
-    assert.equal(indicators[1].type, 'bonus');
+    const actIndex = indicators.findIndex(i => i.type === 'action');
+    const bonusIndex = indicators.findIndex(i => i.type === 'bonus');
+    const reactIndex = indicators.findIndex(i => i.type === 'reaction');
+
+    // Action (slot 0/column 1) must be before Bonus Action (slot 1/column 2) which is before Reaction
+    assert.ok(actIndex < bonusIndex, 'Action column must precede Bonus Action column');
+    assert.ok(bonusIndex < reactIndex, 'Bonus Action column must precede Reaction column');
 });
 
 test('ActionDisplayApp _prepareContext extracts economy indicators when enabled and suppresses when disabled', async () => {
@@ -165,10 +177,18 @@ test('ActionDisplayApp _prepareContext extracts economy indicators when enabled 
 
         const contextEnabled = await app._prepareContext({});
         assert.equal(contextEnabled.showEconomyIndicators, true);
-        assert.equal(contextEnabled.items[0].economyIndicators.length, 1);
-        assert.equal(contextEnabled.items[0].economyIndicators[0].color, '#0000ff');
-        assert.equal(contextEnabled.items[1].economyIndicators.length, 1);
-        assert.equal(contextEnabled.items[1].economyIndicators[0].color, '#14b8a6');
+        assert.ok(contextEnabled.items[0].economyIndicators.length > 0);
+        const item1Action = contextEnabled.items[0].economyIndicators.find(i => i.type === 'action');
+        const item1Bonus = contextEnabled.items[0].economyIndicators.find(i => i.type === 'bonus');
+        assert.equal(item1Action?.active, true);
+        assert.equal(item1Action?.color, '#0000ff');
+        assert.equal(item1Bonus?.active, false);
+
+        const item2Action = contextEnabled.items[1].economyIndicators.find(i => i.type === 'action');
+        const item2Bonus = contextEnabled.items[1].economyIndicators.find(i => i.type === 'bonus');
+        assert.equal(item2Action?.active, false);
+        assert.equal(item2Bonus?.active, true);
+        assert.equal(item2Bonus?.color, '#14b8a6');
 
         // 2. When enableEconomyIndicators is false
         game.settings.set(MODULE_ID, 'enableEconomyIndicators', false);

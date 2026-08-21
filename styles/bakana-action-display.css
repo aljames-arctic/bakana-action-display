@@ -254,6 +254,16 @@
     flex-shrink: 0;
     box-shadow: 0 0 3px rgba(0, 0, 0, 0.4);
     border: 1px solid rgba(255, 255, 255, 0.15);
+    box-sizing: border-box;
+}
+
+.bad-economy-bar.bad-economy-bar-empty {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    box-shadow: none !important;
+    border: none !important;
+    background: transparent !important;
 }
 
 /* Remaining Uses Slot (Dedicated 1/6th of space on far right) */
