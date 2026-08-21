@@ -17,8 +17,9 @@ const MODIFIER_KEY_MAP = {
  * They also define the localization labels and icons for the HUD tabs.
  */
 export class BaseSystemAdapter {
-    constructor(systemId) {
+    constructor(systemId, isSupported = false) {
         this.systemId = systemId;
+        this.isSupported = Boolean(isSupported);
         this.contextMenuManager = new BaseSystemContextMenuManager(this);
         this.filterManager = new BaseSystemTabFilterManager(this);
         this.contextModifier = new BaseSystemContextModifier(this);

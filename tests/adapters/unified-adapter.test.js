@@ -6,6 +6,7 @@ import { initializeFoundryAdapter } from '../../src/adapters/foundry/index.js';
 import { initializeSystemAdapter } from '../../src/adapters/system/index.js';
 import { initializeModuleAdapters } from '../../src/adapters/module/index.js';
 import { MODULE_ID } from '../../src/constants.js';
+import { log } from '../../src/lib/logger.js';
 
 test('initializeFoundryAdapter returns FoundryCurrentAdapter inheriting BaseFoundryAdapter with dynamic generation', () => {
     // V12
@@ -33,20 +34,44 @@ test('initializeFoundryAdapter returns FoundryCurrentAdapter inheriting BaseFoun
     assert.equal(v14.generation, 14);
 });
 
-test('initializeSystemAdapter loads matching system adapter or falls back to BaseSystemAdapter', async () => {
+test('initializeSystemAdapter loads matching system adapter or falls back to BaseSystemAdapter with isSupported flag', async () => {
     // Known system: dnd5e
     const dnd5e = await initializeSystemAdapter('dnd5e');
     assert.equal(dnd5e.systemId, 'dnd5e');
+    assert.equal(dnd5e.isSupported, true);
 
-    // Unknown system fallback
-    const unknown = await initializeSystemAdapter('custom-homebrew-rpg');
-    assert.ok(unknown instanceof BaseSystemAdapter);
-    assert.equal(unknown.systemId, 'custom-homebrew-rpg');
+    // Known system: pf1
+    const pf1 = await initializeSystemAdapter('pf1');
+    assert.equal(pf1.systemId, 'pf1');
+    assert.equal(pf1.isSupported, true);
+
+    // Known system: pf2e
+    const pf2e = await initializeSystemAdapter('pf2e');
+    assert.equal(pf2e.systemId, 'pf2e');
+    assert.equal(pf2e.isSupported, true);
+
+    // Unknown/unsupported system fallback (e.g. tormenta20)
+    const logs = [];
+    const origLog = console.log;
+    log.setVerbosity('debug');
+    console.log = (...args) => logs.push(args.join(' '));
+    try {
+        const tormenta = await initializeSystemAdapter('tormenta20');
+        assert.ok(tormenta instanceof BaseSystemAdapter);
+        assert.equal(tormenta.systemId, 'tormenta20');
+        assert.equal(tormenta.isSupported, false);
+        assert.ok(logs.some(l => l.includes('tormenta20') && l.includes('not natively supported') && l.includes('github.com')));
+        assert.ok(logs.some(l => l.includes('Debug') && l.includes('No system adapter found for "tormenta20"')));
+    } finally {
+        console.log = origLog;
+        log.setVerbosity('warn');
+    }
 
     // Empty system fallback
     const fallback = await initializeSystemAdapter(null);
     assert.ok(fallback instanceof BaseSystemAdapter);
     assert.equal(fallback.systemId, 'unknown');
+    assert.equal(fallback.isSupported, false);
 });
 
 test('initializeModuleAdapters registers active modules from registry', () => {
@@ -58,22 +83,43 @@ test('initializeModuleAdapters registers active modules from registry', () => {
     assert.equal(activeMods.has('midi-qol'), true);
 });
 
-test('Unified Adapter init initializes foundry, system, and module layers', async () => {
+test('Unified Adapter init initializes and formats system label correctly for supported and unsupported systems', async () => {
     game.release = { generation: 12 };
     game.version = '12.331';
-    game.system = { id: 'dnd5e' };
-    game.modules = new Map([
-        ['midi-qol', { id: 'midi-qol', active: false }]
-    ]);
+    game.modules = new Map();
 
-    const testAdapter = new Adapter();
-    await testAdapter.init();
+    const logs = [];
+    const origLog = console.log;
+    log.setVerbosity('info');
+    console.log = (...args) => logs.push(args.join(' '));
 
-    assert.ok(testAdapter.foundry instanceof FoundryCurrentAdapter);
-    assert.ok(testAdapter.foundry instanceof BaseFoundryAdapter);
-    assert.equal(testAdapter.foundry.generation, 12);
-    assert.equal(testAdapter.system.systemId, 'dnd5e');
-    assert.equal(testAdapter.modules.size, 0);
+    try {
+        // Supported system
+        game.system = { id: 'dnd5e' };
+        const supportedAdapter = new Adapter();
+        await supportedAdapter.init();
+        assert.ok(supportedAdapter.foundry instanceof FoundryCurrentAdapter);
+        assert.ok(supportedAdapter.foundry instanceof BaseFoundryAdapter);
+        assert.equal(supportedAdapter.foundry.generation, 12);
+        assert.equal(supportedAdapter.system.systemId, 'dnd5e');
+        assert.equal(supportedAdapter.system.isSupported, true);
+        assert.equal(supportedAdapter.modules.size, 0);
+        assert.ok(logs.some(l => l.includes('Unified Adapter initialized [Foundry: v12, System: dnd5e, Modules: 0]')));
+
+        logs.length = 0;
+
+        // Unsupported system: tormenta20
+        game.release = { generation: 13 };
+        game.system = { id: 'tormenta20' };
+        const unsupportedAdapter = new Adapter();
+        await unsupportedAdapter.init();
+        assert.equal(unsupportedAdapter.system.systemId, 'tormenta20');
+        assert.equal(unsupportedAdapter.system.isSupported, false);
+        assert.ok(logs.some(l => l.includes('Unified Adapter initialized [Foundry: v13, System: tormenta20 (unsupported), Modules: 0]')));
+    } finally {
+        console.log = origLog;
+        log.setVerbosity('warn');
+    }
 });
 
 test('Unified Adapter getActions executes base extraction -> system -> module -> hidden pipeline', async () => {

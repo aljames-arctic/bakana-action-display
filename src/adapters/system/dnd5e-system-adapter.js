@@ -24,7 +24,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
     #cachedForMap = new Map();
 
     constructor() {
-        super('dnd5e');
+        super('dnd5e', true);
         this.contextMenuManager = new Dnd5eSystemContextMenuManager(this);
         this.filterManager = new Dnd5eSystemTabFilterManager(this);
         this.contextModifier = new Dnd5eSystemContextModifier(this);

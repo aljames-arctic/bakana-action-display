@@ -38,7 +38,8 @@ class Adapter {
         this.system = await initializeSystemAdapter(game.system?.id);
         this.modules = initializeModuleAdapters();
         this._initialized = true;
-        log.info(`Unified Adapter initialized [Foundry: v${this.foundry.generation}, System: ${this.system.systemId}, Modules: ${this.modules.size}]`);
+        const systemLabel = this.system.isSupported ? this.system.systemId : `${this.system.systemId} (unsupported)`;
+        log.info(`Unified Adapter initialized [Foundry: v${this.foundry.generation}, System: ${systemLabel}, Modules: ${this.modules.size}]`);
     }
 
     /* -------------------------------------------- */

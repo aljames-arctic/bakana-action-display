@@ -1,4 +1,5 @@
 import { BaseSystemAdapter } from './base-system-adapter.js';
+import { MODULE_ID, GITHUB_ISSUES_URL } from '../../constants.js';
 import { log } from '../../lib/logger.js';
 
 /**
@@ -17,7 +18,7 @@ function toPascalCase(str) {
  */
 export async function initializeSystemAdapter(systemId = game.system?.id) {
     if (!systemId) {
-        return new BaseSystemAdapter('unknown');
+        return new BaseSystemAdapter('unknown', false);
     }
 
     const systemPath = `./${systemId}-system-adapter.js`;
@@ -25,18 +26,22 @@ export async function initializeSystemAdapter(systemId = game.system?.id) {
 
     try {
         const systemModule = await import(systemPath);
-        const AdapterClass = systemModule[systemClassName];
+        const AdapterClass = systemModule[systemClassName] ?? systemModule.default;
         if (AdapterClass) {
             log.info(`Initialized system adapter for: ${systemId}`);
             return new AdapterClass();
         }
-        log.warn(`Class ${systemClassName} not found in ${systemPath}. Falling back to default adapter.`);
+        log.debug(`Class "${systemClassName}" not found in ${systemPath}. Falling back to default adapter.`);
     } catch (error) {
-        log.warn(`No system adapter found for ${systemId} at ${systemPath}. Falling back to default adapter.`);
-        log.error("System adapter load error:", error);
+        log.debug(`No system adapter found for "${systemId}" at ${systemPath}. Falling back to default adapter.`, error);
     }
 
-    return new BaseSystemAdapter(systemId);
+    const issuesUrl = game.modules?.get?.(MODULE_ID)?.bugs ?? GITHUB_ISSUES_URL;
+    log.info(`System "${systemId}" is not natively supported and will use the default adapter. If you experience issues or would like to request support, please visit: ${issuesUrl}`);
+
+    return new BaseSystemAdapter(systemId, false);
 }
 
 export { BaseSystemAdapter };
+
+

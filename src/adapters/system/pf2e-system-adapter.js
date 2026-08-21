@@ -56,7 +56,7 @@ const PF2E_ACTION_TYPE_MAP = {
  */
 export class Pf2eSystemAdapter extends FantasySystemAdapter {
     constructor() {
-        super('pf2e');
+        super('pf2e', true);
         this.contextMenuManager = new Pf2eSystemContextMenuManager(this);
     }
 

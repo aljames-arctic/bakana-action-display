@@ -50,7 +50,7 @@ const ICONS = {
  */
 export class Pf1SystemAdapter extends FantasySystemAdapter {
     constructor() {
-        super('pf1');
+        super('pf1', true);
         this.contextMenuManager = new Pf1SystemContextMenuManager(this);
     }
 
