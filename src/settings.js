@@ -311,27 +311,54 @@ Hooks.once('init', () => {
 
 /**
  * Injects styled subsection headers for World, User, and Client settings into the SettingsConfig dialog.
+ * Moves user-scoped menus (like economyColorsMenu) to the User Settings section so they appear under User Settings.
  * @param {HTMLElement|Object} html Rendered settings config DOM element or jQuery collection
  */
 export function injectSettingsHeaders(html) {
     const root = (typeof HTMLElement !== 'undefined' && html instanceof HTMLElement) ? html : (html?.[0] ?? html);
     if (!root || typeof root.querySelector !== 'function') return;
 
+    // 1. Move economyColorsMenu (User Menu) into the User Settings section before hudOpacity if both are present
+    const economyMenuSelector = [
+        `[data-key="${MODULE_ID}.economyColorsMenu"]`,
+        `[data-setting-id="${MODULE_ID}.economyColorsMenu"]`,
+        `[data-entry-id="${MODULE_ID}.economyColorsMenu"]`
+    ].join(', ');
+    const hudOpacitySelector = [
+        `[name="${MODULE_ID}.hudOpacity"]`,
+        `[data-setting-id="${MODULE_ID}.hudOpacity"]`,
+        `[data-entry-id="${MODULE_ID}.hudOpacity"]`
+    ].join(', ');
+
+    const economyMenuEl = root.querySelector(economyMenuSelector);
+    const hudOpacityEl = root.querySelector(hudOpacitySelector);
+
+    if (economyMenuEl && hudOpacityEl) {
+        const economyFg = economyMenuEl.closest('.form-group') ?? economyMenuEl;
+        const hudOpacityFg = hudOpacityEl.closest('.form-group') ?? hudOpacityEl;
+        if (economyFg && hudOpacityFg && economyFg.parentNode && economyFg.parentNode === hudOpacityFg.parentNode) {
+            if (economyFg.nextElementSibling !== hudOpacityFg) {
+                hudOpacityFg.parentNode.insertBefore(economyFg, hudOpacityFg);
+            }
+        }
+    }
+
+    // 2. Insert section headers before the respective first setting in each scope
     const sections = [
         {
-            key: 'categorizationMenu',
+            keys: ['categorizationMenu', 'enableCenterOnToken', 'enableEconomyIndicators'],
             scope: 'world',
             title: game.i18n.localize('BAD.settingsSections.world') ?? 'World Settings',
             icon: 'fas fa-globe'
         },
         {
-            key: 'hudOpacity',
+            keys: ['economyColorsMenu', 'hudOpacity'],
             scope: 'user',
             title: game.i18n.localize('BAD.settingsSections.user') ?? 'User Settings',
             icon: 'fas fa-user'
         },
         {
-            key: 'logVerbosity',
+            keys: ['logVerbosity'],
             scope: 'client',
             title: game.i18n.localize('BAD.settingsSections.client') ?? 'Client Settings',
             icon: 'fas fa-desktop'
@@ -339,14 +366,18 @@ export function injectSettingsHeaders(html) {
     ];
 
     for (const section of sections) {
-        const settingSelector = [
-            `[data-setting-id="${MODULE_ID}.${section.key}"]`,
-            `[data-entry-id="${MODULE_ID}.${section.key}"]`,
-            `[name="${MODULE_ID}.${section.key}"]`,
-            `[data-key="${MODULE_ID}.${section.key}"]`
-        ].join(', ');
+        let targetEl = null;
+        for (const key of section.keys) {
+            const selector = [
+                `[data-setting-id="${MODULE_ID}.${key}"]`,
+                `[data-entry-id="${MODULE_ID}.${key}"]`,
+                `[name="${MODULE_ID}.${key}"]`,
+                `[data-key="${MODULE_ID}.${key}"]`
+            ].join(', ');
+            targetEl = root.querySelector(selector);
+            if (targetEl) break;
+        }
 
-        const targetEl = root.querySelector(settingSelector);
         if (!targetEl) continue;
 
         const formGroup = targetEl.closest('.form-group') ?? targetEl;

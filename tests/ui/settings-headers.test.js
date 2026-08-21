@@ -21,8 +21,14 @@ class MockElement extends HTMLElement {
     }
 
     appendChild(child) {
+        if (child.parentNode) {
+            const oldIdx = child.parentNode.children.indexOf(child);
+            if (oldIdx !== -1) child.parentNode.children.splice(oldIdx, 1);
+        }
         if (this.children.length > 0) {
             child.previousElementSibling = this.children[this.children.length - 1];
+        } else {
+            child.previousElementSibling = null;
         }
         child.parentNode = this;
         this.children.push(child);
@@ -30,7 +36,11 @@ class MockElement extends HTMLElement {
     }
 
     insertBefore(newChild, refChild) {
-        const index = this.children.indexOf(refChild);
+        if (newChild.parentNode) {
+            const oldIdx = newChild.parentNode.children.indexOf(newChild);
+            if (oldIdx !== -1) newChild.parentNode.children.splice(oldIdx, 1);
+        }
+        const index = refChild ? this.children.indexOf(refChild) : -1;
         if (index === -1) {
             return this.appendChild(newChild);
         }
@@ -124,6 +134,72 @@ test('injectSettingsHeaders inserts world, user, and client headers into Setting
         // Second injection (idempotency check)
         injectSettingsHeaders(root);
         assert.equal(root.children.length, 6, 'Should remain 6 items without duplicate headers');
+    } finally {
+        document.createElement = origCreateElement;
+    }
+});
+
+test('injectSettingsHeaders moves economyColorsMenu into the User Settings section', () => {
+    const origCreateElement = document.createElement;
+    document.createElement = (tagName) => new MockElement(tagName);
+
+    try {
+        const root = new MockElement('div', { className: 'settings-list' });
+
+        // Foundry renders all menus at the top of the module section
+        const fgCatMenu = new MockElement('div', { className: 'form-group' });
+        const btnCat = new MockElement('button', { dataset: { key: 'bakana-action-display.categorizationMenu' } });
+        fgCatMenu.appendChild(btnCat);
+        root.appendChild(fgCatMenu);
+
+        const fgEconMenu = new MockElement('div', { className: 'form-group' });
+        const btnEcon = new MockElement('button', { dataset: { key: 'bakana-action-display.economyColorsMenu' } });
+        fgEconMenu.appendChild(btnEcon);
+        root.appendChild(fgEconMenu);
+
+        // Regular world settings follow
+        const fgCenter = new MockElement('div', { className: 'form-group' });
+        const inputCenter = new MockElement('input', { name: 'bakana-action-display.enableCenterOnToken' });
+        fgCenter.appendChild(inputCenter);
+        root.appendChild(fgCenter);
+
+        // User settings
+        const fgOpacity = new MockElement('div', { className: 'form-group' });
+        const inputOpacity = new MockElement('input', { name: 'bakana-action-display.hudOpacity' });
+        fgOpacity.appendChild(inputOpacity);
+        root.appendChild(fgOpacity);
+
+        // Client settings
+        const fgLog = new MockElement('div', { className: 'form-group' });
+        const inputLog = new MockElement('input', { name: 'bakana-action-display.logVerbosity' });
+        fgLog.appendChild(inputLog);
+        root.appendChild(fgLog);
+
+        injectSettingsHeaders(root);
+
+        // Expected DOM structure:
+        // [0]: World Header
+        // [1]: fgCatMenu (World Menu)
+        // [2]: fgCenter (World Setting)
+        // [3]: User Header
+        // [4]: fgEconMenu (User Menu relocated here!)
+        // [5]: fgOpacity (User Setting)
+        // [6]: Client Header
+        // [7]: fgLog (Client Setting)
+        assert.equal(root.children.length, 8);
+        assert.equal(root.children[0].className, 'bad-settings-section-header');
+        assert.equal(root.children[0].dataset.scope, 'world');
+        assert.equal(root.children[1], fgCatMenu);
+        assert.equal(root.children[2], fgCenter);
+
+        assert.equal(root.children[3].className, 'bad-settings-section-header');
+        assert.equal(root.children[3].dataset.scope, 'user');
+        assert.equal(root.children[4], fgEconMenu, 'economyColorsMenu should be located under User Settings header');
+        assert.equal(root.children[5], fgOpacity);
+
+        assert.equal(root.children[6].className, 'bad-settings-section-header');
+        assert.equal(root.children[6].dataset.scope, 'client');
+        assert.equal(root.children[7], fgLog);
     } finally {
         document.createElement = origCreateElement;
     }
