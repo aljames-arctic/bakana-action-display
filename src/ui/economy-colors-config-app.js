@@ -23,6 +23,7 @@ export class EconomyColorsConfigApp extends adapter.foundry.HandlebarsApplicatio
             height: 'auto'
         },
         actions: {
+            toggleEnabled: EconomyColorsConfigApp.prototype._onToggleEnabled,
             resetDefaults: EconomyColorsConfigApp.prototype._onResetDefaults,
             saveConfig: EconomyColorsConfigApp.prototype._onSaveConfig,
             closeConfig: EconomyColorsConfigApp.prototype._onCloseConfig
@@ -44,6 +45,7 @@ export class EconomyColorsConfigApp extends adapter.foundry.HandlebarsApplicatio
         super(options);
         const stored = game.settings.get(MODULE_ID, 'economyColors') ?? {};
         this.colors = foundry.utils.duplicate(stored);
+        this.enabled = Boolean(game.settings.get(MODULE_ID, 'enableEconomyIndicators'));
         this.selectedPreset = '';
     }
 
@@ -68,6 +70,7 @@ export class EconomyColorsConfigApp extends adapter.foundry.HandlebarsApplicatio
             selected: this.selectedPreset === p.id
         }));
 
+        context.enabled = this.enabled;
         context.economyTypes = economyTypes;
         context.presets = presets;
         return context;
@@ -85,6 +88,14 @@ export class EconomyColorsConfigApp extends adapter.foundry.HandlebarsApplicatio
      */
     _attachInputListeners() {
         if (!this.element) return;
+
+        // Enable checkbox toggle
+        const enableToggle = this.element.querySelector('.bad-economy-enable-toggle');
+        if (enableToggle) {
+            enableToggle.addEventListener('change', (event) => {
+                this.enabled = event.target.checked;
+            });
+        }
 
         // Preset dropdown selection
         const presetSelect = this.element.querySelector('.bad-economy-preset-select');
@@ -130,6 +141,13 @@ export class EconomyColorsConfigApp extends adapter.foundry.HandlebarsApplicatio
     }
 
     /**
+     * Handle enable checkbox toggling.
+     */
+    async _onToggleEnabled(event, target) {
+        this.enabled = target.checked;
+    }
+
+    /**
      * Apply a color palette preset to current colors and re-render.
      * @param {string} presetId
      */
@@ -162,6 +180,7 @@ export class EconomyColorsConfigApp extends adapter.foundry.HandlebarsApplicatio
      */
     async _onSaveConfig(event, target) {
         event.preventDefault();
+        await game.settings.set(MODULE_ID, 'enableEconomyIndicators', Boolean(this.enabled));
         await game.settings.set(MODULE_ID, 'economyColors', this.colors);
         ui.notifications?.info?.(game.i18n.localize('BAD.economyColors.saved'));
         if (actionDisplay.activeApp?.rendered) {

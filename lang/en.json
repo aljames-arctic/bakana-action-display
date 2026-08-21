@@ -15,10 +15,6 @@
                 "name": "Center on Token Button",
                 "hint": "Display a button in the HUD control bar to recenter the canvas view on the active token."
             },
-            "enableEconomyIndicators": {
-                "name": "Action Economy Indicators",
-                "hint": "Display vertical colored indicator bars on the right side of item cards indicating their action economy."
-            },
             "economyColorsMenu": {
                 "name": "Action Economy Colors",
                 "label": "Configure Colors",
@@ -104,6 +100,7 @@
         },
         "economyColors": {
             "title": "Action Economy Colors",
+            "enable": "Enable Action Economy Indicators",
             "description": "Configure the colored vertical bars used to indicate action economy for each action type.",
             "resetDefaults": "Reset to Defaults",
             "saved": "Action economy colors saved successfully.",

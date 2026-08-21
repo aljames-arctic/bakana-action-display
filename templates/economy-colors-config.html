@@ -1,5 +1,11 @@
 <div class="bad-economy-config">
     <div class="bad-config-header-row">
+        <div class="bad-config-toggle-group">
+            <label class="bad-config-toggle-label">
+                <input type="checkbox" name="enableEconomyIndicators" class="bad-economy-enable-toggle" data-action="toggleEnabled" {{#if enabled}}checked{{/if}} />
+                <span>{{localize "BAD.economyColors.enable"}}</span>
+            </label>
+        </div>
         <p class="bad-config-description">{{localize "BAD.economyColors.description"}}</p>
     </div>
 

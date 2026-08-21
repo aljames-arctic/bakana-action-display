@@ -202,12 +202,14 @@ test('ActionDisplayApp _prepareContext extracts economy indicators when enabled 
     }
 });
 
-test('EconomyColorsConfigApp prepares economy context, saves colors, selects presets, and resets defaults', async () => {
+test('EconomyColorsConfigApp prepares economy context, toggles enablement, saves colors, selects presets, and resets defaults', async () => {
+    game.settings.set(MODULE_ID, 'enableEconomyIndicators', false);
     game.settings.set(MODULE_ID, 'economyColors', { action: '#123456' });
 
     const configApp = new EconomyColorsConfigApp();
     const context = await configApp._prepareContext({});
 
+    assert.equal(context.enabled, false);
     assert.ok(Array.isArray(context.economyTypes));
     const actionType = context.economyTypes.find(t => t.id === 'action');
     assert.ok(actionType);
@@ -216,6 +218,10 @@ test('EconomyColorsConfigApp prepares economy context, saves colors, selects pre
     assert.ok(Array.isArray(context.presets));
     assert.ok(context.presets.some(p => p.id === 'protanopia'));
     assert.ok(context.presets.some(p => p.id === 'tritanopia'));
+
+    // Test toggle enablement
+    await configApp._onToggleEnabled({ preventDefault() {} }, { checked: true });
+    assert.equal(configApp.enabled, true);
 
     // Test select preset (e.g. protanopia)
     let rendered = false;
@@ -232,6 +238,7 @@ test('EconomyColorsConfigApp prepares economy context, saves colors, selects pre
     configApp.close = async () => { closed = true; };
     await configApp._onSaveConfig({ preventDefault() {} });
 
+    assert.equal(game.settings.get(MODULE_ID, 'enableEconomyIndicators'), true);
     assert.equal(game.settings.get(MODULE_ID, 'economyColors').action, '#abcdef');
     assert.equal(game.settings.get(MODULE_ID, 'economyColors').bonus, '#654321');
     assert.equal(closed, true);
@@ -242,4 +249,7 @@ test('EconomyColorsConfigApp prepares economy context, saves colors, selects pre
     assert.deepEqual(configApp.colors, {});
     assert.equal(configApp.selectedPreset, '');
     assert.equal(rendered, true);
+
+    // Clean up
+    game.settings.set(MODULE_ID, 'enableEconomyIndicators', false);
 });

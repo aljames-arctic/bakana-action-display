@@ -50,21 +50,6 @@ Hooks.once('init', () => {
         }
     });
 
-    // Register Action Economy Indicators Setting (World Scope, default disabled)
-    game.settings.register(MODULE_ID, 'enableEconomyIndicators', {
-        name: game.i18n.localize('BAD.settings.enableEconomyIndicators.name'),
-        hint: game.i18n.localize('BAD.settings.enableEconomyIndicators.hint'),
-        scope: 'world',
-        config: true,
-        type: Boolean,
-        default: false,
-        onChange: () => {
-            if (actionDisplay.activeApp && actionDisplay.activeApp.rendered) {
-                actionDisplay.activeApp.render();
-            }
-        }
-    });
-
     // ==========================================
     // User Scope Settings & Menus
     // ==========================================
@@ -77,6 +62,19 @@ Hooks.once('init', () => {
         icon: 'fas fa-palette',
         type: EconomyColorsConfigApp,
         restricted: false
+    });
+
+    // Register Action Economy Indicators Setting (User Scope, default disabled, configured in menu)
+    game.settings.register(MODULE_ID, 'enableEconomyIndicators', {
+        scope: 'user',
+        config: false,
+        type: Boolean,
+        default: false,
+        onChange: () => {
+            if (actionDisplay.activeApp && actionDisplay.activeApp.rendered) {
+                actionDisplay.activeApp.render();
+            }
+        }
     });
 
     // Register Action Economy Colors Configuration Storage (User Scope)
@@ -346,7 +344,7 @@ export function injectSettingsHeaders(html) {
     // 2. Insert section headers before the respective first setting in each scope
     const sections = [
         {
-            keys: ['categorizationMenu', 'enableCenterOnToken', 'enableEconomyIndicators'],
+            keys: ['categorizationMenu', 'enableCenterOnToken'],
             scope: 'world',
             title: game.i18n.localize('BAD.settingsSections.world') ?? 'World Settings',
             icon: 'fas fa-globe'
