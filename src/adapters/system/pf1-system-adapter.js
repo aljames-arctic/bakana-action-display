@@ -2,6 +2,7 @@ import { FantasySystemAdapter } from './genre/fantasy-system-adapter.js';
 import { localize } from '../../lib/utils.js';
 import { log } from '../../lib/logger.js';
 import { TabRef } from '../../ui/tab-ref.js';
+import { Action } from '../../ui/action.js';
 import { MODULE_ID } from '../../constants.js';
 import { Pf1SystemContextMenuManager } from './context-menu/pf1-system-context-menu-manager.js';
 
@@ -9,16 +10,22 @@ const SORT_ORDERS = {
     tabs: {
         'economy': {
             'all': 0, 'action': 1, 'bonus': 2, 'reaction': 3, 'other': 4
+        },
+        'ability': {
+            'all': 0, 'str': 1, 'dex': 2, 'con': 3, 'int': 4, 'wis': 5, 'cha': 6
         }
     },
     item_type: {
-        'weapon': 1,
-        'attack': 1,
-        'equipment': 2,
-        'spell': 3,
-        'feat': 4,
-        'buff': 5,
-        'consumable': 6
+        'all': 0,
+        'savingThrow': 1,
+        'abilityCheck': 2,
+        'weapon': 3,
+        'attack': 3,
+        'equipment': 4,
+        'spell': 5,
+        'feat': 6,
+        'buff': 7,
+        'consumable': 8
     }
 };
 
@@ -31,7 +38,8 @@ const SPELL_SUB_TAB_ORDER = new Map(
 const ICONS = {
     action_type: {
         'all': 'fas fa-border-all',
-        'economy': 'fas fa-stopwatch'
+        'economy': 'fas fa-stopwatch',
+        'ability': 'fas fa-fist-raised'
     }
 };
 
@@ -213,8 +221,171 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
             }
         }
 
+        for (const act of modified) {
+            act.page = 1;
+        }
+
+        modified.push(...this.extractCheckActions(actor));
+
         // Apply default resource filtering (e.g. hiding depleted actions)
         return super.modifyActions(modified, actor);
+    }
+
+    /**
+     * Extract Page 2 ability checks, saving throws, and skill checks for PF1e.
+     * @param {Actor} actor
+     * @returns {Action[]}
+     */
+    extractCheckActions(actor) {
+        if (!actor) return [];
+        const checkActions = [];
+        const abilities = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
+        const abilityNames = {
+            str: ['PF1.AbilityStr', 'Strength'],
+            dex: ['PF1.AbilityDex', 'Dexterity'],
+            con: ['PF1.AbilityCon', 'Constitution'],
+            int: ['PF1.AbilityInt', 'Intelligence'],
+            wis: ['PF1.AbilityWis', 'Wisdom'],
+            cha: ['PF1.AbilityCha', 'Charisma']
+        };
+        const abilityIcons = {
+            str: 'icons/svg/sword.svg',
+            dex: 'icons/svg/wing.svg',
+            con: 'icons/svg/shield.svg',
+            int: 'icons/svg/book.svg',
+            wis: 'icons/svg/eye.svg',
+            cha: 'icons/svg/paralysis.svg'
+        };
+
+        for (const abl of abilities) {
+            const labelKey = abilityNames[abl];
+            const name = localize(labelKey[0], labelKey[1]);
+            const img = abilityIcons[abl];
+
+            const saveSub = new Action({
+                id: `save-${abl}`,
+                name: localize('BAD.page2.savingThrow', 'Saving Throw'),
+                type: 'savingThrow',
+                img,
+                right: [TabRef.from('ability', abl)],
+                left: ['savingThrow'],
+                available: true,
+                roll: async (event) => {
+                    const rollEvent = this._createRollEvent(event);
+                    if (abl === 'con' || abl === 'dex' || abl === 'wis') {
+                        const saveMap = { con: 'fort', dex: 'ref', wis: 'will' };
+                        const saveKey = saveMap[abl];
+                        if (typeof actor.rollSavingThrow === 'function') {
+                            return actor.rollSavingThrow(saveKey, { event: rollEvent });
+                        } else if (typeof actor.rollSave === 'function') {
+                            return actor.rollSave(saveKey, { event: rollEvent });
+                        }
+                    }
+                    if (typeof actor.rollAbilitySave === 'function') {
+                        return actor.rollAbilitySave(abl, { event: rollEvent });
+                    } else if (typeof actor.rollSavingThrow === 'function') {
+                        return actor.rollSavingThrow(abl, { event: rollEvent });
+                    } else if (typeof actor.rollSave === 'function') {
+                        return actor.rollSave(abl, { event: rollEvent });
+                    }
+                }
+            });
+
+            const checkSub = new Action({
+                id: `check-${abl}`,
+                name: localize('BAD.page2.abilityCheck', 'Ability Check'),
+                type: 'abilityCheck',
+                img,
+                right: [TabRef.from('ability', abl)],
+                left: ['abilityCheck'],
+                available: true,
+                roll: async (event) => {
+                    const rollEvent = this._createRollEvent(event);
+                    if (typeof actor.rollAbilityTest === 'function') {
+                        return actor.rollAbilityTest(abl, { event: rollEvent });
+                    } else if (typeof actor.rollAbilityCheck === 'function') {
+                        return actor.rollAbilityCheck(abl, { event: rollEvent });
+                    } else if (typeof actor.rollAbility === 'function') {
+                        return actor.rollAbility(abl, { event: rollEvent });
+                    }
+                }
+            });
+
+            const coreAction = new Action({
+                id: `ability-${abl}`,
+                name,
+                type: 'ability',
+                img,
+                right: [TabRef.from('ability', abl)],
+                left: ['savingThrow'],
+                itemCategories: [['savingThrow'], ['abilityCheck']],
+                available: true,
+                uses: { available: null, max: null },
+                subactions: [saveSub, checkSub],
+                collapseDropdownIfSingle: true,
+                extra: { section: 'core', page: 2, ability: abl }
+            });
+            coreAction.section = 'core';
+            coreAction.page = 2;
+            checkActions.push(coreAction);
+        }
+
+        // Skills
+        const skills = actor.system?.skills ?? {};
+        for (const [skillId, skill] of Object.entries(skills)) {
+            const abl = skill.ability ?? CONFIG?.PF1?.skills?.[skillId]?.ability ?? 'dex';
+            const label = skill.name ?? CONFIG?.PF1?.skills?.[skillId] ?? skill.label ?? skillId;
+            const skillImg = abilityIcons[abl] ?? 'icons/svg/d20.svg';
+            const skillAction = new Action({
+                id: `skill-${skillId}`,
+                name: label,
+                type: 'skill',
+                img: skillImg,
+                right: [TabRef.from('ability', abl)],
+                left: ['abilityCheck'],
+                available: true,
+                uses: { available: null, max: null },
+                roll: async (event) => {
+                    const rollEvent = this._createRollEvent(event);
+                    if (typeof actor.rollSkill === 'function') {
+                        return actor.rollSkill(skillId, { event: rollEvent });
+                    }
+                },
+                extra: { section: 'other', page: 2, ability: abl }
+            });
+            skillAction.section = 'other';
+            skillAction.page = 2;
+            checkActions.push(skillAction);
+
+            if (skill.subSkills && typeof skill.subSkills === 'object') {
+                for (const [subId, subSkill] of Object.entries(skill.subSkills)) {
+                    const subAbl = subSkill.ability ?? abl;
+                    const subLabel = subSkill.name ?? `${label} (${subId})`;
+                    const subAction = new Action({
+                        id: `skill-${skillId}-${subId}`,
+                        name: subLabel,
+                        type: 'skill',
+                        img: abilityIcons[subAbl] ?? skillImg,
+                        right: [TabRef.from('ability', subAbl)],
+                        left: ['abilityCheck'],
+                        available: true,
+                        uses: { available: null, max: null },
+                        roll: async (event) => {
+                            const rollEvent = this._createRollEvent(event);
+                            if (typeof actor.rollSkill === 'function') {
+                                return actor.rollSkill(`${skillId}.subSkills.${subId}`, { event: rollEvent });
+                            }
+                        },
+                        extra: { section: 'other', page: 2, ability: subAbl }
+                    });
+                    subAction.section = 'other';
+                    subAction.page = 2;
+                    checkActions.push(subAction);
+                }
+            }
+        }
+
+        return checkActions;
     }
 
     // #endregion
@@ -227,8 +398,11 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
      */
     modifyContext(context, app) {
         super.modifyContext?.(context, app);
+        if (Number(app?.activePage) === 2) {
+            this.formatSplitLayout(context);
+        }
 
-        const showAll = Boolean(app.actor?.getFlag?.(MODULE_ID, 'showAll'));
+        const showAll = Boolean(app?.actor?.getFlag?.(MODULE_ID, 'showAll'));
 
         const allParent = context.itemTypes?.find(g => g.id === 'all');
         if (allParent) {
@@ -276,6 +450,16 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
      * Get the localized label for a right-side action sub-tab in PF1e.
      */
     getActionSubTabLabel(subId) {
+        const abilityLabels = {
+            str: localize('PF1.AbilityStr', 'Strength'),
+            dex: localize('PF1.AbilityDex', 'Dexterity'),
+            con: localize('PF1.AbilityCon', 'Constitution'),
+            int: localize('PF1.AbilityInt', 'Intelligence'),
+            wis: localize('PF1.AbilityWis', 'Wisdom'),
+            cha: localize('PF1.AbilityCha', 'Charisma')
+        };
+        if (abilityLabels[subId]) return abilityLabels[subId];
+
         switch (subId) {
             case 'all': return localize('BAD.core.allActions', 'All Actions');
             case 'action': return localize('PF1.Activation.action.Plural', 'Actions');
@@ -585,17 +769,72 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
 
     /**
      * Get the default HUD categorization structure for PF1e.
+     * @param {Object} [overrides={}] Generic category overrides
      * @returns {Object[]} Array of category definition objects
      */
-    getDefaultCategories() {
-        return super.getDefaultCategories({
+    getDefaultCategories(overrides = {}) {
+        const categories = super.getDefaultCategories(foundry.utils.mergeObject({
             weapon: {
                 expression: `item.type === 'weapon' || item.type === 'attack' || item.type === 'equipment'`
             },
             feature: {
                 expression: `item.type === 'feat' || item.type === 'buff'`
             }
-        });
+        }, overrides, { inplace: false, overwrite: true }));
+
+        const pf1Categories = [
+            {
+                id: 'cat_ability_checks',
+                name: 'Abilities',
+                expression: `action.type === "ability"`,
+                subcategories: []
+            },
+            {
+                id: 'cat_skill_checks',
+                name: 'Skills',
+                expression: `action.type === "skill"`,
+                subcategories: [
+                    {
+                        id: 'sub_strength',
+                        name: 'Strength',
+                        expression: `action.right.some(t => t.label === "str")`
+                    },
+                    {
+                        id: 'sub_dexterity',
+                        name: 'Dexterity',
+                        expression: `action.right.some(t => t.label === "dex")`
+                    },
+                    {
+                        id: 'sub_constitution',
+                        name: 'Constitution',
+                        expression: `action.right.some(t => t.label === "con")`
+                    },
+                    {
+                        id: 'sub_intelligence',
+                        name: 'Intelligence',
+                        expression: `action.right.some(t => t.label === "int")`
+                    },
+                    {
+                        id: 'sub_wisdom',
+                        name: 'Wisdom',
+                        expression: `action.right.some(t => t.label === "wis")`
+                    },
+                    {
+                        id: 'sub_charisma',
+                        name: 'Charisma',
+                        expression: `action.right.some(t => t.label === "cha")`
+                    }
+                ]
+            }
+        ];
+
+        for (const cat of pf1Categories) {
+            const key = cat.id.replace('cat_', '');
+            const catOverride = overrides[cat.id] ?? overrides[key] ?? {};
+            categories.push(foundry.utils.mergeObject(cat, catOverride, { inplace: false, overwrite: true }));
+        }
+
+        return categories;
     }
 
     // #endregion

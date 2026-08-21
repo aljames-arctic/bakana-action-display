@@ -148,6 +148,11 @@
             "carryTypeWorn": "Wear Item",
             "carryTypeStowed": "Stow Item",
             "carryTypeDropped": "Drop Item"
+        },
+        "page2": {
+            "savingThrow": "Saving Throw",
+            "abilityCheck": "Ability Check",
+            "ability": "Ability"
         }
     }
 }

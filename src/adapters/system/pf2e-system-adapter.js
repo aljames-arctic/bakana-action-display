@@ -2,6 +2,7 @@ import { FantasySystemAdapter } from './genre/fantasy-system-adapter.js';
 import { localize } from '../../lib/utils.js';
 import { log } from '../../lib/logger.js';
 import { TabRef } from '../../ui/tab-ref.js';
+import { Action } from '../../ui/action.js';
 import { MODULE_ID } from '../../constants.js';
 import { Pf2eSystemContextMenuManager } from './context-menu/pf2e-system-context-menu-manager.js';
 
@@ -9,15 +10,21 @@ const SORT_ORDERS = {
     tabs: {
         'economy': {
             'all': 0, 'action': 1, 'reaction': 2, 'free': 3, 'other': 4
+        },
+        'ability': {
+            'all': 0, 'str': 1, 'dex': 2, 'con': 3, 'int': 4, 'wis': 5, 'cha': 6
         }
     },
     item_type: {
-        'weapon': 1,
-        'equipment': 2,
-        'consumable': 3,
-        'feat': 4,
-        'spell': 5,
-        'other': 6
+        'all': 0,
+        'savingThrow': 1,
+        'abilityCheck': 2,
+        'weapon': 3,
+        'equipment': 4,
+        'consumable': 5,
+        'feat': 6,
+        'spell': 7,
+        'other': 8
     }
 };
 
@@ -30,7 +37,8 @@ const PF2E_SPELL_SUB_TAB_ORDER = new Map(
 const ICONS = {
     action_type: {
         'all': 'fas fa-border-all',
-        'economy': 'fas fa-stopwatch'
+        'economy': 'fas fa-stopwatch',
+        'ability': 'fas fa-fist-raised'
     },
     default_strike: 'systems/pf2e/icons/default-icons/melee.svg'
 };
@@ -142,8 +150,171 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
             finalActions.push(action);
         }
 
+        for (const action of finalActions) {
+            action.page = 1;
+        }
+
+        finalActions.push(...this.extractCheckActions(actor));
+
         // 4. Apply default resource filtering (e.g. hiding depleted actions)
         return super.modifyActions(finalActions, actor);
+    }
+
+    /**
+     * Extract Page 2 ability checks, saving throws, and skill checks for PF2e.
+     * @param {Actor} actor
+     * @returns {Action[]}
+     */
+    extractCheckActions(actor) {
+        if (!actor) return [];
+        const checkActions = [];
+        const abilities = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
+        const abilityNames = {
+            str: ['PF2E.AbilityStr', 'Strength'],
+            dex: ['PF2E.AbilityDex', 'Dexterity'],
+            con: ['PF2E.AbilityCon', 'Constitution'],
+            int: ['PF2E.AbilityInt', 'Intelligence'],
+            wis: ['PF2E.AbilityWis', 'Wisdom'],
+            cha: ['PF2E.AbilityCha', 'Charisma']
+        };
+        const abilityIcons = {
+            str: 'icons/svg/sword.svg',
+            dex: 'icons/svg/wing.svg',
+            con: 'icons/svg/shield.svg',
+            int: 'icons/svg/book.svg',
+            wis: 'icons/svg/eye.svg',
+            cha: 'icons/svg/paralysis.svg'
+        };
+
+        for (const abl of abilities) {
+            const labelKey = abilityNames[abl];
+            const name = localize(labelKey[0], labelKey[1]);
+            const img = abilityIcons[abl];
+
+            const saveSub = new Action({
+                id: `save-${abl}`,
+                name: localize('BAD.page2.savingThrow', 'Saving Throw'),
+                type: 'savingThrow',
+                img,
+                right: [TabRef.from('ability', abl)],
+                left: ['savingThrow'],
+                available: true,
+                roll: async (event) => {
+                    const rollEvent = this._createRollEvent(event);
+                    if (abl === 'con' || abl === 'dex' || abl === 'wis') {
+                        const saveMap = { con: 'fortitude', dex: 'reflex', wis: 'will' };
+                        const saveKey = saveMap[abl];
+                        if (actor.saves?.[saveKey]?.roll) {
+                            return actor.saves[saveKey].roll({ event: rollEvent });
+                        } else if (actor.system?.saves?.[saveKey]?.roll) {
+                            return actor.system.saves[saveKey].roll({ event: rollEvent });
+                        }
+                    }
+                    if (typeof actor.rollSave === 'function') {
+                        return actor.rollSave({ save: abl, event: rollEvent });
+                    } else if (typeof actor.rollSavingThrow === 'function') {
+                        return actor.rollSavingThrow(abl, { event: rollEvent });
+                    }
+                }
+            });
+
+            const checkSub = new Action({
+                id: `check-${abl}`,
+                name: localize('BAD.page2.abilityCheck', 'Ability Check'),
+                type: 'abilityCheck',
+                img,
+                right: [TabRef.from('ability', abl)],
+                left: ['abilityCheck'],
+                available: true,
+                roll: async (event) => {
+                    const rollEvent = this._createRollEvent(event);
+                    if (typeof actor.rollAbilityCheck === 'function') {
+                        return actor.rollAbilityCheck(abl, { event: rollEvent });
+                    } else if (actor.system?.abilities?.[abl]?.roll) {
+                        return actor.system.abilities[abl].roll({ event: rollEvent });
+                    } else if (typeof actor.rollAttribute === 'function') {
+                        return actor.rollAttribute({ attribute: abl, event: rollEvent });
+                    } else if (typeof actor.rollAbilityTest === 'function') {
+                        return actor.rollAbilityTest(abl, { event: rollEvent });
+                    }
+                }
+            });
+
+            const coreAction = new Action({
+                id: `ability-${abl}`,
+                name,
+                type: 'ability',
+                img,
+                right: [TabRef.from('ability', abl)],
+                left: ['savingThrow'],
+                itemCategories: [['savingThrow'], ['abilityCheck']],
+                available: true,
+                uses: { available: null, max: null },
+                subactions: [saveSub, checkSub],
+                collapseDropdownIfSingle: true,
+                extra: { section: 'core', page: 2, ability: abl }
+            });
+            coreAction.section = 'core';
+            coreAction.page = 2;
+            checkActions.push(coreAction);
+        }
+
+        // Skills
+        const PF2E_SKILL_ABILITY_MAP = {
+            acrobatics: 'dex',
+            arcana: 'int',
+            athletics: 'str',
+            crafting: 'int',
+            deception: 'cha',
+            diplomacy: 'cha',
+            intimidation: 'cha',
+            medicine: 'wis',
+            nature: 'wis',
+            occultism: 'int',
+            performance: 'cha',
+            religion: 'wis',
+            society: 'int',
+            stealth: 'dex',
+            survival: 'wis',
+            thievery: 'dex'
+        };
+
+        const skills = actor.skills ?? actor.system?.skills ?? {};
+        for (const [skillKey, skill] of Object.entries(skills)) {
+            const slug = skill.slug ?? skillKey;
+            const abl = skill.attribute ?? skill.ability ?? PF2E_SKILL_ABILITY_MAP[slug] ?? 'int';
+            const label = skill.label ?? skill.name ?? slug;
+            const skillImg = abilityIcons[abl] ?? 'icons/svg/d20.svg';
+
+            const skillAction = new Action({
+                id: `skill-${slug}`,
+                name: label,
+                type: 'skill',
+                img: skillImg,
+                right: [TabRef.from('ability', abl)],
+                left: ['abilityCheck'],
+                available: true,
+                uses: { available: null, max: null },
+                roll: async (event) => {
+                    const rollEvent = this._createRollEvent(event);
+                    if (typeof skill.roll === 'function') {
+                        return skill.roll({ event: rollEvent });
+                    } else if (typeof actor.rollSkill === 'function') {
+                        try {
+                            return await actor.rollSkill({ skill: slug, event: rollEvent });
+                        } catch {
+                            return actor.rollSkill(slug, { event: rollEvent });
+                        }
+                    }
+                },
+                extra: { section: 'other', page: 2, ability: abl }
+            });
+            skillAction.section = 'other';
+            skillAction.page = 2;
+            checkActions.push(skillAction);
+        }
+
+        return checkActions;
     }
 
     // #endregion
@@ -208,6 +379,16 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
      * Get the localized label for a right-side action sub-tab in PF2e.
      */
     getActionSubTabLabel(subId) {
+        const abilityLabels = {
+            str: localize('PF2E.AbilityStr', 'Strength'),
+            dex: localize('PF2E.AbilityDex', 'Dexterity'),
+            con: localize('PF2E.AbilityCon', 'Constitution'),
+            int: localize('PF2E.AbilityInt', 'Intelligence'),
+            wis: localize('PF2E.AbilityWis', 'Wisdom'),
+            cha: localize('PF2E.AbilityCha', 'Charisma')
+        };
+        if (abilityLabels[subId]) return abilityLabels[subId];
+
         switch (subId) {
             case 'all': return localize('BAD.core.allActions', 'All Actions');
             case 'action': return localize('PF2E.TabActionsLabel', 'Actions');
@@ -235,8 +416,11 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
      */
     modifyContext(context, app) {
         super.modifyContext?.(context, app);
+        if (Number(app?.activePage) === 2) {
+            this.formatSplitLayout(context);
+        }
 
-        const showAll = Boolean(app.actor?.getFlag?.(MODULE_ID, 'showAll'));
+        const showAll = Boolean(app?.actor?.getFlag?.(MODULE_ID, 'showAll'));
 
         const allParent = context.itemTypes?.find(g => g.id === 'all');
         if (allParent) {
@@ -536,10 +720,11 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
 
     /**
      * Get the default HUD categorization structure for PF2e.
+     * @param {Object} [overrides={}] Generic category overrides
      * @returns {Object[]} Array of category definition objects
      */
-    getDefaultCategories() {
-        return super.getDefaultCategories({
+    getDefaultCategories(overrides = {}) {
+        const categories = super.getDefaultCategories(foundry.utils.mergeObject({
             weapon: {
                 name: 'Weapons & Strikes',
                 expression: `item.type === 'weapon' || action.left.includes('weapon')`
@@ -549,7 +734,7 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
                     {
                         id: 'sub_cantrips',
                         name: 'Cantrips',
-                        expression: `item.rank === 0 || item.isCantrip || item.system.traits.value.includes('cantrip')`
+                        expression: `item.rank === 0 || item.isCantrip || item.system?.traits?.value?.includes('cantrip')`
                     },
                     {
                         id: 'sub_ranked_spells',
@@ -562,7 +747,61 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
                 name: 'Feats & Actions',
                 expression: `item.type === 'feat' || item.type === 'action'`
             }
-        });
+        }, overrides, { inplace: false, overwrite: true }));
+
+        const pf2eCategories = [
+            {
+                id: 'cat_ability_checks',
+                name: 'Abilities',
+                expression: `action.type === "ability"`,
+                subcategories: []
+            },
+            {
+                id: 'cat_skill_checks',
+                name: 'Skills',
+                expression: `action.type === "skill"`,
+                subcategories: [
+                    {
+                        id: 'sub_strength',
+                        name: 'Strength',
+                        expression: `action.right.some(t => t.label === "str")`
+                    },
+                    {
+                        id: 'sub_dexterity',
+                        name: 'Dexterity',
+                        expression: `action.right.some(t => t.label === "dex")`
+                    },
+                    {
+                        id: 'sub_constitution',
+                        name: 'Constitution',
+                        expression: `action.right.some(t => t.label === "con")`
+                    },
+                    {
+                        id: 'sub_intelligence',
+                        name: 'Intelligence',
+                        expression: `action.right.some(t => t.label === "int")`
+                    },
+                    {
+                        id: 'sub_wisdom',
+                        name: 'Wisdom',
+                        expression: `action.right.some(t => t.label === "wis")`
+                    },
+                    {
+                        id: 'sub_charisma',
+                        name: 'Charisma',
+                        expression: `action.right.some(t => t.label === "cha")`
+                    }
+                ]
+            }
+        ];
+
+        for (const cat of pf2eCategories) {
+            const key = cat.id.replace('cat_', '');
+            const catOverride = overrides[cat.id] ?? overrides[key] ?? {};
+            categories.push(foundry.utils.mergeObject(cat, catOverride, { inplace: false, overwrite: true }));
+        }
+
+        return categories;
     }
 
     // #endregion

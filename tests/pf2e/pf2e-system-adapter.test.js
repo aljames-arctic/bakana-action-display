@@ -12,13 +12,16 @@ test('Pf2eSystemAdapter initialization and extractable item types', () => {
     assert.equal(adapter.shouldExtractItem({ type: 'consumable' }), true);
     assert.equal(adapter.shouldExtractItem({ type: 'equipment' }), true);
     const defaultCategories = adapter.getDefaultCategories();
-    assert.equal(defaultCategories.length, 4);
+    assert.equal(defaultCategories.length, 6);
     assert.equal(defaultCategories[0].name, 'Favorites');
     assert.equal(defaultCategories[1].name, 'Weapons & Strikes');
     assert.equal(defaultCategories[2].name, 'Spells');
     assert.equal(defaultCategories[2].subcategories[0].name, 'Cantrips');
     assert.equal(defaultCategories[2].subcategories[1].name, 'Ranked Spells');
     assert.equal(defaultCategories[3].name, 'Feats & Actions');
+    assert.equal(defaultCategories[4].name, 'Abilities');
+    assert.equal(defaultCategories[5].name, 'Skills');
+    assert.equal(defaultCategories[5].subcategories.length, 6);
 });
 
 test('Pf2eSystemAdapter label lookups', () => {
@@ -40,11 +43,13 @@ test('Pf2eSystemAdapter label lookups', () => {
 test('Pf2eSystemAdapter sort order lookups', () => {
     const adapter = new Pf2eSystemAdapter();
 
-    assert.equal(adapter.getItemTypeSortOrder('weapon'), 1);
-    assert.equal(adapter.getItemTypeSortOrder('equipment'), 2);
-    assert.equal(adapter.getItemTypeSortOrder('consumable'), 3);
-    assert.equal(adapter.getItemTypeSortOrder('feat'), 4);
-    assert.equal(adapter.getItemTypeSortOrder('spell'), 5);
+    assert.equal(adapter.getItemTypeSortOrder('savingThrow'), 1);
+    assert.equal(adapter.getItemTypeSortOrder('abilityCheck'), 2);
+    assert.equal(adapter.getItemTypeSortOrder('weapon'), 3);
+    assert.equal(adapter.getItemTypeSortOrder('equipment'), 4);
+    assert.equal(adapter.getItemTypeSortOrder('consumable'), 5);
+    assert.equal(adapter.getItemTypeSortOrder('feat'), 6);
+    assert.equal(adapter.getItemTypeSortOrder('spell'), 7);
 
     assert.equal(adapter.getActionSubTabSortOrder('economy', 'all'), 0);
     assert.equal(adapter.getActionSubTabSortOrder('economy', 'action'), 1);
@@ -126,7 +131,7 @@ test('Pf2eSystemAdapter modifyActions full transformation pipeline', async () =>
 
     const modified = await adapter.modifyActions(rawActions, actor);
 
-    assert.equal(modified.length, 4, 'Should format feat, spell, consumable, and injected Strike');
+    assert.equal(modified.length, 10, 'Should format feat, spell, consumable, injected Strike, and 6 ability actions');
 
     // Feat verification
     const featAction = modified.find(a => a.id === 'act-1');
@@ -334,5 +339,71 @@ test('Pf2eSystemAdapter context menu manager provides carry type options and tab
     adapter.modifyContext(context, app);
     assert.equal(context.itemTypes.find(t => t.id === 'all').showUnprepared, true);
     assert.equal(context.itemTypes.find(t => t.id === 'weapon').showUnprepared, true);
+});
+
+test('Pf2eSystemAdapter extractCheckActions generates abilities, saves, and skills for Page 2', async () => {
+    const adapter = new Pf2eSystemAdapter();
+
+    let rolledSave = null;
+    let rolledAbility = null;
+    let rolledSkill = null;
+
+    const actor = {
+        saves: {
+            fortitude: { roll: () => { rolledSave = 'fortitude'; } },
+            reflex: { roll: () => { rolledSave = 'reflex'; } },
+            will: { roll: () => { rolledSave = 'will'; } }
+        },
+        rollAbilityCheck: (abl) => { rolledAbility = abl; },
+        skills: {
+            athletics: {
+                slug: 'athletics',
+                attribute: 'str',
+                label: 'Athletics',
+                roll: () => { rolledSkill = 'athletics'; }
+            },
+            stealth: {
+                slug: 'stealth',
+                attribute: 'dex',
+                label: 'Stealth',
+                roll: () => { rolledSkill = 'stealth'; }
+            }
+        }
+    };
+
+    const checkActions = adapter.extractCheckActions(actor);
+    assert.equal(checkActions.length, 8); // 6 abilities + 2 skills (Athletics + Stealth)
+
+    const strAction = checkActions.find(a => a.id === 'ability-str');
+    assert.ok(strAction);
+    assert.equal(strAction.page, 2);
+    assert.equal(strAction.section, 'core');
+    assert.equal(strAction.subactions.length, 2);
+
+    // Save subaction (Fortitude on CON)
+    const conAction = checkActions.find(a => a.id === 'ability-con');
+    const conSave = conAction.subactions.find(s => s.id === 'save-con');
+    await conSave.roll({});
+    assert.equal(rolledSave, 'fortitude');
+
+    // Ability check subaction
+    const strCheck = strAction.subactions.find(s => s.id === 'check-str');
+    await strCheck.roll({});
+    assert.equal(rolledAbility, 'str');
+
+    // Skill action
+    const athSkill = checkActions.find(a => a.id === 'skill-athletics');
+    assert.ok(athSkill);
+    assert.equal(athSkill.page, 2);
+    assert.equal(athSkill.section, 'other');
+    await athSkill.roll({});
+    assert.equal(rolledSkill, 'athletics');
+
+    // Split layout on page 2
+    const context = { items: checkActions };
+    adapter.modifyContext(context, { activePage: 2, actor });
+    assert.equal(context.layout, 'split');
+    assert.equal(context.coreItems.length, 6);
+    assert.equal(context.otherItems.length, 2);
 });
 

@@ -11,13 +11,16 @@ test('Pf1SystemAdapter initialization and extractable item types', () => {
     assert.equal(adapter.shouldExtractItem({ type: 'buff' }), true);
     assert.equal(adapter.shouldExtractItem({ type: 'class' }), false);
     const defaultCategories = adapter.getDefaultCategories();
-    assert.equal(defaultCategories.length, 4);
+    assert.equal(defaultCategories.length, 6);
     assert.equal(defaultCategories[0].name, 'Favorites');
     assert.equal(defaultCategories[1].name, 'Weapons');
     assert.ok(defaultCategories[1].expression.includes('attack'));
     assert.equal(defaultCategories[2].name, 'Spells');
     assert.equal(defaultCategories[3].name, 'Features');
     assert.ok(defaultCategories[3].expression.includes('buff'));
+    assert.equal(defaultCategories[4].name, 'Abilities');
+    assert.equal(defaultCategories[5].name, 'Skills');
+    assert.equal(defaultCategories[5].subcategories.length, 6);
 });
 
 test('Pf1SystemAdapter label lookups and spell sub-tab labels', () => {
@@ -40,9 +43,11 @@ test('Pf1SystemAdapter label lookups and spell sub-tab labels', () => {
 test('Pf1SystemAdapter sort orders', () => {
     const adapter = new Pf1SystemAdapter();
 
-    assert.equal(adapter.getItemTypeSortOrder('weapon'), 1);
-    assert.equal(adapter.getItemTypeSortOrder('equipment'), 2);
-    assert.equal(adapter.getItemTypeSortOrder('spell'), 3);
+    assert.equal(adapter.getItemTypeSortOrder('savingThrow'), 1);
+    assert.equal(adapter.getItemTypeSortOrder('abilityCheck'), 2);
+    assert.equal(adapter.getItemTypeSortOrder('weapon'), 3);
+    assert.equal(adapter.getItemTypeSortOrder('equipment'), 4);
+    assert.equal(adapter.getItemTypeSortOrder('spell'), 5);
     assert.equal(adapter.getItemSubTabSortOrder('spell', 'cantrip'), 999);
     assert.equal(adapter.getItemSubTabSortOrder('spell', '1'), 2);
     assert.equal(adapter.getItemSubTabSortOrder('spell', 'sla'), 999);
@@ -102,7 +107,7 @@ test('Pf1SystemAdapter modifyActions full transformation pipeline', async () => 
 
     const modified = await adapter.modifyActions(rawActions, actor);
 
-    assert.equal(modified.length, 2, 'Should format both spell and buff actions');
+    assert.equal(modified.length, 8, 'Should format both spell and buff actions plus 6 ability actions');
 
     const spellAction = modified.find(a => a.id === 'act-spell');
     assert.equal(spellAction.activationType, 'action');
@@ -155,15 +160,15 @@ test('Pf1SystemAdapter filters unequipped items unless showUnequipped or showAll
         { id: 'act-w2', originalItem: unequippedWeapon }
     ];
 
-    // 1. By default, unequipped weapon is filtered out
+    // 1. By default, unequipped weapon is filtered out (1 equipped + 6 abilities = 7)
     const modified1 = await adapter.modifyActions(rawActions, actor);
-    assert.equal(modified1.length, 1);
+    assert.equal(modified1.length, 7);
     assert.equal(modified1[0].id, 'act-w1');
 
-    // 2. When showUnequipped_weapon is true, unequipped weapon is included with available: false
+    // 2. When showUnequipped_weapon is true, unequipped weapon is included with available: false (2 weapons + 6 abilities = 8)
     actor.flags['bakana-action-display'].showUnequipped_weapon = true;
     const modified2 = await adapter.modifyActions(rawActions, actor);
-    assert.equal(modified2.length, 2);
+    assert.equal(modified2.length, 8);
     const unequippedAction = modified2.find(a => a.id === 'act-w2');
     assert.ok(unequippedAction);
     assert.equal(unequippedAction.available, false);
@@ -244,5 +249,72 @@ test('Pf1SystemAdapter context menu manager provides equip/unequip options and t
     adapter.modifyContext(context, app);
     assert.equal(context.itemTypes.find(t => t.id === 'all').showUnprepared, true);
     assert.equal(context.itemTypes.find(t => t.id === 'weapon').showUnprepared, true);
+});
+
+test('Pf1SystemAdapter extractCheckActions generates abilities, saves, and skills for Page 2', async () => {
+    const adapter = new Pf1SystemAdapter();
+
+    let rolledSave = null;
+    let rolledAbility = null;
+    let rolledSkill = null;
+
+    const actor = {
+        rollSavingThrow: (key) => { rolledSave = key; },
+        rollAbilityTest: (abl) => { rolledAbility = abl; },
+        rollSkill: (id) => { rolledSkill = id; },
+        system: {
+            skills: {
+                acr: { ability: 'dex', name: 'Acrobatics' },
+                crf: {
+                    ability: 'int',
+                    name: 'Craft',
+                    subSkills: {
+                        arm: { name: 'Armor' }
+                    }
+                }
+            }
+        }
+    };
+
+    const checkActions = adapter.extractCheckActions(actor);
+    assert.equal(checkActions.length, 9); // 6 abilities + 3 skill actions (Acrobatics + Craft + Craft Armor)
+
+    const strAction = checkActions.find(a => a.id === 'ability-str');
+    assert.ok(strAction);
+    assert.equal(strAction.page, 2);
+    assert.equal(strAction.section, 'core');
+    assert.equal(strAction.subactions.length, 2);
+
+    // Save subaction (e.g. Fortitude on CON)
+    const conAction = checkActions.find(a => a.id === 'ability-con');
+    const conSave = conAction.subactions.find(s => s.id === 'save-con');
+    await conSave.roll({});
+    assert.equal(rolledSave, 'fort');
+
+    // Ability check subaction
+    const strCheck = strAction.subactions.find(s => s.id === 'check-str');
+    await strCheck.roll({});
+    assert.equal(rolledAbility, 'str');
+
+    // Skill action
+    const acrSkill = checkActions.find(a => a.id === 'skill-acr');
+    assert.ok(acrSkill);
+    assert.equal(acrSkill.page, 2);
+    assert.equal(acrSkill.section, 'other');
+    await acrSkill.roll({});
+    assert.equal(rolledSkill, 'acr');
+
+    // Sub-skill action
+    const crfSkill = checkActions.find(a => a.id === 'skill-crf-arm');
+    assert.ok(crfSkill);
+    await crfSkill.roll({});
+    assert.equal(rolledSkill, 'crf.subSkills.arm');
+
+    // Split layout on page 2
+    const context = { items: checkActions };
+    adapter.modifyContext(context, { activePage: 2, actor });
+    assert.equal(context.layout, 'split');
+    assert.equal(context.coreItems.length, 6);
+    assert.equal(context.otherItems.length, 3);
 });
 
