@@ -70,7 +70,7 @@ export class Pf2eSystemContextMenuManager extends BaseSystemContextMenuManager {
     getContextMenuItems(app) {
         return [
             {
-                name: "PF2E.Item.Physical.CarryType.Title",
+                name: "PF2E.Actor.Inventory.CarryType.OpenMenu",
                 icon: '<i class="fas fa-shield-halved"></i>',
                 condition: el => {
                     const item = this.#getOwnerItem(app, el);
@@ -78,7 +78,7 @@ export class Pf2eSystemContextMenuManager extends BaseSystemContextMenuManager {
                 },
                 submenu: [
                     {
-                        name: "PF2E.Item.Physical.CarryType.Held1",
+                        name: "PF2E.CarryType.held1",
                         icon: '<i class="fas fa-hand"></i>',
                         active: (item) => item?.system?.equipped?.carryType === 'held' && item?.system?.equipped?.handsHeld === 1,
                         condition: (item) => item?.type !== 'armor',
@@ -90,7 +90,7 @@ export class Pf2eSystemContextMenuManager extends BaseSystemContextMenuManager {
                         }
                     },
                     {
-                        name: "PF2E.Item.Physical.CarryType.Held2",
+                        name: "PF2E.CarryType.held2",
                         icon: '<i class="fas fa-hands"></i>',
                         active: (item) => item?.system?.equipped?.carryType === 'held' && item?.system?.equipped?.handsHeld === 2,
                         condition: (item) => ['weapon', 'equipment'].includes(item?.type),
@@ -102,7 +102,7 @@ export class Pf2eSystemContextMenuManager extends BaseSystemContextMenuManager {
                         }
                     },
                     {
-                        name: "PF2E.Item.Physical.CarryType.Worn",
+                        name: "PF2E.CarryType.worn",
                         icon: '<i class="fas fa-shirt"></i>',
                         active: (item) => item?.system?.equipped?.carryType === 'worn',
                         condition: () => true,
@@ -114,7 +114,7 @@ export class Pf2eSystemContextMenuManager extends BaseSystemContextMenuManager {
                         }
                     },
                     {
-                        name: "PF2E.Item.Physical.CarryType.Stowed",
+                        name: "PF2E.CarryType.stowed",
                         icon: '<i class="fas fa-box-archive"></i>',
                         active: (item) => item?.system?.equipped?.carryType === 'stowed',
                         condition: () => true,
@@ -126,7 +126,7 @@ export class Pf2eSystemContextMenuManager extends BaseSystemContextMenuManager {
                         }
                     },
                     {
-                        name: "PF2E.Item.Physical.CarryType.Dropped",
+                        name: "PF2E.CarryType.dropped",
                         icon: '<i class="fas fa-arrow-down"></i>',
                         active: (item) => item?.system?.equipped?.carryType === 'dropped',
                         condition: () => true,

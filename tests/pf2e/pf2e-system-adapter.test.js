@@ -31,7 +31,7 @@ test('Pf2eSystemAdapter label lookups', () => {
     assert.equal(adapter.getItemTypeLabel('spell'), 'PF2E.Item.Spell.Plural');
     assert.equal(adapter.getItemTypeLabel('weapon'), 'PF2E.TraitWeapons');
     assert.equal(adapter.getItemTypeLabel('consumable'), 'PF2E.Item.Consumable.Plural');
-    assert.equal(adapter.getItemTypeLabel('equipment'), 'PF2E.Item.Physical.Equipment');
+    assert.equal(adapter.getItemTypeLabel('equipment'), 'PF2E.CompendiumBrowser.TabEquipment');
 
     assert.equal(adapter.getItemSubTabLabel('spell', 'focus'), 'PF2E.Focus.Spells');
     assert.equal(adapter.getItemSubTabLabel('spell', 'innate'), 'PF2E.PreparationTypeInnate');
@@ -244,15 +244,15 @@ test('Pf2eSystemAdapter context menu manager provides carry type options and tab
     };
 
     const menuItems = adapter.getContextMenuItems(app);
-    const updateEquipItem = menuItems.find(m => m.name === 'PF2E.Item.Physical.CarryType.Title');
+    const updateEquipItem = menuItems.find(m => m.name === 'PF2E.Actor.Inventory.CarryType.OpenMenu');
     assert.ok(updateEquipItem);
     assert.ok(Array.isArray(updateEquipItem.submenu));
 
-    const hold1Item = updateEquipItem.submenu.find(m => m.name === 'PF2E.Item.Physical.CarryType.Held1');
-    const hold2Item = updateEquipItem.submenu.find(m => m.name === 'PF2E.Item.Physical.CarryType.Held2');
-    const wearItem = updateEquipItem.submenu.find(m => m.name === 'PF2E.Item.Physical.CarryType.Worn');
-    const stowItem = updateEquipItem.submenu.find(m => m.name === 'PF2E.Item.Physical.CarryType.Stowed');
-    const dropItem = updateEquipItem.submenu.find(m => m.name === 'PF2E.Item.Physical.CarryType.Dropped');
+    const hold1Item = updateEquipItem.submenu.find(m => m.name === 'PF2E.CarryType.held1');
+    const hold2Item = updateEquipItem.submenu.find(m => m.name === 'PF2E.CarryType.held2');
+    const wearItem = updateEquipItem.submenu.find(m => m.name === 'PF2E.CarryType.worn');
+    const stowItem = updateEquipItem.submenu.find(m => m.name === 'PF2E.CarryType.stowed');
+    const dropItem = updateEquipItem.submenu.find(m => m.name === 'PF2E.CarryType.dropped');
 
     assert.ok(hold1Item);
     assert.ok(hold2Item);

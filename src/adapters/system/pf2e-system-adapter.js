@@ -345,7 +345,7 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
             case 'spell': return localize('PF2E.Item.Spell.Plural', 'Spells');
             case 'weapon': return localize('PF2E.TraitWeapons', 'Weapons');
             case 'consumable': return localize('PF2E.Item.Consumable.Plural', localize('PF2E.Item.Physical.Consumable', 'Consumables'));
-            case 'equipment': return localize('PF2E.Item.Physical.Equipment', localize('PF2E.Actor.Inventory.Section.Equipment', 'Equipment'));
+            case 'equipment': return localize('PF2E.CompendiumBrowser.TabEquipment', localize('PF2E.NPC.AddEquipment', 'Equipment'));
             default: return super.getItemTypeLabel(parentId);
         }
     }
