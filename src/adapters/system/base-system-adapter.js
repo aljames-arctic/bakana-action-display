@@ -309,20 +309,15 @@ export class BaseSystemAdapter {
         }
 
         const systemTypes = this.getEconomyTypes() ?? [];
-        const sortedTypes = [...systemTypes].sort((a, b) => {
-            const orderA = this.getActionSubTabSortOrder('economy', a.id) ?? 999;
-            const orderB = this.getActionSubTabSortOrder('economy', b.id) ?? 999;
-            return orderA - orderB;
-        });
 
         // Any action types on the item that are not in systemTypes map to 'other'
-        const hasUnmapped = Array.from(types).some(t => !sortedTypes.some(st => st.id === t));
+        const hasUnmapped = Array.from(types).some(t => !systemTypes.some(st => st.id === t));
         if (hasUnmapped) {
             types.add('other');
         }
 
         const indicators = [];
-        for (const sysType of sortedTypes) {
+        for (const sysType of systemTypes) {
             const isActive = types.has(sysType.id);
             const color = isActive ? this.getEconomyColor(sysType.id, userColors) : null;
             indicators.push({
