@@ -378,10 +378,10 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
     /**
      * Map a D&D 5e activation type to its parent category under Action Economy.
      * @param {string} type
-     * @returns {string} Category identifier ('standard', 'time', 'rest', 'combat', 'monster', 'vehicle', 'other')
+     * @returns {string|null} Category identifier ('standard', 'time', 'rest', 'combat', 'monster', 'vehicle') or null if direct
      */
     #getEconomyCategory(type) {
-        if (!type) return 'other';
+        if (!type) return null;
         const norm = String(type).toLowerCase();
         switch (norm) {
             case 'action':
@@ -412,8 +412,10 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                 return 'monster';
             case 'crew':
                 return 'vehicle';
+            case 'special':
+            case 'other':
             default:
-                return 'other';
+                return null;
         }
     }
 

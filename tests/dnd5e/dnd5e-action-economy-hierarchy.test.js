@@ -31,7 +31,8 @@ test('Dnd5eSystemAdapter maps activities to nested Action Economy categories', a
         createItemWithActivities('item-rest', 'Rest Item', ['shortRest', 'longRest', 'short', 'long']),
         createItemWithActivities('item-combat', 'Combat Item', ['encounter', 'turnStart', 'turnEnd']),
         createItemWithActivities('item-monster', 'Monster Item', ['legendary', 'mythic', 'lair']),
-        createItemWithActivities('item-vehicle', 'Vehicle Item', ['crew'])
+        createItemWithActivities('item-vehicle', 'Vehicle Item', ['crew']),
+        createItemWithActivities('item-special', 'Special Item', ['special'])
     ];
 
     const actor = {
@@ -91,6 +92,13 @@ test('Dnd5eSystemAdapter maps activities to nested Action Economy categories', a
     assert.ok(vehicleAction);
     assert.deepEqual(vehicleAction.right.map(t => t.path), [
         'economy/vehicle/crew'
+    ]);
+
+    // 7. Special: nested directly under Action Economy
+    const specialAction = modified.find(a => a.name === 'Special Item');
+    assert.ok(specialAction);
+    assert.deepEqual(specialAction.right.map(t => t.path), [
+        'economy/special'
     ]);
 });
 
@@ -191,14 +199,15 @@ test('ActionDisplayApp builds nested sub-tabs under Action Economy and filters a
         new Action({ id: '5', name: 'Long Rest Buff', left: ['feat'], right: [TabRef.from('economy', 'rest', 'longRest')], page: 1 }),
         new Action({ id: '6', name: 'Turn Start Regen', left: ['feat'], right: [TabRef.from('economy', 'combat', 'turnStart')], page: 1 }),
         new Action({ id: '7', name: 'Dragon Breath (Legendary)', left: ['feat'], right: [TabRef.from('economy', 'monster', 'legendary')], page: 1 }),
-        new Action({ id: '8', name: 'Fire Ballista', left: ['equipment'], right: [TabRef.from('economy', 'vehicle', 'crew')], page: 1 })
+        new Action({ id: '8', name: 'Fire Ballista', left: ['equipment'], right: [TabRef.from('economy', 'vehicle', 'crew')], page: 1 }),
+        new Action({ id: '9', name: 'Special Feature', left: ['feat'], right: [TabRef.from('economy', 'special')], page: 1 })
     ];
 
     actionDisplay.getActions = async () => testActions;
 
     // 1. Initial render context: all actions visible under 'all'
     const ctx = await app._prepareContext();
-    assert.equal(ctx.items.length, 8);
+    assert.equal(ctx.items.length, 9);
 
     // Verify parentGroups['economy'] hierarchy
     const econGroup = app.parentGroups['economy'];
@@ -210,6 +219,7 @@ test('ActionDisplayApp builds nested sub-tabs under Action Economy and filters a
     assert.ok(subCategories.includes('combat'), 'Should have combat category');
     assert.ok(subCategories.includes('monster'), 'Should have monster category');
     assert.ok(subCategories.includes('vehicle'), 'Should have vehicle category');
+    assert.ok(subCategories.includes('special'), 'Should have direct special sub-tab');
 
     // Verify nested sub-tabs under standard
     const stdCat = econGroup.subTabs.find(t => t.id === 'standard');
@@ -217,10 +227,10 @@ test('ActionDisplayApp builds nested sub-tabs under Action Economy and filters a
     const stdSubIds = stdCat.subTabs.map(t => t.id);
     assert.deepEqual(stdSubIds, ['action', 'bonus', 'reaction']);
 
-    // 2. Select 'economy' parent tab: all 8 economy actions visible
+    // 2. Select 'economy' parent tab: all 9 economy actions visible
     app.rightTabs.selectParent('economy', app.parentGroups);
     const ctxEcon = await app._prepareContext();
-    assert.equal(ctxEcon.items.length, 8);
+    assert.equal(ctxEcon.items.length, 9);
 
     // 3. Select 'standard' category tab: only Action, Bonus Action, Reaction actions visible
     app.rightTabs.selectSub('economy', 'standard', app.parentGroups);
@@ -263,6 +273,12 @@ test('ActionDisplayApp builds nested sub-tabs under Action Economy and filters a
     const ctxBonus = await app._prepareContext();
     assert.equal(ctxBonus.items.length, 1);
     assert.equal(ctxBonus.items[0].name, 'Healing Word');
+
+    // 10. Select direct sub-tab 'special': only Special Feature visible
+    app.rightTabs.selectSub('economy', 'special', app.parentGroups);
+    const ctxSpecial = await app._prepareContext();
+    assert.equal(ctxSpecial.items.length, 1);
+    assert.equal(ctxSpecial.items[0].name, 'Special Feature');
 });
 
 test('HUDTabColumn right-click multi-select toggling of nested sub-tabs and category tabs', async () => {
