@@ -88,9 +88,7 @@
             "categoryExprPlaceholder": "Boolean Expression (e.g. item.type === 'weapon')",
             "subCategoryNamePlaceholder": "Subcategory Name (e.g. daggers)",
             "subCategoryExprPlaceholder": "Boolean Expression (e.g. item.name.toLowerCase().includes('dagger'))",
-            "save": "Save Changes",
             "loadPresets": "Load Presets",
-            "cancel": "Cancel",
             "saved": "Categorization configuration saved successfully.",
             "noCategories": "No custom categories defined. Click '+ Add Category' to start.",
             "fallthroughTooltip": "Enable Fallthrough: actions matching this category will appear here and continue evaluating into later categories rather than being consumed.",
@@ -124,8 +122,6 @@
             "active": "Active",
             "inactive": "Inactive",
             "noActiveModules": "No supported module integrations are currently active in this world.",
-            "save": "Save Changes",
-            "cancel": "Cancel",
             "saved": "Module integration configuration saved successfully.",
             "midiQol": {
                 "filterAutomationOnly": {
@@ -146,6 +142,8 @@
             "none": "None"
         },
         "common": {
+            "save": "Save Changes",
+            "cancel": "Cancel",
             "actionEconomy": "Action Economy",
             "itemCharges": "Item Charges",
             "prepareSpell": "Prepare Spell",
