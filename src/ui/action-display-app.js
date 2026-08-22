@@ -762,6 +762,10 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         event.preventDefault();
         this._clearMenuState();
         const clickedId = target.dataset.type;
+        if (event?.shiftKey) {
+            this._onToggleLeftParent(clickedId);
+            return;
+        }
         const tab = this.leftGroups?.[clickedId];
         tab?.onLeftClick(this, this.leftTabs, this.leftGroups, event);
         this.render();
@@ -777,6 +781,10 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         this._clearMenuState();
         const parentGroup = target.closest('.bad-left-tab-group');
         const parentId = parentGroup?.querySelector('.bad-left-tab')?.dataset.type;
+        if (event?.shiftKey) {
+            this._onToggleLeftSub(target, target.dataset.type);
+            return;
+        }
         const subTab = this.leftGroups?.[parentId]?.getSubTab(target.dataset.type);
         subTab?.onLeftClick(this, this.leftTabs, this.leftGroups, event);
         this.render();
@@ -814,6 +822,10 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         event.preventDefault();
         this._clearMenuState();
         const clickedId = target.dataset.type;
+        if (event?.shiftKey) {
+            this._onToggleRightParent(clickedId);
+            return;
+        }
         const tab = this.parentGroups?.[clickedId];
         tab?.onLeftClick(this, this.rightTabs, this.parentGroups, event);
         this.render();
@@ -829,6 +841,10 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         this._clearMenuState();
         const parentGroup = target.closest('.bad-right-tab-group');
         const parentId = parentGroup?.querySelector('.bad-right-tab')?.dataset.type;
+        if (event?.shiftKey) {
+            this._onToggleRightSub(target, target.dataset.type);
+            return;
+        }
         const subTab = this.parentGroups?.[parentId]?.getSubTab(target.dataset.type);
         subTab?.onLeftClick(this, this.rightTabs, this.parentGroups, event);
         this.render();

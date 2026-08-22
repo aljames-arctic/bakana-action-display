@@ -186,8 +186,14 @@ export class HUDTab {
             const handled = this.customOnLeftClick(app, tabColumn, groups, event);
             if (handled) return;
         }
-        if (game.settings.get(MODULE_ID, 'toggleTabSelection')) {
-            this.onRightClick(app, tabColumn, groups, event);
+        if (event?.shiftKey || game.settings.get(MODULE_ID, 'toggleTabSelection')) {
+            if (this.isTopLevel) {
+                tabColumn.toggleParent(this.id, groups);
+            } else {
+                const rootId = this.rootParent?.id ?? this.parent?.id;
+                const isExclusion = adapter.isExclusionTab(rootId);
+                tabColumn.toggleSub(rootId, this.id, groups, isExclusion);
+            }
             return;
         }
         if (this.isTopLevel) {

@@ -480,3 +480,78 @@ test('ActionDisplayApp builds and renders Spell Components exclusion tab group w
     assert.equal(compTabFocused.expanded, true, 'Spell Components group should be marked as expanded when focused');
 });
 
+test('ActionDisplayApp shift+left click on tabs and subtabs always selects/unselects without toggling equip-prepared', async () => {
+    adapter.system = new Dnd5eSystemAdapter();
+    const flags = {};
+    const mockActor = {
+        uuid: 'Actor.shift-test-isolated',
+        isOwner: true,
+        getFlag: (mod, key) => flags[key] ?? false,
+        setFlag: async (mod, key, val) => { flags[key] = val; }
+    };
+    const app = new ActionDisplayApp({ actor: mockActor });
+    app.render = () => {};
+    const testActions = [
+        new Action({ id: '1', name: 'Sword', left: ['weapon'], right: [TabRef.from('economy', 'standard', 'action')], page: 1 }),
+        new Action({ id: '2', name: 'Fireball', left: ['spell', 'spell-3'], right: [TabRef.from('economy', 'standard', 'action')], page: 1 }),
+        new Action({ id: '3', name: 'Shield', left: ['spell', 'spell-1'], right: [TabRef.from('economy', 'standard', 'reaction')], page: 1 })
+    ];
+    actionDisplay.getActions = async () => testActions;
+
+    // 1. Initial state: 'all' is active
+    await app._prepareContext();
+    assert.equal(app.leftTabs.focusedParent, 'all');
+
+    // 2. Shift+Left Click on left parent tab 'weapon' -> multi-selects 'weapon'
+    const shiftClickEvent = {
+        shiftKey: true,
+        preventDefault: () => {}
+    };
+    await app._onChangeLeftItemType(shiftClickEvent, { dataset: { type: 'weapon' } });
+    assert.ok(app.leftTabs.activeParents.has('weapon'), 'Weapon should now be selected');
+    assert.equal(flags.showUnequipped_weapon, undefined, 'Flag should NOT be toggled on shift+left click');
+
+    // 3. Shift+Left Click on left parent tab 'spell' -> multi-selects 'spell' in addition to 'weapon'
+    await app._onChangeLeftItemType(shiftClickEvent, { dataset: { type: 'spell' } });
+    assert.ok(app.leftTabs.activeParents.has('weapon'), 'Weapon should remain selected');
+    assert.ok(app.leftTabs.activeParents.has('spell'), 'Spell should now also be selected');
+    assert.equal(flags.showAll_spell, undefined, 'Flag should NOT be toggled on shift+left click');
+
+    // 4. Shift+Left Click on 'weapon' again -> unselects 'weapon', leaving 'spell'
+    await app._onChangeLeftItemType(shiftClickEvent, { dataset: { type: 'weapon' } });
+    assert.equal(app.leftTabs.activeParents.has('weapon'), false, 'Weapon should be unselected');
+    assert.ok(app.leftTabs.activeParents.has('spell'), 'Spell should remain selected');
+
+    // 5. Shift+Left Click on left sub-tab (e.g. spell level 1)
+    const mockParentGroup = {
+        querySelector: (sel) => sel.includes('.bad-left-tab') ? { dataset: { type: 'spell' } } : null
+    };
+    const mockSubTabEl = {
+        dataset: { type: 'spell-1' },
+        closest: (sel) => sel.includes('.bad-left-tab-group') ? mockParentGroup : null
+    };
+    await app._onChangeLeftSubItemType(shiftClickEvent, mockSubTabEl);
+    assert.ok(app.leftTabs.activeSubTypes.has('spell-1'), 'Spell level 1 subtab should be selected');
+    assert.equal(flags.showUnprepared_spell, undefined, 'showUnprepared flag should NOT be toggled on shift+left click');
+
+    // 6. Shift+Left Click on right parent tab and sub-tab
+    // Reset rightTabs to default ('all') to test toggling 'economy'
+    app.rightTabs.resetToDefault();
+    await app._onChangeActionType(shiftClickEvent, { dataset: { type: 'economy' } });
+    assert.ok(app.rightTabs.activeParents.has('economy'), 'Economy should be selected');
+
+    const mockRightParentGroup = {
+        querySelector: (sel) => sel.includes('.bad-right-tab') ? { dataset: { type: 'economy' } } : null
+    };
+    const mockRightSubTabEl = {
+        dataset: { type: 'action' },
+        closest: (sel) => sel.includes('.bad-right-tab-group') ? mockRightParentGroup : null
+    };
+    await app._onChangeSubActionType(shiftClickEvent, mockRightSubTabEl);
+    assert.ok(app.rightTabs.activeSubTypes.has('action'), 'Action subtab should be selected');
+
+    // 7. Shift+Left Click on right sub-tab again -> unselects 'action'
+    await app._onChangeSubActionType(shiftClickEvent, mockRightSubTabEl);
+    assert.equal(app.rightTabs.activeSubTypes.has('action'), false, 'Action subtab should be unselected');
+});
+
