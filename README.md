@@ -3,152 +3,78 @@
 [![Foundry VTT Version](https://img.shields.io/badge/Foundry%20VTT-v12+-orange.svg)](https://foundryvtt.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-[![Latest Module Downloads](https://img.shields.io/github/downloads/aljames-arctic/bakana-action-display/latest/module.zip?style=flat-square&label=latest%20downloads&color=blue)](https://github.com/aljames-arctic/bakana-action-display/releases) [![Total Module Downloads](https://img.shields.io/github/downloads-pre/aljames-arctic/bakana-action-display/module.zip?style=flat-square&label=total%20downloads&color=success)](https://github.com/aljames-arctic/bakana-action-display/releases)
-
 A sleek, high-performance, and highly customizable **Action HUD** for **Foundry VTT (V12+)**.
 
-**Bakana's Action Display** dynamically tracks your selected token on the canvas, instantly extracting and displaying their available attacks, spells, feats, and consumables. Designed with a premium, modern aesthetic, it helps players and GMs speed up combat by placing all their tactical options just one (or two) clicks away.
-
-<img width="1201" height="971" alt="hud_demo" src="https://github.com/user-attachments/assets/95a30db7-608e-4323-a655-1ab3841ab9cb" />
-
----
-
-## Table of Contents
-*   [Key Features](#key-features)
-*   [How to Use](#how-to-use)
-*   [System Exclusives](#system-exclusives)
-    *   [D&D 5e Exclusives](#dd-5e-exclusives)
-        *   [Midi-QOL Integration (Module)](#midi-qol-integration-module)
-    *   [Pathfinder 2e Exclusives](#pathfinder-2e-exclusives)
-    *   [Pathfinder 1e Exclusives](#pathfinder-1e-exclusives)
-*   [Architecture & Extension](#architecture--extension)
-*   [Configuration & Settings](#configuration--settings)
-*   [Installation](#installation)
-*   [License](#license)
+**Bakana's Action Display** dynamically tracks your selected token on the canvas, instantly presenting their available attacks, spells, features, checks, and consumables. Designed with a modern aesthetic, responsive animations, and deep system integrations, it keeps tactical options right at your fingertips to drastically accelerate gameplay.
 
 ---
 
 ## Key Features
 
-*   **Dynamic Token Tracking**: Automatically follows your active or selected token, updating the HUD instantly as you switch selection.
-*   **Dual-Tab Filtering**:
-    *   **Left-Side Tabs**: Group actions by item type (Weapons, Spells, Feats, Consumables, etc.).
-    *   **Right-Side Tabs**: Group actions by their action economy cost (Actions, Bonus Actions, Reactions, Passives, etc.).
-*   **Right-Click Multi-Select**: Right-click on any parent tab or sub-tab to toggle it, allowing you to combine categories (e.g., view both **Weapons** and **Spells**, or **Bonus Actions** and **Reactions** at the same time!).
-*   **Floating / Detached Mode**: Drag the HUD anywhere on your screen—it will smoothly glide at 60fps and save its position. Click the anchor icon to re-attach it to tokens.
-*   **Hide Depleted Resources**: Toggle the resource filter to instantly hide spells, activities, or items that have run out of slots, charges, or uses.
-*   **Customizable Visibility**: Right-click any action card in the HUD to hide it. Unhide it anytime via the context menu.
-*   **Left-Click Smart Dropdowns**: For items with multiple options (like a spell with multiple casting levels or a weapon with multiple activities), left-clicking opens a sleek dropdown to let you choose your option. Even if active filters limit a multi-option item down to a single qualifying choice, the dropdown is still shown to provide clear feedback on what is being cast.
+* **Dynamic Token Tracking & Canvas Centering**: Automatically follows the active or selected token, updating instantly on selection change. Includes a quick **Center on Token** button to focus your canvas view.
+* **Dual-Column & Multi-Level Filtering**:
+  * **Left-Side Tabs**: Filter actions by item type (Weapons, Spells, Feats, Consumables, Equipment, Favorites, etc.).
+  * **Right-Side Tabs**: Filter actions by activation cost (Actions, Bonus Actions, Reactions, Time, Rest, Legendary/Lair, etc.) with nested subcategory hierarchies.
+  * **Multi-Select & Isolation**: Right-click any tab or subcategory to combine filters (e.g. view Weapons + Spells, or Actions + Bonus Actions simultaneously). Left-click any active sub-tab to isolate it.
+* **Visual Action Economy Indicators**: Dynamic, colored indicator bars on every action card instantly show activation cost requirements. Includes a dedicated **Economy Colors Configuration** menu to customize color palettes, toggle specific indicator types, or apply presets.
+* **Custom Categorization & Rules Engine**: Build custom categories and nested subcategories using boolean expressions (e.g. `item.type === 'weapon'`, `item.system.level < 3`). Supports **Fallthrough** (allowing matched actions to continue cascading down) and **Dividing Bars** (empty category names rendering as horizontal section dividers).
+* **Multi-Page Navigation (Checks & Saves)**: Easily flip between **Page 1** (Combat Actions, Spells, Equipment) and **Page 2** (Core Ability Checks, Saving Throws, and Skills with split section layouts).
+* **Favorites Integration**: Star favorite items with one click or right-click context menu. Automatically synchronizes with system-level favorites (e.g. D&D 5e favorites).
+* **Smart Dropdown Activations**: Items with multiple activities, formulas, or spellcasting modes open an inline single-line dropdown showing remaining uses and icons for rapid selection.
+* **Instant Search & Depleted Filter**: Instant full-text filtering across all actions with one-click clear, plus a toggle button to hide actions with depleted uses, slots, or ammunition.
+* **Flexible HUD Positioning**:
+  * **Attached**: Dynamically follows the token.
+  * **Pinned**: Anchors to the token at a fixed offset.
+  * **Detached**: Freely floating anywhere on screen with silky smooth 60fps dragging and position memory.
 
 ---
 
-<img width="1211" height="1091" alt="drag_hide_demo mp4" src="https://github.com/user-attachments/assets/9bc95595-debc-42a3-acef-47518a6d1faa" />
+## Supported Systems
 
-
-## How to Use
-
-*   **Left-Click a Tab**: Selects that category exclusively. If multiple sub-tabs are already active, left-clicking one of them will **isolate** it (deselecting all others, making it the sole active filter) rather than toggling it off.
-*   **Right-Click a Tab**: Toggles that sub-tab in/out of your active filters. Right-clicking a **parent tab header** (like *Spells* or *Action Economy*) acts as a multi-stage toggle:
-    *   **First Click**: Acts as a **reset shortcut**, clearing all active sub-tab filters under that parent.
-    *   **Second Click (when already cleared)**: Toggles the parent tab itself **off** (unselecting it). If no parent tabs remain active on that side, the column automatically falls back to selecting the **All** parent tab.
-*   **Left-Click an Action Card**: Rolls the action! If the action has multiple options, it opens a dropdown; click the option you want to roll.
-*   **Right-Click an Action Card**: Opens the context menu to **Hide** or **Unhide** the action, or open the item's sheet.
-*   **Drag the Top Handle**: Instantly detaches/pins the HUD and lets you drag it anywhere.
-*   **Click the Anchor / Pin Icon**: Cycles through HUD positioning modes:
-    *   `<i class="fas fa-link"></i>` **Attached**: Dynamic token tracking.
-    *   `<i class="fas fa-thumbtack"></i>` **Pinned**: Locks the HUD to the token's top-left corner at a fixed offset (clamped to page bounds).
-    *   `<i class="fas fa-unlink"></i>` **Detached**: Floating at your last dragged screen coordinates.
-*   **Click the Checkbox ⚙️**: Toggles the **Hide Depleted Resources** filter.
-
-<img width="1211" height="1091" alt="drag_hide_demo mp4" src="https://github.com/user-attachments/assets/245bb464-95c1-431b-b2b4-fc467975987e" />
+| System | Highlights |
+| :--- | :--- |
+| **D&D 5th Edition (v3.x / v4.x+)** | Full Activity 4.0 architecture support, spell slot calculations, unprepared spells right-click toggle, negative spell component filters (Verbal, Somatic, Material), and Midi-QOL automation filtering. |
+| **Pathfinder 2e** | Derived Strikes & unarmed attacks resolution, ammunition counters, carry-type context menus (Hold 1H/2H, Wear, Stow, Drop), equip toggles, and Page 2 Checks/Saves/Perception. |
+| **Pathfinder 1e** | Linked attack merging, multi-action dropdowns, buff tracking, equipment management, and Page 2 Ability Checks/Saves. |
+| **Universal / Core Fallback** | Automatic fallback adapter for unsupported systems, providing standard item extraction, roll triggers, and customization. |
 
 ---
 
-## System Exclusives
+## Recommended Media & Demonstrations
 
-The module is built on a modular adapter pattern, allowing it to hook deeply into game systems to extract native rules, icons, and sorting algorithms. Below are the features exclusive to each supported system:
+To best showcase the module in the README or release notes, the following short clips and screenshots are recommended:
 
-### D&D 5e Exclusives
-
-#### 4.0 Activity System
-Full support for D&D 5e's 4.0 Activity architecture. Items or features with multiple activities (such as `Spellcasting` features containing cast activities, or weapons with multiple attack modes) are presented as a single card. Left-clicking opens a responsive dropdown menu formatted on a single line showing the spell icon, left-aligned name, and right-aligned remaining uses (`2 / 2`). Dropdowns intelligently position below the item row and adjust their scrollable height to the viewport.
-
-![D&D 5e Activity Dropdown](docs/readme-assets/activity_select.png)
-
-#### Equipment & Weapon Tabs with Subcategories
-The HUD includes dedicated left-side parent tabs for **Weapons** and **Equipment**:
-*   **Subcategory Sub-tabs**: Weapons are categorized into sub-tabs by type (Simple Melee, Martial Melee, Simple Ranged, Martial Ranged, Natural, etc.), and Equipment is categorized by type (Light, Medium, Heavy, Shield, Clothing, Trinket, Wand, Wondrous, etc.).
-*   **Equipped / Unequipped Toggle**: By default, the HUD displays only equipped items to keep combat focused. Right-clicking the **"All Weapons"** or **"All Equipment"** sub-tab toggles an orange highlight state (`showUnequipped`), revealing all equipped and unequipped gear in your inventory.
-*   **Equip & Unequip Actions**: Right-clicking any weapon or equipment card opens the context menu with **Equip** or **Unequip** options to manage item equipment states directly from the HUD.
-
-#### Prepared Spells Toggle
-You can choose whether to show or hide unprepared spells in the HUD. A quick **right-click shortcut on the "All Spells" tab** allows you to toggle the visibility of unprepared spells instantly without opening the settings menu.
-
-<img width="1049" height="837" alt="unprepared_spells" src="https://github.com/user-attachments/assets/02aa7f06-13a4-4c3a-a77f-649678e551b4" />
-
-#### Spell Properties Filter
-A dedicated, collapsible **Spell Components** section appears at the bottom of the right-side tabs (exclusive to the D&D 5e system). Unlike other filters, it operates as a **negative/exclusion filter** to help you quickly identify what you can cast under constraints (such as being silenced, bound, or stripped of materials):
-*   **Grey (Default)**: Allowed. The component is permitted, and spells requiring it are shown.
-*   **Red Outline + Diagonal (Banned)**: Banned. Toggling a component (Verbal, Somatic, or Material) bans it. Any spells requiring that component will be instantly hidden from the HUD.
-*   **Persistent Expansion**: While any component is banned, the *Spell Components* tab will remain expanded on your screen even if you left-click to focus the *Action Economy* tab, allowing you to combine filters.
-
-#### Midi-QOL Integration (Module)
-When the `midi-qol` module is active, the Action Display HUD integrates automatically:
-*   **Automation Filtering**: The HUD automatically scans activities and filters out any that are marked as **`automationOnly`** in their Midi-QOL properties. This prevents internal utility activities from cluttering your HUD.
-*   **Smart Hiding**: If all activities on an item are marked as automation-only, the entire item card is automatically hidden from the HUD.
-
----
-
-### Pathfinder 2e Exclusives
-
-#### Strike Resolution
-Unlike other systems where attacks are just items in the inventory, PF2e uses a complex derived "Strikes" system. The PF2e adapter dynamically extracts these Strikes (both weapon attacks and unarmed strikes like Fist or monster Claws) directly from `actor.system.actions`. 
-*   **Ammunition Tracking**: Weapon strikes automatically display remaining ammunition (e.g., arrows for a bow) directly on the card.
-*   **Synthetic Attacks**: Unarmed attacks are backed by synthetic items generated by the system, ensuring they always have icons and roll correctly.
-<!-- [PLACEHOLDER: Screenshot - A PF2e character HUD showing weapon strikes with ammunition counters and unarmed strikes like Fist] -->
-
-#### Numerical Spell Level Sorting
-Spells in PF2e are grouped by level. The adapter automatically overrides alphabetical sorting for spell sub-tabs, ensuring they are sorted **numerically by spell level** (Cantrips, 1st, 2nd, 3rd...) for intuitive navigation.
-
----
-
-### Pathfinder 1e Exclusives
-
-#### Linked Attacks & Multi-Actions
-In PF1, weapons often have multiple attack options, or are linked to specific attack items. The PF1 adapter automatically merges these:
-*   **Linked Attack Merging**: If a weapon has linked attack items, the adapter merges them into a single HUD card. Left-clicking the card opens a dropdown listing all the linked attacks.
-*   **Multi-Action Dropdowns**: Items with multiple defined actions are automatically presented with dropdowns, allowing you to choose which attack or formula to activate.
-<!-- [PLACEHOLDER: Screenshot - A PF1 weapon card clicked, showing a dropdown containing its multiple attack/full-attack options] -->
-
-#### Buff Tracking
-PF1 relies heavily on temporary buffs. The adapter extracts active buffs and displays them in a dedicated **Buffs** tab, allowing you to view and manage them quickly.
-
----
-
-## Architecture & Extension
-
-This module is designed to be highly extensible. It uses a clean **Adapter Pattern** to decouple the core UI from system-specific and module-specific rules:
-
-*   **System Adapters**: Manage how items are categorized, how rolls are triggered, and how system-specific resources are calculated. All system adapters inherit from `BaseSystemAdapter`.
-*   **Module Adapters**: Intercept and modify actions based on other active modules (like Midi-QOL). All module adapters inherit from `BaseModuleAdapter`.
-
-For a deep dive into the codebase architecture, lifecycle hooks, and instructions on how to write your own system or module adapters, please refer to our **[Architecture Guide](docs/architecture_guide.md)**. For a detailed execution flow, hook sequence, and class method index, check out the **[Function Call Tree & Developer API Reference](docs/function_tree.md)**.
+1. **Main HUD Showcase (`hud_demo.png` / `.gif`)**
+   * *Description*: High-resolution screenshot or GIF showing the HUD open beside a character token, highlighting the dual left/right tab columns, action economy indicator bars, and active spell/attack cards.
+2. **Multi-Level Action Economy & Multi-Select (`tab_multi_select.gif`)**
+   * *Description*: Quick 5-second GIF demonstrating right-clicking multiple parent tabs (Weapons + Spells) and expanding nested Action Economy subcategories (Standard -> Bonus Actions, Reactions).
+3. **Custom Categorization & Dividing Bars (`categorization_config.png` / `.gif`)**
+   * *Description*: Showing the Categorization Configuration UI with a custom rule list, fallthrough chevrons enabled, and an empty dividing bar separating sections on the HUD.
+4. **Action Economy Color Palette Customizer (`economy_colors_config.png`)**
+   * *Description*: Showing the Economy Colors Configuration app previewing custom indicator colors, enabled checkboxes, and color pickers.
+5. **Page 2: Ability Checks & Saving Throws (`page_navigation_checks.gif`)**
+   * *Description*: Showing the user clicking the page arrow to transition from Page 1 combat actions to Page 2 split-layout Ability Checks, Saves, and Skills.
+6. **Activity Dropdown & Right-Click Context Menu (`activity_dropdown_context.gif`)**
+   * *Description*: Left-clicking a multi-activity spell or weapon to show the inline dropdown, followed by right-clicking an item card to show the Edit / Favorite / Carry State context menu.
 
 ---
 
 ## Configuration & Settings
 
-Configure these options in the Foundry VTT Module Settings menu:
-*   **HUD Position Mode**: Choose whether the HUD operates in `Attached` (dynamic tracking), `Pinned` (fixed token offset), or `Detached` (floating) mode.
-*   **Persist Tab Selections Across Close / Open & Refreshes**: Save active parent and sub-tab selections for each character across HUD close/open, actor switches, and page reloads.
-*   **Filter Out of Resources**: Enable or disable the resource filter by default.
-*   **Theme & Styling**: Fully compatible with custom CSS. Overrides core Foundry styles cleanly.
+Configure these options in Foundry VTT **Configure Settings > Module Settings**:
+
+* **HUD Position Mode**: Default positioning mode (`Attached`, `Pinned`, or `Detached`).
+* **Categorization Configuration**: Open the interactive category builder to craft custom HUD sections and filters.
+* **Action Economy Colors**: Customize individual indicator colors, enable/disable specific economy types, and choose presets.
+* **Module Integrations**: Configure external module hooks (e.g. Midi-QOL automation-only filtering).
+* **Persist Tab Selections**: Preserves your active tab combinations across reloads and actor switches.
+* **Toggle Tab Selection**: Enables right-click multi-select behavior on left-click.
 
 ---
 
 ## Installation
 
-To install the module, copy the following Manifest URL into the **Install Module** dialog in the Foundry VTT Setup menu:
+Install directly via the Foundry VTT Module Browser or copy the Manifest URL into **Install Module**:
 
 ```text
 https://github.com/aljames-arctic/bakana-action-display/releases/latest/download/module.json
@@ -158,4 +84,4 @@ https://github.com/aljames-arctic/bakana-action-display/releases/latest/download
 
 ## License
 
-This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
+This project is open source and available under the [MIT License](LICENSE).
