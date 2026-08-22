@@ -97,11 +97,11 @@ function isMatchingActor(docActor, docParent) {
  * Request a debounced re-render of the active HUD when documents mutate.
  */
 function requestHUDRender() {
-    if (!activeApp || (!activeApp.rendered && !activeApp.element)) return;
+    if (!activeApp?.rendered && !activeApp?.element) return;
     if (renderDebounceTimer) clearTimeout(renderDebounceTimer);
     renderDebounceTimer = setTimeout(() => {
         renderDebounceTimer = null;
-        if (activeApp && (activeApp.rendered || activeApp.element)) {
+        if (activeApp?.rendered || activeApp?.element) {
             activeApp.render();
         }
     }, 50);

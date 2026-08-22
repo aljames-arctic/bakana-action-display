@@ -472,7 +472,7 @@ export class CategorizationConfigApp extends adapter.foundry.HandlebarsApplicati
 
         ui?.notifications?.info?.(game.i18n.localize('BAD.categorization.saved'));
 
-        if (actionDisplay.activeApp && actionDisplay.activeApp.rendered) {
+        if (actionDisplay.activeApp?.rendered) {
             actionDisplay.activeApp.render();
         }
 
