@@ -77,7 +77,7 @@ export class ModuleIntegrationsConfigApp extends adapter.foundry.HandlebarsAppli
 
         ui?.notifications?.info?.(game.i18n.localize('BAD.moduleIntegrations.saved'));
 
-        if (actionDisplay.activeApp && actionDisplay.activeApp.rendered) {
+        if (actionDisplay.activeApp?.rendered) {
             actionDisplay.activeApp.render();
         }
 

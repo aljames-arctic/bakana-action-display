@@ -80,72 +80,42 @@ export class Pf1SystemContextMenuManager extends BaseSystemContextMenuManager {
 
         const isParentTab = el.classList.contains('bad-left-tab');
         const isSubTab = el.classList.contains('bad-left-sub-tab');
+        const parentType = isParentTab
+            ? el.dataset.type
+            : (isSubTab && el.dataset.type === 'all'
+                ? el.closest('.bad-left-tab-group')?.querySelector('.bad-left-tab')?.dataset.type
+                : null);
 
-        if (isParentTab) {
-            const parentType = el.dataset.type;
-            if (parentType === 'all') {
-                const current = app.actor.getFlag(MODULE_ID, 'showAll') ?? false;
-                const nextState = !current;
+        if (!parentType) return false;
+
+        if (parentType === 'all') {
+            const current = app.actor.getFlag(MODULE_ID, 'showAll') ?? false;
+            const nextState = !current;
+            if (app.actor.update) {
                 const updates = {};
                 for (const key of ALL_FILTER_FLAGS) {
                     updates[`flags.${MODULE_ID}.${key}`] = nextState;
                 }
-                if (typeof app.actor.update === 'function') {
-                    app.actor.update(updates);
-                } else {
-                    for (const key of ALL_FILTER_FLAGS) {
-                        app.actor.setFlag?.(MODULE_ID, key, nextState);
-                    }
+                app.actor.update(updates);
+            } else {
+                for (const key of ALL_FILTER_FLAGS) {
+                    app.actor.setFlag?.(MODULE_ID, key, nextState);
                 }
-                return true;
             }
-
-            const flagMap = {
-                weapon: 'showUnequipped_weapon',
-                equipment: 'showUnequipped_equipment',
-                consumable: 'showUnequipped_consumable'
-            };
-
-            const flagKey = flagMap[parentType];
-            if (flagKey) {
-                const current = app.actor.getFlag(MODULE_ID, flagKey) ?? false;
-                app.actor.setFlag(MODULE_ID, flagKey, !current);
-                return true;
-            }
-            return false;
+            return true;
         }
 
-        if (isSubTab && el.dataset.type === 'all') {
-            const parentType = el.closest('.bad-left-tab-group')?.querySelector('.bad-left-tab')?.dataset.type;
-            if (parentType === 'all') {
-                const current = app.actor.getFlag(MODULE_ID, 'showAll') ?? false;
-                const nextState = !current;
-                const updates = {};
-                for (const key of ALL_FILTER_FLAGS) {
-                    updates[`flags.${MODULE_ID}.${key}`] = nextState;
-                }
-                if (typeof app.actor.update === 'function') {
-                    app.actor.update(updates);
-                } else {
-                    for (const key of ALL_FILTER_FLAGS) {
-                        app.actor.setFlag?.(MODULE_ID, key, nextState);
-                    }
-                }
-                return true;
-            }
+        const flagMap = {
+            weapon: 'showUnequipped_weapon',
+            equipment: 'showUnequipped_equipment',
+            consumable: 'showUnequipped_consumable'
+        };
 
-            const flagMap = {
-                weapon: 'showUnequipped_weapon',
-                equipment: 'showUnequipped_equipment',
-                consumable: 'showUnequipped_consumable'
-            };
-
-            const flagKey = flagMap[parentType];
-            if (flagKey) {
-                const current = app.actor.getFlag(MODULE_ID, flagKey) ?? false;
-                app.actor.setFlag(MODULE_ID, flagKey, !current);
-                return true;
-            }
+        const flagKey = flagMap[parentType];
+        if (flagKey) {
+            const current = app.actor.getFlag(MODULE_ID, flagKey) ?? false;
+            app.actor.setFlag(MODULE_ID, flagKey, !current);
+            return true;
         }
 
         return false;

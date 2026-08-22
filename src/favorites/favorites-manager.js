@@ -71,8 +71,8 @@ export async function setActorItemFavorite(actor, item, isFavorite, customAdapte
                 await actor.update({
                     [`flags.${MODULE_ID}.favorites.-=${item.id}`]: null
                 });
-            } else if (actor.setFlag) {
-                await actor.setFlag(MODULE_ID, 'favorites', current);
+            } else {
+                await actor.setFlag?.(MODULE_ID, 'favorites', current);
             }
         }
     } catch (err) {
