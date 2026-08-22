@@ -116,14 +116,13 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
             // 1. Filter out unprepared spells (unless cantrip/innate/at-will/pact/always, showUnprepared/showAll is enabled, or item is user-hidden)
             let isSpellUnprepared = false;
             if (type === 'spell') {
-                const prep = item.system.preparation ?? {};
-                const prepMode = prep.mode ?? item.system.method ?? 'prepared';
-                const isPrepared = Boolean(prep.prepared ?? item.system.prepared);
+                const prepMode = item.system.method ?? 'prepared';
+                const isPrepared = Boolean(item.system.prepared);
                 const isCantrip = (item.system.level ?? 0) === 0;
                 isSpellUnprepared = !isCantrip && !['innate', 'atwill', 'pact', 'always'].includes(prepMode) && !isPrepared;
 
                 if (!showUnprepared && isSpellUnprepared && !isUserHidden) {
-                    log.debug(`Dnd5eSystemAdapter.modifyActions | Filtering out spell "${item.name}" (ID: ${item.id}) — prep.prepared === false and prepMode (${prepMode}) requires preparation; showUnprepared flag is not set`);
+                    log.debug(`Dnd5eSystemAdapter.modifyActions | Filtering out spell "${item.name}" (ID: ${item.id}) — isPrepared === false and prepMode (${prepMode}) requires preparation; showUnprepared flag is not set`);
                     continue;
                 }
             }

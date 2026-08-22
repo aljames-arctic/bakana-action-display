@@ -686,4 +686,98 @@ test('Dnd5eSystemAdapter resolves cached helper spells for NPC Spellcasting feat
     assert.ok(rightPaths.includes('components/somatic'));
 });
 
+test('Dnd5eSystemAdapter modifyActions evaluates spell preparation using SpellData#method and SpellData#prepared strictly', async () => {
+    const adapter = new Dnd5eSystemAdapter();
+
+    let preparationAccessed = false;
+    const modernPreparedSpell = {
+        id: 'spell-modern-prep',
+        name: 'Misty Step',
+        type: 'spell',
+        system: {
+            level: 2,
+            method: 'prepared',
+            prepared: true,
+            get preparation() {
+                preparationAccessed = true;
+                return { mode: 'prepared', prepared: true };
+            },
+            activities: {
+                'act-misty': {
+                    _id: 'act-misty',
+                    name: 'Cast',
+                    type: 'cast',
+                    activation: { type: 'bonus' }
+                }
+            }
+        }
+    };
+
+    const modernUnpreparedSpell = {
+        id: 'spell-modern-unprep',
+        name: 'Scorching Ray',
+        type: 'spell',
+        system: {
+            level: 2,
+            method: 'prepared',
+            prepared: false,
+            get preparation() {
+                preparationAccessed = true;
+                return { mode: 'prepared', prepared: false };
+            },
+            activities: {
+                'act-scorch': {
+                    _id: 'act-scorch',
+                    name: 'Cast',
+                    type: 'cast',
+                    activation: { type: 'action' }
+                }
+            }
+        }
+    };
+
+    const innateSpell = {
+        id: 'spell-innate',
+        name: 'Detect Magic',
+        type: 'spell',
+        system: {
+            level: 1,
+            method: 'innate',
+            prepared: false,
+            activities: {
+                'act-detect': {
+                    _id: 'act-detect',
+                    name: 'Cast',
+                    type: 'cast',
+                    activation: { type: 'action' }
+                }
+            }
+        }
+    };
+
+    const actor = {
+        items: new foundry.utils.Collection([modernPreparedSpell, modernUnpreparedSpell, innateSpell]),
+        system: { spells: { spell1: { value: 2, max: 2 }, spell2: { value: 2, max: 2 } } },
+        getFlag: () => false
+    };
+
+    adapter.init(actor);
+    const rawActions = [
+        { id: 'spell-modern-prep', originalItem: modernPreparedSpell },
+        { id: 'spell-modern-unprep', originalItem: modernUnpreparedSpell },
+        { id: 'spell-innate', originalItem: innateSpell }
+    ];
+
+    const modified = await adapter.modifyActions(rawActions, actor);
+
+    assert.equal(preparationAccessed, false, 'preparation getter should never be accessed');
+    const preparedAction = modified.find(a => a.id === 'spell-modern-prep');
+    const unpreparedAction = modified.find(a => a.id === 'spell-modern-unprep');
+    const innateAction = modified.find(a => a.id === 'spell-innate');
+
+    assert.ok(preparedAction, 'Prepared spell should be included');
+    assert.equal(unpreparedAction, undefined, 'Unprepared spell should be filtered out when showUnprepared is false');
+    assert.ok(innateAction, 'Innate spell should be included regardless of prepared boolean');
+});
+
 
