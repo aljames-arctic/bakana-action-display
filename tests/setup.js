@@ -185,7 +185,10 @@ globalThis.foundry = {
                     this.menuItems = menuItems;
                     this.options = options;
                 }
-                async render() {}
+                async render(target) {
+                    this.options?.onOpen?.(target);
+                    this._setPosition?.(null, target);
+                }
                 async close() {}
             }
         }

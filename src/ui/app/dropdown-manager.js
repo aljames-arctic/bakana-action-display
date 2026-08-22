@@ -28,9 +28,7 @@ export function openActivitySubContextMenu(app, targetLi, subaction) {
     const subMenu = new ContextMenuClass(targetBody, ".context-item", menuItems, {
         jQuery: false
     });
-    setTimeout(() => {
-        subMenu?.render?.(targetLi)?.catch?.(err => log.error("SubContextMenu render error:", err));
-    }, 10);
+    subMenu?.render?.(targetLi)?.catch?.(err => log.error("SubContextMenu render error:", err));
 }
 
 /**
@@ -109,29 +107,75 @@ export function showActivityDropdown(app, target, subactions, event) {
 
     const ContextMenuClass = adapter.foundry.ContextMenu;
     const targetBody = app?.element?.ownerDocument?.body ?? document.body;
-    const menu = new ContextMenuClass(targetBody, ".bad-action-item", menuItems, {
+
+    const applyPositioning = (menuEl) => {
+        if (!menuEl) return;
+        if (menuEl.parentElement !== targetBody) {
+            targetBody.appendChild(menuEl);
+        }
+
+        const rect = target.getBoundingClientRect?.() ?? { left: 0, top: 0, right: 100, bottom: 30, width: 100, height: 30 };
+        const viewportHeight = window?.innerHeight ?? 1080;
+        const spaceBelow = viewportHeight - rect.bottom - 15;
+        const spaceAbove = rect.top - 15;
+        const neededHeight = subactions.length * 36 + 15;
+
+        // Prefer down: only place above if space below is critically constrained (< 80px) and space above is larger
+        const placeAbove = spaceBelow < Math.min(neededHeight, 80) && spaceAbove > spaceBelow;
+        const availableSpace = placeAbove ? spaceAbove : spaceBelow;
+        const maxHeight = Math.max(60, Math.min(neededHeight, availableSpace));
+
+        const styles = {
+            position: 'fixed',
+            left: `${rect.left}px`,
+            top: placeAbove ? `${Math.max(10, rect.top - Math.min(neededHeight, maxHeight))}px` : `${rect.bottom}px`,
+            bottom: 'auto',
+            width: `${rect.width}px`,
+            'min-width': `${rect.width}px`,
+            'box-sizing': 'border-box',
+            'z-index': '999999',
+            display: 'block',
+            visibility: 'visible',
+            opacity: '1',
+            'max-height': `${maxHeight}px`
+        };
+
+        for (const [prop, val] of Object.entries(styles)) {
+            menuEl.style?.setProperty?.(prop, val, 'important');
+        }
+
+        Array.from(menuEl.children ?? []).forEach(child => {
+            child.style?.setProperty?.('max-height', `${maxHeight}px`, 'important');
+            child.style?.setProperty?.('overflow-y', 'auto', 'important');
+        });
+    };
+
+    const options = {
         jQuery: false,
+        onOpen: () => {
+            const menuEl = document.querySelector('#context-menu, .context-menu');
+            applyPositioning(menuEl);
+        },
         onClose: () => {
             target.classList.remove('bad-dropdown-active');
             app._activeLeftClickMenu = null;
             app._activeMenuTarget = null;
         }
-    });
+    };
+
+    const menu = new ContextMenuClass(targetBody, ".bad-action-item", menuItems, options);
+    menu._setPosition = (html) => {
+        const menuEl = html instanceof HTMLElement ? html : html?.[0] ?? document.querySelector('#context-menu, .context-menu');
+        if (menuEl) applyPositioning(menuEl);
+    };
+    menu.setPosition = menu._setPosition;
 
     app._activeLeftClickMenu = menu;
 
-    setTimeout(async () => {
-        try {
-            await menu.render(target);
-        } catch (e) {
-            log.error(`showActivityDropdown | menu.render error:`, e);
-        }
-
+    menu.render(target)?.then?.(() => {
         const menuEl = document.querySelector('#context-menu, .context-menu');
         if (menuEl) {
-            if (menuEl.parentElement !== targetBody) {
-                targetBody.appendChild(menuEl);
-            }
+            applyPositioning(menuEl);
 
             const lis = menuEl.querySelectorAll('.context-item');
             lis.forEach((li, idx) => {
@@ -157,38 +201,8 @@ export function showActivityDropdown(app, target, subactions, event) {
                     li.insertAdjacentHTML('beforeend', itemData.usesHtml);
                 }
             });
-
-            const rect = target.getBoundingClientRect();
-            const viewportHeight = window?.innerHeight ?? 1080;
-            const spaceBelow = viewportHeight - rect.bottom - 15;
-            const spaceAbove = rect.top - 15;
-            const neededHeight = subactions.length * 36 + 15;
-
-            const placeAbove = (spaceBelow < neededHeight || spaceBelow < 120) && spaceAbove > spaceBelow;
-            const availableSpace = placeAbove ? spaceAbove : spaceBelow;
-            const maxHeight = Math.max(100, Math.min(neededHeight, availableSpace));
-
-            const styles = {
-                position: 'fixed',
-                left: `${rect.left}px`,
-                top: placeAbove ? `${Math.max(10, rect.top - Math.min(neededHeight, maxHeight))}px` : `${rect.bottom}px`,
-                bottom: 'auto',
-                width: `${rect.width}px`,
-                'min-width': `${rect.width}px`,
-                'box-sizing': 'border-box',
-                'z-index': '999999',
-                display: 'block',
-                visibility: 'visible',
-                opacity: '1',
-                'max-height': `${maxHeight}px`
-            };
-            for (const [prop, val] of Object.entries(styles)) {
-                menuEl.style.setProperty(prop, val, 'important');
-            }
-            Array.from(menuEl.children).forEach(child => {
-                child.style.setProperty('max-height', `${maxHeight}px`, 'important');
-                child.style.setProperty('overflow-y', 'auto', 'important');
-            });
         }
-    }, 10);
+    })?.catch?.(e => {
+        log.error(`showActivityDropdown | menu.render error:`, e);
+    });
 }

@@ -159,7 +159,7 @@ export class ContextMenuManager {
         };
 
         const ContextMenuClass = adapter.foundry.ContextMenu;
-        return new ContextMenuClass(targetBody, ".bad-action-item", menuItems, options);
+        return new ContextMenuClass(this.element, ".bad-action-item", menuItems, options);
     }
 
     /**
@@ -183,9 +183,10 @@ export class ContextMenuManager {
         const spaceAbove = rect.top - 15;
         const neededHeight = itemCount * 36 + 15;
 
-        const placeAbove = (spaceBelow < neededHeight || spaceBelow < 120) && spaceAbove > spaceBelow;
+        // Prefer down: only place above if space below is critically constrained (< 80px) and space above is larger
+        const placeAbove = spaceBelow < Math.min(neededHeight, 80) && spaceAbove > spaceBelow;
         const availableSpace = placeAbove ? spaceAbove : spaceBelow;
-        const maxHeight = Math.max(100, Math.min(neededHeight, availableSpace));
+        const maxHeight = Math.max(60, Math.min(neededHeight, availableSpace));
 
         const styles = {
             position: 'fixed',
