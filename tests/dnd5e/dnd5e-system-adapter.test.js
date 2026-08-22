@@ -571,4 +571,119 @@ test('Dnd5eSystemAdapter modifyContext orange indicators for All Items and Spell
     assert.equal(allSpellsSub3.showUnprepared, true);
 });
 
+test('Dnd5eSystemAdapter extracts spell component tabs for NPC Spellcasting feats with linked cast activities', async () => {
+    const adapter = new Dnd5eSystemAdapter('dnd5e');
+
+    const fireballSpell = {
+        id: 'spell-fireball',
+        name: 'Fireball',
+        type: 'spell',
+        system: {
+            properties: new Set(['vocal', 'somatic', 'material']),
+            activation: { type: 'action' }
+        }
+    };
+
+    const spellcastingFeat = {
+        id: 'feat-spellcasting',
+        name: 'Spellcasting',
+        type: 'feat',
+        system: {
+            activities: [
+                {
+                    id: 'act-fireball',
+                    name: 'Cast Fireball',
+                    type: 'cast',
+                    spell: fireballSpell,
+                    activation: { type: 'action' }
+                },
+                {
+                    id: 'act-shield',
+                    name: 'Cast Shield',
+                    type: 'cast',
+                    spell: {
+                        properties: ['vocal', 'somatic'],
+                        system: { activation: { type: 'reaction' } }
+                    },
+                    activation: { type: 'reaction' }
+                }
+            ]
+        }
+    };
+
+    const actor = {
+        items: new foundry.utils.Collection([spellcastingFeat]),
+        system: { spells: {} }
+    };
+
+    const rawActions = [{ id: 'act-feat', originalItem: spellcastingFeat }];
+    const modified = await adapter.modifyActions(rawActions, actor);
+
+    const featAction = modified.find(a => a.id === 'act-feat');
+    assert.ok(featAction, 'Should create action for Spellcasting feat');
+    assert.equal(featAction.subactions.length, 2);
+
+    const rightPaths = featAction.right.map(t => t.path);
+    assert.ok(rightPaths.includes('components/vocal'), 'Should include vocal component tab');
+    assert.ok(rightPaths.includes('components/somatic'), 'Should include somatic component tab');
+    assert.ok(rightPaths.includes('components/material'), 'Should include material component tab');
+});
+
+test('Dnd5eSystemAdapter resolves cached helper spells for NPC Spellcasting feats and extracts components', async () => {
+    const adapter = new Dnd5eSystemAdapter('dnd5e');
+
+    const cachedDetectMagic = {
+        id: 'spell-detect-magic',
+        name: 'Detect Magic',
+        type: 'spell',
+        flags: {
+            dnd5e: { cachedFor: '.Item.feat-spellcasting.Activity.act-detect-magic' }
+        },
+        system: {
+            properties: ['vocal', 'somatic', 'concentration', 'ritual'],
+            activation: { type: 'action' }
+        }
+    };
+
+    const spellcastingFeat = {
+        id: 'feat-spellcasting',
+        name: 'Spellcasting',
+        type: 'feat',
+        system: {
+            activities: {
+                'act-detect-magic': {
+                    _id: 'act-detect-magic',
+                    name: '',
+                    type: 'cast',
+                    spell: {
+                        uuid: 'Compendium.dnd5e.spells.Item.phbsplDetectMagi',
+                        properties: []
+                    }
+                }
+            }
+        }
+    };
+
+    const actor = {
+        items: new foundry.utils.Collection([spellcastingFeat, cachedDetectMagic]),
+        system: { spells: {} }
+    };
+
+    assert.equal(adapter.shouldExtractItem(cachedDetectMagic), false, 'Cached helper items should be skipped by shouldExtractItem');
+    assert.equal(adapter.shouldExtractItem(spellcastingFeat), true, 'Spellcasting feat should be extracted');
+
+    adapter.init(actor);
+    const rawActions = [{ id: 'act-feat', originalItem: spellcastingFeat }];
+    const modified = await adapter.modifyActions(rawActions, actor);
+
+    const featAction = modified.find(a => a.id === 'act-feat');
+    assert.ok(featAction);
+    assert.equal(featAction.subactions.length, 1);
+    assert.equal(featAction.subactions[0].name, 'Detect Magic', 'Subaction name should fall back to linked spell name');
+
+    const rightPaths = featAction.right.map(t => t.path);
+    assert.ok(rightPaths.includes('components/vocal'));
+    assert.ok(rightPaths.includes('components/somatic'));
+});
+
 

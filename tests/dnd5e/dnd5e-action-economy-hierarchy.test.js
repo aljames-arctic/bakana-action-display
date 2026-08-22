@@ -432,3 +432,51 @@ test('ActionDisplayApp left parent tab right-click multi-selects when not in foc
     assert.equal(flags.showUnequipped_weapon, false, 'Flag should be toggled back to false');
 });
 
+test('ActionDisplayApp builds and renders Spell Components exclusion tab group with expanded sub-tabs', async () => {
+    const token = {
+        id: 'tok-archmage',
+        name: 'Archmage',
+        actor: {
+            id: 'act-archmage',
+            name: 'Archmage',
+            uuid: 'Actor.act-archmage',
+            isOwner: true,
+            getFlag: () => null
+        }
+    };
+
+    const app = new ActionDisplayApp(token);
+    app.activePage = 1;
+
+    const testActions = [
+        new Action({
+            id: 'feat-spellcasting',
+            name: 'Spellcasting',
+            left: ['feat'],
+            right: [
+                TabRef.from('economy', 'standard', 'action'),
+                TabRef.from('components', 'vocal'),
+                TabRef.from('components', 'somatic'),
+                TabRef.from('components', 'material')
+            ],
+            page: 1
+        })
+    ];
+
+    actionDisplay.getActions = async () => testActions;
+
+    // 1. Initial context
+    const ctx = await app._prepareContext();
+    const compTab = ctx.actionTypes.find(t => t.id === 'components');
+    assert.ok(compTab, 'Spell Components tab should be present in actionTypes');
+    assert.ok(compTab.label);
+    assert.equal(compTab.subTabs.length, 3);
+    assert.deepEqual(compTab.subTabs.map(s => s.id), ['vocal', 'somatic', 'material']);
+
+    // 2. Focus the components tab
+    app.rightTabs.focusedParent = 'components';
+    const ctxFocused = await app._prepareContext();
+    const compTabFocused = ctxFocused.actionTypes.find(t => t.id === 'components');
+    assert.equal(compTabFocused.expanded, true, 'Spell Components group should be marked as expanded when focused');
+});
+

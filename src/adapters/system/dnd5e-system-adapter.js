@@ -46,7 +46,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         this.#cachedForMap = new Map();
         if (actor?.items) {
             for (const item of actor.items.values()) {
-                const cachedFor = item.flags?.dnd5e?.cachedFor;
+                const cachedFor = item.flags?.dnd5e?.cachedFor ?? item.getFlag?.('dnd5e', 'cachedFor');
                 if (cachedFor) {
                     const lastDot = cachedFor.lastIndexOf('.');
                     const actId = lastDot !== -1 ? cachedFor.slice(lastDot + 1) : cachedFor;
@@ -73,7 +73,8 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
             log.debug(`Dnd5eSystemAdapter.shouldExtractItem | Skipping "${item.name}" (${type}, ID: ${item.id}) — type not in ALLOWED_TYPES`);
             return false;
         }
-        if (item.getFlag?.('dnd5e', 'cachedFor')) {
+        const cachedFor = item.getFlag?.('dnd5e', 'cachedFor') ?? item.flags?.dnd5e?.cachedFor;
+        if (cachedFor) {
             log.debug(`Dnd5eSystemAdapter.shouldExtractItem | Skipping "${item.name}" (${type}, ID: ${item.id}) — item.flags.dnd5e.cachedFor is set (helper item)`);
             return false;
         }
@@ -112,15 +113,17 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                 ? rawHidden.includes(item.id)
                 : Boolean(rawHidden?.[item.id]);
 
-            // 1. Filter out unprepared spells (unless innate/at-will/pact, showUnprepared/showAll is enabled, or item is user-hidden)
+            // 1. Filter out unprepared spells (unless cantrip/innate/at-will/pact/always, showUnprepared/showAll is enabled, or item is user-hidden)
             let isSpellUnprepared = false;
             if (type === 'spell') {
-                const prepMode = item.system.method;
-                const isPrepared = Boolean(item.system.prepared);
-                isSpellUnprepared = !['innate', 'atwill', 'pact'].includes(prepMode) && !isPrepared;
+                const prep = item.system.preparation ?? {};
+                const prepMode = prep.mode ?? item.system.method ?? 'prepared';
+                const isPrepared = Boolean(prep.prepared ?? item.system.prepared);
+                const isCantrip = (item.system.level ?? 0) === 0;
+                isSpellUnprepared = !isCantrip && !['innate', 'atwill', 'pact', 'always'].includes(prepMode) && !isPrepared;
 
                 if (!showUnprepared && isSpellUnprepared && !isUserHidden) {
-                    log.debug(`Dnd5eSystemAdapter.modifyActions | Filtering out spell "${item.name}" (ID: ${item.id}) — item.system.prepared === false and prepMode (${prepMode}) requires preparation; showUnprepared flag is not set`);
+                    log.debug(`Dnd5eSystemAdapter.modifyActions | Filtering out spell "${item.name}" (ID: ${item.id}) — prep.prepared === false and prepMode (${prepMode}) requires preparation; showUnprepared flag is not set`);
                     continue;
                 }
             }
@@ -154,8 +157,8 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
 
                     return new Action({
                         id: activity.id,
-                        name: activity.name ?? linkedAction?.name ?? activity.type.toUpperCase(),
-                        img: activity.img ?? linkedAction?.img ?? item.img,
+                        name: (activity.name && activity.name.trim().length > 0) ? activity.name : (linkedAction?.name ?? activity.type.toUpperCase()),
+                        img: (activity.img && activity.img.trim().length > 0) ? activity.img : (linkedAction?.img ?? item.img),
                         uses: this.#calculateActivityUses(activity, item),
                         right: [tabRef],
                         roll: async (event) => {
@@ -541,12 +544,22 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         let doc = sub.linkedAction;
         const activity = sub.originalActivity;
         if (!doc && activity) {
-            doc = this.#extractItemSpell(activity);
-            if (!doc && activity.spell?.uuid && typeof fromUuidSync === 'function') {
-                try {
-                    doc = fromUuidSync(activity.spell.uuid);
-                } catch (e) {
-                    // ignore sync resolution errors
+            doc = this.#cachedForMap.get(activity.id)
+                ?? this.#actor?.items?.find?.(i => (i.flags?.dnd5e?.cachedFor ?? i.getFlag?.('dnd5e', 'cachedFor'))?.endsWith(activity.id));
+            if (!doc) {
+                doc = this.#extractItemSpell(activity);
+            }
+            if (!doc) {
+                const uuid = typeof activity.spell === 'string' ? activity.spell : activity.spell?.uuid;
+                if (uuid) {
+                    const syncResolver = foundry?.utils?.fromUuidSync ?? globalThis.fromUuidSync;
+                    if (typeof syncResolver === 'function') {
+                        try {
+                            doc = syncResolver(uuid);
+                        } catch (e) {
+                            // ignore sync resolution errors
+                        }
+                    }
                 }
             }
         }
@@ -588,36 +601,43 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
      * @returns {Promise<Document|Object>}
      */
     async #resolveActivityLinkedAction(activity, actor) {
-        if (activity.type === 'cast' && activity.spell?.uuid) {
-            const uuid = activity.spell.uuid;
-            if (this.#resolvedSpellCache.has(uuid)) {
-                return this.#resolvedSpellCache.get(uuid);
-            }
-            if (typeof fromUuidSync === 'function') {
-                try {
-                    const doc = fromUuidSync(uuid);
-                    if (doc) {
-                        this.#resolvedSpellCache.set(uuid, doc);
-                        return doc;
-                    }
-                } catch (_) {}
-            }
-            try {
-                const doc = await fromUuid(uuid);
-                if (doc) {
-                    this.#resolvedSpellCache.set(uuid, doc);
-                    return doc;
-                }
-            } catch (e) {
-                log.warn(`Failed to resolve compendium spell UUID ${uuid}:`, e);
-            }
-        }
         if (actor) {
             const cached = this.#cachedForMap.get(activity.id)
-                ?? actor.items?.find?.(i => i.flags?.dnd5e?.cachedFor?.endsWith(activity.id));
+                ?? actor.items?.find?.(i => (i.flags?.dnd5e?.cachedFor ?? i.getFlag?.('dnd5e', 'cachedFor'))?.endsWith(activity.id));
             if (cached) return cached;
         }
         if (activity.type === 'cast') {
+            const uuid = typeof activity.spell === 'string' ? activity.spell : activity.spell?.uuid;
+            if (uuid) {
+                if (this.#resolvedSpellCache.has(uuid)) {
+                    return this.#resolvedSpellCache.get(uuid);
+                }
+                const syncResolver = foundry?.utils?.fromUuidSync ?? globalThis.fromUuidSync;
+                if (typeof syncResolver === 'function') {
+                    try {
+                        const doc = syncResolver(uuid);
+                        if (doc) {
+                            this.#resolvedSpellCache.set(uuid, doc);
+                            return doc;
+                        }
+                    } catch (_) {}
+                }
+                const asyncResolver = foundry?.utils?.fromUuid ?? globalThis.fromUuid;
+                if (typeof asyncResolver === 'function') {
+                    try {
+                        const doc = await asyncResolver(uuid);
+                        if (doc) {
+                            this.#resolvedSpellCache.set(uuid, doc);
+                            return doc;
+                        }
+                    } catch (e) {
+                        log.warn(`Failed to resolve compendium spell UUID ${uuid}:`, e);
+                    }
+                }
+            }
+            if (this.#isItemDocument(activity.spell) || activity.spell?.system) {
+                return activity.spell;
+            }
             return activity.spell ?? activity;
         }
         return activity;
@@ -694,13 +714,24 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         const activities = item.system?.activities;
         if (!activities) return [];
         if (typeof activities.values === 'function') {
-            return Array.from(activities.values());
+            return Array.from(activities.values()).map(act => {
+                if (act && !act.id && act._id) act.id = act._id;
+                return act;
+            });
         }
         if (Array.isArray(activities)) {
-            return activities;
+            return activities.map(act => {
+                if (act && !act.id && act._id) act.id = act._id;
+                return act;
+            });
         }
         if (typeof activities === 'object') {
-            return Object.values(activities);
+            return Object.entries(activities).map(([id, act]) => {
+                if (act && typeof act === 'object') {
+                    act.id = act.id ?? act._id ?? id;
+                }
+                return act;
+            });
         }
         return [];
     }
@@ -773,7 +804,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
      */
     #hasLimitedUses(item) {
         if (this.#calculateLimitedUses(item.system?.uses)) return true;
-        return Array.from(item.system?.activities?.values() ?? [])
+        return this.getItemActivities(item)
             .some(activity => this.#calculateLimitedUses(activity.uses));
     }
 
@@ -1031,9 +1062,8 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
 
         const spellDoc = linkedAction ?? this.resolveRootSpellDocument({ originalActivity: activity, linkedAction: activity.spell });
         if (spellDoc) {
-            const spellType = this.#normalizeActivationType(
-                this.#isItemDocument(spellDoc) ? spellDoc.system?.activation?.type : spellDoc.activation?.type
-            );
+            const rawType = spellDoc.system?.activation?.type ?? spellDoc.activation?.type;
+            const spellType = this.#normalizeActivationType(rawType);
             if (spellType) return spellType;
         }
 
