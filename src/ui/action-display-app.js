@@ -969,7 +969,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
             const actor = this.actor;
             const token = this.token;
             const user = game.user;
-            log.info(`_onRollAction | Left-clicked action "${action.name}" (${action.id}):`, { action, item, actor, token, user });
+            log.debug(`_onRollAction | Left-clicked action "${action.name}" (${action.id}):`, { action, item, actor, token, user });
             const itemActivities = action.subactions;
 
             if (itemActivities && itemActivities.length > 0) {
@@ -985,15 +985,15 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
                 } else if (subsToShow.length === 1) {
                     const chosenSub = subsToShow[0];
                     const chosenItem = chosenSub.originalItem ?? action.originalItem;
-                    log.info(`_onRollAction | Rolling subaction "${chosenSub.name}":`, { action: chosenSub, item: chosenItem, actor, token, user });
+                    log.debug(`_onRollAction | Rolling subaction "${chosenSub.name}":`, { action: chosenSub, item: chosenItem, actor, token, user });
                     chosenSub.roll(event);
                 } else {
-                    log.info(`_onRollAction | Rolling action "${action.name}":`, { action, item, actor, token, user });
+                    log.debug(`_onRollAction | Rolling action "${action.name}":`, { action, item, actor, token, user });
                     action.roll(event);
                 }
             } else {
                 // No sub-actions: roll directly
-                log.info(`_onRollAction | Rolling action "${action.name}":`, { action, item, actor, token, user });
+                log.debug(`_onRollAction | Rolling action "${action.name}":`, { action, item, actor, token, user });
                 action.roll(event);
             }
         }

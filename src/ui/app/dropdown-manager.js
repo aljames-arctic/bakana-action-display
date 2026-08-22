@@ -63,7 +63,7 @@ export function buildSubactionMenuItem(sub, event, app = null) {
             const actor = app?.actor ?? null;
             const token = app?.token ?? null;
             const user = game.user;
-            log.info(`Rolling subaction "${sub.name}" via dropdown:`, { action: sub, item, actor, token, user });
+            log.debug(`Rolling subaction "${sub.name}" via dropdown:`, { action: sub, item, actor, token, user });
             sub.roll(event);
         }
     };
@@ -148,12 +148,7 @@ export function showActivityDropdown(app, target, subactions, event) {
                             log.debug("LeftClickMenu.close threw synchronously:", err);
                         }
                         app._activeLeftClickMenu = null;
-                        if (adapter.openEditSheet) {
-                            adapter.openEditSheet(sub);
-                        } else {
-                            const entity = sub.originalActivity ?? sub.originalItem;
-                            entity?.sheet?.render?.(true);
-                        }
+                        adapter.openEditSheet(sub);
                     });
                 }
                 const itemData = menuItems[idx];
