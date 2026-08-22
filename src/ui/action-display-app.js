@@ -360,7 +360,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         }
 
         for (const combo of existingItemCombinations) {
-            if (!combo || typeof combo !== 'string') continue;
+            if (!combo) continue;
             const parts = combo.split('/');
             const parentId = parts[0];
             const subId = parts[1]; // might be undefined (spell level)
@@ -442,7 +442,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         }
 
         for (const combo of existingCombinations) {
-            if (!combo || typeof combo !== 'string') continue;
+            if (!combo) continue;
             const parts = combo.split('/');
             const parentId = parts[0];
 
@@ -1016,7 +1016,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
      */
     async _onToggleFilterResources(event, target) {
         const current = Boolean(game.settings.get(MODULE_ID, 'showDepleted'));
-        const next = typeof target?.checked === 'boolean' ? target.checked : !current;
+        const next = target?.checked ?? !current;
         await game.settings.set(MODULE_ID, 'showDepleted', next);
         this.render();
     }
@@ -1083,7 +1083,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         const searchInput = this.element.querySelector('.bad-search-input');
         if (searchInput) {
             searchInput.focus();
-            if (typeof this._searchSelectionStart === 'number' && typeof this._searchSelectionEnd === 'number') {
+            if (this._searchSelectionStart !== null && this._searchSelectionEnd !== null) {
                 searchInput.setSelectionRange(this._searchSelectionStart, this._searchSelectionEnd);
             }
         }

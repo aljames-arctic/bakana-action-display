@@ -232,10 +232,7 @@ export class ContextMenuManager {
         this.closeSubmenu();
 
         const qualifying = submenuItems.filter(sub => {
-            if (typeof sub.condition === 'function') {
-                return Boolean(sub.condition(item));
-            }
-            return true;
+            return sub.condition ? Boolean(sub.condition(item)) : true;
         });
 
         if (qualifying.length === 0) return;
@@ -250,7 +247,7 @@ export class ContextMenuManager {
             const li = document.createElement('li');
             li.className = 'context-item';
 
-            const isActive = typeof sub.active === 'function' ? Boolean(sub.active(item)) : false;
+            const isActive = Boolean(sub.active?.(item));
             if (isActive) {
                 li.classList.add('active-state');
             }
@@ -283,9 +280,7 @@ export class ContextMenuManager {
                 }
                 this.element.querySelector('.bakana-action-display-container')?.classList.remove('has-context-menu');
 
-                if (typeof sub.callback === 'function') {
-                    await sub.callback(item);
-                }
+                await sub.callback?.(item);
                 if (this.app.rendered) {
                     this.app.render();
                 }

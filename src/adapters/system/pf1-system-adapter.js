@@ -345,7 +345,7 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
             skillAction.page = 2;
             checkActions.push(skillAction);
 
-            if (skill.subSkills && typeof skill.subSkills === 'object') {
+            if (skill.subSkills) {
                 for (const [subId, subSkill] of Object.entries(skill.subSkills)) {
                     const subAbl = subSkill.ability ?? abl;
                     const subLabel = subSkill.name ?? `${label} (${subId})`;

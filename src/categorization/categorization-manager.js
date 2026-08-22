@@ -30,21 +30,20 @@ import { adapter } from '../adapters/index.js';
  * @returns {CategorizationConfig} Strict normalized configuration
  */
 export function normalizeCategorizationConfig(raw) {
-    const isObject = raw && typeof raw === 'object';
-    const enabled = Boolean(isObject ? raw.enabled : false);
-    const rawCategories = Array.isArray(raw?.categories) ? raw.categories : [];
+    const enabled = Boolean(raw?.enabled);
+    const rawCategories = raw?.categories ?? [];
 
     const categories = rawCategories.map((cat, catIndex) => {
-        const catId = typeof cat?.id === 'string' && cat.id.length > 0 ? cat.id : `cat_${Date.now()}_${catIndex}`;
-        const name = typeof cat?.name === 'string' ? cat.name : '';
-        const expression = typeof cat?.expression === 'string' ? cat.expression : '';
+        const catId = cat?.id || `cat_${Date.now()}_${catIndex}`;
+        const name = cat?.name ?? '';
+        const expression = cat?.expression ?? '';
         const fallthrough = Boolean(cat?.fallthrough);
-        const rawSubs = Array.isArray(cat?.subcategories) ? cat.subcategories : [];
+        const rawSubs = cat?.subcategories ?? [];
 
         const subcategories = rawSubs.map((sub, subIndex) => {
-            const subId = typeof sub?.id === 'string' && sub.id.length > 0 ? sub.id : `sub_${Date.now()}_${subIndex}`;
-            const subName = typeof sub?.name === 'string' ? sub.name : '';
-            const subExpr = typeof sub?.expression === 'string' ? sub.expression : '';
+            const subId = sub?.id || `sub_${Date.now()}_${subIndex}`;
+            const subName = sub?.name ?? '';
+            const subExpr = sub?.expression ?? '';
             return {
                 id: subId,
                 name: subName,
@@ -74,13 +73,14 @@ export function normalizeCategorizationConfig(raw) {
  * @returns {{ valid: boolean, error: string|null }} Validation result
  */
 export function validateExpression(expression) {
-    if (!expression || typeof expression !== 'string' || !expression.trim()) {
+    const expr = expression?.trim?.();
+    if (!expr) {
         return { valid: false, error: 'Expression cannot be empty.' };
     }
     try {
         new Function(
             'action', 'item', 'actor', 'token', 'user',
-            `"use strict"; return Boolean(${expression.trim()});`
+            `"use strict"; return Boolean(${expr});`
         );
         return { valid: true, error: null };
     } catch (err) {
@@ -97,8 +97,7 @@ export function validateExpression(expression) {
  * @returns {boolean} True if expression evaluates to truthy
  */
 export function evaluateBooleanExpression(expression, action, context = {}) {
-    if (!expression || typeof expression !== 'string') return false;
-    const expr = expression.trim();
+    const expr = expression?.trim?.();
     if (!expr) return false;
 
     try {
@@ -111,7 +110,6 @@ export function evaluateBooleanExpression(expression, action, context = {}) {
             'action', 'item', 'actor', 'token', 'user',
             `"use strict"; return Boolean(${expr});`
         );
-
         return Boolean(evaluator(action, item, actor, token, user));
     } catch (err) {
         log.error(`Failed to evaluate boolean expression: "${expression}"`, err);
@@ -120,13 +118,13 @@ export function evaluateBooleanExpression(expression, action, context = {}) {
 }
 
 /**
- * Partition a list of actions into categorized sections and sub-sections based on user configuration.
+ * Categorize a list of visible Action instances according to the provided configuration.
  *
- * @param {Object[]} actions Array of Action instances
- * @param {CategorizationConfig} config Categorization configuration object
- * @param {string} [catchAllLabel='Other Actions'] Localized name for the catch-all category for uncategorized actions
- * @param {Object} [context={}] Evaluation context containing actor and token documents
- * @returns {Object[]|null} List of categorized sections or null if categorization is disabled
+ * @param {Action[]} actions Actions to categorize
+ * @param {CategorizationConfig|Object} config Categorization configuration
+ * @param {string} catchAllLabel Localized label for unmatched/remainder actions
+ * @param {Object} [context={}] Additional evaluation context { actor, token, user }
+ * @returns {CategorizedSection[]|null} Grouped category sections or null if disabled
  */
 export function categorizeActions(actions, config, catchAllLabel, context = {}) {
     const normalizedConfig = normalizeCategorizationConfig(config);
@@ -134,9 +132,7 @@ export function categorizeActions(actions, config, catchAllLabel, context = {}) 
         return null;
     }
 
-    const othersLabel = (typeof catchAllLabel === 'string' && catchAllLabel.trim().length > 0)
-        ? catchAllLabel.trim()
-        : 'Other Actions';
+    const othersLabel = catchAllLabel?.trim?.() || 'Other Actions';
 
     // Map each category to an internal bucket structure
     const categoryMap = new Map();

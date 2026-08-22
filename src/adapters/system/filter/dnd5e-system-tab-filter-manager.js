@@ -24,10 +24,7 @@ function containerHasComponent(container, component) {
     if (Array.isArray(target)) {
         return aliases.some(alias => target.includes(alias));
     }
-    if (typeof target === 'object') {
-        return aliases.some(alias => Boolean(target[alias]));
-    }
-    return false;
+    return aliases.some(alias => Boolean(target[alias]));
 }
 
 /**

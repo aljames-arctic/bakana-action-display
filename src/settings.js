@@ -340,7 +340,7 @@ Hooks.once('init', () => {
  * @param {HTMLElement|Object} html Rendered settings config DOM element or jQuery collection
  */
 export function injectSettingsHeaders(html) {
-    const root = (typeof HTMLElement !== 'undefined' && html instanceof HTMLElement) ? html : (html?.[0] ?? html);
+    const root = html?.[0] ?? html;
     if (!root?.querySelector) return;
 
     // 1. Move economyColorsMenu (User Menu) into the User Settings section before hudOpacity if both are present

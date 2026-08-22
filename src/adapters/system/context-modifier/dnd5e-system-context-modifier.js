@@ -308,9 +308,9 @@ export class Dnd5eSystemContextModifier extends BaseSystemContextModifier {
         const cfg = CONFIG?.DND5E;
         const configLabel = cfg?.activityActivationCategories?.[subId]
             ?? cfg?.activityActivationTypes?.[subId]
-            ?? cfg?.abilityActivationTypes?.[subId];
         if (configLabel) {
-            return typeof configLabel === 'string' ? localize(configLabel, fallback) : (configLabel.label ?? configLabel.name ?? fallback);
+            const label = configLabel.label ?? configLabel.name ?? configLabel;
+            return localize(label, fallback);
         }
 
         if (config) {

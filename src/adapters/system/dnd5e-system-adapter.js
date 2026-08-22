@@ -295,11 +295,8 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                 available: true,
                 roll: async (event) => {
                     const rollEvent = this._createRollEvent(event);
-                    if (typeof actor.rollSavingThrow === 'function') {
-                        return actor.rollSavingThrow({ ability: abl, event: rollEvent });
-                    } else if (typeof actor.rollAbilitySave === 'function') {
-                        return actor.rollAbilitySave(abl, { event: rollEvent });
-                    }
+                    return actor.rollSavingThrow?.({ ability: abl, event: rollEvent })
+                        ?? actor.rollAbilitySave?.(abl, { event: rollEvent });
                 }
             });
 
@@ -313,19 +310,10 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                 available: true,
                 roll: async (event) => {
                     const rollEvent = this._createRollEvent(event);
-                    if (typeof actor.rollAbilityTest === 'function') {
-                        try {
-                            return await actor.rollAbilityTest({ ability: abl, event: rollEvent });
-                        } catch {
-                            return actor.rollAbilityTest(abl, { event: rollEvent });
-                        }
-                    } else if (typeof actor.rollAbilityCheck === 'function') {
-                        try {
-                            return await actor.rollAbilityCheck({ ability: abl, event: rollEvent });
-                        } catch {
-                            return actor.rollAbilityCheck(abl, { event: rollEvent });
-                        }
-                    }
+                    return actor.rollAbilityTest?.({ ability: abl, event: rollEvent })
+                        ?? actor.rollAbilityCheck?.({ ability: abl, event: rollEvent })
+                        ?? actor.rollAbilityTest?.(abl, { event: rollEvent })
+                        ?? actor.rollAbilityCheck?.(abl, { event: rollEvent });
                 }
             });
 
@@ -366,13 +354,8 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                 uses: { available: null, max: null },
                 roll: async (event) => {
                     const rollEvent = this._createRollEvent(event);
-                    if (typeof actor.rollSkill === 'function') {
-                        try {
-                            return await actor.rollSkill({ skill: skillId, event: rollEvent });
-                        } catch {
-                            return actor.rollSkill(skillId, { event: rollEvent });
-                        }
-                    }
+                    return actor.rollSkill?.({ skill: skillId, event: rollEvent })
+                        ?? actor.rollSkill?.(skillId, { event: rollEvent });
                 },
                 extra: { section: 'other', page: 2, ability: abl }
             });
@@ -550,16 +533,12 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                 doc = this.#extractItemSpell(activity);
             }
             if (!doc) {
-                const uuid = typeof activity.spell === 'string' ? activity.spell : activity.spell?.uuid;
+                const uuid = activity.spell?.uuid ?? (activity.spell?.startsWith?.('Compendium.') ? activity.spell : null);
                 if (uuid) {
-                    const syncResolver = foundry?.utils?.fromUuidSync ?? globalThis.fromUuidSync;
-                    if (typeof syncResolver === 'function') {
-                        try {
-                            doc = syncResolver(uuid);
-                        } catch (e) {
-                            // ignore sync resolution errors
-                        }
-                    }
+                    const syncResolver = globalThis.fromUuidSync ?? foundry?.utils?.fromUuidSync;
+                    try {
+                        doc = syncResolver?.(uuid);
+                    } catch (_) {}
                 }
             }
         }
@@ -578,7 +557,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
 
         if (doc) return doc;
 
-        if (activity?.spell && typeof activity.spell === 'object' && !this.#isItemDocument(activity.spell)) {
+        if (activity?.spell && !this.#isItemDocument(activity.spell)) {
             return activity.spell;
         }
 
@@ -607,32 +586,29 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
             if (cached) return cached;
         }
         if (activity.type === 'cast') {
-            const uuid = typeof activity.spell === 'string' ? activity.spell : activity.spell?.uuid;
+            const uuid = activity.spell?.uuid ?? (activity.spell?.startsWith?.('Compendium.') ? activity.spell : null);
             if (uuid) {
                 if (this.#resolvedSpellCache.has(uuid)) {
                     return this.#resolvedSpellCache.get(uuid);
                 }
-                const syncResolver = foundry?.utils?.fromUuidSync ?? globalThis.fromUuidSync;
-                if (typeof syncResolver === 'function') {
-                    try {
-                        const doc = syncResolver(uuid);
-                        if (doc) {
-                            this.#resolvedSpellCache.set(uuid, doc);
-                            return doc;
-                        }
-                    } catch (_) {}
-                }
-                const asyncResolver = foundry?.utils?.fromUuid ?? globalThis.fromUuid;
-                if (typeof asyncResolver === 'function') {
-                    try {
-                        const doc = await asyncResolver(uuid);
-                        if (doc) {
-                            this.#resolvedSpellCache.set(uuid, doc);
-                            return doc;
-                        }
-                    } catch (e) {
-                        log.warn(`Failed to resolve compendium spell UUID ${uuid}:`, e);
+                const syncResolver = globalThis.fromUuidSync ?? foundry?.utils?.fromUuidSync;
+                try {
+                    const doc = syncResolver?.(uuid);
+                    if (doc) {
+                        this.#resolvedSpellCache.set(uuid, doc);
+                        return doc;
                     }
+                } catch (_) {}
+
+                const asyncResolver = globalThis.fromUuid ?? foundry?.utils?.fromUuid;
+                try {
+                    const doc = await asyncResolver?.(uuid);
+                    if (doc) {
+                        this.#resolvedSpellCache.set(uuid, doc);
+                        return doc;
+                    }
+                } catch (e) {
+                    log.warn(`Failed to resolve compendium spell UUID ${uuid}:`, e);
                 }
             }
             if (this.#isItemDocument(activity.spell) || activity.spell?.system) {
@@ -713,7 +689,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
     getItemActivities(item) {
         const activities = item.system?.activities;
         if (!activities) return [];
-        if (typeof activities.values === 'function') {
+        if (activities.values) {
             return Array.from(activities.values()).map(act => {
                 if (act && !act.id && act._id) act.id = act._id;
                 return act;
@@ -725,15 +701,10 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                 return act;
             });
         }
-        if (typeof activities === 'object') {
-            return Object.entries(activities).map(([id, act]) => {
-                if (act && typeof act === 'object') {
-                    act.id = act.id ?? act._id ?? id;
-                }
-                return act;
-            });
-        }
-        return [];
+        return Object.entries(activities).map(([id, act]) => {
+            if (act) act.id = act.id ?? act._id ?? id;
+            return act;
+        });
     }
 
     /**
@@ -757,11 +728,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
 
         // 1. Limited Uses (standard item charges/uses)
         if (system.uses && system.uses.max && system.uses.max !== "0") {
-            let max = system.uses.max;
-            if (typeof max === 'string') {
-                const parsed = parseInt(max, 10);
-                max = Number.isNaN(parsed) ? 0 : parsed;
-            }
+            const max = parseInt(system.uses.max, 10) || 0;
 
             if (max > 0) {
                 const spent = system.uses.spent;
@@ -815,11 +782,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
      */
     #calculateLimitedUses(uses) {
         if (uses && uses.max && uses.max !== "0") {
-            let max = uses.max;
-            if (typeof max === 'string') {
-                const parsed = parseInt(max, 10);
-                max = Number.isNaN(parsed) ? 0 : parsed;
-            }
+            const max = parseInt(uses.max, 10) || 0;
             if (max > 0) {
                 const spent = uses.spent;
                 const available = (spent !== undefined && spent !== null)
@@ -1042,8 +1005,9 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
      * @returns {string|null}
      */
     #normalizeActivationType(type) {
-        if (!type || typeof type === 'boolean' || type === 'none' || type === '') return null;
-        return String(type).toLowerCase();
+        if (!type || type === true || type === 'none') return null;
+        const str = String(type).trim().toLowerCase();
+        return str.length > 0 && str !== 'none' ? str : null;
     }
 
     /**
