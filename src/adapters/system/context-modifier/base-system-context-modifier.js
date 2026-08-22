@@ -126,12 +126,6 @@ export class BaseSystemContextModifier {
         if (parentId === 'savingThrow') return 'fas fa-shield-alt';
         if (parentId === 'abilityCheck') return 'fas fa-dice-d20';
         const typeMap = {
-            arma: 'fas fa-sword',
-            armadura: 'fas fa-shield-halved',
-            magia: 'fas fa-wand-magic-sparkles',
-            poder: 'fas fa-award',
-            equipamento: 'fas fa-shield-halved',
-            consumivel: 'fas fa-flask-potion',
             weapon: 'fas fa-sword',
             spell: 'fas fa-wand-magic-sparkles',
             feat: 'fas fa-award',

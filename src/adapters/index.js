@@ -60,9 +60,7 @@ class Adapter {
         // 2. System Transformation
         if (this.system) {
             try {
-                if (typeof this.system.modifyActions === 'function') {
-                    actions = await this.system.modifyActions(actions, actor);
-                }
+                actions = await this.system.modifyActions(actions, actor);
             } catch (error) {
                 log.error(`Error in system adapter "${this.system.systemId}":`, error);
             }
@@ -71,16 +69,14 @@ class Adapter {
         // 3. Module Transformations
         for (const [moduleId, modAdapter] of this.modules.entries()) {
             try {
-                if (typeof modAdapter.modifyActions === 'function') {
-                    actions = await modAdapter.modifyActions(actions);
-                }
+                actions = await modAdapter.modifyActions(actions);
             } catch (error) {
                 log.error(`Error in module adapter "${moduleId}":`, error);
             }
         }
 
         // 4. Hidden items filtering
-        const rawHidden = typeof actor.getFlag === 'function' ? actor.getFlag(MODULE_ID, 'hiddenItems') : undefined;
+        const rawHidden = actor.getFlag?.(MODULE_ID, 'hiddenItems');
         const hiddenMap = Array.isArray(rawHidden)
             ? rawHidden.reduce((acc, id) => { acc[id] = true; return acc; }, {})
             : (rawHidden ?? {});
@@ -125,7 +121,7 @@ class Adapter {
                 log.debug(`Adapter._extractBaseActions | Skipping item (ID: ${item?.id}) — item.name is missing or falsy`);
                 continue;
             }
-            if (typeof this.system.shouldExtractItem === 'function' && !this.system.shouldExtractItem(item)) {
+            if (this.system && !this.system.shouldExtractItem(item)) {
                 continue;
             }
             actions.push(new Action({
@@ -311,9 +307,7 @@ class Adapter {
      * @returns {boolean}
      */
     matchesEconomyTabs(action, filterContext) {
-        return typeof this.system?.matchesEconomyTabs === 'function'
-            ? this.system.matchesEconomyTabs(action, filterContext)
-            : true;
+        return this.system?.matchesEconomyTabs(action, filterContext) ?? true;
     }
 
     /**
@@ -331,10 +325,7 @@ class Adapter {
      * @returns {Object[]|null}
      */
     getDefaultCategories() {
-        if (typeof this.system?.getDefaultCategories === 'function') {
-            return this.system.getDefaultCategories();
-        }
-        return null;
+        return this.system?.getDefaultCategories?.() ?? null;
     }
 
     /**

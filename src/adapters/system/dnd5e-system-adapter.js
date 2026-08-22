@@ -1098,8 +1098,8 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         }
 
         // 3. Actor system.favorites set/array (dnd5e 3.x+ actor favorites collection)
-        if (Array.isArray(actor?.system?.favorites)) {
-            const relUuid = typeof item.getRelativeUUID === 'function' ? item.getRelativeUUID(actor) : null;
+        if (actor?.system?.favorites?.some) {
+            const relUuid = item.getRelativeUUID?.(actor) ?? null;
             return actor.system.favorites.some(f => f?.id === item.id || (relUuid && f?.id === relUuid) || f?.id === item.uuid);
         }
 

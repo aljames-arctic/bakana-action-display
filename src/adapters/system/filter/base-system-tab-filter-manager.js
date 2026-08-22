@@ -1,4 +1,17 @@
-import { toSet } from '../../../lib/utils.js';
+/**
+ * Helper to check if a tab or any of its ancestors under a root tab matches a predicate.
+ * @param {Object} tab Action tab descriptor { root, label, parent }
+ * @param {string} rootId Root parent tab ID
+ * @param {(label: string) => boolean} predicate
+ * @returns {boolean}
+ */
+function hasTabInPath(tab, rootId, predicate) {
+    if (tab.root !== rootId) return false;
+    for (let cur = tab; cur && cur.label !== rootId; cur = cur.parent) {
+        if (predicate(cur.label)) return true;
+    }
+    return false;
+}
 
 /**
  * Manages tab filtering, set-algebraic combinators (union, intersection, difference),
@@ -73,7 +86,7 @@ export class BaseSystemTabFilterManager {
             if (!this.isExclusionTab(parentId)) continue;
 
             const group = parentGroups?.[parentId];
-            const validSubIds = group?.getAllSubTabIds ? group.getAllSubTabIds() : toSet(group?.subTabs, t => t.id);
+            const validSubIds = group?.getAllSubTabIds?.() ?? new Set();
 
             const hasExcludedTab = right.some(
                 tab => tab.root === parentId && (activeSubs.has(tab.label) || (tab.parent && activeSubs.has(tab.parent.label))) && validSubIds.has(tab.label)
@@ -93,36 +106,18 @@ export class BaseSystemTabFilterManager {
             if (this.isExclusionTab(actionParentId)) return false;
 
             const parentGroup = parentGroups?.[actionParentId];
-            const validSubIds = parentGroup?.getAllSubTabIds ? parentGroup.getAllSubTabIds() : toSet(parentGroup?.subTabs, t => t.id);
+            const validSubIds = parentGroup?.getAllSubTabIds?.() ?? new Set();
             const activeSubsForParent = Array.from(activeSubs).filter(id => validSubIds.has(id));
 
             if (activeSubsForParent.length === 0) return true;
 
             if (this.isIntersectionTab(actionParentId)) {
                 return activeSubsForParent.every(subId =>
-                    right.some(t => {
-                        if (t.root !== actionParentId) return false;
-                        if (t.label === subId) return true;
-                        let p = t.parent;
-                        while (p && p.label !== actionParentId) {
-                            if (p.label === subId) return true;
-                            p = p.parent;
-                        }
-                        return false;
-                    })
+                    right.some(t => hasTabInPath(t, actionParentId, label => label === subId))
                 );
             }
 
-            return right.some(t => {
-                if (t.root !== actionParentId) return false;
-                if (activeSubs.has(t.label)) return true;
-                let p = t.parent;
-                while (p && p.label !== actionParentId) {
-                    if (activeSubs.has(p.label)) return true;
-                    p = p.parent;
-                }
-                return false;
-            });
+            return right.some(t => hasTabInPath(t, actionParentId, label => activeSubs.has(label)));
         });
     }
 
@@ -142,7 +137,7 @@ export class BaseSystemTabFilterManager {
             if (!this.isExclusionTab(parentId)) continue;
 
             const group = parentGroups?.[parentId];
-            const validSubIds = group?.getAllSubTabIds ? group.getAllSubTabIds() : toSet(group?.subTabs, t => t.id);
+            const validSubIds = group?.getAllSubTabIds?.() ?? new Set();
 
             if (validSubIds.size === 0) {
                 activeExclusionSubs.push(...activeSubs);

@@ -9,7 +9,7 @@ import { adapter } from '../adapters/index.js';
  * @returns {Record<string, boolean>} Map of itemId to boolean
  */
 export function getActorFavorites(actor) {
-    if (!actor || typeof actor.getFlag !== 'function') return {};
+    if (!actor?.getFlag) return {};
     return actor.getFlag(MODULE_ID, 'favorites') ?? {};
 }
 
@@ -64,16 +64,14 @@ export async function setActorItemFavorite(actor, item, isFavorite, customAdapte
         const current = { ...getActorFavorites(actor) };
         if (targetFavorite) {
             current[item.id] = true;
-            if (typeof actor.setFlag === 'function') {
-                await actor.setFlag(MODULE_ID, 'favorites', current);
-            }
+            await actor.setFlag(MODULE_ID, 'favorites', current);
         } else {
             delete current[item.id];
-            if (typeof actor.update === 'function') {
+            if (actor.update) {
                 await actor.update({
                     [`flags.${MODULE_ID}.favorites.-=${item.id}`]: null
                 });
-            } else if (typeof actor.setFlag === 'function') {
+            } else if (actor.setFlag) {
                 await actor.setFlag(MODULE_ID, 'favorites', current);
             }
         }
@@ -121,9 +119,7 @@ export async function syncActorFavorites(actor, customAdapter = null) {
         }
 
         if (hasChanges) {
-            if (typeof actor.setFlag === 'function') {
-                await actor.setFlag(MODULE_ID, 'favorites', updatedFlags);
-            }
+            await actor.setFlag(MODULE_ID, 'favorites', updatedFlags);
         }
     } catch (err) {
         log.error(`Failed to synchronize favorites for actor "${actor.name}":`, err);

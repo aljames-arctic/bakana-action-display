@@ -1,7 +1,6 @@
 import { adapter } from '../adapters/index.js';
 import { actionDisplay } from '../action-display.js';
 import { log } from '../lib/logger.js';
-import { toSet } from '../lib/utils.js';
 import { MODULE_ID } from '../constants.js';
 import { HUDTabColumn } from './hud-tab-column.js';
 import { HUDTab } from './hud-tab.js';
@@ -396,7 +395,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
 
         // Post-process leftGroups to set active, expanded, and activeParent, and sort sub-tabs
         for (const parent of itemTypes) {
-            const validSubIds = toSet(parent.subTabs, t => t.id);
+            const validSubIds = parent.getAllSubTabIds();
             const activeSubsForParent = Array.from(this.leftTabs.activeSubTypes).filter(id => validSubIds.has(id));
 
             parent.active = this.leftTabs.activeParents.has(parent.id);
@@ -515,7 +514,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
 
             if (parent.subTabs.length > 0 && !skipAll) {
                 const isActive = parent.id === this.rightTabs.focusedParent;
-                const validSubIds = parent.getAllSubTabIds ? parent.getAllSubTabIds() : toSet(parent.subTabs, t => t.id);
+                const validSubIds = parent.getAllSubTabIds();
                 const activeSubsForParent = Array.from(this.rightTabs.activeSubTypes).filter(id => validSubIds.has(id));
 
                 parent.addSubTab({
@@ -536,7 +535,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         // Post-process parentGroups to set active, expanded, and activeParent
         for (const parent of actionTypes) {
             if (adapter.isExclusionTab(parent.id)) continue; // Exclude exclusion tabs from activeParent calculation
-            const validSubIds = parent.getAllSubTabIds ? parent.getAllSubTabIds() : toSet(parent.subTabs, t => t.id);
+            const validSubIds = parent.getAllSubTabIds();
             const activeSubsForParent = Array.from(this.rightTabs.activeSubTypes).filter(id => validSubIds.has(id));
 
             parent.active = this.rightTabs.activeParents.has(parent.id);
@@ -671,7 +670,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
             return leftSub.some(type => {
                 if (this.leftTabs.activeParents.has(type)) {
                     const parentGroup = this.leftGroups?.[type];
-                    const validSubIds = toSet(parentGroup?.subTabs, t => t.id);
+                    const validSubIds = parentGroup?.getAllSubTabIds?.() ?? new Set();
                     const activeSubsForParent = Array.from(this.leftTabs.activeSubTypes).filter(id => validSubIds.has(id));
 
                     if (activeSubsForParent.length === 0) {
@@ -688,7 +687,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
                         return true;
                     } else {
                         const parentGroup = this.leftGroups?.[type];
-                        const validSubIds = toSet(parentGroup?.subTabs, t => t.id);
+                        const validSubIds = parentGroup?.getAllSubTabIds?.() ?? new Set();
                         const activeSubsForParent = Array.from(this.leftTabs.activeSubTypes).filter(id => validSubIds.has(id));
                         if (activeSubsForParent.length === 0) {
                             return true;
@@ -1030,9 +1029,9 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
             x: (this.token.x ?? 0) + ((this.token.w ?? 0) / 2),
             y: (this.token.y ?? 0) + ((this.token.h ?? 0) / 2)
         };
-        if (typeof canvas?.animatePan === 'function') {
+        if (canvas?.animatePan) {
             await canvas.animatePan({ x: center.x, y: center.y });
-        } else if (typeof canvas?.pan === 'function') {
+        } else if (canvas?.pan) {
             canvas.pan({ x: center.x, y: center.y });
         }
     }
@@ -1414,16 +1413,14 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
 
         if (shouldHide) {
             currentHidden[itemId] = true;
-            if (typeof this.actor.setFlag === 'function') {
-                await this.actor.setFlag(MODULE_ID, 'hiddenItems', currentHidden);
-            }
+            await this.actor.setFlag(MODULE_ID, 'hiddenItems', currentHidden);
         } else {
             delete currentHidden[itemId];
-            if (typeof this.actor.update === 'function') {
+            if (this.actor.update) {
                 await this.actor.update({
                     [`flags.${MODULE_ID}.hiddenItems.-=${itemId}`]: null
                 });
-            } else if (typeof this.actor.setFlag === 'function') {
+            } else if (this.actor.setFlag) {
                 await this.actor.setFlag(MODULE_ID, 'hiddenItems', currentHidden);
             }
         }
