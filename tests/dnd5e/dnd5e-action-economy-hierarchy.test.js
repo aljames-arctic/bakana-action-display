@@ -6,6 +6,7 @@ import { Action } from '../../src/ui/action.js';
 import { TabRef } from '../../src/ui/tab-ref.js';
 import { ActionDisplayApp } from '../../src/ui/action-display-app.js';
 import { actionDisplay } from '../../src/action-display.js';
+import { adapter } from '../../src/adapters/index.js';
 
 test('Dnd5eSystemAdapter maps activities to nested Action Economy categories', async () => {
     const adapter = new Dnd5eSystemAdapter();
@@ -369,5 +370,65 @@ test('HUDTabColumn right-click multi-select toggling of nested sub-tabs and cate
     // 6. Right-click Action again -> all siblings under Standard are now active -> collapses back to Standard
     app.rightTabs.toggleSub('economy', 'action', app.parentGroups);
     assert.deepEqual(Array.from(app.rightTabs.activeSubTypes), ['standard']);
+});
+
+test('ActionDisplayApp left parent tab right-click multi-selects when not in focus, and toggles show capabilities when in focus', async () => {
+    adapter.system = new Dnd5eSystemAdapter();
+    const flags = {};
+    const mockActor = {
+        isOwner: true,
+        getFlag: (mod, key) => flags[key] ?? false,
+        setFlag: async (mod, key, val) => { flags[key] = val; }
+    };
+    const app = new ActionDisplayApp({ actor: mockActor });
+    const testActions = [
+        new Action({ id: '1', name: 'Sword', left: ['weapon'], right: [TabRef.from('economy', 'standard', 'action')], page: 1 }),
+        new Action({ id: '2', name: 'Fireball', left: ['spell'], right: [TabRef.from('economy', 'standard', 'action')], page: 1 })
+    ];
+    actionDisplay.getActions = async () => testActions;
+
+    // Initial state: 'all' is focused/expanded
+    await app._prepareContext();
+    assert.equal(app.leftTabs.focusedParent, 'all');
+    assert.ok(app.leftTabs.activeParents.has('all'));
+    assert.equal(app.leftGroups['weapon'].expanded, false);
+
+    // Mock element and event for right-clicking 'weapon' tab
+    const weaponTabEl = {
+        tagName: 'BUTTON',
+        dataset: { type: 'weapon' },
+        classList: { contains: (cls) => cls === 'bad-left-tab' },
+        closest: (selector) => {
+            if (selector.includes('bad-left-tab-group')) {
+                return { classList: { contains: (c) => c === 'expanded' && app.leftGroups['weapon']?.expanded } };
+            }
+            if (selector.includes('bad-left-tab')) return weaponTabEl;
+            return null;
+        }
+    };
+    const fakeEvent = {
+        target: weaponTabEl,
+        preventDefault: () => {},
+        stopPropagation: () => {},
+        stopImmediatePropagation: () => {}
+    };
+
+    // 1. Right click on weapon when not in focus -> multi-selects weapon
+    app._onContextMenuCapture(fakeEvent);
+    assert.ok(app.leftTabs.activeParents.has('weapon'), 'Weapon should now be selected');
+    assert.equal(flags.showUnequipped_weapon, undefined, 'Flag should not be toggled when selecting unfocused tab');
+
+    // Re-prepare context to simulate render update (weapon is now focused/expanded)
+    await app._prepareContext();
+    assert.equal(app.leftTabs.focusedParent, 'weapon');
+    assert.equal(app.leftGroups['weapon'].expanded, true);
+
+    // 2. Right click on weapon when in focus -> toggles showUnequipped_weapon flag
+    app._onContextMenuCapture(fakeEvent);
+    assert.equal(flags.showUnequipped_weapon, true, 'Flag should be toggled to true when right-clicking focused tab');
+
+    // 3. Right click on weapon again when in focus -> toggles showUnequipped_weapon back to false
+    app._onContextMenuCapture(fakeEvent);
+    assert.equal(flags.showUnequipped_weapon, false, 'Flag should be toggled back to false');
 });
 

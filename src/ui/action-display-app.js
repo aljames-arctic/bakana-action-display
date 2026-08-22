@@ -1321,10 +1321,23 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
             event.stopPropagation();
             event.stopImmediatePropagation();
 
-            // Delegate to system adapter for custom right-click behavior (e.g. toggling showAll/unprepared/unequipped in dnd5e)
-            const handled = adapter.onTabRightClick(this, leftParentTarget, event);
-            if (!handled) {
-                this._onToggleLeftParent(leftParentTarget.dataset.type);
+            const parentId = leftParentTarget.dataset.type;
+            const parentTab = this.leftGroups?.[parentId];
+            const isExpanded = Boolean(
+                parentTab?.expanded ||
+                leftParentTarget.closest('.bad-left-tab-group')?.classList.contains('expanded') ||
+                this.leftTabs.focusedParent === parentId
+            );
+
+            if (isExpanded) {
+                // If in focus / expanded: toggle show capabilities via system adapter (e.g. toggling showAll/unprepared/unequipped)
+                const handled = adapter.onTabRightClick(this, leftParentTarget, event);
+                if (!handled) {
+                    this._onToggleLeftParent(parentId);
+                }
+            } else {
+                // If not in focus (not expanded): select in addition to current selection
+                this._onToggleLeftParent(parentId);
             }
             return;
         }

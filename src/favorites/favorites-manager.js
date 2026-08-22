@@ -96,7 +96,7 @@ export async function syncActorFavorites(actor, customAdapter = null) {
         const updatedFlags = {};
         let hasChanges = false;
 
-        const items = Array.from(actor.items.values());
+        const items = Array.from(actor.items?.values?.() ?? actor.items ?? []);
         for (const item of items) {
             if (!item?.id) continue;
             const isSysFav = Boolean(sys.isFavorite(actor, item));
