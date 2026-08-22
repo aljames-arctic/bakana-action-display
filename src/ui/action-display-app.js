@@ -534,12 +534,12 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
 
         // Post-process parentGroups to set active, expanded, and activeParent
         for (const parent of actionTypes) {
-            if (adapter.isExclusionTab(parent.id)) continue; // Exclude exclusion tabs from activeParent calculation
+            const isExclusion = adapter.isExclusionTab(parent.id);
             const validSubIds = parent.getAllSubTabIds();
             const activeSubsForParent = Array.from(this.rightTabs.activeSubTypes).filter(id => validSubIds.has(id));
 
             parent.active = this.rightTabs.activeParents.has(parent.id);
-            if (parent.subTabs.length > 0 && parent.active && activeSubsForParent.length > 0) {
+            if (!isExclusion && parent.subTabs.length > 0 && parent.active && activeSubsForParent.length > 0) {
                 parent.activeParent = true;
             }
             parent.expanded = parent.id === this.rightTabs.focusedParent || activeSubsForParent.length > 0;
