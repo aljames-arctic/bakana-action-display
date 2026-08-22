@@ -28,11 +28,7 @@ export function isActorItemFavorite(actor, item, customAdapter = null) {
     if (favorites[item.id]) return true;
 
     const sys = customAdapter ?? adapter.system;
-    if (sys?.hasFavorites?.() && sys.isFavorite(actor, item)) {
-        return true;
-    }
-
-    return false;
+    return Boolean(sys?.hasFavorites?.() && sys.isFavorite(actor, item));
 }
 
 /**
@@ -92,31 +88,20 @@ export async function syncActorFavorites(actor, customAdapter = null) {
     if (!actor || !sys?.hasFavorites?.() || !actor.isOwner) return;
 
     try {
-        const currentFlags = { ...getActorFavorites(actor) };
+        const currentFlags = getActorFavorites(actor);
         const updatedFlags = {};
-        let hasChanges = false;
 
         const items = Array.from(actor.items?.values?.() ?? actor.items ?? []);
         for (const item of items) {
-            if (!item?.id) continue;
-            const isSysFav = Boolean(sys.isFavorite(actor, item));
-            if (isSysFav) {
+            if (item?.id && sys.isFavorite(actor, item)) {
                 updatedFlags[item.id] = true;
-                if (!currentFlags[item.id]) {
-                    hasChanges = true;
-                }
-            } else {
-                if (currentFlags[item.id]) {
-                    hasChanges = true;
-                }
             }
         }
 
-        for (const id of Object.keys(currentFlags)) {
-            if (!updatedFlags[id]) {
-                hasChanges = true;
-            }
-        }
+        const currentKeys = Object.keys(currentFlags);
+        const updatedKeys = Object.keys(updatedFlags);
+        const hasChanges = currentKeys.length !== updatedKeys.length ||
+            currentKeys.some(id => !updatedFlags[id]);
 
         if (hasChanges) {
             await actor.setFlag(MODULE_ID, 'favorites', updatedFlags);
