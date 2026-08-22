@@ -542,11 +542,14 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         const activity = sub.originalActivity;
         if (!doc && activity) {
             doc = this.#extractItemSpell(activity);
-            if (!doc && activity.spell?.uuid && typeof fromUuidSync === 'function') {
-                try {
-                    doc = fromUuidSync(activity.spell.uuid);
-                } catch (e) {
-                    // ignore sync resolution errors
+            if (!doc && activity.spell?.uuid) {
+                const syncResolver = foundry?.utils?.fromUuidSync ?? globalThis.fromUuidSync;
+                if (typeof syncResolver === 'function') {
+                    try {
+                        doc = syncResolver(activity.spell.uuid);
+                    } catch (e) {
+                        // ignore sync resolution errors
+                    }
                 }
             }
         }
@@ -593,23 +596,27 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
             if (this.#resolvedSpellCache.has(uuid)) {
                 return this.#resolvedSpellCache.get(uuid);
             }
-            if (typeof fromUuidSync === 'function') {
+            const syncResolver = foundry?.utils?.fromUuidSync ?? globalThis.fromUuidSync;
+            if (typeof syncResolver === 'function') {
                 try {
-                    const doc = fromUuidSync(uuid);
+                    const doc = syncResolver(uuid);
                     if (doc) {
                         this.#resolvedSpellCache.set(uuid, doc);
                         return doc;
                     }
                 } catch (_) {}
             }
-            try {
-                const doc = await fromUuid(uuid);
-                if (doc) {
-                    this.#resolvedSpellCache.set(uuid, doc);
-                    return doc;
+            const asyncResolver = foundry?.utils?.fromUuid ?? globalThis.fromUuid;
+            if (typeof asyncResolver === 'function') {
+                try {
+                    const doc = await asyncResolver(uuid);
+                    if (doc) {
+                        this.#resolvedSpellCache.set(uuid, doc);
+                        return doc;
+                    }
+                } catch (e) {
+                    log.warn(`Failed to resolve compendium spell UUID ${uuid}:`, e);
                 }
-            } catch (e) {
-                log.warn(`Failed to resolve compendium spell UUID ${uuid}:`, e);
             }
         }
         if (actor) {

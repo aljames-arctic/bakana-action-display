@@ -1,6 +1,12 @@
 import { BaseSystemTabFilterManager } from './base-system-tab-filter-manager.js';
 import { TabRef } from '../../../ui/tab-ref.js';
 
+const COMPONENT_ALIASES = {
+    'vocal': ['vocal', 'v', 'verbal'],
+    'somatic': ['somatic', 's'],
+    'material': ['material', 'm']
+};
+
 /**
  * Check if a container (Set, Array, or Object map) contains a specific spell component identifier.
  * @param {Set|Array|Object} container
@@ -10,9 +16,17 @@ import { TabRef } from '../../../ui/tab-ref.js';
 function containerHasComponent(container, component) {
     if (!container) return false;
     const target = container.value ?? container;
-    if (target instanceof Set) return target.has(component);
-    if (Array.isArray(target)) return target.includes(component);
-    if (typeof target === 'object') return Boolean(target[component]);
+    const aliases = COMPONENT_ALIASES[component] ?? [component];
+
+    if (target instanceof Set) {
+        return aliases.some(alias => target.has(alias));
+    }
+    if (Array.isArray(target)) {
+        return aliases.some(alias => target.includes(alias));
+    }
+    if (typeof target === 'object') {
+        return aliases.some(alias => Boolean(target[alias]));
+    }
     return false;
 }
 
@@ -25,8 +39,16 @@ function containerHasComponent(container, component) {
 function docHasComponent(doc, component) {
     if (!doc) return false;
     return containerHasComponent(doc, component) ||
+           containerHasComponent(doc.properties, component) ||
            containerHasComponent(doc.system?.properties, component) ||
-           containerHasComponent(doc.system?.components, component);
+           containerHasComponent(doc.system?.components, component) ||
+           containerHasComponent(doc.components, component) ||
+           containerHasComponent(doc.spell?.properties, component) ||
+           containerHasComponent(doc.spell?.system?.properties, component) ||
+           containerHasComponent(doc.spell?.system?.components, component) ||
+           containerHasComponent(doc.spell?.components, component) ||
+           containerHasComponent(doc.item?.system?.properties, component) ||
+           containerHasComponent(doc.item?.system?.components, component);
 }
 
 /**
@@ -50,7 +72,14 @@ export class Dnd5eSystemTabFilterManager extends BaseSystemTabFilterManager {
     requiresComponent(sub, component) {
         if (!sub) return false;
         const rootDoc = this.adapter.resolveRootSpellDocument?.(sub) ?? null;
-        const docsToCheck = [sub, sub.linkedAction, sub.originalActivity, sub.originalItem, rootDoc];
+        const docsToCheck = [
+            sub,
+            sub.linkedAction,
+            sub.originalActivity,
+            sub.originalActivity?.spell,
+            sub.originalItem,
+            rootDoc
+        ];
         return docsToCheck.some(doc => docHasComponent(doc, component));
     }
 

@@ -571,4 +571,62 @@ test('Dnd5eSystemAdapter modifyContext orange indicators for All Items and Spell
     assert.equal(allSpellsSub3.showUnprepared, true);
 });
 
+test('Dnd5eSystemAdapter extracts spell component tabs for NPC Spellcasting feats with linked cast activities using abbreviated properties (v, s, m)', async () => {
+    const adapter = new Dnd5eSystemAdapter('dnd5e');
+
+    const fireballSpell = {
+        id: 'spell-fireball',
+        name: 'Fireball',
+        type: 'spell',
+        system: {
+            properties: new Set(['v', 's', 'm']),
+            activation: { type: 'action' }
+        }
+    };
+
+    const spellcastingFeat = {
+        id: 'feat-spellcasting',
+        name: 'Spellcasting',
+        type: 'feat',
+        system: {
+            activities: [
+                {
+                    id: 'act-fireball',
+                    name: 'Cast Fireball',
+                    type: 'cast',
+                    spell: fireballSpell,
+                    activation: { type: 'action' }
+                },
+                {
+                    id: 'act-shield',
+                    name: 'Cast Shield',
+                    type: 'cast',
+                    spell: {
+                        properties: ['v', 's'],
+                        system: { activation: { type: 'reaction' } }
+                    },
+                    activation: { type: 'reaction' }
+                }
+            ]
+        }
+    };
+
+    const actor = {
+        items: new foundry.utils.Collection([spellcastingFeat]),
+        system: { spells: {} }
+    };
+
+    const rawActions = [{ id: 'act-feat', originalItem: spellcastingFeat }];
+    const modified = await adapter.modifyActions(rawActions, actor);
+
+    const featAction = modified.find(a => a.id === 'act-feat');
+    assert.ok(featAction, 'Should create action for Spellcasting feat');
+    assert.equal(featAction.subactions.length, 2);
+
+    const rightPaths = featAction.right.map(t => t.path);
+    assert.ok(rightPaths.includes('components/vocal'), 'Should include vocal component tab');
+    assert.ok(rightPaths.includes('components/somatic'), 'Should include somatic component tab');
+    assert.ok(rightPaths.includes('components/material'), 'Should include material component tab');
+});
+
 
