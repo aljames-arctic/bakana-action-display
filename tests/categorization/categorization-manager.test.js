@@ -373,3 +373,35 @@ test('categorizeActions supports empty category name creating separator sections
     assert.equal(result[0].name, '');
     assert.deepEqual(result[0].items, [sword]);
 });
+
+test('categorizeActions sorts items alphabetically in categories and subcategories', () => {
+    const sword = new Action({ id: '1', name: 'Zweihander', type: 'weapon' });
+    const dagger = new Action({ id: '2', name: 'Dagger', type: 'weapon' });
+    const axe = new Action({ id: '3', name: 'Battleaxe', type: 'weapon' });
+    const bow = new Action({ id: '4', name: 'Shortbow', type: 'weapon' });
+
+    const config = {
+        enabled: true,
+        categories: [
+            {
+                id: 'c1',
+                name: 'Weapons',
+                expression: 'item.type === "weapon"',
+                subcategories: [
+                    { id: 's1', name: 'Blades', expression: 'item.name === "Zweihander" || item.name === "Dagger"' },
+                    { id: 's2', name: 'Other Weapons', expression: 'true' }
+                ]
+            }
+        ]
+    };
+
+    const result = categorizeActions([sword, dagger, axe, bow], config);
+    assert.equal(result.length, 1);
+    const blades = result[0].subsections.find(s => s.name === 'Blades');
+    const others = result[0].subsections.find(s => s.name === 'Other Weapons');
+
+    // Blades should be sorted Dagger -> Zweihander
+    assert.deepEqual(blades.items.map(i => i.name), ['Dagger', 'Zweihander']);
+    // Other Weapons should be sorted Battleaxe -> Shortbow
+    assert.deepEqual(others.items.map(i => i.name), ['Battleaxe', 'Shortbow']);
+});

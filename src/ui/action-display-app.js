@@ -582,6 +582,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
             if (!query) return true;
             return this._matchesSearchQuery(action, query);
         });
+        visibleActions.sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''));
         this.displayedActions = visibleActions;
 
         context.itemTypes = itemTypes;

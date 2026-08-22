@@ -211,6 +211,7 @@ export function categorizeActions(actions, config, catchAllLabel, context = {}) 
         const subsections = [];
         for (const [subId, subEntry] of bucket.subBuckets.entries()) {
             if (subEntry.items.length > 0) {
+                subEntry.items.sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''));
                 subsections.push({
                     name: subEntry.subcategory.name,
                     items: subEntry.items
@@ -219,12 +220,14 @@ export function categorizeActions(actions, config, catchAllLabel, context = {}) 
         }
 
         if (bucket.othersItems.length > 0) {
+            bucket.othersItems.sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''));
             subsections.push({
                 name: othersLabel,
                 items: bucket.othersItems
             });
         }
 
+        bucket.directItems.sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''));
         categorizedSections.push({
             name: bucket.category.name,
             items: bucket.directItems,
@@ -233,6 +236,7 @@ export function categorizeActions(actions, config, catchAllLabel, context = {}) 
     }
 
     if (topLevelOthers.length > 0) {
+        topLevelOthers.sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''));
         categorizedSections.push({
             name: othersLabel,
             items: topLevelOthers,

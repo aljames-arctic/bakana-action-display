@@ -222,15 +222,17 @@ test('ActionDisplayApp _prepareContext extracts economy indicators when enabled 
         game.settings.set(MODULE_ID, 'economyColors', testColors);
 
         const contextEnabled = await app._prepareContext({});
+        const item1 = contextEnabled.items.find(i => i.id === 'act-1');
+        const item2 = contextEnabled.items.find(i => i.id === 'act-2');
         assert.equal(contextEnabled.showEconomyIndicators, true);
-        assert.equal(contextEnabled.items[0].economyIndicators.length, 3);
-        assert.equal(contextEnabled.items[0].economyIndicators[0].active, true);
-        assert.equal(contextEnabled.items[0].economyIndicators[0].color, '#0000ff');
-        assert.equal(contextEnabled.items[0].economyIndicators[1].active, false);
-        assert.equal(contextEnabled.items[1].economyIndicators.length, 3);
-        assert.equal(contextEnabled.items[1].economyIndicators[0].active, false);
-        assert.equal(contextEnabled.items[1].economyIndicators[1].active, true);
-        assert.equal(contextEnabled.items[1].economyIndicators[1].color, '#14b8a6');
+        assert.equal(item1.economyIndicators.length, 3);
+        assert.equal(item1.economyIndicators[0].active, true);
+        assert.equal(item1.economyIndicators[0].color, '#0000ff');
+        assert.equal(item1.economyIndicators[1].active, false);
+        assert.equal(item2.economyIndicators.length, 3);
+        assert.equal(item2.economyIndicators[0].active, false);
+        assert.equal(item2.economyIndicators[1].active, true);
+        assert.equal(item2.economyIndicators[1].color, '#14b8a6');
 
         // 2. When specific category is disabled (e.g. bonus action disabled)
         game.settings.set(MODULE_ID, 'economyColors', {
@@ -238,10 +240,12 @@ test('ActionDisplayApp _prepareContext extracts economy indicators when enabled 
             disabled: { ...testColors.disabled, bonus: true }
         });
         const contextCategoryDisabled = await app._prepareContext({});
-        assert.equal(contextCategoryDisabled.items[0].economyIndicators.length, 2);
-        assert.equal(contextCategoryDisabled.items[0].economyIndicators[0].active, true);
-        assert.equal(contextCategoryDisabled.items[1].economyIndicators.length, 2);
-        assert.equal(contextCategoryDisabled.items[1].economyIndicators.every(ind => !ind.active), true);
+        const catDisItem1 = contextCategoryDisabled.items.find(i => i.id === 'act-1');
+        const catDisItem2 = contextCategoryDisabled.items.find(i => i.id === 'act-2');
+        assert.equal(catDisItem1.economyIndicators.length, 2);
+        assert.equal(catDisItem1.economyIndicators[0].active, true);
+        assert.equal(catDisItem2.economyIndicators.length, 2);
+        assert.equal(catDisItem2.economyIndicators.every(ind => !ind.active), true);
 
         // 3. When enableEconomyIndicators is false
         game.settings.set(MODULE_ID, 'enableEconomyIndicators', false);
