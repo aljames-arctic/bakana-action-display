@@ -309,6 +309,17 @@ globalThis.document = globalThis.document ?? {
     }
 };
 
+globalThis.window = globalThis.window ?? {
+    innerWidth: 1920,
+    innerHeight: 1080,
+    getComputedStyle: () => ({ paddingBottom: '0px' }),
+    addEventListener() {},
+    removeEventListener() {},
+    requestAnimationFrame: (cb) => setTimeout(cb, 0)
+};
+
+globalThis.requestAnimationFrame = globalThis.requestAnimationFrame ?? ((cb) => setTimeout(cb, 0));
+
 globalThis.game = {
     release: {
         generation: 12

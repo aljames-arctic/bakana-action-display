@@ -108,7 +108,8 @@ export function showActivityDropdown(app, target, subactions, event) {
     target.classList.add('bad-dropdown-active');
 
     const ContextMenuClass = adapter.foundry.ContextMenu;
-    const menu = new ContextMenuClass(app.element, ".bad-action-item", menuItems, {
+    const targetBody = app?.element?.ownerDocument?.body ?? document.body;
+    const menu = new ContextMenuClass(targetBody, ".bad-action-item", menuItems, {
         jQuery: false,
         onClose: () => {
             target.classList.remove('bad-dropdown-active');
@@ -126,10 +127,10 @@ export function showActivityDropdown(app, target, subactions, event) {
             log.error(`showActivityDropdown | menu.render error:`, e);
         }
 
-        const menuEl = document.querySelector('#context-menu');
+        const menuEl = document.querySelector('#context-menu, .context-menu');
         if (menuEl) {
-            if (menuEl.parentElement !== document.body) {
-                document.body.appendChild(menuEl);
+            if (menuEl.parentElement !== targetBody) {
+                targetBody.appendChild(menuEl);
             }
 
             const lis = menuEl.querySelectorAll('.context-item');
@@ -158,14 +159,19 @@ export function showActivityDropdown(app, target, subactions, event) {
             });
 
             const rect = target.getBoundingClientRect();
-            const spaceBelow = window.innerHeight - rect.bottom - 15;
+            const viewportHeight = window?.innerHeight ?? 1080;
+            const spaceBelow = viewportHeight - rect.bottom - 15;
+            const spaceAbove = rect.top - 15;
             const neededHeight = subactions.length * 36 + 15;
-            const maxHeight = Math.max(150, Math.min(neededHeight, spaceBelow));
+
+            const placeAbove = (spaceBelow < neededHeight || spaceBelow < 120) && spaceAbove > spaceBelow;
+            const availableSpace = placeAbove ? spaceAbove : spaceBelow;
+            const maxHeight = Math.max(100, Math.min(neededHeight, availableSpace));
 
             const styles = {
                 position: 'fixed',
                 left: `${rect.left}px`,
-                top: `${rect.bottom}px`,
+                top: placeAbove ? `${Math.max(10, rect.top - Math.min(neededHeight, maxHeight))}px` : `${rect.bottom}px`,
                 bottom: 'auto',
                 width: `${rect.width}px`,
                 'min-width': `${rect.width}px`,

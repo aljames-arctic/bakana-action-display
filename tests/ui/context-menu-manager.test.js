@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import '../setup.js';
-import { createActionContextMenu } from '../../src/ui/app/context-menu-manager.js';
+import { ContextMenuManager, createActionContextMenu } from '../../src/ui/app/context-menu-manager.js';
 import { openActivitySubContextMenu } from '../../src/ui/app/dropdown-manager.js';
 import { Dnd5eSystemAdapter } from '../../src/adapters/system/dnd5e-system-adapter.js';
 
@@ -173,4 +173,85 @@ test('ContextMenuManager supports submenu definition, arrow injection, and popou
 
     const manager = createActionContextMenu(mockApp, mockElement);
     assert.ok(manager);
+});
+
+test('ContextMenuManager _positionContextMenu reparents #context-menu to document.body and applies fixed styling', () => {
+    const mockApp = { actor: { isOwner: true } };
+    const mockElement = { querySelectorAll: () => [], querySelector: () => null };
+    const manager = new ContextMenuManager(mockApp, mockElement);
+
+    const menuStyles = {};
+    const mockMenuEl = {
+        parentElement: { notBody: true },
+        style: {
+            setProperty: (prop, val) => { menuStyles[prop] = val; }
+        },
+        children: []
+    };
+
+    let appendedToBody = false;
+    const originalQuerySelector = document.querySelector;
+    const originalAppendChild = document.body.appendChild;
+
+    document.querySelector = (selector) => {
+        if (selector.includes('#context-menu')) return mockMenuEl;
+        return null;
+    };
+    document.body.appendChild = (child) => {
+        if (child === mockMenuEl) appendedToBody = true;
+        return child;
+    };
+
+    const mockTarget = {
+        getBoundingClientRect: () => ({ left: 50, top: 100, right: 250, bottom: 130, width: 200, height: 30 })
+    };
+
+    try {
+        manager._positionContextMenu(mockTarget, 4);
+        assert.equal(appendedToBody, true, '#context-menu must be reparented to document.body');
+        assert.equal(menuStyles.position, 'fixed', 'Position must be fixed to escape HUD bounding box');
+        assert.equal(menuStyles.left, '50px', 'Left must match target left');
+        assert.equal(menuStyles.top, '130px', 'Top must match target bottom when space below is sufficient');
+        assert.equal(menuStyles.width, '200px', 'Width must match target width');
+        assert.equal(menuStyles['z-index'], '999999', 'z-index must be high to render over HUD and canvas');
+    } finally {
+        document.querySelector = originalQuerySelector;
+        document.body.appendChild = originalAppendChild;
+    }
+});
+
+test('ContextMenuManager _positionContextMenu positions menu above when space below is constrained', () => {
+    const mockApp = { actor: { isOwner: true } };
+    const mockElement = { querySelectorAll: () => [], querySelector: () => null };
+    const manager = new ContextMenuManager(mockApp, mockElement);
+
+    const menuStyles = {};
+    const mockMenuEl = {
+        parentElement: document.body,
+        style: {
+            setProperty: (prop, val) => { menuStyles[prop] = val; }
+        },
+        children: []
+    };
+
+    const originalQuerySelector = document.querySelector;
+    document.querySelector = (selector) => {
+        if (selector.includes('#context-menu')) return mockMenuEl;
+        return null;
+    };
+
+    // Target placed near the bottom of a 1080px viewport
+    const mockTarget = {
+        getBoundingClientRect: () => ({ left: 50, top: 1000, right: 250, bottom: 1030, width: 200, height: 30 })
+    };
+
+    try {
+        manager._positionContextMenu(mockTarget, 5);
+        assert.equal(menuStyles.position, 'fixed');
+        // Space below is 1080 - 1030 - 15 = 35px (< 120px), so it should flip above top (1000px)
+        const topVal = parseFloat(menuStyles.top);
+        assert.ok(topVal < 1000, 'Top should be positioned above target when space below is constrained');
+    } finally {
+        document.querySelector = originalQuerySelector;
+    }
 });

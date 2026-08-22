@@ -107,6 +107,8 @@ export class ContextMenuManager {
             menuItems.push(...systemItems);
         }
 
+        const targetBody = this.app?.element?.ownerDocument?.body ?? document.body;
+
         const options = {
             jQuery: false,
             onOpen: (target) => {
@@ -133,7 +135,18 @@ export class ContextMenuManager {
                 target.classList.add('bad-menu-active');
                 this.element.querySelector('.bakana-action-display-container')?.classList.add('has-context-menu');
 
-                this._bindSubmenus(target, menuItems);
+                const scheduleReposition = () => {
+                    this._positionContextMenu(target, menuItems.length);
+                    this._bindSubmenus(target, menuItems);
+                };
+
+                scheduleReposition();
+                if (typeof queueMicrotask === 'function') queueMicrotask(scheduleReposition);
+                if (typeof requestAnimationFrame === 'function') {
+                    requestAnimationFrame(scheduleReposition);
+                } else if (typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function') {
+                    window.requestAnimationFrame(scheduleReposition);
+                }
             },
             onClose: () => {
                 this.closeSubmenu();
@@ -146,7 +159,57 @@ export class ContextMenuManager {
         };
 
         const ContextMenuClass = adapter.foundry.ContextMenu;
-        return new ContextMenuClass(this.element, ".bad-action-item", menuItems, options);
+        return new ContextMenuClass(targetBody, ".bad-action-item", menuItems, options);
+    }
+
+    /**
+     * Reparent and position the context menu in the document body so it escapes HUD scroll boundaries.
+     * @param {HTMLElement} target Target action item element
+     * @param {number} itemCount Number of items in context menu
+     * @private
+     */
+    _positionContextMenu(target, itemCount) {
+        const targetBody = this.app?.element?.ownerDocument?.body ?? document.body;
+        const menuEl = document.querySelector('#context-menu, .context-menu:not(.bad-sub-context-menu)');
+        if (!menuEl) return;
+
+        if (menuEl.parentElement !== targetBody) {
+            targetBody.appendChild(menuEl);
+        }
+
+        const rect = target.getBoundingClientRect?.() ?? { left: 0, top: 0, right: 100, bottom: 30, width: 100, height: 30 };
+        const viewportHeight = window?.innerHeight ?? 1080;
+        const spaceBelow = viewportHeight - rect.bottom - 15;
+        const spaceAbove = rect.top - 15;
+        const neededHeight = itemCount * 36 + 15;
+
+        const placeAbove = (spaceBelow < neededHeight || spaceBelow < 120) && spaceAbove > spaceBelow;
+        const availableSpace = placeAbove ? spaceAbove : spaceBelow;
+        const maxHeight = Math.max(100, Math.min(neededHeight, availableSpace));
+
+        const styles = {
+            position: 'fixed',
+            left: `${rect.left}px`,
+            top: placeAbove ? `${Math.max(10, rect.top - Math.min(neededHeight, maxHeight))}px` : `${rect.bottom}px`,
+            bottom: 'auto',
+            width: `${rect.width}px`,
+            'min-width': `${rect.width}px`,
+            'box-sizing': 'border-box',
+            'z-index': '999999',
+            display: 'block',
+            visibility: 'visible',
+            opacity: '1',
+            'max-height': `${maxHeight}px`
+        };
+
+        for (const [prop, val] of Object.entries(styles)) {
+            menuEl.style?.setProperty?.(prop, val, 'important');
+        }
+
+        Array.from(menuEl.children ?? []).forEach(child => {
+            child.style?.setProperty?.('max-height', `${maxHeight}px`, 'important');
+            child.style?.setProperty?.('overflow-y', 'auto', 'important');
+        });
     }
 
     /**
