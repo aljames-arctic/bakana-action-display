@@ -338,21 +338,35 @@ Hooks.once('init', () => {
  * Injects styled subsection headers for World, User, and Client settings into the SettingsConfig dialog.
  * Moves user-scoped menus (like economyColorsMenu) to the User Settings section so they appear under User Settings.
  * @param {HTMLElement|Object} html Rendered settings config DOM element or jQuery collection
+ * @param {Application} [app] Application instance
  */
-export function injectSettingsHeaders(html) {
-    const root = html?.[0] ?? html;
+export function injectSettingsHeaders(html, app) {
+    const root = (html instanceof (globalThis.HTMLElement ?? Object))
+        ? html
+        : (html?.[0] instanceof (globalThis.HTMLElement ?? Object))
+            ? html[0]
+            : (app?.element instanceof (globalThis.HTMLElement ?? Object))
+                ? app.element
+                : (app?.element?.[0] instanceof (globalThis.HTMLElement ?? Object))
+                    ? app.element[0]
+                    : (globalThis.document?.querySelector?.('#client-settings, form.categories, .settings-list') ?? null);
+
     if (!root?.querySelector) return;
 
     // 1. Move economyColorsMenu (User Menu) into the User Settings section before hudOpacity if both are present
     const economyMenuSelector = [
         `[data-key="${MODULE_ID}.economyColorsMenu"]`,
+        `[data-action="${MODULE_ID}.economyColorsMenu"]`,
         `[data-setting-id="${MODULE_ID}.economyColorsMenu"]`,
-        `[data-entry-id="${MODULE_ID}.economyColorsMenu"]`
+        `[data-entry-id="${MODULE_ID}.economyColorsMenu"]`,
+        `[data-key="economyColorsMenu"]`,
+        `[data-action="economyColorsMenu"]`
     ].join(', ');
     const hudOpacitySelector = [
         `[name="${MODULE_ID}.hudOpacity"]`,
         `[data-setting-id="${MODULE_ID}.hudOpacity"]`,
-        `[data-entry-id="${MODULE_ID}.hudOpacity"]`
+        `[data-entry-id="${MODULE_ID}.hudOpacity"]`,
+        `[name="hudOpacity"]`
     ].join(', ');
 
     const economyMenuEl = root.querySelector(economyMenuSelector);
@@ -377,7 +391,7 @@ export function injectSettingsHeaders(html) {
             icon: 'fas fa-globe'
         },
         {
-            keys: ['economyColorsMenu', 'hudOpacity'],
+            keys: ['economyColorsMenu', 'hudOpacity', 'hudScale', 'fontSize'],
             scope: 'user',
             title: game.i18n.localize('BAD.settingsSections.user') ?? 'User Settings',
             icon: 'fas fa-user'
@@ -397,7 +411,13 @@ export function injectSettingsHeaders(html) {
                 `[data-setting-id="${MODULE_ID}.${key}"]`,
                 `[data-entry-id="${MODULE_ID}.${key}"]`,
                 `[name="${MODULE_ID}.${key}"]`,
-                `[data-key="${MODULE_ID}.${key}"]`
+                `[data-key="${MODULE_ID}.${key}"]`,
+                `[data-action="${MODULE_ID}.${key}"]`,
+                `[data-setting-id="${key}"]`,
+                `[data-entry-id="${key}"]`,
+                `[name="${key}"]`,
+                `[data-key="${key}"]`,
+                `[data-action="${key}"]`
             ].join(', ');
             targetEl = root.querySelector(selector);
             if (targetEl) break;
@@ -406,9 +426,13 @@ export function injectSettingsHeaders(html) {
         if (!targetEl) continue;
 
         const formGroup = targetEl.closest('.form-group') ?? targetEl;
-        if (!formGroup || !formGroup.parentNode) continue;
+        const parent = formGroup?.parentNode;
+        if (!formGroup || !parent) continue;
 
         // Ensure we don't insert duplicate headers
+        const existing = parent.querySelector?.(`.bad-settings-section-header[data-scope="${section.scope}"]`);
+        if (existing) continue;
+
         const prev = formGroup.previousElementSibling;
         if (prev?.classList?.contains('bad-settings-section-header') && prev?.dataset?.scope === section.scope) {
             continue;
@@ -418,11 +442,11 @@ export function injectSettingsHeaders(html) {
         header.className = 'bad-settings-section-header';
         header.dataset.scope = section.scope;
         header.innerHTML = `<i class="${section.icon}"></i><span>${section.title}</span>`;
-        formGroup.parentNode.insertBefore(header, formGroup);
+        parent.insertBefore(header, formGroup);
     }
 }
 
 Hooks.on('renderSettingsConfig', (app, html) => {
-    injectSettingsHeaders(html);
+    injectSettingsHeaders(html, app);
 });
 
