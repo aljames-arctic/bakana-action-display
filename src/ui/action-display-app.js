@@ -1173,35 +1173,36 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
      * Clear all active context menu and dropdown target styling and close any open menus.
      */
     _clearMenuState() {
-        // Close any open right-click context menu if we have an active context menu target
-        if (this._activeContextMenuTarget) {
-            if (this._contextMenu) {
-                try {
-                    this._contextMenu.close({ animate: false })?.catch?.(err => {
-                        log.debug("ContextMenu.close promise rejected (expected during re-render):", err);
-                    });
-                } catch (err) {
-                    log.debug("ContextMenu.close threw synchronously:", err);
-                }
-            }
-            this._activeContextMenuTarget.classList.remove('bad-menu-active');
-            this._activeContextMenuTarget = null;
-        }
+        const activeContextTarget = this._activeContextMenuTarget;
+        const activeMenuTarget = this._activeMenuTarget;
+        const activeLeftMenu = this._activeLeftClickMenu;
+        const contextMenu = this._contextMenu;
 
-        if (this._activeMenuTarget) {
-            this._activeMenuTarget.classList.remove('bad-dropdown-active');
-            this._activeMenuTarget = null;
-        }
+        this._activeContextMenuTarget = null;
+        this._activeMenuTarget = null;
+        this._activeLeftClickMenu = null;
 
-        if (this._activeLeftClickMenu) {
+        activeContextTarget?.classList?.remove?.('bad-menu-active');
+        activeMenuTarget?.classList?.remove?.('bad-dropdown-active');
+
+        if (contextMenu) {
             try {
-                this._activeLeftClickMenu.close({ animate: false })?.catch?.(err => {
+                contextMenu.close({ animate: false })?.catch?.(err => {
+                    log.debug("ContextMenu.close promise rejected (expected during re-render):", err);
+                });
+            } catch (err) {
+                log.debug("ContextMenu.close threw synchronously:", err);
+            }
+        }
+
+        if (activeLeftMenu) {
+            try {
+                activeLeftMenu.close({ animate: false })?.catch?.(err => {
                     log.debug("LeftClickMenu.close promise rejected:", err);
                 });
             } catch (err) {
                 log.debug("LeftClickMenu.close threw synchronously:", err);
             }
-            this._activeLeftClickMenu = null;
         }
 
         // Clean up any lingering context-menu or sub-context-menu DOM elements

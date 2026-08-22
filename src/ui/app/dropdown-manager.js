@@ -80,17 +80,20 @@ export function showActivityDropdown(app, target, subactions, event) {
     const menuItems = subactions.map(sub => buildSubactionMenuItem(sub, event, app));
 
     if (app._activeLeftClickMenu) {
+        const prevLeftMenu = app._activeLeftClickMenu;
+        app._activeLeftClickMenu = null;
         try {
-            app._activeLeftClickMenu.close()?.catch?.(err => {
+            prevLeftMenu.close()?.catch?.(err => {
                 log.debug("LeftClickMenu.close promise rejected:", err);
             });
         } catch (err) {
             log.debug("LeftClickMenu.close threw synchronously:", err);
         }
-        app._activeLeftClickMenu = null;
     }
 
     if (app._activeContextMenuTarget && app._contextMenu) {
+        const prevContextTarget = app._activeContextMenuTarget;
+        app._activeContextMenuTarget = null;
         try {
             app._contextMenu.close()?.catch?.(err => {
                 log.debug("ContextMenu.close promise rejected:", err);
@@ -98,8 +101,7 @@ export function showActivityDropdown(app, target, subactions, event) {
         } catch (err) {
             log.debug("ContextMenu.close threw synchronously:", err);
         }
-        app._activeContextMenuTarget.classList.remove('bad-menu-active');
-        app._activeContextMenuTarget = null;
+        prevContextTarget?.classList?.remove?.('bad-menu-active');
     }
 
     app._activeMenuTarget = target;

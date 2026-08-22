@@ -113,18 +113,20 @@ export class ContextMenuManager {
             jQuery: false,
             onOpen: (target) => {
                 if (this.app._activeLeftClickMenu) {
+                    const prevLeftMenu = this.app._activeLeftClickMenu;
+                    this.app._activeLeftClickMenu = null;
                     try {
-                        this.app._activeLeftClickMenu.close()?.catch?.(err => {
+                        prevLeftMenu.close()?.catch?.(err => {
                             log.debug("LeftClickMenu.close promise rejected:", err);
                         });
                     } catch (err) {
                         log.debug("LeftClickMenu.close threw synchronously:", err);
                     }
-                    this.app._activeLeftClickMenu = null;
                 }
                 if (this.app._activeMenuTarget) {
-                    this.app._activeMenuTarget.classList.remove('bad-dropdown-active');
+                    const prevMenuTarget = this.app._activeMenuTarget;
                     this.app._activeMenuTarget = null;
+                    prevMenuTarget?.classList?.remove?.('bad-dropdown-active');
                 }
                 this.closeSubmenu();
 
@@ -150,11 +152,10 @@ export class ContextMenuManager {
             },
             onClose: () => {
                 this.closeSubmenu();
-                if (this.app._activeContextMenuTarget) {
-                    this.app._activeContextMenuTarget.classList.remove('bad-menu-active');
-                }
+                const prevContextTarget = this.app._activeContextMenuTarget;
                 this.app._activeContextMenuTarget = null;
-                this.element.querySelector('.bakana-action-display-container')?.classList.remove('has-context-menu');
+                prevContextTarget?.classList?.remove?.('bad-menu-active');
+                this.element.querySelector('.bakana-action-display-container')?.classList?.remove?.('has-context-menu');
             }
         };
 
