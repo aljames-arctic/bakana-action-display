@@ -18,7 +18,7 @@ Hooks.once('init', async () => {
     // Wrap Token.prototype._onClickRight during init so it is bound correctly by all tokens' InteractionManagers
     const TokenClass = adapter.foundry.Token;
     const originalRightClick = TokenClass.prototype._onClickRight;
-    if (typeof originalRightClick === 'function') {
+    if (originalRightClick) {
         TokenClass.prototype._onClickRight = function (event) {
             const isTokenHUDOpen = Boolean(canvas?.hud?.token?.rendered && (canvas.hud.token.object === this || canvas.hud.token.object?.id === this.id));
             if (isTokenHUDOpen && activeApp && (activeApp.token === this || activeApp.token?.id === this.id)) {

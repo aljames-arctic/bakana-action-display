@@ -341,7 +341,7 @@ Hooks.once('init', () => {
  */
 export function injectSettingsHeaders(html) {
     const root = (typeof HTMLElement !== 'undefined' && html instanceof HTMLElement) ? html : (html?.[0] ?? html);
-    if (!root || typeof root.querySelector !== 'function') return;
+    if (!root?.querySelector) return;
 
     // 1. Move economyColorsMenu (User Menu) into the User Settings section before hudOpacity if both are present
     const economyMenuSelector = [

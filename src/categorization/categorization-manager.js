@@ -251,9 +251,8 @@ export function categorizeActions(actions, config, catchAllLabel, context = {}) 
  */
 export function getDefaultCategories(customAdapter = null) {
     const sys = customAdapter ?? adapter.system;
-    if (typeof sys?.getDefaultCategories === 'function') {
-        return sys.getDefaultCategories();
-    }
+    const defaults = sys?.getDefaultCategories?.();
+    if (defaults) return defaults;
     return [
         {
             id: 'cat_favorites',

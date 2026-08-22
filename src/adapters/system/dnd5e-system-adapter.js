@@ -1050,17 +1050,17 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
     openEditSheet(action) {
         const activity = action?.originalActivity;
         if (activity) {
-            if (typeof activity.sheet?.render === "function") {
+            if (activity.sheet?.render) {
                 activity.sheet.render(true);
                 return;
             }
-            if (typeof activity.item?.sheet?.render === "function") {
+            if (activity.item?.sheet?.render) {
                 activity.item.sheet.render(true, { subtab: "activities", activityId: activity.id });
                 return;
             }
         }
         const item = action?.originalItem;
-        if (typeof item?.sheet?.render === "function") {
+        if (item?.sheet?.render) {
             item.sheet.render(true);
         }
     }
@@ -1119,13 +1119,13 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         const isFav = Boolean(favorite);
 
         // 1. If item has system.favorite field (modern dnd5e 3.x+)
-        if (item.system && 'favorite' in item.system && typeof item.update === 'function') {
+        if (item.system && 'favorite' in item.system && item.update) {
             return await item.update({ 'system.favorite': isFav });
         }
 
         // 2. If actor has addFavorite / removeFavorite methods (dnd5e 3.x actor methods)
-        if (typeof actor?.system?.addFavorite === 'function' && typeof actor?.system?.removeFavorite === 'function') {
-            const uuid = typeof item.getRelativeUUID === 'function' ? item.getRelativeUUID(actor) : item.id;
+        if (actor?.system?.addFavorite && actor?.system?.removeFavorite) {
+            const uuid = item.getRelativeUUID?.(actor) ?? item.id;
             if (isFav) {
                 return await actor.system.addFavorite({ id: uuid, type: 'item' });
             } else {
@@ -1134,7 +1134,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         }
 
         // 3. Fallback to updating item flags
-        if (typeof item.update === 'function') {
+        if (item.update) {
             return await item.update({ 'flags.dnd5e.favorite': isFav });
         }
 

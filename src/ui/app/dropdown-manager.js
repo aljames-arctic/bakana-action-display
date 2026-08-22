@@ -15,19 +15,10 @@ export function openActivitySubContextMenu(app, targetLi, subaction) {
             condition: () => {
                 if (!app.actor?.isOwner) return false;
                 const entity = subaction?.originalActivity ?? subaction?.originalItem;
-                return Boolean(entity && (typeof entity.sheet?.render === "function" || typeof entity.edit === "function"));
+                return Boolean(entity?.sheet?.render || entity?.edit);
             },
             callback: () => {
-                if (adapter.openEditSheet) {
-                    adapter.openEditSheet(subaction);
-                } else {
-                    const entity = subaction?.originalActivity ?? subaction?.originalItem;
-                    if (typeof entity?.sheet?.render === "function") {
-                        entity.sheet.render(true);
-                    } else if (typeof entity?.edit === "function") {
-                        entity.edit();
-                    }
-                }
+                adapter.openEditSheet(subaction);
             }
         }
     ];
@@ -38,9 +29,7 @@ export function openActivitySubContextMenu(app, targetLi, subaction) {
         jQuery: false
     });
     setTimeout(() => {
-        if (typeof subMenu?.render === "function") {
-            subMenu.render(targetLi)?.catch?.(err => log.error("SubContextMenu render error:", err));
-        }
+        subMenu?.render?.(targetLi)?.catch?.(err => log.error("SubContextMenu render error:", err));
     }, 10);
 }
 

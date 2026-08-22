@@ -28,14 +28,14 @@ export class ContextMenuManager {
                     if (!this.app.actor?.isOwner) return false;
                     const action = this.app.actions?.find(a => a.id === el.dataset.actionId);
                     const item = action?.originalItem ?? this.app.actor?.items?.get(el.dataset.actionId);
-                    return Boolean(item && typeof item.sheet?.render === "function");
+                    return Boolean(item?.sheet?.render);
                 },
                 callback: el => {
                     const action = this.app.actions?.find(a => a.id === el.dataset.actionId);
-                    if (action && adapter.openEditSheet) {
+                    if (action) {
                         adapter.openEditSheet(action);
                     } else {
-                        const item = action?.originalItem ?? this.app.actor?.items?.get(el.dataset.actionId);
+                        const item = this.app.actor?.items?.get(el.dataset.actionId);
                         item?.sheet?.render(true);
                     }
                 }

@@ -110,11 +110,11 @@ export class BaseSystemAdapter {
      */
     openEditSheet(action) {
         const entity = action?.originalActivity ?? action?.originalItem;
-        if (typeof entity?.sheet?.render === "function") {
+        if (entity?.sheet?.render) {
             entity.sheet.render(true);
-        } else if (typeof entity?.edit === "function") {
+        } else if (entity?.edit) {
             entity.edit();
-        } else if (typeof action?.originalItem?.sheet?.render === "function") {
+        } else if (action?.originalItem?.sheet?.render) {
             action.originalItem.sheet.render(true);
         }
     }

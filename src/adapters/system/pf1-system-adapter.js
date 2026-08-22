@@ -277,11 +277,8 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
                     available: true,
                     roll: async (event) => {
                         const rollEvent = this._createRollEvent(event);
-                        if (typeof actor.rollSavingThrow === 'function') {
-                            return actor.rollSavingThrow(saveKey, { event: rollEvent });
-                        } else if (typeof actor.rollSave === 'function') {
-                            return actor.rollSave(saveKey, { event: rollEvent });
-                        }
+                        return actor.rollSavingThrow?.(saveKey, { event: rollEvent }) ??
+                            actor.rollSave?.(saveKey, { event: rollEvent });
                     }
                 });
                 subactions.push(saveSub);
@@ -297,13 +294,9 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
                 available: true,
                 roll: async (event) => {
                     const rollEvent = this._createRollEvent(event);
-                    if (typeof actor.rollAbilityTest === 'function') {
-                        return actor.rollAbilityTest(abl, { event: rollEvent });
-                    } else if (typeof actor.rollAbilityCheck === 'function') {
-                        return actor.rollAbilityCheck(abl, { event: rollEvent });
-                    } else if (typeof actor.rollAbility === 'function') {
-                        return actor.rollAbility(abl, { event: rollEvent });
-                    }
+                    return actor.rollAbilityTest?.(abl, { event: rollEvent }) ??
+                        actor.rollAbilityCheck?.(abl, { event: rollEvent }) ??
+                        actor.rollAbility?.(abl, { event: rollEvent });
                 }
             });
             subactions.push(checkSub);
@@ -344,9 +337,7 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
                 uses: { available: null, max: null },
                 roll: async (event) => {
                     const rollEvent = this._createRollEvent(event);
-                    if (typeof actor.rollSkill === 'function') {
-                        return actor.rollSkill(skillId, { event: rollEvent });
-                    }
+                    return actor.rollSkill?.(skillId, { event: rollEvent });
                 },
                 extra: { section: 'other', page: 2, ability: abl }
             });
@@ -369,9 +360,7 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
                         uses: { available: null, max: null },
                         roll: async (event) => {
                             const rollEvent = this._createRollEvent(event);
-                            if (typeof actor.rollSkill === 'function') {
-                                return actor.rollSkill(`${skillId}.subSkills.${subId}`, { event: rollEvent });
-                            }
+                            return actor.rollSkill?.(`${skillId}.subSkills.${subId}`, { event: rollEvent });
                         },
                         extra: { section: 'other', page: 2, ability: subAbl }
                     });
@@ -543,9 +532,9 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
     #executeItemRoll(item, actionId, event) {
         const proxiedEvent = this._createRollEvent(event);
         const options = actionId ? { actionId, event: proxiedEvent } : { event: proxiedEvent };
-        if (typeof item.use === 'function') {
+        if (item.use) {
             item.use(options);
-        } else if (typeof item.roll === 'function') {
+        } else if (item.roll) {
             item.roll(options);
         }
     }

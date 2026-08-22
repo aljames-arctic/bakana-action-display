@@ -252,11 +252,8 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
             uses: { available: null, max: null },
             roll: async (event) => {
                 const rollEvent = this._createRollEvent(event);
-                if (typeof actor.perception?.roll === 'function') {
-                    return actor.perception.roll({ event: rollEvent });
-                } else if (typeof actor.system?.attributes?.perception?.roll === 'function') {
-                    return actor.system.attributes.perception.roll({ event: rollEvent });
-                }
+                return actor.perception?.roll?.({ event: rollEvent }) ??
+                    actor.system?.attributes?.perception?.roll?.({ event: rollEvent });
             },
             extra: { section: 'core', page: 2, ability: 'wis' }
         });
@@ -311,9 +308,10 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
                 uses: { available: null, max: null },
                 roll: async (event) => {
                     const rollEvent = this._createRollEvent(event);
-                    if (typeof skill.roll === 'function') {
+                    if (skill.roll) {
                         return skill.roll({ event: rollEvent });
-                    } else if (typeof actor.rollSkill === 'function') {
+                    }
+                    if (actor.rollSkill) {
                         try {
                             return await actor.rollSkill({ skill: slug, event: rollEvent });
                         } catch {
@@ -539,18 +537,18 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
 
     #executeFeatRoll(item, event) {
         const proxiedEvent = this._createRollEvent(event);
-        if (typeof item.toMessage === 'function') {
+        if (item.toMessage) {
             item.toMessage();
-        } else if (typeof item.use === 'function') {
+        } else if (item.use) {
             item.use({ event: proxiedEvent });
         }
     }
 
     #executeSpellRoll(entry, item, event) {
         const proxiedEvent = this._createRollEvent(event);
-        if (typeof entry.cast === 'function') {
+        if (entry?.cast) {
             entry.cast(item, { event: proxiedEvent });
-        } else if (typeof item.toMessage === 'function') {
+        } else if (item.toMessage) {
             item.toMessage();
         }
     }
@@ -559,27 +557,27 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
         const proxiedEvent = this._createRollEvent(event);
         if (strike.variants?.[0]?.roll) {
             strike.variants[0].roll({ event: proxiedEvent });
-        } else if (typeof strike.roll === 'function') {
+        } else if (strike.roll) {
             strike.roll({ event: proxiedEvent });
         }
     }
 
     #executeConsumableRoll(item, event) {
         const proxiedEvent = this._createRollEvent(event);
-        if (typeof item.consume === 'function') {
+        if (item.consume) {
             item.consume();
-        } else if (typeof item.toMessage === 'function') {
+        } else if (item.toMessage) {
             item.toMessage();
-        } else if (typeof item.use === 'function') {
+        } else if (item.use) {
             item.use({ event: proxiedEvent });
         }
     }
 
     #executeEquipmentRoll(item, event) {
         const proxiedEvent = this._createRollEvent(event);
-        if (typeof item.toMessage === 'function') {
+        if (item.toMessage) {
             item.toMessage();
-        } else if (typeof item.use === 'function') {
+        } else if (item.use) {
             item.use({ event: proxiedEvent });
         }
     }
