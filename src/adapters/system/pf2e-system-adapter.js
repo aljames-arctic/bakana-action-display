@@ -73,10 +73,7 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
         if (item.category === 'unarmed' || item.system.category?.value === 'unarmed') return true;
 
         const traits = item.system.traits?.value;
-        if (Array.isArray(traits) && (traits.includes('unarmed') || traits.includes('natural'))) {
-            return true;
-        }
-        if (traits instanceof Set && (traits.has('unarmed') || traits.has('natural'))) {
+        if (traits?.includes?.('unarmed') || traits?.includes?.('natural') || traits?.has?.('unarmed') || traits?.has?.('natural')) {
             return true;
         }
 

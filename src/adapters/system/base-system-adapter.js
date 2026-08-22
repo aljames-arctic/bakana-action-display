@@ -275,20 +275,14 @@ export class BaseSystemAdapter {
     isEconomyTypeEnabled(type, userColors = {}) {
         if (!type?.id || type.id === 'none' || type.id === 'all') return false;
 
-        const disabledMap = userColors.disabled;
-        if (disabledMap) {
-            const isDisabled = Array.isArray(disabledMap)
-                ? disabledMap.includes(type.id)
-                : Boolean(disabledMap[type.id]);
-            if (isDisabled) return false;
+        const disabled = userColors.disabled;
+        if (disabled && (disabled[type.id] || (Array.isArray(disabled) && disabled.includes(type.id)))) {
+            return false;
         }
 
-        const enabledMap = userColors.enabled;
-        if (enabledMap) {
-            const isExplicitlyEnabled = Array.isArray(enabledMap)
-                ? enabledMap.includes(type.id)
-                : Boolean(enabledMap[type.id]);
-            if (isExplicitlyEnabled) return true;
+        const enabled = userColors.enabled;
+        if (enabled && (enabled[type.id] || (Array.isArray(enabled) && enabled.includes(type.id)))) {
+            return true;
         }
 
         return Boolean(type.defaultEnabled);

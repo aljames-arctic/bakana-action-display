@@ -44,14 +44,8 @@ export class EconomyColorsConfigApp extends adapter.foundry.HandlebarsApplicatio
         super(options);
         const stored = game.settings.get(MODULE_ID, 'economyColors') ?? {};
         this.colors = foundry.utils.duplicate(stored);
-        const rawDisabled = this.colors.disabled ?? {};
-        this.disabled = Array.isArray(rawDisabled)
-            ? Object.fromEntries(rawDisabled.map(id => [id, true]))
-            : foundry.utils.duplicate(rawDisabled);
-        const rawEnabled = this.colors.enabled ?? {};
-        this.enabledTypes = Array.isArray(rawEnabled)
-            ? Object.fromEntries(rawEnabled.map(id => [id, true]))
-            : foundry.utils.duplicate(rawEnabled);
+        this.disabled = foundry.utils.duplicate(this.colors.disabled ?? {});
+        this.enabledTypes = foundry.utils.duplicate(this.colors.enabled ?? {});
         delete this.colors.disabled;
         delete this.colors.enabled;
         this.enabled = Boolean(game.settings.get(MODULE_ID, 'enableEconomyIndicators'));
