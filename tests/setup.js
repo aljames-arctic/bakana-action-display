@@ -160,6 +160,8 @@ globalThis.foundry = {
                     this.element = null;
                 }
                 async _prepareContext(options = {}) { return { ...options }; }
+                _onFirstRender(context, options) {}
+                _onRender(context, options) {}
                 async render(options = {}) {
                     this.rendered = true;
                     this.state = 2;

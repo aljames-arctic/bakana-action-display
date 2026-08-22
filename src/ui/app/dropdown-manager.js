@@ -157,9 +157,11 @@ export function showActivityDropdown(app, target, subactions, event) {
             applyPositioning(menuEl);
         },
         onClose: () => {
-            target.classList.remove('bad-dropdown-active');
-            app._activeLeftClickMenu = null;
-            app._activeMenuTarget = null;
+            target?.classList?.remove?.('bad-dropdown-active');
+            if (app._activeLeftClickMenu === menu) app._activeLeftClickMenu = null;
+            if (app._activeMenuTarget === target) app._activeMenuTarget = null;
+            const menuEl = document.querySelector('#context-menu, .context-menu');
+            menuEl?.remove?.();
         }
     };
 
@@ -169,6 +171,21 @@ export function showActivityDropdown(app, target, subactions, event) {
         if (menuEl) applyPositioning(menuEl);
     };
     menu.setPosition = menu._setPosition;
+
+    const origClose = typeof menu.close === 'function' ? menu.close.bind(menu) : null;
+    menu.close = async (closeOptions = {}) => {
+        const menuEl = document.querySelector('#context-menu, .context-menu');
+        try {
+            if (origClose) await origClose(closeOptions);
+        } catch (err) {
+            log.debug("LeftClickMenu close error:", err);
+        } finally {
+            menuEl?.remove?.();
+            target?.classList?.remove?.('bad-dropdown-active');
+            if (app._activeLeftClickMenu === menu) app._activeLeftClickMenu = null;
+            if (app._activeMenuTarget === target) app._activeMenuTarget = null;
+        }
+    };
 
     app._activeLeftClickMenu = menu;
 

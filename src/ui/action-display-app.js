@@ -1133,7 +1133,11 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
 
         // Close dropdown when dragging or clicking outside the active menu/item
         this._boundOutsidePointerDown = (event) => {
-            if ((this._activeLeftClickMenu || this._activeContextMenuTarget) && !event.target.closest('#context-menu, .context-menu, .bad-action-item')) {
+            const activeTarget = this._activeContextMenuTarget ?? this._activeMenuTarget;
+            const clickedInsideMenu = Boolean(event.target.closest('#context-menu, .context-menu'));
+            const clickedActiveItem = Boolean(activeTarget && event.target.closest('.bad-action-item') === activeTarget);
+
+            if ((this._activeLeftClickMenu || this._activeContextMenuTarget || this._activeMenuTarget) && !clickedInsideMenu && !clickedActiveItem) {
                 this._clearMenuState();
             }
         };
@@ -1173,7 +1177,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         if (this._activeContextMenuTarget) {
             if (this._contextMenu) {
                 try {
-                    this._contextMenu.close()?.catch?.(err => {
+                    this._contextMenu.close({ animate: false })?.catch?.(err => {
                         log.debug("ContextMenu.close promise rejected (expected during re-render):", err);
                     });
                 } catch (err) {
@@ -1191,7 +1195,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
 
         if (this._activeLeftClickMenu) {
             try {
-                this._activeLeftClickMenu.close()?.catch?.(err => {
+                this._activeLeftClickMenu.close({ animate: false })?.catch?.(err => {
                     log.debug("LeftClickMenu.close promise rejected:", err);
                 });
             } catch (err) {
@@ -1199,6 +1203,14 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
             }
             this._activeLeftClickMenu = null;
         }
+
+        // Clean up any lingering context-menu or sub-context-menu DOM elements
+        const openMenus = document.querySelectorAll('#context-menu, .context-menu');
+        openMenus.forEach(el => el.remove());
+
+        const container = this.element?.querySelector?.('.bakana-action-display-container');
+        container?.classList?.remove?.('has-context-menu');
+
         this._preventReopen = false;
     }
 

@@ -2,7 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import '../setup.js';
 import { ContextMenuManager, createActionContextMenu } from '../../src/ui/app/context-menu-manager.js';
-import { openActivitySubContextMenu } from '../../src/ui/app/dropdown-manager.js';
+import { openActivitySubContextMenu, showActivityDropdown } from '../../src/ui/app/dropdown-manager.js';
+import { ActionDisplayApp } from '../../src/ui/action-display-app.js';
 import { Dnd5eSystemAdapter } from '../../src/adapters/system/dnd5e-system-adapter.js';
 
 test('createActionContextMenu includes Edit Item option that renders originalItem sheet', () => {
@@ -254,4 +255,152 @@ test('ContextMenuManager _positionContextMenu positions menu above when space be
     } finally {
         document.querySelector = originalQuerySelector;
     }
+});
+
+test('showActivityDropdown close removes #context-menu from DOM and resets active target state', async () => {
+    const mockApp = {
+        _activeLeftClickMenu: null,
+        _activeMenuTarget: null,
+        element: { ownerDocument: { body: document.body } }
+    };
+    let removedFromDom = false;
+    const mockMenuEl = {
+        remove: () => { removedFromDom = true; },
+        querySelectorAll: () => []
+    };
+
+    const originalQuerySelector = document.querySelector;
+    document.querySelector = (sel) => {
+        if (sel.includes('#context-menu')) return mockMenuEl;
+        return null;
+    };
+
+    const mockTarget = {
+        classList: {
+            add: () => {},
+            remove: (cls) => {}
+        },
+        getBoundingClientRect: () => ({ left: 0, top: 0, right: 100, bottom: 30, width: 100, height: 30 })
+    };
+
+    const subactions = [
+        { name: 'Act 1', roll: () => {} },
+        { name: 'Act 2', roll: () => {} }
+    ];
+
+    try {
+        showActivityDropdown(mockApp, mockTarget, subactions, { preventDefault() {}, stopPropagation() {} });
+        assert.ok(mockApp._activeLeftClickMenu, 'Left click menu should be set');
+        assert.equal(mockApp._activeMenuTarget, mockTarget, 'Active menu target should be set');
+
+        await mockApp._activeLeftClickMenu.close();
+        assert.equal(removedFromDom, true, '#context-menu should be removed from DOM on close');
+        assert.equal(mockApp._activeLeftClickMenu, null, 'Active left click menu reference should be cleared');
+        assert.equal(mockApp._activeMenuTarget, null, 'Active menu target reference should be cleared');
+    } finally {
+        document.querySelector = originalQuerySelector;
+    }
+});
+
+test('ActionDisplayApp _clearMenuState removes lingering context-menu DOM elements and closes activeLeftClickMenu', () => {
+    const mockActor = { isOwner: true, uuid: 'Actor.cleanup-test' };
+    const app = new ActionDisplayApp({ actor: mockActor });
+
+    let leftClosed = false;
+    let contextClosed = false;
+    let menuElRemoved = false;
+
+    app._activeLeftClickMenu = {
+        close: () => { leftClosed = true; }
+    };
+    app._activeMenuTarget = {
+        classList: { remove: () => {} }
+    };
+    app._activeContextMenuTarget = {
+        classList: { remove: () => {} }
+    };
+    app._contextMenu = {
+        close: () => { contextClosed = true; }
+    };
+
+    const mockMenuEl = {
+        remove: () => { menuElRemoved = true; }
+    };
+
+    const originalQuerySelectorAll = document.querySelectorAll;
+    document.querySelectorAll = (sel) => {
+        if (sel.includes('#context-menu')) return [mockMenuEl];
+        return [];
+    };
+
+    try {
+        app._clearMenuState();
+        assert.equal(leftClosed, true, 'Left click menu should be closed');
+        assert.equal(contextClosed, true, 'Right click context menu should be closed');
+        assert.equal(menuElRemoved, true, 'Lingering context-menu elements should be removed from DOM');
+        assert.equal(app._activeLeftClickMenu, null);
+        assert.equal(app._activeMenuTarget, null);
+        assert.equal(app._activeContextMenuTarget, null);
+    } finally {
+        document.querySelectorAll = originalQuerySelectorAll;
+    }
+});
+
+test('ActionDisplayApp _boundOutsidePointerDown closes active dropdown when clicking another action item', () => {
+    const mockActor = { isOwner: true, uuid: 'Actor.outside-pointer-test' };
+    const app = new ActionDisplayApp({ actor: mockActor });
+    app.element = {
+        addEventListener: () => {},
+        querySelector: () => null,
+        querySelectorAll: () => []
+    };
+
+    let clearMenuStateCalled = false;
+    app._clearMenuState = () => { clearMenuStateCalled = true; };
+
+    // Simulate item 1 dropdown open
+    const item1El = { id: 'item-1' };
+    const item2El = { id: 'item-2' };
+    app._activeLeftClickMenu = { close: () => {} };
+    app._activeMenuTarget = item1El;
+
+    app._onFirstRender({}, {});
+
+    // 1. Click on item 2 (different item) -> should trigger _clearMenuState
+    const fakeEventItem2 = {
+        target: {
+            closest: (sel) => {
+                if (sel.includes('.bad-action-item')) return item2El;
+                return null;
+            }
+        }
+    };
+    app._boundOutsidePointerDown(fakeEventItem2);
+    assert.equal(clearMenuStateCalled, true, 'Clicking another action item must close active dropdown');
+
+    // 2. Click on item 1 (same item) -> should NOT trigger _clearMenuState from outside click
+    clearMenuStateCalled = false;
+    const fakeEventItem1 = {
+        target: {
+            closest: (sel) => {
+                if (sel.includes('.bad-action-item')) return item1El;
+                return null;
+            }
+        }
+    };
+    app._boundOutsidePointerDown(fakeEventItem1);
+    assert.equal(clearMenuStateCalled, false, 'Clicking the same item should not trigger outside click close');
+
+    // 3. Click inside menu -> should NOT trigger _clearMenuState from outside click
+    clearMenuStateCalled = false;
+    const fakeEventMenu = {
+        target: {
+            closest: (sel) => {
+                if (sel.includes('#context-menu')) return { id: 'context-menu' };
+                return null;
+            }
+        }
+    };
+    app._boundOutsidePointerDown(fakeEventMenu);
+    assert.equal(clearMenuStateCalled, false, 'Clicking inside the menu should not trigger outside click close');
 });
