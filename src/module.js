@@ -171,7 +171,7 @@ Hooks.on('closeTokenHUD', (tokenHUD, html) => {
 // Hook into canvas pan to update attached HUD position dynamically
 Hooks.on('canvasPan', (canvas, pan) => {
     if (activeApp && activeApp.isTracked) {
-        activeApp.updatePosition();
+        activeApp.setPosition();
     }
 });
 

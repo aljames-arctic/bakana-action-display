@@ -6,6 +6,7 @@
 globalThis.Item = class Item {};
 globalThis.Actor = class Actor {};
 globalThis.HTMLElement = class HTMLElement {};
+Math.clamp = Math.clamp ?? ((num, min, max) => Math.min(Math.max(num, min), max));
 globalThis.CONFIG = globalThis.CONFIG ?? {};
 globalThis.CONFIG.DND5E = globalThis.CONFIG.DND5E ?? {
     activityActivationTypes: {
@@ -117,6 +118,12 @@ class TokenHUD {
 globalThis.canvas = {
     hud: {
         token: new TokenHUD()
+    },
+    stage: {
+        scale: { x: 1, y: 1 }
+    },
+    grid: {
+        size: 100
     }
 };
 
@@ -175,6 +182,9 @@ globalThis.foundry = {
                         this.element.style.display = 'none';
                         this.element = null;
                     }
+                    return this;
+                }
+                setPosition(position = {}) {
                     return this;
                 }
             }
@@ -360,5 +370,6 @@ globalThis.game = {
     },
     keyboard: {
         isModifierActive(mod) { return false; }
-    }
+    },
+    canvas: globalThis.canvas
 };

@@ -63,3 +63,81 @@ test('Reactive document hooks re-render activeApp when item or actor mutates', a
     // Cleanup: close HUD
     Hooks.callAll('closeTokenHUD', {}, {});
 });
+
+test('canvasPan hook updates position on tracked activeApp without error', () => {
+    let positionUpdated = 0;
+    const mockToken = {
+        id: 'token-hero-pan',
+        name: 'Hero Pan',
+        document: { isOwner: true },
+        actor: {
+            id: 'actor-hero-pan',
+            name: 'Hero Actor',
+            isOwner: true,
+            items: new foundry.utils.Collection()
+        }
+    };
+
+    // Open HUD for token
+    Hooks.callAll('renderTokenHUD', { object: mockToken }, {}, {});
+
+    const app = actionDisplay.activeApp;
+    assert.ok(app);
+    assert.equal(app.isTracked, true);
+
+    app.setPosition = () => {
+        positionUpdated++;
+    };
+
+    // canvasPan triggers setPosition when isTracked is true
+    Hooks.callAll('canvasPan', {}, {});
+    assert.equal(positionUpdated, 1);
+
+    // Cleanup: close HUD
+    Hooks.callAll('closeTokenHUD', {}, {});
+});
+
+test('ActionDisplayApp setPosition calculates coordinates across attached, pinned, and detached modes', () => {
+    const mockToken = {
+        id: 'token-hero-pos',
+        name: 'Hero Pos',
+        document: { isOwner: true },
+        actor: {
+            id: 'actor-hero-pos',
+            name: 'Hero Actor',
+            isOwner: true,
+            items: new foundry.utils.Collection()
+        },
+        w: 100,
+        h: 100,
+        worldTransform: { tx: 500, ty: 400 }
+    };
+
+    // Open HUD for token
+    Hooks.callAll('renderTokenHUD', { object: mockToken }, {}, {});
+
+    const app = actionDisplay.activeApp;
+    assert.ok(app);
+    app.element = { style: {}, offsetWidth: 300, offsetHeight: 200 };
+
+    // 1. Attached mode (default)
+    app.positionMode = 'attached';
+    app.setPosition();
+    assert.ok(app.element.style.left !== undefined || app.element.style.top !== undefined);
+
+    // 2. Pinned mode
+    app.positionMode = 'pinned';
+    app.setPosition();
+    assert.ok(app.element.style.left !== undefined);
+    assert.ok(app.element.style.top !== undefined);
+
+    // 3. Detached mode
+    app.positionMode = 'detached';
+    app.setPosition();
+    assert.ok(app.element.style.left !== undefined);
+
+    // Cleanup: close HUD
+    Hooks.callAll('closeTokenHUD', {}, {});
+});
+
+
