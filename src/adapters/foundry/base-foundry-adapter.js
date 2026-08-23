@@ -103,4 +103,18 @@ export class BaseFoundryAdapter {
     getProperty(obj, path) {
         return foundry.utils.getProperty(obj, path);
     }
+
+    /**
+     * Enrich an HTML string with Foundry enrichers, roll data, and document links.
+     * @param {string} content HTML string to enrich
+     * @param {Object} [options={}] Enrichment options (rollData, secrets, relativeTo, etc.)
+     * @returns {Promise<string>}
+     */
+    async enrichHTML(content, options = {}) {
+        if (!content) return '';
+        if (typeof globalThis.TextEditor?.enrichHTML === 'function') {
+            return globalThis.TextEditor.enrichHTML(content, { secrets: false, async: true, ...options });
+        }
+        return content;
+    }
 }

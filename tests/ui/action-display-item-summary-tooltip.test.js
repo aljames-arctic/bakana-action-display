@@ -10,7 +10,7 @@ import { Pf1SystemAdapter } from '../../src/adapters/system/pf1-system-adapter.j
 import { Pf2eSystemAdapter } from '../../src/adapters/system/pf2e-system-adapter.js';
 import { adapter } from '../../src/adapters/index.js';
 
-test('BaseSystemAdapter.getItemSummary returns basic item summary properties', () => {
+test('BaseSystemAdapter.getItemSummary returns basic item summary properties and enriched description', async () => {
     const baseAdapter = new BaseSystemAdapter('generic');
     const mockItem = {
         name: 'Torch',
@@ -19,7 +19,7 @@ test('BaseSystemAdapter.getItemSummary returns basic item summary properties', (
         system: {
             range: { value: 20, units: 'ft' },
             damage: { value: '1' },
-            description: { value: '<p>A simple torch.</p>' }
+            description: { value: '<p>A simple [[lookup @name lowercase]]{torch}.</p>' }
         }
     };
     const action = new Action({
@@ -29,7 +29,7 @@ test('BaseSystemAdapter.getItemSummary returns basic item summary properties', (
         uses: { available: 5, max: 10 }
     });
 
-    const summary = baseAdapter.getItemSummary(action, mockItem);
+    const summary = await baseAdapter.getItemSummary(action, mockItem);
     assert.ok(summary);
     assert.equal(summary.title, 'Torch');
     assert.equal(summary.subtitle, 'Equipment');
@@ -40,7 +40,7 @@ test('BaseSystemAdapter.getItemSummary returns basic item summary properties', (
     assert.equal(summary.description, '<p>A simple torch.</p>');
 });
 
-test('Dnd5eSystemAdapter.getItemSummary formats weapons, spells, feats, and Page 2 checks', () => {
+test('Dnd5eSystemAdapter.getItemSummary formats weapons, spells, feats, and Page 2 checks with enriched description', async () => {
     const dnd5eAdapter = new Dnd5eSystemAdapter();
 
     // 1. Weapon
@@ -57,7 +57,7 @@ test('Dnd5eSystemAdapter.getItemSummary formats weapons, spells, feats, and Page
         system: {
             type: { value: 'martialM', label: 'Martial Melee' },
             properties: new Set(['ver']),
-            description: { value: 'A versatile sword.' }
+            description: { value: '<p>The [[lookup @name lowercase]]{monster} swings a versatile sword.</p>' }
         }
     };
     const weaponAction = new Action({
@@ -66,7 +66,7 @@ test('Dnd5eSystemAdapter.getItemSummary formats weapons, spells, feats, and Page
         originalItem: weaponItem
     });
 
-    const weaponSummary = dnd5eAdapter.getItemSummary(weaponAction, weaponItem);
+    const weaponSummary = await dnd5eAdapter.getItemSummary(weaponAction, weaponItem);
     assert.ok(weaponSummary);
     assert.equal(weaponSummary.title, 'Longsword');
     assert.ok(weaponSummary.subtitle.includes('Martial Melee'));
@@ -75,6 +75,7 @@ test('Dnd5eSystemAdapter.getItemSummary formats weapons, spells, feats, and Page
     assert.ok(weaponSummary.properties.some(p => p.label === 'Damage' && p.value === '1d8+3 Slashing'));
     assert.ok(weaponSummary.properties.some(p => p.label === 'Range' && p.value === '5 ft'));
     assert.ok(weaponSummary.properties.some(p => p.value === 'ver'));
+    assert.equal(weaponSummary.description, '<p>The longsword swings a versatile sword.</p>');
 
     // 2. Spell
     const spellItem = {
@@ -102,7 +103,7 @@ test('Dnd5eSystemAdapter.getItemSummary formats weapons, spells, feats, and Page
         originalItem: spellItem
     });
 
-    const spellSummary = dnd5eAdapter.getItemSummary(spellAction, spellItem);
+    const spellSummary = await dnd5eAdapter.getItemSummary(spellAction, spellItem);
     assert.ok(spellSummary);
     assert.equal(spellSummary.title, 'Fireball');
     assert.ok(spellSummary.properties.some(p => p.label === 'Damage' && p.value === '8d6 Fire'));
@@ -141,23 +142,23 @@ test('Dnd5eSystemAdapter.getItemSummary formats weapons, spells, feats, and Page
         extra: { section: 'core' }
     });
 
-    const checkSummary = dnd5eAdapter.getItemSummary(checkAction, null, mockActor);
+    const checkSummary = await dnd5eAdapter.getItemSummary(checkAction, null, mockActor);
     assert.equal(checkSummary.title, 'Dexterity');
     assert.equal(checkSummary.subtitle, 'Ability Check');
     assert.ok(checkSummary.properties.some(p => p.label === 'Modifier' && p.value === '+3'));
     assert.ok(checkSummary.properties.some(p => p.label === 'Score' && p.value === '16'));
 
-    const saveSummary = dnd5eAdapter.getItemSummary(saveAction, null, mockActor);
+    const saveSummary = await dnd5eAdapter.getItemSummary(saveAction, null, mockActor);
     assert.equal(saveSummary.subtitle, 'Saving Throw');
     assert.ok(saveSummary.properties.some(p => p.label === 'Modifier' && p.value === '+5'));
     assert.ok(saveSummary.properties.some(p => p.value === 'Proficient'));
 
-    const skillSummary = dnd5eAdapter.getItemSummary(skillAction, null, mockActor);
+    const skillSummary = await dnd5eAdapter.getItemSummary(skillAction, null, mockActor);
     assert.ok(skillSummary.subtitle.includes('Skill Check'));
     assert.ok(skillSummary.properties.some(p => p.label === 'Modifier' && p.value === '+5'));
 });
 
-test('Pf1SystemAdapter and Pf2eSystemAdapter getItemSummary extraction', () => {
+test('Pf1SystemAdapter and Pf2eSystemAdapter getItemSummary extraction', async () => {
     const pf1 = new Pf1SystemAdapter();
     const pf2e = new Pf2eSystemAdapter();
 
@@ -168,7 +169,7 @@ test('Pf1SystemAdapter and Pf2eSystemAdapter getItemSummary extraction', () => {
         system: { description: { value: 'A small dagger.' } }
     };
     const pf1Action = new Action({ id: 'pf1-1', name: 'Dagger', originalItem: pf1Item });
-    const pf1Summary = pf1.getItemSummary(pf1Action, pf1Item);
+    const pf1Summary = await pf1.getItemSummary(pf1Action, pf1Item);
     assert.equal(pf1Summary.title, 'Dagger');
     assert.ok(pf1Summary.properties.some(p => p.label === 'Attack' && p.value === '+4'));
 
@@ -183,7 +184,7 @@ test('Pf1SystemAdapter and Pf2eSystemAdapter getItemSummary extraction', () => {
         }
     };
     const pf2eAction = new Action({ id: 'pf2e-1', name: 'Shortsword', originalItem: pf2eItem });
-    const pf2eSummary = pf2e.getItemSummary(pf2eAction, pf2eItem);
+    const pf2eSummary = await pf2e.getItemSummary(pf2eAction, pf2eItem);
     assert.equal(pf2eSummary.title, 'Shortsword');
     assert.ok(pf2eSummary.properties.some(p => p.label === 'Damage' && p.value === '1d6 piercing'));
     assert.ok(pf2eSummary.properties.some(p => p.value === 'agile'));
@@ -242,7 +243,7 @@ test('ActionDisplayApp triggers rich tooltip on hover + holding ? key, and hides
     assert.equal(globalThis.game.tooltip.active, false);
 
     // 2. Press '?' while hovering -> Tooltip activates
-    app._onKeyDown({ key: '?', shiftKey: true, target: { tagName: 'DIV' } });
+    await app._onKeyDown({ key: '?', shiftKey: true, target: { tagName: 'DIV' } });
     assert.equal(globalThis.game.tooltip.active, true);
     assert.ok(globalThis.game.tooltip.options.html.includes('Greatsword'));
     assert.ok(globalThis.game.tooltip.options.html.includes('2d6+4 Slashing'));
@@ -253,8 +254,8 @@ test('ActionDisplayApp triggers rich tooltip on hover + holding ? key, and hides
     assert.equal(globalThis.game.tooltip.active, false);
 
     // 4. Hold '?' first, then hover over item -> Tooltip activates
-    app._onKeyDown({ key: '?', shiftKey: true, target: { tagName: 'DIV' } });
-    app._boundOnPointerOver({ target: itemEl });
+    await app._onKeyDown({ key: '?', shiftKey: true, target: { tagName: 'DIV' } });
+    await app._boundOnPointerOver({ target: itemEl });
     assert.equal(globalThis.game.tooltip.active, true);
 
     // 5. Pointer leaves item -> Tooltip deactivates
@@ -262,15 +263,15 @@ test('ActionDisplayApp triggers rich tooltip on hover + holding ? key, and hides
     assert.equal(globalThis.game.tooltip.active, false);
 
     // 6. Test window blur clears state
-    app._onKeyDown({ key: '?', shiftKey: true, target: { tagName: 'DIV' } });
-    app._boundOnPointerOver({ target: itemEl });
+    await app._onKeyDown({ key: '?', shiftKey: true, target: { tagName: 'DIV' } });
+    await app._boundOnPointerOver({ target: itemEl });
     assert.equal(globalThis.game.tooltip.active, true);
     app._onWindowBlur();
     assert.equal(globalThis.game.tooltip.active, false);
     assert.equal(app._isQuestionMarkHeld, false);
 
     // 7. Ignore '?' when typing inside search input
-    app._onKeyDown({ key: '?', shiftKey: true, target: { tagName: 'INPUT' } });
+    await app._onKeyDown({ key: '?', shiftKey: true, target: { tagName: 'INPUT' } });
     assert.equal(app._isQuestionMarkHeld, false);
     assert.equal(globalThis.game.tooltip.active, false);
 
@@ -383,18 +384,18 @@ test('ActionDisplayApp triggers rich tooltip for activities in dropdown menus wh
         assert.equal(sub2Li._badSubaction, sub2);
 
         // 1. Hover over first activity while holding '?'
-        app._onKeyDown({ key: '?', shiftKey: true, target: { tagName: 'DIV' } });
+        await app._onKeyDown({ key: '?', shiftKey: true, target: { tagName: 'DIV' } });
         assert.equal(app._isQuestionMarkHeld, true);
 
         // Trigger pointerover on sub1Li
-        sub1Li._listeners.pointerover();
+        await sub1Li._listeners.pointerover();
         assert.equal(globalThis.game.tooltip.active, true);
         assert.ok(globalThis.game.tooltip.options.html.includes('Staff Strike'));
         assert.ok(globalThis.game.tooltip.options.html.includes('1d6+2 Bludgeoning'));
 
         // 2. Move pointer to second activity sub2Li
         sub1Li._listeners.pointerout({ relatedTarget: sub2Li });
-        sub2Li._listeners.pointerover();
+        await sub2Li._listeners.pointerover();
         assert.equal(globalThis.game.tooltip.active, true);
         assert.ok(globalThis.game.tooltip.options.html.includes('Two-Handed Strike'));
         assert.ok(globalThis.game.tooltip.options.html.includes('1d8+2 Bludgeoning'));

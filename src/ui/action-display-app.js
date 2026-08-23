@@ -1259,7 +1259,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         if (itemEl && itemEl !== this._hoveredActionItem) {
             this._hoveredActionItem = itemEl;
             if (this._isQuestionMarkHeld) {
-                this._showItemSummaryTooltip(itemEl);
+                return this._showItemSummaryTooltip(itemEl);
             }
         }
     }
@@ -1296,7 +1296,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         if (isQuestionMark) {
             this._isQuestionMarkHeld = true;
             if (this._hoveredActionItem && !this._activeSummaryTooltip) {
-                this._showItemSummaryTooltip(this._hoveredActionItem);
+                return this._showItemSummaryTooltip(this._hoveredActionItem);
             }
         }
     }
@@ -1398,14 +1398,16 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
      * @param {HTMLElement} itemEl
      * @protected
      */
-    _showItemSummaryTooltip(itemEl) {
+    async _showItemSummaryTooltip(itemEl) {
         if (!itemEl) return;
         const actionId = itemEl.dataset?.actionId;
         const action = itemEl._badSubaction ?? this.actions.find(a => a.id === actionId);
         if (!action) return;
 
-        const summary = adapter.getItemSummary(action, action.originalItem, this.actor);
+        const summary = await adapter.getItemSummary(action, action.originalItem, this.actor);
         if (!summary) return;
+
+        if (this._hoveredActionItem !== itemEl || !this._isQuestionMarkHeld) return;
 
         const html = typeof summary === 'string' ? summary : this._formatItemSummaryHtml(summary);
         this._activeSummaryTooltip = { element: itemEl, actionId: action.id, summary, html };

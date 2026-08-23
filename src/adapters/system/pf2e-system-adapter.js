@@ -824,7 +824,7 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
      * @param {Object} [actor] The owning actor document
      * @returns {{title: string, subtitle?: string, img?: string, properties?: Array<string|{label?: string, value: string}>, description?: string}|null}
      */
-    getItemSummary(action, item = action?.originalItem, actor = null) {
+    async getItemSummary(action, item = action?.originalItem, actor = null) {
         if (!action && !item) return null;
         const targetItem = item ?? action?.originalItem ?? action;
         const title = action?.name ?? targetItem?.name ?? '';
@@ -850,7 +850,16 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
             properties.push({ label: 'Uses', value: usesStr });
         }
 
-        const description = system.description?.value ?? '';
+        let description = system.description?.value ?? '';
+        if (description && typeof globalThis.TextEditor?.enrichHTML === 'function') {
+            const rollData = targetItem?.getRollData?.() ?? actor?.getRollData?.() ?? {};
+            description = await globalThis.TextEditor.enrichHTML(description, {
+                rollData,
+                relativeTo: targetItem ?? actor,
+                secrets: false,
+                async: true
+            });
+        }
 
         return {
             title,

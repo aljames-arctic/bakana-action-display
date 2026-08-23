@@ -209,7 +209,7 @@ export function showActivityDropdown(app, target, subactions, event) {
                     li.addEventListener('pointerover', () => {
                         app._hoveredActionItem = li;
                         if (app._isQuestionMarkHeld) {
-                            app._showItemSummaryTooltip(li);
+                            return app._showItemSummaryTooltip(li);
                         }
                     });
 

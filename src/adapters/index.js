@@ -371,10 +371,20 @@ class Adapter {
      * @param {Object} action
      * @param {Object} [item]
      * @param {Object} [actor]
-     * @returns {Object|null}
+     * @returns {Promise<Object|null>}
      */
-    getItemSummary(action, item, actor) {
+    async getItemSummary(action, item, actor) {
         return this.system?.getItemSummary?.(action, item, actor) ?? null;
+    }
+
+    /**
+     * Enrich an HTML string with Foundry enrichers, roll data, and document links.
+     * @param {string} content HTML string to enrich
+     * @param {Object} [options={}] Enrichment options (rollData, secrets, relativeTo, etc.)
+     * @returns {Promise<string>}
+     */
+    async enrichHTML(content, options = {}) {
+        return this.foundry?.enrichHTML?.(content, options) ?? content;
     }
 }
 

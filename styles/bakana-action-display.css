@@ -1299,10 +1299,13 @@ div#tooltip:has(.bad-item-summary-tooltip),
 .bad-item-summary-tooltip {
     text-align: left !important;
     direction: ltr !important;
-    max-width: 400px !important;
+    max-width: 420px !important;
     min-width: 260px !important;
     width: max-content !important;
     white-space: normal !important;
+    overflow-x: hidden !important;
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
 }
 
 .bad-item-summary-tooltip {
@@ -1312,6 +1315,8 @@ div#tooltip:has(.bad-item-summary-tooltip),
     font-size: 0.9em;
     line-height: 1.35;
     color: #e2e8f0;
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
 }
 
 .bad-summary-header {
@@ -1320,6 +1325,7 @@ div#tooltip:has(.bad-item-summary-tooltip),
     gap: 0.55em;
     border-bottom: 1px solid rgba(255, 255, 255, 0.12);
     padding-bottom: 0.4em;
+    overflow: hidden;
 }
 
 .bad-summary-icon {
@@ -1335,6 +1341,7 @@ div#tooltip:has(.bad-item-summary-tooltip),
     display: flex;
     flex-direction: column;
     min-width: 0;
+    overflow: hidden;
 }
 
 .bad-summary-title {
@@ -1350,6 +1357,9 @@ div#tooltip:has(.bad-item-summary-tooltip),
     font-size: 0.82em;
     color: #a78bfa;
     font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .bad-summary-tags {
@@ -1377,13 +1387,25 @@ div#tooltip:has(.bad-item-summary-tooltip),
     line-height: 1.35;
     max-height: 160px;
     overflow-y: auto;
-    padding-right: 0.2em;
+    overflow-x: hidden !important;
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
+    white-space: normal !important;
+    padding-right: 0.3em;
     border-top: 1px solid rgba(255, 255, 255, 0.08);
     padding-top: 0.4em;
+    box-sizing: border-box !important;
+}
+
+.bad-summary-desc * {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
 }
 
 .bad-summary-desc p {
-    margin: 0 0 0.3em 0;
+    margin: 0 0 0.35em 0;
 }
 
 .bad-summary-desc p:last-child {

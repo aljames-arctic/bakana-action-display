@@ -443,7 +443,7 @@ export class BaseSystemAdapter {
      * @param {Object} [actor] The owning actor document
      * @returns {{title: string, subtitle?: string, img?: string, properties?: Array<string|{label?: string, value: string}>, description?: string}|null}
      */
-    getItemSummary(action, item = action?.originalItem, actor = null) {
+    async getItemSummary(action, item = action?.originalItem, actor = null) {
         if (!action && !item) return null;
         const targetItem = item ?? action?.originalItem ?? action;
         const title = action?.name ?? targetItem?.name ?? '';
@@ -464,7 +464,16 @@ export class BaseSystemAdapter {
             properties.push({ label: 'Uses', value: usesStr });
         }
 
-        const description = targetItem?.system?.description?.value ?? targetItem?.system?.description ?? '';
+        let description = targetItem?.system?.description?.value ?? targetItem?.system?.description ?? '';
+        if (description && typeof globalThis.TextEditor?.enrichHTML === 'function') {
+            const rollData = targetItem?.getRollData?.() ?? actor?.getRollData?.() ?? {};
+            description = await globalThis.TextEditor.enrichHTML(description, {
+                rollData,
+                relativeTo: targetItem ?? actor,
+                secrets: false,
+                async: true
+            });
+        }
 
         return {
             title,
