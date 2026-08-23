@@ -1279,7 +1279,14 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
      */
     _onPointerOver(event) {
         const itemEl = event.target?.closest?.('.bad-action-item');
-        if (itemEl && itemEl !== this._hoveredActionItem) {
+        if (!itemEl) {
+            if (this._hoveredActionItem) {
+                this._hoveredActionItem = null;
+                this._hideItemSummaryTooltip();
+            }
+            return;
+        }
+        if (itemEl !== this._hoveredActionItem) {
             this._hoveredActionItem = itemEl;
             const showSummaries = this._isQuestionMarkHeld || Boolean(game.settings.get(MODULE_ID, 'showItemSummaries'));
             if (showSummaries) {

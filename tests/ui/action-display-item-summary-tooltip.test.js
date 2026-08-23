@@ -482,5 +482,15 @@ test('ActionDisplayApp triggers rich tooltip on hover when showItemSummaries tog
     assert.equal(game.settings.get('bakana-action-display', 'showItemSummaries'), false);
     assert.equal(globalThis.game.tooltip.active, false);
 
+    // 8. Hovering over the ? button itself or other control buttons does NOT activate a tooltip
+    const buttonEl = {
+        tagName: 'BUTTON',
+        className: 'bad-control-btn bad-summary-toggle-btn',
+        closest: (sel) => null
+    };
+    await app._boundOnPointerOver({ target: buttonEl });
+    assert.equal(globalThis.game.tooltip.active, false);
+    assert.equal(app._hoveredActionItem, null);
+
     await app.close();
 });
