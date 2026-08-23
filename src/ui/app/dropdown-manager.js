@@ -57,6 +57,7 @@ export function buildSubactionMenuItem(sub, event, app = null) {
         icon: `<span class="bad-menu-icon-wrap">${iconHtml}</span>`,
         usesHtml: usesHtml,
         callback: () => {
+            app?._hideItemSummaryTooltip?.();
             const item = sub.originalItem ?? sub;
             const actor = app?.actor ?? null;
             const token = app?.token ?? null;
@@ -159,6 +160,7 @@ export function showActivityDropdown(app, target, subactions, event) {
             applyPositioning(menuEl);
         },
         onClose: () => {
+            app?._hideItemSummaryTooltip?.();
             target?.classList?.remove?.('bad-dropdown-active');
             if (app._activeLeftClickMenu === menu) app._activeLeftClickMenu = null;
             if (app._activeMenuTarget === target) app._activeMenuTarget = null;
@@ -176,6 +178,7 @@ export function showActivityDropdown(app, target, subactions, event) {
 
     const origClose = typeof menu.close === 'function' ? menu.close.bind(menu) : null;
     menu.close = async (closeOptions = {}) => {
+        app?._hideItemSummaryTooltip?.();
         const menuEl = document.querySelector('#context-menu, .context-menu');
         try {
             if (origClose) await origClose(closeOptions);
@@ -191,7 +194,7 @@ export function showActivityDropdown(app, target, subactions, event) {
 
     app._activeLeftClickMenu = menu;
 
-    menu.render(target)?.then?.(() => {
+    return menu.render(target)?.then?.(() => {
         const menuEl = document.querySelector('#context-menu, .context-menu');
         if (menuEl) {
             applyPositioning(menuEl);
@@ -200,10 +203,29 @@ export function showActivityDropdown(app, target, subactions, event) {
             lis.forEach((li, idx) => {
                 const sub = subactions[idx];
                 if (sub) {
+                    li.dataset.actionId = sub.id;
+                    li._badSubaction = sub;
+
+                    li.addEventListener('pointerover', () => {
+                        app._hoveredActionItem = li;
+                        if (app._isQuestionMarkHeld) {
+                            app._showItemSummaryTooltip(li);
+                        }
+                    });
+
+                    li.addEventListener('pointerout', (ev) => {
+                        const related = ev.relatedTarget?.closest?.('.context-item');
+                        if (related !== li && app._hoveredActionItem === li) {
+                            app._hoveredActionItem = null;
+                            app._hideItemSummaryTooltip();
+                        }
+                    });
+
                     li.addEventListener('contextmenu', (ev) => {
                         ev.preventDefault();
                         ev.stopPropagation();
                         ev.stopImmediatePropagation();
+                        app._hideItemSummaryTooltip();
                         try {
                             app._activeLeftClickMenu?.close()?.catch?.(err => {
                                 log.debug("LeftClickMenu.close promise rejected:", err);

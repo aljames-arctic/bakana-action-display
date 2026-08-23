@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import '../setup.js';
 import { Action } from '../../src/ui/action.js';
 import { ActionDisplayApp } from '../../src/ui/action-display-app.js';
+import { showActivityDropdown } from '../../src/ui/app/dropdown-manager.js';
 import { BaseSystemAdapter } from '../../src/adapters/system/base-system-adapter.js';
 import { Dnd5eSystemAdapter } from '../../src/adapters/system/dnd5e-system-adapter.js';
 import { Pf1SystemAdapter } from '../../src/adapters/system/pf1-system-adapter.js';
@@ -277,4 +278,135 @@ test('ActionDisplayApp triggers rich tooltip on hover + holding ? key, and hides
     await app.close();
     assert.equal(app._hoveredActionItem, null);
     assert.equal(app._isQuestionMarkHeld, false);
+});
+
+test('ActionDisplayApp triggers rich tooltip for activities in dropdown menus when holding ?', async () => {
+    adapter.system = new Dnd5eSystemAdapter();
+
+    const parentItem = {
+        name: 'Versatile Staff',
+        type: 'weapon',
+        system: { description: { value: 'A magical staff.' } }
+    };
+
+    const sub1 = new Action({
+        id: 'sub-staff-1',
+        name: 'Staff Strike',
+        originalItem: parentItem,
+        originalActivity: {
+            name: 'Staff Strike',
+            labels: {
+                activation: '1 Action',
+                toHit: '+4',
+                damage: '1d6+2 Bludgeoning',
+                range: '5 ft'
+            }
+        }
+    });
+
+    const sub2 = new Action({
+        id: 'sub-staff-2',
+        name: 'Two-Handed Strike',
+        originalItem: parentItem,
+        originalActivity: {
+            name: 'Two-Handed Strike',
+            labels: {
+                activation: '1 Action',
+                toHit: '+4',
+                damage: '1d8+2 Bludgeoning',
+                range: '5 ft'
+            }
+        }
+    });
+
+    const parentAction = new Action({
+        id: 'parent-staff',
+        name: 'Versatile Staff',
+        originalItem: parentItem,
+        subactions: [sub1, sub2]
+    });
+
+    const app = new ActionDisplayApp({
+        actor: { isOwner: true }
+    });
+    app.actions = [parentAction];
+
+    // Mock DOM action card and menu elements
+    const targetCard = {
+        tagName: 'DIV',
+        className: 'bad-action-item',
+        dataset: { actionId: 'parent-staff' },
+        classList: { add() {}, remove() {}, contains: () => false },
+        getBoundingClientRect: () => ({ left: 100, top: 100, right: 250, bottom: 140, width: 150, height: 40 })
+    };
+
+    const sub1Li = {
+        tagName: 'LI',
+        className: 'context-item',
+        dataset: {},
+        _listeners: {},
+        addEventListener(evt, fn) { this._listeners[evt] = fn; },
+        querySelector: () => null,
+        insertAdjacentHTML: () => {},
+        getBoundingClientRect: () => ({ left: 100, top: 140, right: 250, bottom: 175, width: 150, height: 35 })
+    };
+
+    const sub2Li = {
+        tagName: 'LI',
+        className: 'context-item',
+        dataset: {},
+        _listeners: {},
+        addEventListener(evt, fn) { this._listeners[evt] = fn; },
+        querySelector: () => null,
+        insertAdjacentHTML: () => {},
+        getBoundingClientRect: () => ({ left: 100, top: 175, right: 250, bottom: 210, width: 150, height: 35 })
+    };
+
+    const mockMenuEl = {
+        remove: () => {},
+        querySelectorAll: (sel) => (sel === '.context-item' ? [sub1Li, sub2Li] : []),
+        style: { setProperty() {} },
+        children: []
+    };
+
+    const originalQuerySelector = document.querySelector;
+    document.querySelector = (sel) => {
+        if (sel.includes('#context-menu')) return mockMenuEl;
+        return null;
+    };
+
+    try {
+        await showActivityDropdown(app, targetCard, [sub1, sub2], { preventDefault() {}, stopPropagation() {} });
+
+        // Verify subaction attached to LI
+        assert.equal(sub1Li._badSubaction, sub1);
+        assert.equal(sub2Li._badSubaction, sub2);
+
+        // 1. Hover over first activity while holding '?'
+        app._onKeyDown({ key: '?', shiftKey: true, target: { tagName: 'DIV' } });
+        assert.equal(app._isQuestionMarkHeld, true);
+
+        // Trigger pointerover on sub1Li
+        sub1Li._listeners.pointerover();
+        assert.equal(globalThis.game.tooltip.active, true);
+        assert.ok(globalThis.game.tooltip.options.html.includes('Staff Strike'));
+        assert.ok(globalThis.game.tooltip.options.html.includes('1d6+2 Bludgeoning'));
+
+        // 2. Move pointer to second activity sub2Li
+        sub1Li._listeners.pointerout({ relatedTarget: sub2Li });
+        sub2Li._listeners.pointerover();
+        assert.equal(globalThis.game.tooltip.active, true);
+        assert.ok(globalThis.game.tooltip.options.html.includes('Two-Handed Strike'));
+        assert.ok(globalThis.game.tooltip.options.html.includes('1d8+2 Bludgeoning'));
+
+        // 3. Release '?'
+        app._onKeyUp({ key: '?', shiftKey: false });
+        assert.equal(globalThis.game.tooltip.active, false);
+
+        // 4. Close dropdown cleans up
+        await app._activeLeftClickMenu.close();
+        assert.equal(app._activeLeftClickMenu, null);
+    } finally {
+        document.querySelector = originalQuerySelector;
+    }
 });

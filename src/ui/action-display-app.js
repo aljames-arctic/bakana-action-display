@@ -1401,14 +1401,14 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
     _showItemSummaryTooltip(itemEl) {
         if (!itemEl) return;
         const actionId = itemEl.dataset?.actionId;
-        const action = this.actions.find(a => a.id === actionId);
+        const action = itemEl._badSubaction ?? this.actions.find(a => a.id === actionId);
         if (!action) return;
 
         const summary = adapter.getItemSummary(action, action.originalItem, this.actor);
         if (!summary) return;
 
         const html = typeof summary === 'string' ? summary : this._formatItemSummaryHtml(summary);
-        this._activeSummaryTooltip = { element: itemEl, actionId, summary, html };
+        this._activeSummaryTooltip = { element: itemEl, actionId: action.id, summary, html };
 
         if (game.tooltip?.activate) {
             game.tooltip.activate(itemEl, {
