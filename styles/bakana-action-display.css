@@ -55,17 +55,17 @@
     display: grid;
     grid-template-columns: 1fr auto 1fr;
     align-items: center;
-    background: rgba(0, 0, 0, 0.2);
+    background: rgba(0, 0, 0, 0.25);
     border-radius: 0.43em; /* 6px -> 0.43em */
-    padding: 0.14em 0.43em; /* 2px 6px -> 0.14em 0.43em */
+    padding: 0.2em 0.43em; /* 3px 6px -> 0.2em 0.43em */
     margin-bottom: 0.28em; /* 4px -> 0.28em */
-    border: 1px solid rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.04);
 }
 
 .bad-control-group {
     display: flex;
     align-items: center;
-    gap: 0.28em; /* 4px -> 0.28em */
+    gap: 0.35em;
 }
 
 .bad-control-group.bad-control-left {
@@ -79,11 +79,11 @@
 .bad-drag-handle {
     cursor: move;
     color: #64748b;
-    font-size: 0.8em; /* rem -> em */
+    font-size: 0.85em; /* rem -> em */
     display: flex;
     align-items: center;
     justify-content: center;
-    height: 1.15em; /* 16px -> 1.15em */
+    height: 1.85em;
     padding: 0 0.5em;
     transition: color 0.2s ease;
 }
@@ -93,22 +93,22 @@
 }
 
 .bad-control-btn {
-    background: none !important;
-    border: none !important;
-    color: #64748b !important;
+    background: rgba(255, 255, 255, 0.03) !important;
+    border: 1px solid transparent !important;
+    color: #94a3b8 !important;
     cursor: pointer;
     padding: 0 !important;
-    font-size: 0.85em !important; /* rem -> em */
+    font-size: 0.88em !important; /* rem -> em */
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
-    transition: color 0.2s ease !important;
-    height: 1.5em !important;
-    width: 1.5em !important;
-    min-width: 1.5em !important;
-    min-height: 1.5em !important;
-    max-width: 1.5em !important;
-    max-height: 1.5em !important;
+    transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease !important;
+    height: 1.85em !important;
+    width: 1.85em !important;
+    min-width: 1.85em !important;
+    min-height: 1.85em !important;
+    max-width: 1.85em !important;
+    max-height: 1.85em !important;
     aspect-ratio: 1 / 1 !important;
     line-height: 1 !important;
     box-shadow: none !important;
@@ -128,12 +128,16 @@
 }
 
 .bad-control-btn:hover {
-    color: #a78bfa !important; /* Soft violet glow */
+    color: #ffffff !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+    border-color: rgba(255, 255, 255, 0.12) !important;
 }
 
 .bad-control-btn.active {
-    color: #a78bfa !important;
-    text-shadow: 0 0 8px rgba(167, 139, 250, 0.6);
+    color: #c084fc !important;
+    background: rgba(167, 139, 250, 0.18) !important;
+    border-color: rgba(167, 139, 250, 0.35) !important;
+    text-shadow: 0 0 6px rgba(167, 139, 250, 0.5);
 }
 
 .bad-control-btn:focus,
@@ -148,11 +152,13 @@
 }
 
 .bad-close-btn {
-    margin-left: 0.5em !important; /* Half an icon extra space from the attachment button */
+    margin-left: 0.35em !important;
 }
 
 .bad-close-btn:hover {
-    color: #ef4444 !important; /* Soft red on close hover */
+    color: #fca5a5 !important;
+    background: rgba(239, 68, 68, 0.15) !important;
+    border-color: rgba(239, 68, 68, 0.3) !important;
 }
 
 
