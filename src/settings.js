@@ -77,14 +77,14 @@ Hooks.once('init', () => {
         }
     });
 
-    // Register Item Summary Tooltip Button Setting (World Scope, default disabled)
+    // Register Item Summary Tooltip Button Setting (World Scope, default enabled)
     game.settings.register(MODULE_ID, 'enableItemSummaryButton', {
         name: game.i18n.localize('BAD.settings.enableItemSummaryButton.name'),
         hint: game.i18n.localize('BAD.settings.enableItemSummaryButton.hint'),
         scope: 'world',
         config: true,
         type: Boolean,
-        default: false,
+        default: true,
         onChange: () => {
             if (actionDisplay.activeApp?.rendered) {
                 actionDisplay.activeApp.render();
