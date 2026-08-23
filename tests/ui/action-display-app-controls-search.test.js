@@ -93,7 +93,7 @@ test('ActionDisplayApp search query filters actions in _prepareContext and clear
     assert.equal(renderCalled, true);
 });
 
-test('ActionDisplayApp _prepareContext reflects enableCenterOnToken world config setting', async () => {
+test('ActionDisplayApp _prepareContext reflects enableCenterOnToken and enableItemSummaryButton world config settings', async () => {
     actionDisplay.getActions = async () => [];
 
     const app = new ActionDisplayApp({ actor: { id: 'test-actor' } });
@@ -102,16 +102,47 @@ test('ActionDisplayApp _prepareContext reflects enableCenterOnToken world config
 
     // Default disabled
     await game.settings.set(MODULE_ID, 'enableCenterOnToken', false);
+    await game.settings.set(MODULE_ID, 'enableItemSummaryButton', false);
+    await game.settings.set(MODULE_ID, 'showItemSummaries', false);
     let context = await app._prepareContext({});
     assert.equal(context.enableCenterOnToken, false);
+    assert.equal(context.enableItemSummaryButton, false);
+    assert.equal(context.showItemSummaries, false);
 
     // Enabled via world config
     await game.settings.set(MODULE_ID, 'enableCenterOnToken', true);
+    await game.settings.set(MODULE_ID, 'enableItemSummaryButton', true);
+    await game.settings.set(MODULE_ID, 'showItemSummaries', true);
     context = await app._prepareContext({});
     assert.equal(context.enableCenterOnToken, true);
+    assert.equal(context.enableItemSummaryButton, true);
+    assert.equal(context.showItemSummaries, true);
 
     // Reset back to false
     await game.settings.set(MODULE_ID, 'enableCenterOnToken', false);
+    await game.settings.set(MODULE_ID, 'enableItemSummaryButton', false);
+    await game.settings.set(MODULE_ID, 'showItemSummaries', false);
+});
+
+test('ActionDisplayApp _onToggleItemSummaries toggles showItemSummaries setting via button', async () => {
+    let renderCalled = false;
+    const app = new ActionDisplayApp({ actor: { id: 'test-actor' } });
+    app.render = () => { renderCalled = true; };
+
+    // Initial state is false
+    await game.settings.set(MODULE_ID, 'showItemSummaries', false);
+    assert.equal(game.settings.get(MODULE_ID, 'showItemSummaries'), false);
+
+    // Toggle on
+    await app._onToggleItemSummaries({}, {});
+    assert.equal(game.settings.get(MODULE_ID, 'showItemSummaries'), true);
+    assert.equal(renderCalled, true);
+
+    // Toggle off
+    renderCalled = false;
+    await app._onToggleItemSummaries({}, {});
+    assert.equal(game.settings.get(MODULE_ID, 'showItemSummaries'), false);
+    assert.equal(renderCalled, true);
 });
 
 test('ActionDisplayApp _syncTabWidths synchronizes tab widths to maximal width per depth', () => {

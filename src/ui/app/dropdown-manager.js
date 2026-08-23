@@ -1,3 +1,4 @@
+import { MODULE_ID } from '../../constants.js';
 import { log } from '../../lib/logger.js';
 import { adapter } from '../../adapters/index.js';
 
@@ -208,7 +209,8 @@ export function showActivityDropdown(app, target, subactions, event) {
 
                     li.addEventListener('pointerover', () => {
                         app._hoveredActionItem = li;
-                        if (app._isQuestionMarkHeld) {
+                        const showSummaries = app._isQuestionMarkHeld || Boolean(game.settings.get(MODULE_ID, 'showItemSummaries'));
+                        if (showSummaries) {
                             return app._showItemSummaryTooltip(li);
                         }
                     });

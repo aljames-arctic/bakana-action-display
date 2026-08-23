@@ -411,3 +411,76 @@ test('ActionDisplayApp triggers rich tooltip for activities in dropdown menus wh
         document.querySelector = originalQuerySelector;
     }
 });
+
+test('ActionDisplayApp triggers rich tooltip on hover when showItemSummaries toggle is active without holding ?', async () => {
+    adapter.system = new Dnd5eSystemAdapter();
+
+    const mockItem = {
+        name: 'Dagger of Venom',
+        type: 'weapon',
+        img: 'icons/dagger.webp',
+        labels: {
+            activation: '1 Action',
+            toHit: '+5',
+            damage: '1d4+3 Piercing',
+            range: '20/60 ft'
+        },
+        system: {
+            description: { value: '<p>A poisoned dagger.</p>' }
+        }
+    };
+
+    const action = new Action({
+        id: 'dagger-1',
+        name: 'Dagger of Venom',
+        originalItem: mockItem
+    });
+
+    const app = new ActionDisplayApp({
+        actor: { isOwner: true }
+    });
+    app.actions = [action];
+
+    const itemEl = {
+        tagName: 'DIV',
+        className: 'bad-action-item',
+        dataset: { actionId: 'dagger-1' },
+        closest: (sel) => (sel === '.bad-action-item' ? itemEl : null),
+        getBoundingClientRect: () => ({ left: 200, top: 100, right: 350, bottom: 140 })
+    };
+
+    // 1. Initial state: showItemSummaries is false -> hover does not activate tooltip
+    await game.settings.set('bakana-action-display', 'showItemSummaries', false);
+    await app._boundOnPointerOver({ target: itemEl });
+    assert.equal(globalThis.game.tooltip.active, false);
+
+    // 2. Enable showItemSummaries via toggle button while hovered -> tooltip activates immediately
+    await app._onToggleItemSummaries({}, {});
+    assert.equal(game.settings.get('bakana-action-display', 'showItemSummaries'), true);
+    assert.equal(globalThis.game.tooltip.active, true);
+    assert.ok(globalThis.game.tooltip.options.html.includes('Dagger of Venom'));
+    assert.ok(globalThis.game.tooltip.options.html.includes('1d4+3 Piercing'));
+
+    // 3. Pointer moves out -> tooltip deactivates
+    app._boundOnPointerOut({ target: itemEl, relatedTarget: null });
+    assert.equal(globalThis.game.tooltip.active, false);
+
+    // 4. Hover again with showItemSummaries still true -> tooltip activates without key press
+    await app._boundOnPointerOver({ target: itemEl });
+    assert.equal(globalThis.game.tooltip.active, true);
+
+    // 5. Keyup does not dismiss tooltip when showItemSummaries is active
+    app._onKeyUp({ key: '?', shiftKey: false });
+    assert.equal(globalThis.game.tooltip.active, true);
+
+    // 6. Window blur does not dismiss tooltip when showItemSummaries is active
+    app._onWindowBlur();
+    assert.equal(globalThis.game.tooltip.active, true);
+
+    // 7. Toggle off showItemSummaries -> tooltip deactivates
+    await app._onToggleItemSummaries({}, {});
+    assert.equal(game.settings.get('bakana-action-display', 'showItemSummaries'), false);
+    assert.equal(globalThis.game.tooltip.active, false);
+
+    await app.close();
+});

@@ -19,6 +19,10 @@
                 "name": "Center on Token Button",
                 "hint": "Display a button in the HUD control bar to recenter the canvas view on the active token."
             },
+            "enableItemSummaryButton": {
+                "name": "Item Summary Tooltip Button",
+                "hint": "Display a ? button in the HUD control bar to toggle rich item summary tooltips without holding the ? key."
+            },
             "economyColorsMenu": {
                 "label": "Configure Colors",
                 "hint": "Customize the indicator bar color for each action economy type for this system."

@@ -5,6 +5,11 @@
             <button class="bad-control-btn bad-filter-resources-btn {{#if showDepleted}}active{{/if}}" data-action="toggleFilterResources">
                 <i class="fas {{#if showDepleted}}fa-eye{{else}}fa-eye-slash{{/if}}"></i>
             </button>
+            {{#if enableItemSummaryButton}}
+            <button class="bad-control-btn bad-summary-toggle-btn {{#if showItemSummaries}}active{{/if}}" data-action="toggleItemSummaries">
+                <i class="fas fa-question"></i>
+            </button>
+            {{/if}}
         </div>
         <div class="bad-drag-handle"><i class="fas fa-grip"></i></div>
         <div class="bad-control-group bad-control-right">

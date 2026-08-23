@@ -77,6 +77,21 @@ Hooks.once('init', () => {
         }
     });
 
+    // Register Item Summary Tooltip Button Setting (World Scope, default disabled)
+    game.settings.register(MODULE_ID, 'enableItemSummaryButton', {
+        name: game.i18n.localize('BAD.settings.enableItemSummaryButton.name'),
+        hint: game.i18n.localize('BAD.settings.enableItemSummaryButton.hint'),
+        scope: 'world',
+        config: true,
+        type: Boolean,
+        default: false,
+        onChange: () => {
+            if (actionDisplay.activeApp?.rendered) {
+                actionDisplay.activeApp.render();
+            }
+        }
+    });
+
     // ==========================================
     // User Scope Settings & Menus
     // ==========================================
@@ -291,6 +306,14 @@ Hooks.once('init', () => {
         default: false
     });
 
+    // Register Show Item Summaries Setting (hidden from config menu, managed via HUD control bar)
+    game.settings.register(MODULE_ID, 'showItemSummaries', {
+        scope: 'client',
+        config: false,
+        type: Boolean,
+        default: false
+    });
+
     // Register HUD Position Mode (attached/pinned/detached)
     game.settings.register(MODULE_ID, 'hudPositionMode', {
         scope: 'client',
@@ -385,7 +408,7 @@ export function injectSettingsHeaders(html, app) {
     // 2. Insert section headers before the respective first setting in each scope
     const sections = [
         {
-            keys: ['categorizationMenu', 'moduleIntegrationsMenu', 'enableCenterOnToken'],
+            keys: ['categorizationMenu', 'moduleIntegrationsMenu', 'enableCenterOnToken', 'enableItemSummaryButton'],
             scope: 'world',
             title: game.i18n.localize('BAD.settingsSections.world') ?? 'World Settings',
             icon: 'fas fa-globe'

@@ -309,6 +309,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
             closeHUD: ActionDisplayApp.prototype._onCloseHUD,
             rollAction: ActionDisplayApp.prototype._onRollAction,
             toggleFilterResources: ActionDisplayApp.prototype._onToggleFilterResources,
+            toggleItemSummaries: ActionDisplayApp.prototype._onToggleItemSummaries,
             recenterToken: ActionDisplayApp.prototype._onRecenterToken,
             clearSearch: ActionDisplayApp.prototype._onClearSearch,
             previousPage: ActionDisplayApp.prototype._onPreviousPage,
@@ -615,7 +616,9 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         context.isPinned = this.isPinned;
         context.isDetached = this.isDetached;
         context.showDepleted = game.settings.get(MODULE_ID, 'showDepleted') ?? false;
+        context.showItemSummaries = game.settings.get(MODULE_ID, 'showItemSummaries') ?? false;
         context.enableCenterOnToken = game.settings.get(MODULE_ID, 'enableCenterOnToken') ?? false;
+        context.enableItemSummaryButton = game.settings.get(MODULE_ID, 'enableItemSummaryButton') ?? false;
         context.searchQuery = this.searchQuery ?? '';
 
         // Synchronize favorites if system supports them and user is owner
@@ -1060,6 +1063,26 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
     }
 
     /**
+     * Toggle the "Show Item Summaries" setting.
+     */
+    async _onToggleItemSummaries(event, target) {
+        event?.preventDefault?.();
+        const current = Boolean(game.settings.get(MODULE_ID, 'showItemSummaries'));
+        const next = target?.checked ?? !current;
+        await game.settings.set(MODULE_ID, 'showItemSummaries', next);
+        if (next) {
+            if (this._hoveredActionItem) {
+                await this._showItemSummaryTooltip(this._hoveredActionItem);
+            }
+        } else {
+            if (!this._isQuestionMarkHeld) {
+                this._hideItemSummaryTooltip();
+            }
+        }
+        this.render();
+    }
+
+    /**
      * Recenter the canvas view on the active HUD token.
      */
     async _onRecenterToken(event, target) {
@@ -1258,7 +1281,8 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         const itemEl = event.target?.closest?.('.bad-action-item');
         if (itemEl && itemEl !== this._hoveredActionItem) {
             this._hoveredActionItem = itemEl;
-            if (this._isQuestionMarkHeld) {
+            const showSummaries = this._isQuestionMarkHeld || Boolean(game.settings.get(MODULE_ID, 'showItemSummaries'));
+            if (showSummaries) {
                 return this._showItemSummaryTooltip(itemEl);
             }
         }
@@ -1311,7 +1335,10 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         const isRelease = event.key === '?' || event.key === 'Shift' || event.code === 'Slash' || event.key === '/' || !event.shiftKey;
         if (isRelease) {
             this._isQuestionMarkHeld = false;
-            this._hideItemSummaryTooltip();
+            const showSummaries = Boolean(game.settings.get(MODULE_ID, 'showItemSummaries'));
+            if (!showSummaries) {
+                this._hideItemSummaryTooltip();
+            }
         }
     }
 
@@ -1321,7 +1348,10 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
      */
     _onWindowBlur() {
         this._isQuestionMarkHeld = false;
-        this._hideItemSummaryTooltip();
+        const showSummaries = Boolean(game.settings.get(MODULE_ID, 'showItemSummaries'));
+        if (!showSummaries) {
+            this._hideItemSummaryTooltip();
+        }
     }
 
     /**
@@ -1407,7 +1437,8 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         const summary = await adapter.getItemSummary(action, action.originalItem, this.actor);
         if (!summary) return;
 
-        if (this._hoveredActionItem !== itemEl || !this._isQuestionMarkHeld) return;
+        const showSummaries = this._isQuestionMarkHeld || Boolean(game.settings.get(MODULE_ID, 'showItemSummaries'));
+        if (this._hoveredActionItem !== itemEl || !showSummaries) return;
 
         const html = typeof summary === 'string' ? summary : this._formatItemSummaryHtml(summary);
         this._activeSummaryTooltip = { element: itemEl, actionId: action.id, summary, html };
