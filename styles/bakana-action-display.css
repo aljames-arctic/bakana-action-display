@@ -1295,13 +1295,18 @@ div#tooltip:has(.bad-expression-tooltip),
 #tooltip:has(.bad-item-summary-tooltip),
 aside#tooltip:has(.bad-item-summary-tooltip),
 div#tooltip:has(.bad-item-summary-tooltip),
+#tooltip.bad-item-summary-tooltip-wrapper,
+aside#tooltip.bad-item-summary-tooltip-wrapper,
+div#tooltip.bad-item-summary-tooltip-wrapper,
+body > #tooltip:has(.bad-item-summary-tooltip),
+body > #tooltip.bad-item-summary-tooltip-wrapper,
 .bad-item-summary-tooltip-wrapper,
 .bad-item-summary-tooltip {
     text-align: left !important;
     direction: ltr !important;
-    max-width: 420px !important;
-    min-width: 260px !important;
-    width: max-content !important;
+    max-width: 520px !important;
+    min-width: 360px !important;
+    width: min(480px, 90vw) !important;
     white-space: normal !important;
     overflow-x: hidden !important;
     word-break: break-word !important;
@@ -1311,10 +1316,11 @@ div#tooltip:has(.bad-item-summary-tooltip),
 .bad-item-summary-tooltip {
     display: flex;
     flex-direction: column;
-    gap: 0.5em;
+    gap: 0.55em;
     font-size: 0.9em;
-    line-height: 1.35;
+    line-height: 1.38;
     color: #e2e8f0;
+    width: 100% !important;
     overflow-x: hidden !important;
     box-sizing: border-box !important;
 }
@@ -1322,15 +1328,15 @@ div#tooltip:has(.bad-item-summary-tooltip),
 .bad-summary-header {
     display: flex;
     align-items: center;
-    gap: 0.55em;
+    gap: 0.6em;
     border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-    padding-bottom: 0.4em;
+    padding-bottom: 0.45em;
     overflow: hidden;
 }
 
 .bad-summary-icon {
-    width: 32px;
-    height: 32px;
+    width: 34px;
+    height: 34px;
     border-radius: 4px;
     border: 1px solid rgba(167, 139, 250, 0.35);
     object-fit: cover;
@@ -1365,7 +1371,7 @@ div#tooltip:has(.bad-item-summary-tooltip),
 .bad-summary-tags {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.3em;
+    gap: 0.35em;
 }
 
 .bad-summary-tag {
@@ -1374,7 +1380,7 @@ div#tooltip:has(.bad-item-summary-tooltip),
     background: rgba(167, 139, 250, 0.16);
     border: 1px solid rgba(167, 139, 250, 0.3);
     color: #e9d5ff;
-    padding: 0.12em 0.45em;
+    padding: 0.14em 0.5em;
     border-radius: 4px;
     font-size: 0.82em;
     font-weight: 600;
@@ -1382,19 +1388,20 @@ div#tooltip:has(.bad-item-summary-tooltip),
 }
 
 .bad-summary-desc {
-    font-size: 0.84em;
+    font-size: 0.86em;
     color: #cbd5e1;
-    line-height: 1.35;
-    max-height: 160px;
+    line-height: 1.4;
+    max-height: 260px;
     overflow-y: auto;
     overflow-x: hidden !important;
     word-break: break-word !important;
     overflow-wrap: break-word !important;
     white-space: normal !important;
-    padding-right: 0.3em;
+    padding-right: 0.35em;
     border-top: 1px solid rgba(255, 255, 255, 0.08);
-    padding-top: 0.4em;
+    padding-top: 0.45em;
     box-sizing: border-box !important;
+    width: 100% !important;
 }
 
 .bad-summary-desc * {
@@ -1405,7 +1412,7 @@ div#tooltip:has(.bad-item-summary-tooltip),
 }
 
 .bad-summary-desc p {
-    margin: 0 0 0.35em 0;
+    margin: 0 0 0.4em 0;
 }
 
 .bad-summary-desc p:last-child {
