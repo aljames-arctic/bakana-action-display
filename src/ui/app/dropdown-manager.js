@@ -216,7 +216,7 @@ export function showActivityDropdown(app, target, subactions, event) {
                     });
                 }
                 const itemData = menuItems[idx];
-                if (itemData && itemData.usesHtml && !li.querySelector('.bad-menu-uses')) {
+                if (itemData?.usesHtml && !li.querySelector('.bad-menu-uses')) {
                     li.insertAdjacentHTML('beforeend', itemData.usesHtml);
                 }
             });

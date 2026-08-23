@@ -628,7 +628,7 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
                     log.error(`Pf1SystemAdapter.modifyActions | Failed to resolve child UUID ${child.uuid}:`, e);
                 }
 
-                if (childItem && childItem.type === 'attack') {
+                if (childItem?.type === 'attack') {
                     attackToWeaponMap.set(childItem.id, weapon);
                     linked.push(childItem);
                 }

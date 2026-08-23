@@ -21,9 +21,9 @@ Hooks.once('init', async () => {
     if (originalRightClick) {
         TokenClass.prototype._onClickRight = function (event) {
             const isTokenHUDOpen = Boolean(canvas?.hud?.token?.rendered && (canvas.hud.token.object === this || canvas.hud.token.object?.id === this.id));
-            if (isTokenHUDOpen && activeApp && (activeApp.token === this || activeApp.token?.id === this.id)) {
+            if (isTokenHUDOpen && (activeApp?.token === this || activeApp?.token?.id === this.id)) {
                 const persist = game.settings.get(MODULE_ID, 'persistDetached');
-                if (persist && activeApp.isDetached) {
+                if (persist && activeApp?.isDetached) {
                     closeDetachedHUD = true;
                 }
             }
@@ -143,7 +143,7 @@ Hooks.on('renderTokenHUD', (tokenHUD, html, data) => {
     }
 
     // If we already have an active rendered app for this token, preserve it to keep its tab/scroll state
-    if (activeApp && (activeApp.token === token || activeApp.token?.id === token.id) && (activeApp.rendered || activeApp.element)) {
+    if ((activeApp?.token === token || activeApp?.token?.id === token.id) && (activeApp?.rendered || activeApp?.element)) {
         return;
     }
 
@@ -170,7 +170,7 @@ Hooks.on('closeTokenHUD', (tokenHUD, html) => {
 
 // Hook into canvas pan to update attached HUD position dynamically
 Hooks.on('canvasPan', (canvas, pan) => {
-    if (activeApp && activeApp.isTracked) {
+    if (activeApp?.isTracked) {
         activeApp.setPosition();
     }
 });

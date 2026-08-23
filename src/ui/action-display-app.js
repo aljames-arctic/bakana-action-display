@@ -989,7 +989,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
             log.debug(`_onRollAction | Left-clicked action "${action.name}" (${action.id}):`, { action, item, actor, token, user });
             const itemActivities = action.subactions;
 
-            if (itemActivities && itemActivities.length > 0) {
+            if (itemActivities?.length > 0) {
                 // Filter sub-actions to only those that match the currently active right-side tabs
                 const filterContext = this._getFilterContext();
                 const qualifyingSubActions = adapter.system.filterSubactions(itemActivities, filterContext, action.left);
@@ -1230,8 +1230,8 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         container.style.minHeight = '';
 
         // Measure the bottom reach of the tabs relative to the container (only if they have children)
-        const leftBottom = (leftTabs && leftTabs.children.length > 0) ? (leftTabs.offsetTop + leftTabs.offsetHeight) : 0;
-        const rightBottom = (rightTabs && rightTabs.children.length > 0) ? (rightTabs.offsetTop + rightTabs.offsetHeight) : 0;
+        const leftBottom = leftTabs?.children.length > 0 ? (leftTabs.offsetTop + leftTabs.offsetHeight) : 0;
+        const rightBottom = rightTabs?.children.length > 0 ? (rightTabs.offsetTop + rightTabs.offsetHeight) : 0;
         const maxTabBottom = Math.max(leftBottom, rightBottom);
 
         if (maxTabBottom > 0) {

@@ -31,7 +31,7 @@ Hooks.once('init', () => {
             categories: []
         },
         onChange: () => {
-            if (actionDisplay.activeApp && actionDisplay.activeApp.rendered) {
+            if (actionDisplay.activeApp?.rendered) {
                 actionDisplay.activeApp.render();
             }
         }
@@ -44,7 +44,7 @@ Hooks.once('init', () => {
         type: Boolean,
         default: true,
         onChange: () => {
-            if (actionDisplay.activeApp && actionDisplay.activeApp.rendered) {
+            if (actionDisplay.activeApp?.rendered) {
                 actionDisplay.activeApp.render();
             }
         }
@@ -71,7 +71,7 @@ Hooks.once('init', () => {
         type: Boolean,
         default: false,
         onChange: () => {
-            if (actionDisplay.activeApp && actionDisplay.activeApp.rendered) {
+            if (actionDisplay.activeApp?.rendered) {
                 actionDisplay.activeApp.render();
             }
         }
@@ -98,7 +98,7 @@ Hooks.once('init', () => {
         type: Boolean,
         default: false,
         onChange: () => {
-            if (actionDisplay.activeApp && actionDisplay.activeApp.rendered) {
+            if (actionDisplay.activeApp?.rendered) {
                 actionDisplay.activeApp.render();
             }
         }
@@ -111,7 +111,7 @@ Hooks.once('init', () => {
         type: Object,
         default: {},
         onChange: () => {
-            if (actionDisplay.activeApp && actionDisplay.activeApp.rendered) {
+            if (actionDisplay.activeApp?.rendered) {
                 actionDisplay.activeApp.render();
             }
         }
@@ -214,7 +214,7 @@ Hooks.once('init', () => {
             'horizontal': game.i18n.localize('BAD.settings.hudAnchorSide.choices.horizontal')
         },
         onChange: () => {
-            if (actionDisplay.activeApp && actionDisplay.activeApp.rendered) {
+            if (actionDisplay.activeApp?.rendered) {
                 actionDisplay.activeApp.setPosition();
             }
         }
@@ -234,7 +234,7 @@ Hooks.once('init', () => {
         },
         default: 0.5,
         onChange: () => {
-            if (actionDisplay.activeApp && actionDisplay.activeApp.rendered) {
+            if (actionDisplay.activeApp?.rendered) {
                 actionDisplay.activeApp.setPosition();
             }
         }
@@ -254,7 +254,7 @@ Hooks.once('init', () => {
         },
         default: 0.5,
         onChange: () => {
-            if (actionDisplay.activeApp && actionDisplay.activeApp.rendered) {
+            if (actionDisplay.activeApp?.rendered) {
                 actionDisplay.activeApp.setPosition();
             }
         }

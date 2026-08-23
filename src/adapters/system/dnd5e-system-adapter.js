@@ -726,7 +726,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         const system = item.system;
 
         // 1. Limited Uses (standard item charges/uses)
-        if (system.uses && system.uses.max && system.uses.max !== "0") {
+        if (system.uses?.max && system.uses.max !== "0") {
             let max = parseInt(system.uses.max, 10) || 0;
 
             if (max > 0) {
@@ -780,7 +780,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
      * @returns {{available: number|null, max: number|null}|null}
      */
     #calculateLimitedUses(uses) {
-        if (uses && uses.max && uses.max !== "0") {
+        if (uses?.max && uses.max !== "0") {
             const max = parseInt(uses.max, 10) || 0;
             if (max > 0) {
                 const spent = uses.spent;
@@ -1117,7 +1117,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         }
 
         // 2. If actor has addFavorite / removeFavorite methods (dnd5e 3.x actor methods)
-        if (actor?.system?.addFavorite && actor?.system?.removeFavorite) {
+        if (actor?.system?.addFavorite && actor.system.removeFavorite) {
             const uuid = item.getRelativeUUID?.(actor) ?? item.id;
             if (isFav) {
                 return await actor.system.addFavorite({ id: uuid, type: 'item' });
