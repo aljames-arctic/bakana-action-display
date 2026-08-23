@@ -57,6 +57,16 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         this._onDragStart = this._onDragStart.bind(this);
         this._onDragMove = this._onDragMove.bind(this);
         this._onDragEnd = this._onDragEnd.bind(this);
+
+        // Item summary tooltip state and bound listeners
+        this._hoveredActionItem = null;
+        this._isQuestionMarkHeld = false;
+        this._activeSummaryTooltip = null;
+        this._boundOnPointerOver = this._onPointerOver.bind(this);
+        this._boundOnPointerOut = this._onPointerOut.bind(this);
+        this._boundOnKeyDown = this._onKeyDown.bind(this);
+        this._boundOnKeyUp = this._onKeyUp.bind(this);
+        this._boundOnWindowBlur = this._onWindowBlur.bind(this);
     }
 
     /**
@@ -255,6 +265,18 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         if (this._boundOutsidePointerDown) {
             window.removeEventListener('pointerdown', this._boundOutsidePointerDown, { capture: true });
         }
+        this._hideItemSummaryTooltip();
+        if (this._boundOnKeyDown) {
+            window.removeEventListener('keydown', this._boundOnKeyDown);
+        }
+        if (this._boundOnKeyUp) {
+            window.removeEventListener('keyup', this._boundOnKeyUp);
+        }
+        if (this._boundOnWindowBlur) {
+            window.removeEventListener('blur', this._boundOnWindowBlur);
+        }
+        this._hoveredActionItem = null;
+        this._isQuestionMarkHeld = false;
         this._contextMenu = null;
         this.actions = []; // Reset actions array to release references
 
@@ -1143,6 +1165,14 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         };
         window.addEventListener('pointerdown', this._boundOutsidePointerDown, { capture: true });
 
+        // Attach item summary tooltip event listeners
+        this.element.addEventListener('pointerover', this._boundOnPointerOver);
+        this.element.addEventListener('pointerout', this._boundOnPointerOut);
+
+        window.addEventListener('keydown', this._boundOnKeyDown);
+        window.addEventListener('keyup', this._boundOnKeyUp);
+        window.addEventListener('blur', this._boundOnWindowBlur);
+
         // Initialize the context menu for action items once
         this._contextMenu = this._createContextMenu();
     }
@@ -1185,6 +1215,8 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         activeContextTarget?.classList?.remove?.('bad-menu-active');
         activeMenuTarget?.classList?.remove?.('bad-dropdown-active');
 
+        this._hideItemSummaryTooltip();
+
         if (contextMenu) {
             try {
                 contextMenu.close({ animate: false })?.catch?.(err => {
@@ -1211,8 +1243,192 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
 
         const container = this.element?.querySelector?.('.bakana-action-display-container');
         container?.classList?.remove?.('has-context-menu');
+    }
 
-        this._preventReopen = false;
+    /* -------------------------------------------- */
+    /*  Item Summary Tooltips                       */
+    /* -------------------------------------------- */
+
+    /**
+     * Handle pointerover events on action items to track hovered element for tooltip.
+     * @param {PointerEvent} event
+     * @protected
+     */
+    _onPointerOver(event) {
+        const itemEl = event.target?.closest?.('.bad-action-item');
+        if (itemEl && itemEl !== this._hoveredActionItem) {
+            this._hoveredActionItem = itemEl;
+            if (this._isQuestionMarkHeld) {
+                this._showItemSummaryTooltip(itemEl);
+            }
+        }
+    }
+
+    /**
+     * Handle pointerout events on action items to clear hovered state and hide tooltip.
+     * @param {PointerEvent} event
+     * @protected
+     */
+    _onPointerOut(event) {
+        const itemEl = event.target?.closest?.('.bad-action-item');
+        const relatedItemEl = event.relatedTarget?.closest?.('.bad-action-item');
+        if (itemEl && itemEl !== relatedItemEl) {
+            if (this._hoveredActionItem === itemEl) {
+                this._hoveredActionItem = null;
+                this._hideItemSummaryTooltip();
+            }
+        }
+    }
+
+    /**
+     * Handle keydown events to detect when '?' (or Shift+/) is held down.
+     * @param {KeyboardEvent} event
+     * @protected
+     */
+    _onKeyDown(event) {
+        if (!event) return;
+        // Ignore when typing inside search inputs or textareas
+        if (event.target?.tagName === 'INPUT' || event.target?.tagName === 'TEXTAREA') {
+            return;
+        }
+
+        const isQuestionMark = event.key === '?' || (event.shiftKey && (event.code === 'Slash' || event.key === '/'));
+        if (isQuestionMark) {
+            this._isQuestionMarkHeld = true;
+            if (this._hoveredActionItem && !this._activeSummaryTooltip) {
+                this._showItemSummaryTooltip(this._hoveredActionItem);
+            }
+        }
+    }
+
+    /**
+     * Handle keyup events to release '?' tooltip mode.
+     * @param {KeyboardEvent} event
+     * @protected
+     */
+    _onKeyUp(event) {
+        if (!event) return;
+        const isRelease = event.key === '?' || event.key === 'Shift' || event.code === 'Slash' || event.key === '/' || !event.shiftKey;
+        if (isRelease) {
+            this._isQuestionMarkHeld = false;
+            this._hideItemSummaryTooltip();
+        }
+    }
+
+    /**
+     * Handle window blur to clear key hold state and hide tooltip.
+     * @protected
+     */
+    _onWindowBlur() {
+        this._isQuestionMarkHeld = false;
+        this._hideItemSummaryTooltip();
+    }
+
+    /**
+     * Choose the optimal tooltip direction (LEFT or RIGHT) based on viewport position.
+     * @param {HTMLElement} element
+     * @returns {string}
+     * @protected
+     */
+    _chooseTooltipDirection(element) {
+        if (!element) return 'RIGHT';
+        try {
+            const rect = element.getBoundingClientRect?.();
+            if (rect) {
+                const windowWidth = typeof window !== 'undefined' ? (window.innerWidth ?? 1920) : 1920;
+                if (rect.left > windowWidth / 2) {
+                    return 'LEFT';
+                }
+            }
+        } catch (e) {
+            log.debug('_chooseTooltipDirection | getBoundingClientRect error:', e);
+        }
+        return 'RIGHT';
+    }
+
+    /**
+     * Format a structured item summary object into HTML.
+     * @param {Object} summary
+     * @returns {string}
+     * @protected
+     */
+    _formatItemSummaryHtml(summary) {
+        if (!summary) return '';
+        const title = summary.title ?? '';
+        const subtitle = summary.subtitle ?? '';
+        const img = summary.img ?? '';
+        const properties = Array.isArray(summary.properties) ? summary.properties.filter(Boolean) : [];
+        const description = summary.description ?? '';
+
+        let html = '<div class="bad-item-summary-tooltip">';
+        html += '<div class="bad-summary-header">';
+        if (img) {
+            html += `<img class="bad-summary-icon" src="${img}" alt="${title}" />`;
+        }
+        html += '<div class="bad-summary-title-group">';
+        html += `<span class="bad-summary-title">${title}</span>`;
+        if (subtitle) {
+            html += `<span class="bad-summary-subtitle">${subtitle}</span>`;
+        }
+        html += '</div></div>';
+
+        if (properties.length > 0) {
+            html += '<div class="bad-summary-tags">';
+            for (const prop of properties) {
+                const text = typeof prop === 'string'
+                    ? prop
+                    : (prop.label ? `${prop.label}: ${prop.value}` : prop.value);
+                if (text) {
+                    html += `<span class="bad-summary-tag">${text}</span>`;
+                }
+            }
+            html += '</div>';
+        }
+
+        if (description) {
+            html += `<div class="bad-summary-desc">${description}</div>`;
+        }
+
+        html += '</div>';
+        return html;
+    }
+
+    /**
+     * Display the item summary tooltip for an action item element.
+     * @param {HTMLElement} itemEl
+     * @protected
+     */
+    _showItemSummaryTooltip(itemEl) {
+        if (!itemEl) return;
+        const actionId = itemEl.dataset?.actionId;
+        const action = this.actions.find(a => a.id === actionId);
+        if (!action) return;
+
+        const summary = adapter.getItemSummary(action, action.originalItem, this.actor);
+        if (!summary) return;
+
+        const html = typeof summary === 'string' ? summary : this._formatItemSummaryHtml(summary);
+        this._activeSummaryTooltip = { element: itemEl, actionId, summary, html };
+
+        if (game.tooltip?.activate) {
+            game.tooltip.activate(itemEl, {
+                html,
+                direction: this._chooseTooltipDirection(itemEl),
+                cssClass: 'bad-item-summary-tooltip-wrapper'
+            });
+        }
+    }
+
+    /**
+     * Hide the currently active item summary tooltip.
+     * @protected
+     */
+    _hideItemSummaryTooltip() {
+        if (!this._activeSummaryTooltip) return;
+        this._activeSummaryTooltip = null;
+        if (game.tooltip?.deactivate) {
+            game.tooltip.deactivate();
+        }
     }
 
     /**

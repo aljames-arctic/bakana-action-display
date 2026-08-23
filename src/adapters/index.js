@@ -365,6 +365,17 @@ class Adapter {
     extractEconomyIndicators(action, userColors) {
         return this.system?.extractEconomyIndicators?.(action, userColors) ?? [];
     }
+
+    /**
+     * Get item summary data for rich tooltips.
+     * @param {Object} action
+     * @param {Object} [item]
+     * @param {Object} [actor]
+     * @returns {Object|null}
+     */
+    getItemSummary(action, item, actor) {
+        return this.system?.getItemSummary?.(action, item, actor) ?? null;
+    }
 }
 
 export const adapter = new Adapter();

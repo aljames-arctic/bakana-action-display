@@ -371,5 +371,20 @@ globalThis.game = {
     keyboard: {
         isModifierActive(mod) { return false; }
     },
+    tooltip: {
+        element: null,
+        options: null,
+        active: false,
+        activate(element, options = {}) {
+            this.element = element;
+            this.options = options;
+            this.active = true;
+        },
+        deactivate() {
+            this.element = null;
+            this.options = null;
+            this.active = false;
+        }
+    },
     canvas: globalThis.canvas
 };

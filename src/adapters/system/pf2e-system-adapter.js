@@ -814,4 +814,52 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
     }
 
     // #endregion
+
+    // #region Tooltip Item Summary
+
+    /**
+     * Build an item summary object for PF2e tooltips.
+     * @param {Object} action The HUD action instance
+     * @param {Object} [item] The original item document
+     * @param {Object} [actor] The owning actor document
+     * @returns {{title: string, subtitle?: string, img?: string, properties?: Array<string|{label?: string, value: string}>, description?: string}|null}
+     */
+    getItemSummary(action, item = action?.originalItem, actor = null) {
+        if (!action && !item) return null;
+        const targetItem = item ?? action?.originalItem ?? action;
+        const title = action?.name ?? targetItem?.name ?? '';
+        const img = (action?.img && action.img.length > 0) ? action.img : (targetItem?.img ?? '');
+        const system = targetItem?.system ?? {};
+        const type = targetItem?.type ? (targetItem.type.charAt(0).toUpperCase() + targetItem.type.slice(1)) : '';
+        const properties = [];
+
+        if (system.damage?.dice && system.damage?.die) {
+            properties.push({ label: 'Damage', value: `${system.damage.dice}${system.damage.die} ${system.damage.damageType ?? ''}`.trim() });
+        }
+        if (system.range) {
+            const rangeStr = typeof system.range === 'object' ? `${system.range.value ?? ''} ${system.range.unit ?? ''}`.trim() : String(system.range);
+            if (rangeStr) properties.push({ label: 'Range', value: rangeStr });
+        }
+        if (system.traits?.value && Array.isArray(system.traits.value)) {
+            for (const trait of system.traits.value) {
+                properties.push({ value: trait });
+            }
+        }
+        if (action?.uses?.available !== null && action?.uses?.available !== undefined) {
+            const usesStr = `${action.uses.available}${action.uses.max ? ' / ' + action.uses.max : ''}`;
+            properties.push({ label: 'Uses', value: usesStr });
+        }
+
+        const description = system.description?.value ?? '';
+
+        return {
+            title,
+            subtitle: type,
+            img,
+            properties,
+            description
+        };
+    }
+
+    // #endregion
 }

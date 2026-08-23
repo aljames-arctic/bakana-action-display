@@ -1198,4 +1198,206 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
     }
 
     // #endregion
+
+    // #region Tooltip Item Summary
+
+    /**
+     * Build a rich item summary object for D&D 5e tooltips.
+     * @param {Object} action The HUD action instance
+     * @param {Object} [item] The original item document
+     * @param {Object} [actor] The owning actor document
+     * @returns {{title: string, subtitle?: string, img?: string, properties?: Array<string|{label?: string, value: string}>, description?: string}|null}
+     */
+    getItemSummary(action, item = action?.originalItem, actor = null) {
+        if (!action && !item) return null;
+
+        const isCoreCheck = action?.extra?.section === 'core' || ['ability', 'abilityCheck', 'save', 'skill'].includes(action?.type);
+        if (isCoreCheck) {
+            return this.#getCheckSummary(action, actor);
+        }
+
+        const targetItem = item ?? action?.originalItem ?? action;
+        const activity = action?.originalActivity;
+        const system = targetItem?.system ?? {};
+
+        const title = action?.name ?? targetItem?.name ?? '';
+        const img = (action?.img && action.img.length > 0) ? action.img : (targetItem?.img ?? '');
+        const properties = [];
+
+        // 1. Subtitle & Classification
+        let subtitle = '';
+        const type = targetItem?.type ?? '';
+        const activation = activity?.labels?.activation ?? targetItem?.labels?.activation ?? '';
+
+        if (type === 'spell') {
+            const levelNum = system.level ?? 0;
+            const levelLabel = levelNum === 0
+                ? (game.i18n?.localize?.('DND5E.SpellCantrip') ?? 'Cantrip')
+                : (CONFIG?.DND5E?.spellLevels?.[levelNum] ?? `${levelNum}th Level`);
+            const schoolLabel = CONFIG?.DND5E?.spellSchools?.[system.school]?.label ?? system.school ?? '';
+            const typeStr = [levelLabel, schoolLabel].filter(Boolean).join(' ');
+            subtitle = [typeStr, activation].filter(Boolean).join(' • ');
+        } else if (type === 'weapon') {
+            const weaponType = system.type?.label ?? CONFIG?.DND5E?.weaponTypes?.[system.type?.value] ?? (game.i18n?.localize?.('DND5E.ItemTypeWeapon') ?? 'Weapon');
+            subtitle = [weaponType, activation].filter(Boolean).join(' • ');
+        } else if (type === 'feat') {
+            const featType = system.type?.label ?? CONFIG?.DND5E?.featureTypes?.[system.type?.value]?.label ?? (game.i18n?.localize?.('DND5E.ItemTypeFeat') ?? 'Feature');
+            subtitle = [featType, activation].filter(Boolean).join(' • ');
+        } else if (type === 'consumable') {
+            const consumableType = system.type?.label ?? CONFIG?.DND5E?.consumableTypes?.[system.type?.value]?.label ?? (game.i18n?.localize?.('DND5E.ItemTypeConsumable') ?? 'Consumable');
+            subtitle = [consumableType, activation].filter(Boolean).join(' • ');
+        } else if (type === 'equipment') {
+            const eqType = system.type?.label ?? CONFIG?.DND5E?.equipmentTypes?.[system.type?.value] ?? (game.i18n?.localize?.('DND5E.ItemTypeEquipment') ?? 'Equipment');
+            subtitle = [eqType, activation].filter(Boolean).join(' • ');
+        } else if (type) {
+            const rawType = type.charAt(0).toUpperCase() + type.slice(1);
+            subtitle = [rawType, activation].filter(Boolean).join(' • ');
+        }
+
+        // 2. Attack Modifier / To-Hit
+        const toHit = activity?.labels?.toHit ?? activity?.attack?.toHit ?? targetItem?.labels?.toHit;
+        if (toHit) {
+            properties.push({ label: 'Attack', value: String(toHit).startsWith('+') || String(toHit).startsWith('-') ? toHit : `+${toHit}` });
+        }
+
+        // 3. Damage / Healing
+        const damage = activity?.labels?.damage ?? targetItem?.labels?.damage;
+        if (damage) {
+            properties.push({ label: 'Damage', value: damage });
+        }
+
+        // 4. Range / Area
+        const range = activity?.labels?.range ?? targetItem?.labels?.range;
+        if (range) {
+            properties.push({ label: 'Range', value: range });
+        }
+        const target = activity?.labels?.target ?? targetItem?.labels?.target;
+        if (target && target !== range) {
+            properties.push({ label: 'Target', value: target });
+        }
+
+        // 5. Saving Throw
+        const save = activity?.labels?.save ?? targetItem?.labels?.save;
+        if (save) {
+            properties.push({ label: 'Save', value: save });
+        }
+
+        // 6. Duration & Concentration / Ritual
+        const duration = activity?.labels?.duration ?? targetItem?.labels?.duration;
+        if (duration) {
+            properties.push({ label: 'Duration', value: duration });
+        }
+        const isConcentration = Boolean(
+            system.properties?.has?.('concentration') ||
+            system.properties?.con ||
+            activity?.duration?.concentration
+        );
+        if (isConcentration) {
+            properties.push({ value: 'Concentration' });
+        }
+        const isRitual = Boolean(
+            system.properties?.has?.('ritual') ||
+            system.properties?.rit
+        );
+        if (isRitual) {
+            properties.push({ value: 'Ritual' });
+        }
+
+        // 7. Components (for spells)
+        const components = targetItem?.labels?.components?.vsm ?? targetItem?.labels?.components?.all;
+        if (components) {
+            properties.push({ label: 'Components', value: components });
+        }
+
+        // 8. Item Properties (finesse, versatile, thrown, heavy, reach, etc.)
+        if (system.properties) {
+            const props = system.properties instanceof Set ? Array.from(system.properties) : (Array.isArray(system.properties) ? system.properties : []);
+            for (const prop of props) {
+                if (['concentration', 'ritual', 'con', 'rit'].includes(prop)) continue;
+                const propLabel = CONFIG?.DND5E?.itemProperties?.[prop]?.label ?? prop;
+                if (propLabel && typeof propLabel === 'string') {
+                    properties.push({ value: propLabel });
+                }
+            }
+        }
+
+        // 9. Limited Uses / Resource
+        if (action?.uses?.available !== null && action?.uses?.available !== undefined) {
+            const usesStr = `${action.uses.available}${action.uses.max ? ' / ' + action.uses.max : ''}`;
+            properties.push({ label: 'Uses', value: usesStr });
+        } else if (system.quantity > 1) {
+            properties.push({ label: 'Qty', value: String(system.quantity) });
+        }
+
+        // 10. Recharge
+        const recharge = activity?.labels?.recharge ?? targetItem?.labels?.recharge;
+        if (recharge) {
+            properties.push({ label: 'Recharge', value: recharge });
+        }
+
+        // 11. Description
+        const description = system.description?.value ?? system.description?.chat ?? action?.linkedAction?.system?.description?.value ?? '';
+
+        return {
+            title,
+            subtitle,
+            img,
+            properties,
+            description
+        };
+    }
+
+    /**
+     * Helper to build check/save/skill summary for Page 2 actions.
+     * @param {Object} action
+     * @param {Object} actor
+     * @returns {Object}
+     */
+    #getCheckSummary(action, actor) {
+        const title = action.name ?? '';
+        const img = action.img ?? '';
+        const properties = [];
+        let subtitle = '';
+
+        if (action.type === 'save') {
+            const ability = action.extra?.ability ?? action.id.replace(/^save-/, '');
+            const ablData = actor?.system?.abilities?.[ability];
+            subtitle = 'Saving Throw';
+            if (ablData) {
+                const saveMod = ablData.save ?? ablData.mod ?? 0;
+                properties.push({ label: 'Modifier', value: saveMod >= 0 ? `+${saveMod}` : `${saveMod}` });
+                if (ablData.saveProf?.hasProficiency) properties.push({ value: 'Proficient' });
+            }
+        } else if (action.type === 'skill') {
+            const skillId = action.id.replace(/^skill-/, '');
+            const skillData = actor?.system?.skills?.[skillId];
+            const abl = skillData?.ability ?? '';
+            const ablLabel = CONFIG?.DND5E?.abilities?.[abl]?.label ?? abl.toUpperCase();
+            subtitle = `Skill Check (${ablLabel})`;
+            if (skillData) {
+                const total = skillData.total ?? skillData.mod ?? 0;
+                properties.push({ label: 'Modifier', value: total >= 0 ? `+${total}` : `${total}` });
+                if (skillData.prof?.hasProficiency) properties.push({ value: 'Proficient' });
+            }
+        } else {
+            const ability = action.extra?.ability ?? action.id.replace(/^(check|ability)-/, '');
+            const ablData = actor?.system?.abilities?.[ability];
+            subtitle = 'Ability Check';
+            if (ablData) {
+                const mod = ablData.mod ?? 0;
+                properties.push({ label: 'Modifier', value: mod >= 0 ? `+${mod}` : `${mod}` });
+                if (ablData.value !== undefined) properties.push({ label: 'Score', value: String(ablData.value) });
+            }
+        }
+
+        return {
+            title,
+            subtitle,
+            img,
+            properties,
+            description: ''
+        };
+    }
+
+    // #endregion
 }
