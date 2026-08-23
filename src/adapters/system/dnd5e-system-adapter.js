@@ -727,7 +727,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
 
         // 1. Limited Uses (standard item charges/uses)
         if (system.uses && system.uses.max && system.uses.max !== "0") {
-            const max = parseInt(system.uses.max, 10) || 0;
+            let max = parseInt(system.uses.max, 10) || 0;
 
             if (max > 0) {
                 const spent = system.uses.spent;

@@ -70,6 +70,25 @@ test('Dnd5eSystemAdapter spell slot calculation', () => {
     // Pact spell
     const pactSpell = { type: 'spell', system: { level: 2, method: 'pact', prepared: true } };
     assert.deepEqual(adapter.calculateUses(pactSpell), { available: 2, max: 2 });
+
+    // Consumable with quantity > 1 and charges
+    const potionWithCharges = {
+        type: 'consumable',
+        system: {
+            uses: { max: '3', spent: 1 },
+            quantity: 2
+        }
+    };
+    assert.deepEqual(adapter.calculateUses(potionWithCharges), { available: 5, max: 6 });
+
+    // Consumable without charges (quantity-based)
+    const potionQuantityOnly = {
+        type: 'consumable',
+        system: {
+            quantity: 4
+        }
+    };
+    assert.deepEqual(adapter.calculateUses(potionQuantityOnly), { available: 4, max: null });
 });
 
 test('Dnd5eSystemAdapter modifyActions full transformation pipeline', async () => {
@@ -779,5 +798,47 @@ test('Dnd5eSystemAdapter modifyActions evaluates spell preparation using SpellDa
     assert.equal(unpreparedAction, undefined, 'Unprepared spell should be filtered out when showUnprepared is false');
     assert.ok(innateAction, 'Innate spell should be included regardless of prepared boolean');
 });
+
+test('Dnd5eSystemAdapter modifyActions handles consumable items with quantity > 1 and itemUses without error', async () => {
+    const adapter = new Dnd5eSystemAdapter();
+    const potion = {
+        id: 'potion-healing',
+        name: 'Potion of Healing',
+        type: 'consumable',
+        system: {
+            quantity: 3,
+            uses: { max: '1', spent: 0 },
+            activities: [
+                {
+                    id: 'act-drink',
+                    name: 'Drink',
+                    type: 'heal',
+                    activation: { type: 'bonus' },
+                    consumption: {
+                        targets: [
+                            { type: 'itemUses', target: '', value: 1 }
+                        ]
+                    }
+                }
+            ]
+        }
+    };
+
+    const actor = {
+        items: new foundry.utils.Collection([potion]),
+        system: { spells: {} },
+        getFlag: () => false
+    };
+
+    adapter.init(actor);
+    const rawActions = [{ id: 'potion-healing', originalItem: potion }];
+    const modified = await adapter.modifyActions(rawActions, actor);
+
+    assert.equal(modified.length, 7, '1 consumable action on Page 1 + 6 core abilities on Page 2');
+    const potionAction = modified.find(a => a.id === 'potion-healing');
+    assert.ok(potionAction, 'Potion action should be created');
+    assert.deepEqual(potionAction.uses, { available: 3, max: 3 }, 'Uses should be scaled by quantity');
+});
+
 
 
