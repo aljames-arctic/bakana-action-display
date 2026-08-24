@@ -1589,7 +1589,6 @@ body > #tooltip.bad-item-summary-tooltip-wrapper,
     min-width: 260px !important;
     width: var(--bad-tooltip-width, min(340px, 90vw)) !important;
     white-space: normal !important;
-    overflow-x: hidden !important;
     word-break: normal !important;
     overflow-wrap: break-word !important;
 }
@@ -1620,26 +1619,8 @@ body > #tooltip.bad-summary-has-table-wrapper,
 .bad-summary-has-table .bad-summary-desc,
 .bad-item-summary-tooltip:has(table) .bad-summary-desc {
     overflow-x: auto !important;
+    overflow-y: auto !important;
     max-width: 100% !important;
-}
-
-/* Prevent non-table text blocks from forcing container width to max-width */
-.bad-summary-has-table .bad-summary-header,
-.bad-summary-has-table .bad-summary-tags,
-.bad-summary-has-table .bad-summary-desc > p,
-.bad-summary-has-table .bad-summary-desc > div:not(table):not(:has(table)),
-.bad-summary-has-table .bad-summary-desc > ul,
-.bad-summary-has-table .bad-summary-desc > ol,
-.bad-summary-has-table .bad-summary-desc > section,
-.bad-item-summary-tooltip:has(table) .bad-summary-header,
-.bad-item-summary-tooltip:has(table) .bad-summary-tags,
-.bad-item-summary-tooltip:has(table) .bad-summary-desc > p,
-.bad-item-summary-tooltip:has(table) .bad-summary-desc > div:not(table):not(:has(table)),
-.bad-item-summary-tooltip:has(table) .bad-summary-desc > ul,
-.bad-item-summary-tooltip:has(table) .bad-summary-desc > ol,
-.bad-item-summary-tooltip:has(table) .bad-summary-desc > section {
-    width: 0 !important;
-    min-width: 100% !important;
 }
 
 .bad-item-summary-tooltip {
@@ -1650,7 +1631,6 @@ body > #tooltip.bad-summary-has-table-wrapper,
     line-height: 1.4;
     color: #e2e8f0;
     width: 100% !important;
-    overflow-x: hidden !important;
     box-sizing: border-box !important;
 }
 
@@ -1720,23 +1700,44 @@ body > #tooltip.bad-summary-has-table-wrapper,
     font-size: 0.86em;
     color: #cbd5e1;
     line-height: 1.4;
-    max-height: 260px;
-    overflow-y: auto;
-    overflow-x: hidden;
-    word-break: break-word;
+    max-height: 280px;
+    overflow-y: auto !important;
+    overflow-x: auto !important;
+    word-break: normal;
     overflow-wrap: break-word;
     white-space: normal;
-    padding-right: 0.35em;
+    padding-right: 0.45em;
     border-top: 1px solid rgba(255, 255, 255, 0.08);
     padding-top: 0.45em;
     box-sizing: border-box;
     width: 100%;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(167, 139, 250, 0.5) rgba(0, 0, 0, 0.2);
+}
+
+.bad-summary-desc::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+}
+
+.bad-summary-desc::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 3px;
+}
+
+.bad-summary-desc::-webkit-scrollbar-thumb {
+    background: rgba(167, 139, 250, 0.5);
+    border-radius: 3px;
+}
+
+.bad-summary-desc::-webkit-scrollbar-thumb:hover {
+    background: rgba(167, 139, 250, 0.8);
 }
 
 .bad-summary-desc * {
     max-width: 100%;
     box-sizing: border-box;
-    word-break: break-word;
+    word-break: normal;
     overflow-wrap: break-word;
 }
 
