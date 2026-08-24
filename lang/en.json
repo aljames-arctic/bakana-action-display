@@ -198,7 +198,9 @@
         "page2": {
             "savingThrow": "Saving Throw",
             "abilityCheck": "Ability Check",
-            "ability": "Ability"
+            "ability": "Ability",
+            "tools": "Tools",
+            "tool": "Tools"
         },
         "keybindings": {
             "toggleHUD": {

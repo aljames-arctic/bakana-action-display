@@ -4,6 +4,8 @@ import '../setup.js';
 import { ActionDisplayApp } from '../../src/ui/action-display-app.js';
 import { actionDisplay } from '../../src/action-display.js';
 import { HUDTab } from '../../src/ui/hud-tab.js';
+import { adapter } from '../../src/adapters/index.js';
+import { Dnd5eSystemAdapter } from '../../src/adapters/system/dnd5e-system-adapter.js';
 
 test('ActionDisplayApp previousPage and nextPage cycle through pages without cyclePage or all-tab triggers', async () => {
     assert.equal(typeof ActionDisplayApp.prototype.cyclePage, 'undefined', 'old cyclePage method should be removed');
@@ -121,4 +123,45 @@ test('ActionDisplayApp Page 2 right tab column initializes activeSubTypes to emp
     assert.equal(rightCol.activeParents.has('ability'), true);
     assert.deepEqual(Array.from(rightCol.activeSubTypes), []);
 });
+
+test('ActionDisplayApp Page 2 populates Tools left filter tab and filters tool proficiency actions', async () => {
+    adapter.system = new Dnd5eSystemAdapter();
+    const app = new ActionDisplayApp({ actor: { id: 'test-actor', getFlag: () => false, flags: {} } });
+    app.activePage = 2;
+    app._saveTabState = () => {};
+
+    const mockActions = [
+        { id: 'ability-dex', name: 'Dexterity', page: 2, left: ['savingThrow'], itemCategories: [['savingThrow'], ['abilityCheck']], right: [{ path: 'ability/dex', root: 'ability', label: 'dex' }] },
+        { id: 'skill-ste', name: 'Stealth', page: 2, left: ['abilityCheck'], right: [{ path: 'ability/dex', root: 'ability', label: 'dex' }] },
+        { id: 'tool-thief', name: "Thieves' Tools", page: 2, left: ['tool'], right: [{ path: 'ability/dex', root: 'ability', label: 'dex' }] },
+        { id: 'tool-alchemist', name: "Alchemist's Supplies", page: 2, left: ['tool'], right: [{ path: 'ability/int', root: 'ability', label: 'int' }] }
+    ];
+
+    actionDisplay.getActions = async () => mockActions;
+
+    // Test with 'all' left tab active
+    const ctxAll = await app._prepareContext({});
+    assert.equal(ctxAll.itemTypes.some(t => t.id === 'tool'), true);
+    const toolTab = ctxAll.itemTypes.find(t => t.id === 'tool');
+    assert.equal(toolTab.label, 'DND5E.ItemTypeToolPlural');
+    assert.equal(toolTab.icon, 'fas fa-hammer');
+    assert.equal(ctxAll.items.length, 4);
+
+    // Test filtering by 'tool' left tab
+    app.leftTabs.activeParents.clear();
+    app.leftTabs.activeParents.add('tool');
+    const ctxTools = await app._prepareContext({});
+    assert.equal(ctxTools.items.length, 2);
+    assert.deepEqual(ctxTools.items.map(i => i.id).sort(), ['tool-alchemist', 'tool-thief']);
+
+    // Test filtering with right-side ability tab (e.g. dex)
+    app.rightTabs.activeParents.clear();
+    app.rightTabs.activeParents.add('ability');
+    app.rightTabs.activeSubTypes.clear();
+    app.rightTabs.activeSubTypes.add('dex');
+    const ctxDexTools = await app._prepareContext({});
+    assert.equal(ctxDexTools.items.length, 1);
+    assert.equal(ctxDexTools.items[0].id, 'tool-thief');
+});
+
 

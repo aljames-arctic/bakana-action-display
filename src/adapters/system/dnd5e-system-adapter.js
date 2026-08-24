@@ -363,6 +363,38 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
             checkActions.push(skillAction);
         }
 
+        // 4. Tool Checks
+        const tools = actor.system?.tools ?? {};
+        for (const [toolId, tool] of Object.entries(tools)) {
+            const toolConfig = cfg?.tools?.[toolId];
+            const configLabel = toolConfig?.label ?? (typeof toolConfig === 'string' ? toolConfig : null);
+            const rawLabel = tool.label ?? configLabel ?? cfg?.toolIds?.[toolId] ?? toolId;
+            const label = localize(rawLabel, rawLabel);
+            const abl = tool.ability ?? toolConfig?.ability ?? 'int';
+            const toolImg = tool.img ?? tool.icon ?? toolConfig?.icon ?? abilityIcons[abl] ?? 'icons/svg/d20.svg';
+            const toolAction = new Action({
+                id: `tool-${toolId}`,
+                name: label,
+                type: 'tool',
+                img: toolImg,
+                right: [TabRef.from('ability', abl)],
+                left: ['tool'],
+                available: true,
+                uses: { available: null, max: null },
+                roll: async (event) => {
+                    const rollEvent = this._createRollEvent(event);
+                    return actor.rollToolCheck?.({ tool: toolId, event: rollEvent })
+                        ?? actor.rollToolCheck?.(toolId, { event: rollEvent })
+                        ?? actor.rollTool?.({ tool: toolId, event: rollEvent })
+                        ?? actor.rollTool?.(toolId, { event: rollEvent });
+                },
+                extra: { section: 'other', page: 2, ability: abl, toolId }
+            });
+            toolAction.section = 'other';
+            toolAction.page = 2;
+            checkActions.push(toolAction);
+        }
+
         return checkActions;
     }
 
@@ -1169,6 +1201,43 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                         expression: `action.right.some(t => t.label === "cha")`
                     }
                 ]
+            },
+            {
+                id: 'cat_tool_checks',
+                name: 'Tools',
+                expression: `action.type === "tool"`,
+                subcategories: [
+                    {
+                        id: 'sub_strength',
+                        name: 'Strength',
+                        expression: `action.right.some(t => t.label === "str")`
+                    },
+                    {
+                        id: 'sub_dexterity',
+                        name: 'Dexterity',
+                        expression: `action.right.some(t => t.label === "dex")`
+                    },
+                    {
+                        id: 'sub_constitution',
+                        name: 'Constitution',
+                        expression: `action.right.some(t => t.label === "con")`
+                    },
+                    {
+                        id: 'sub_intelligence',
+                        name: 'Intelligence',
+                        expression: `action.right.some(t => t.label === "int")`
+                    },
+                    {
+                        id: 'sub_wisdom',
+                        name: 'Wisdom',
+                        expression: `action.right.some(t => t.label === "wis")`
+                    },
+                    {
+                        id: 'sub_charisma',
+                        name: 'Charisma',
+                        expression: `action.right.some(t => t.label === "cha")`
+                    }
+                ]
             }
         ];
 
@@ -1195,7 +1264,9 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
     async getItemSummary(action, item = action?.originalItem, actor = null) {
         if (!action && !item) return null;
 
-        const isCoreCheck = action?.extra?.section === 'core' || ['ability', 'abilityCheck', 'save', 'skill'].includes(action?.type);
+        const isPage2Check = action?.page === 2 || action?.extra?.page === 2 || action?.extra?.section === 'core';
+        const isCoreCheck = (isPage2Check && ['ability', 'abilityCheck', 'save', 'skill', 'tool'].includes(action?.type))
+            || (!action?.originalItem && ['ability', 'abilityCheck', 'save', 'skill', 'tool'].includes(action?.type));
         if (isCoreCheck) {
             return this.#getCheckSummary(action, actor);
         }
@@ -1348,6 +1419,19 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                 const total = skillData.total ?? skillData.mod ?? 0;
                 properties.push({ label: 'Modifier', value: total >= 0 ? `+${total}` : `${total}` });
                 if (skillData.prof?.hasProficiency) properties.push({ value: 'Proficient' });
+            }
+        } else if (action.type === 'tool') {
+            const toolId = action.extra?.toolId ?? action.id.replace(/^tool-/, '');
+            const toolData = actor?.system?.tools?.[toolId];
+            const abl = toolData?.ability ?? action.extra?.ability ?? '';
+            const ablLabel = CONFIG?.DND5E?.abilities?.[abl]?.label ?? (abl ? abl.toUpperCase() : '');
+            subtitle = ablLabel ? `Tool Check (${ablLabel})` : 'Tool Check';
+            if (toolData) {
+                const total = toolData.total ?? toolData.mod ?? 0;
+                properties.push({ label: 'Modifier', value: total >= 0 ? `+${total}` : `${total}` });
+                if (toolData.prof?.hasProficiency || (typeof toolData.value === 'number' && toolData.value > 0)) {
+                    properties.push({ value: 'Proficient' });
+                }
             }
         } else {
             const ability = action.extra?.ability ?? action.id.replace(/^(check|ability)-/, '');

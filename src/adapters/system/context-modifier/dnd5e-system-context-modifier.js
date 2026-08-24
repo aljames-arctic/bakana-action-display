@@ -47,6 +47,7 @@ const SORT_ORDERS = {
         'spell': 5,
         'consumable': 6,
         'tool': 7,
+        'tools': 7,
         'backpack': 8,
         'loot': 9,
         'feat': 10
@@ -57,6 +58,7 @@ const ICONS = {
     item_type: {
         'equipment': 'fas fa-shield',
         'tool': 'fas fa-hammer',
+        'tools': 'fas fa-hammer',
         'backpack': 'fas fa-sack',
         'loot': 'fas fa-gem'
     },
@@ -72,7 +74,8 @@ const LABEL_KEYS = {
         'weapon': ['DND5E.ItemTypeWeapon', 'Weapon'],
         'equipment': ['DND5E.ItemTypeEquipment', 'Equipment'],
         'consumable': ['DND5E.ItemTypeConsumable', 'Consumable'],
-        'tool': ['DND5E.ItemTypeTool', 'Tool'],
+        'tool': ['DND5E.ItemTypeToolPlural', 'Tools'],
+        'tools': ['DND5E.ItemTypeToolPlural', 'Tools'],
         'backpack': ['DND5E.ItemTypeContainer', 'Container'],
         'loot': ['DND5E.ItemTypeLoot', 'Loot'],
         'feat': ['DND5E.ItemTypeFeat', 'Feature'],

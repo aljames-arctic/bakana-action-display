@@ -10,7 +10,7 @@ test('Dnd5eSystemAdapter initialization and labels', () => {
     assert.equal(adapter.getItemTypeIcon('weapon'), 'fas fa-sword');
     assert.equal(adapter.getItemTypeIcon('equipment'), 'fas fa-shield');
     const defaultCategories = adapter.getDefaultCategories();
-    assert.equal(defaultCategories.length, 6);
+    assert.equal(defaultCategories.length, 7);
     assert.equal(defaultCategories[0].name, 'Favorites');
     assert.equal(defaultCategories[1].name, 'Weapons');
     assert.equal(defaultCategories[2].name, 'Spells');
@@ -34,6 +34,11 @@ test('Dnd5eSystemAdapter initialization and labels', () => {
     assert.equal(defaultCategories[5].subcategories[4].expression, 'action.right.some(t => t.label === "wis")');
     assert.equal(defaultCategories[5].subcategories[5].name, 'Charisma');
     assert.equal(defaultCategories[5].subcategories[5].expression, 'action.right.some(t => t.label === "cha")');
+    assert.equal(defaultCategories[6].name, 'Tools');
+    assert.equal(defaultCategories[6].expression, 'action.type === "tool"');
+    assert.equal(defaultCategories[6].subcategories.length, 6);
+    assert.equal(defaultCategories[6].subcategories[1].name, 'Dexterity');
+    assert.equal(defaultCategories[6].subcategories[3].name, 'Intelligence');
 });
 
 test('Dnd5eSystemAdapter shouldExtractItem filtering', () => {
@@ -194,20 +199,29 @@ test('Dnd5eSystemAdapter modifyActions full transformation pipeline', async () =
     assert.equal(dexAbility.collapseDropdownIfSingle, true);
 });
 
-test('Dnd5eSystemAdapter extractCheckActions generates core saves, core checks, and skills', () => {
+test('Dnd5eSystemAdapter extractCheckActions generates core saves, core checks, skills, and tool proficiency checks', async () => {
     const adapter = new Dnd5eSystemAdapter('dnd5e');
+    let rolledTool = null;
     const mockActor = {
         system: {
             skills: {
                 acr: { ability: 'dex', label: 'Acrobatics' },
                 ath: { ability: 'str', label: 'Athletics' }
+            },
+            tools: {
+                thief: { ability: 'dex', label: "Thieves' Tools", value: 1 },
+                alchemist: { ability: 'int', label: "Alchemist's Supplies", value: 1 }
             }
+        },
+        rollToolCheck: async (options) => {
+            rolledTool = options?.tool ?? options;
+            return { rolled: true };
         }
     };
 
     const checks = adapter.extractCheckActions(mockActor);
-    // 6 core ability items (each with 2 activities) + 2 skills = 8 items
-    assert.equal(checks.length, 8);
+    // 6 core ability items (each with 2 activities) + 2 skills + 2 tools = 10 items
+    assert.equal(checks.length, 10);
 
     const coreAbilities = checks.filter(c => c.type === 'ability');
     assert.equal(coreAbilities.length, 6);
@@ -215,11 +229,31 @@ test('Dnd5eSystemAdapter extractCheckActions generates core saves, core checks, 
 
     const skills = checks.filter(c => c.type === 'skill');
     assert.equal(skills.length, 2);
-    assert.ok(skills.every(s => s.section === 'other' && s.page === 2));
+    assert.ok(skills.every(s => s.section === 'other' && s.page === 2 && s.left[0] === 'abilityCheck'));
 
-    const acrSkill = skills.find(s => s.id === 'skill-acr');
-    assert.equal(acrSkill.name, 'Acrobatics');
-    assert.equal(acrSkill.right[0].label, 'dex');
+    const tools = checks.filter(c => c.type === 'tool');
+    assert.equal(tools.length, 2);
+    assert.ok(tools.every(t => t.section === 'other' && t.page === 2 && t.left[0] === 'tool'));
+
+    const thiefTool = tools.find(t => t.id === 'tool-thief');
+    assert.equal(thiefTool.name, "Thieves' Tools");
+    assert.equal(thiefTool.right[0].label, 'dex');
+    assert.deepEqual(thiefTool.left, ['tool']);
+
+    const alchemistTool = tools.find(t => t.id === 'tool-alchemist');
+    assert.equal(alchemistTool.name, "Alchemist's Supplies");
+    assert.equal(alchemistTool.right[0].label, 'int');
+    assert.deepEqual(alchemistTool.left, ['tool']);
+
+    // Test tool rolling
+    await thiefTool.roll({});
+    assert.equal(rolledTool, 'thief');
+
+    // Test tool check item summary
+    const summary = await adapter.getItemSummary(thiefTool, null, mockActor);
+    assert.equal(summary.title, "Thieves' Tools");
+    assert.ok(summary.subtitle.includes('Tool Check'));
+    assert.ok(summary.properties.some(p => p.value === 'Proficient'));
 });
 
 test('Dnd5eSystemAdapter modifyContext triggers split layout exclusively on Page 2 for ability/skill checks', () => {

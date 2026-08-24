@@ -22,6 +22,7 @@ const SORT_ORDERS = {
         'equipment': 5,
         'consumable': 6,
         'tool': 7,
+        'tools': 7,
         'backpack': 8,
         'loot': 9,
         'other': 10,
@@ -106,6 +107,9 @@ export class BaseSystemContextModifier {
             case 'hidden': return localize('BAD.core.hidden', 'Hidden');
             case 'savingThrow': return localize('BAD.page2.savingThrow', 'Saving Throw');
             case 'abilityCheck': return localize('BAD.page2.abilityCheck', 'Ability Check');
+            case 'tool':
+            case 'tools':
+                return localize('BAD.page2.tools', 'Tools');
             default: {
                 const configLabel = CONFIG.Item?.typeLabels?.[parentId];
                 if (configLabel) {
@@ -125,12 +129,15 @@ export class BaseSystemContextModifier {
     getItemTypeIcon(parentId) {
         if (parentId === 'savingThrow') return 'fas fa-shield-alt';
         if (parentId === 'abilityCheck') return 'fas fa-dice-d20';
+        if (parentId === 'tool' || parentId === 'tools') return 'fas fa-hammer';
         const typeMap = {
             weapon: 'fas fa-sword',
             spell: 'fas fa-wand-magic-sparkles',
             feat: 'fas fa-award',
             equipment: 'fas fa-shield-halved',
-            consumable: 'fas fa-flask-potion'
+            consumable: 'fas fa-flask-potion',
+            tool: 'fas fa-hammer',
+            tools: 'fas fa-hammer'
         };
         return ICONS.item_type[parentId] ?? typeMap[parentId] ?? 'fas fa-question';
     }
