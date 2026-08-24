@@ -1613,7 +1613,7 @@ body > #tooltip.bad-summary-has-table-wrapper,
 .bad-item-summary-tooltip.bad-summary-has-table,
 .bad-item-summary-tooltip:has(table) {
     min-width: min(340px, 90vw) !important;
-    max-width: min(720px, 92vw) !important;
+    max-width: min(680px, 92vw) !important;
     width: max-content !important;
 }
 
@@ -1621,6 +1621,25 @@ body > #tooltip.bad-summary-has-table-wrapper,
 .bad-item-summary-tooltip:has(table) .bad-summary-desc {
     overflow-x: auto !important;
     max-width: 100% !important;
+}
+
+/* Prevent non-table text blocks from forcing container width to max-width */
+.bad-summary-has-table .bad-summary-header,
+.bad-summary-has-table .bad-summary-tags,
+.bad-summary-has-table .bad-summary-desc > p,
+.bad-summary-has-table .bad-summary-desc > div:not(table):not(:has(table)),
+.bad-summary-has-table .bad-summary-desc > ul,
+.bad-summary-has-table .bad-summary-desc > ol,
+.bad-summary-has-table .bad-summary-desc > section,
+.bad-item-summary-tooltip:has(table) .bad-summary-header,
+.bad-item-summary-tooltip:has(table) .bad-summary-tags,
+.bad-item-summary-tooltip:has(table) .bad-summary-desc > p,
+.bad-item-summary-tooltip:has(table) .bad-summary-desc > div:not(table):not(:has(table)),
+.bad-item-summary-tooltip:has(table) .bad-summary-desc > ul,
+.bad-item-summary-tooltip:has(table) .bad-summary-desc > ol,
+.bad-item-summary-tooltip:has(table) .bad-summary-desc > section {
+    width: 0 !important;
+    min-width: 100% !important;
 }
 
 .bad-item-summary-tooltip {

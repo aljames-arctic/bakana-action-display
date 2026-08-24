@@ -1666,7 +1666,34 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
                 direction: this._chooseTooltipDirection(itemEl, hasTable),
                 cssClass
             });
+
+            if (hasTable) {
+                this._adjustTableTooltipWidth();
+            }
         }
+    }
+
+    /**
+     * Dynamically size the tooltip container to the minimal width needed by roll tables
+     * between normal width (340px) and maximal width (680px / 2x normal size).
+     * @protected
+     */
+    _adjustTableTooltipWidth() {
+        const tooltipEl = document.querySelector?.('#tooltip, aside#tooltip, div#tooltip');
+        if (!tooltipEl) return;
+        const table = tooltipEl.querySelector?.('.bad-item-summary-tooltip table');
+        if (!table) return;
+
+        const normalWidth = 340;
+        const maxAllowedWidth = Math.min(680, Math.floor((typeof window !== 'undefined' ? (window.innerWidth ?? 1920) : 1920) * 0.92));
+
+        // Measure table width
+        const tableWidth = Math.ceil(table.getBoundingClientRect?.()?.width ?? table.offsetWidth ?? table.scrollWidth ?? normalWidth);
+        const calculatedWidth = Math.max(normalWidth, Math.min(tableWidth + 24, maxAllowedWidth));
+
+        tooltipEl.style?.setProperty?.('width', `${calculatedWidth}px`, 'important');
+        tooltipEl.style?.setProperty?.('max-width', `${calculatedWidth}px`, 'important');
+        tooltipEl.style?.setProperty?.('min-width', `${normalWidth}px`, 'important');
     }
 
     /**
@@ -1676,6 +1703,12 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
     _hideItemSummaryTooltip() {
         if (!this._activeSummaryTooltip) return;
         this._activeSummaryTooltip = null;
+        const tooltipEl = document.querySelector?.('#tooltip, aside#tooltip, div#tooltip');
+        if (tooltipEl) {
+            tooltipEl.style?.removeProperty?.('width');
+            tooltipEl.style?.removeProperty?.('max-width');
+            tooltipEl.style?.removeProperty?.('min-width');
+        }
         if (game.tooltip?.deactivate) {
             game.tooltip.deactivate();
         }
