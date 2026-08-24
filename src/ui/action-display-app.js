@@ -249,6 +249,9 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         if (this._boundOutsidePointerDown) {
             window.removeEventListener('pointerdown', this._boundOutsidePointerDown, { capture: true });
         }
+        if (this._boundWindowStackPointerDown) {
+            window.removeEventListener('pointerdown', this._boundWindowStackPointerDown, { capture: true });
+        }
         this._hideItemSummaryTooltip();
         if (this._boundOnKeyDown) {
             window.removeEventListener('keydown', this._boundOnKeyDown);
@@ -1232,9 +1235,28 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         };
         window.addEventListener('pointerdown', this._boundOutsidePointerDown, { capture: true });
 
-        // Bring HUD to top on initial open and whenever clicked / interacted with
+        // Window Stacking Management:
+        // Ensure that whichever window (our HUD or any other Foundry sheet/dialog) was interacted with most recently is placed on top.
         this.bringToTop();
-        this.element.addEventListener('pointerdown', () => this.bringToTop());
+        this._boundWindowStackPointerDown = (event) => {
+            if (!this.element) return;
+            const targetWindow = event.target?.closest?.('.window-app, .application, .app, .dialog, .sidebar-popout');
+            if (!targetWindow) return;
+
+            if (targetWindow === this.element || this.element.contains(targetWindow)) {
+                this.bringToTop();
+            } else {
+                if (targetWindow.closest?.('#context-menu, .context-menu, .bad-item-summary-tooltip')) return;
+                const hudZ = parseInt(this.element.style?.zIndex, 10) || 100;
+                const targetZ = parseInt(targetWindow.style?.zIndex, 10) || 0;
+                if (targetZ <= hudZ) {
+                    const newZ = hudZ + 1;
+                    targetWindow.style.zIndex = `${newZ}`;
+                    globalThis._maxZ = Math.max(globalThis._maxZ ?? 100, newZ);
+                }
+            }
+        };
+        window.addEventListener('pointerdown', this._boundWindowStackPointerDown, { capture: true });
 
         // Attach item summary tooltip event listeners
         this.element.addEventListener('pointerover', this._boundOnPointerOver);

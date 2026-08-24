@@ -4,6 +4,7 @@ import '../setup.js';
 import { ActionDisplayApp } from '../../src/ui/action-display-app.js';
 import { actionDisplay } from '../../src/action-display.js';
 import { MODULE_ID } from '../../src/constants.js';
+import '../../src/module.js';
 
 test('ActionDisplayApp _onRecenterToken recenters canvas view on token center', async () => {
     let pannedCoords = null;
@@ -419,4 +420,46 @@ test('ActionDisplayApp _onFirstRender calls bringToTop on initial open, while _o
     // 2. Background re-render preserves z-index (does NOT call bringToTop)
     app._onRender({}, {});
     assert.equal(bringToTopCount, 1, '_onRender must not call bringToTop() so subsequent windows remain on top');
+});
+
+test('Clicking or rendering another application elevates that window above the HUD', () => {
+    const hudApp = new ActionDisplayApp({ actor: { id: 'test-actor' } });
+    const hudElement = {
+        style: { zIndex: '100' },
+        querySelector: () => ({ offsetWidth: 320, offsetHeight: 400 }),
+        querySelectorAll: () => [],
+        addEventListener: () => {},
+        contains: (el) => el === hudElement,
+        offsetWidth: 320,
+        offsetHeight: 400
+    };
+    hudApp.element = hudElement;
+    actionDisplay.activeApp = hudApp;
+
+    // Simulate another application window
+    const sheetElement = {
+        style: { zIndex: '100' },
+        closest: (sel) => sel.includes('window-app') ? sheetElement : null
+    };
+
+    // 1. Initial render of another application -> renderApplication hook elevates sheet
+    Hooks.callAll('renderApplication', { element: [sheetElement] }, [sheetElement]);
+    assert.equal(sheetElement.style.zIndex, '101', 'Newly opened sheet should have z-index higher than HUD (100 + 1)');
+
+    // 2. Click on the HUD -> elevates HUD above sheet
+    hudApp._onFirstRender({}, {});
+    hudApp._boundWindowStackPointerDown({
+        target: { closest: (sel) => sel.includes('window-app') ? hudElement : null }
+    });
+    assert.ok(parseInt(hudElement.style.zIndex, 10) > 101, 'HUD z-index should be elevated above sheet on HUD click');
+
+    // 3. Click on the sheet -> elevates sheet above HUD
+    const newHudZ = parseInt(hudElement.style.zIndex, 10);
+    hudApp._boundWindowStackPointerDown({
+        target: { closest: (sel) => sel.includes('window-app') ? sheetElement : null }
+    });
+    assert.equal(sheetElement.style.zIndex, `${newHudZ + 1}`, 'Sheet z-index should be elevated above HUD on sheet click');
+
+    // Clean up
+    actionDisplay.activeApp = null;
 });

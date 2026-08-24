@@ -293,3 +293,23 @@ Hooks.on('updateToken', (tokenDoc, changes, options, userId) => {
         requestHUDRender();
     }
 });
+
+// Hook into Application rendering to ensure newly opened sheets/windows sit above the HUD
+Hooks.on('renderApplication', (app, html) => {
+    const currentHUD = actionDisplay?.activeApp ?? activeApp;
+    if (!currentHUD?.element) return;
+    const hudEl = currentHUD.element;
+    const appEl = app?.element?.[0] ?? app?.element ?? html?.[0] ?? html;
+    if (!appEl || appEl === hudEl || hudEl.contains?.(appEl)) return;
+    if (appEl.closest?.('#context-menu, .context-menu, .bad-item-summary-tooltip')) return;
+
+    const hudZ = parseInt(hudEl.style?.zIndex, 10) || 100;
+    const appZ = parseInt(appEl.style?.zIndex, 10) || 0;
+    if (appZ <= hudZ) {
+        const newZ = hudZ + 1;
+        if (appEl.style) {
+            appEl.style.zIndex = `${newZ}`;
+        }
+        globalThis._maxZ = Math.max(globalThis._maxZ ?? 100, newZ);
+    }
+});
