@@ -1562,13 +1562,13 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
      * @returns {string}
      * @protected
      */
-    _chooseTooltipDirection(element, hasTable = false) {
+    _chooseTooltipDirection(element, hasTable = false, targetWidth = 360) {
         if (!element) return 'RIGHT';
         try {
             const rect = element.getBoundingClientRect?.();
             if (rect) {
                 const windowWidth = typeof window !== 'undefined' ? (window.innerWidth ?? 1920) : 1920;
-                const neededSpace = hasTable ? 500 : 360;
+                const neededSpace = hasTable ? Math.max(targetWidth + 20, 400) : 360;
                 const spaceRight = windowWidth - rect.right;
                 const spaceLeft = rect.left;
 
@@ -1588,10 +1588,11 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
     /**
      * Format a structured item summary object into HTML.
      * @param {Object} summary
+     * @param {number|null} targetWidth
      * @returns {string}
      * @protected
      */
-    _formatItemSummaryHtml(summary) {
+    _formatItemSummaryHtml(summary, targetWidth = null) {
         if (!summary) return '';
         const title = summary.title ?? '';
         const subtitle = summary.subtitle ?? '';
@@ -1600,8 +1601,9 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         const description = summary.description ?? '';
         const hasTable = Boolean(description && /<table[\s>]/i.test(description));
         const tableClass = hasTable ? ' bad-summary-has-table' : '';
+        const widthStyle = targetWidth ? ` style="--bad-tooltip-width: ${targetWidth}px; --bad-tooltip-max-width: ${targetWidth}px; width: ${targetWidth}px; max-width: ${targetWidth}px;"` : '';
 
-        let html = `<div class="bad-item-summary-tooltip${tableClass}">`;
+        let html = `<div class="bad-item-summary-tooltip${tableClass}"${widthStyle}>`;
         html += '<div class="bad-summary-header">';
         if (img) {
             html += `<img class="bad-summary-icon" src="${img}" alt="${title}" />`;
@@ -1651,11 +1653,17 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         const showSummaries = this._isQuestionMarkHeld || Boolean(game.settings.get(MODULE_ID, 'showItemSummaries'));
         if (this._hoveredActionItem !== itemEl || !showSummaries) return;
 
-        const html = typeof summary === 'string' ? summary : this._formatItemSummaryHtml(summary);
-        this._activeSummaryTooltip = { element: itemEl, actionId: action.id, summary, html };
-
         const rawDesc = typeof summary === 'string' ? summary : (summary.description ?? '');
         const hasTable = Boolean(rawDesc && /<table[\s>]/i.test(rawDesc));
+
+        let targetWidth = null;
+        if (hasTable) {
+            targetWidth = this._calculateTableTooltipWidth(rawDesc);
+        }
+
+        const html = typeof summary === 'string' ? summary : this._formatItemSummaryHtml(summary, targetWidth);
+        this._activeSummaryTooltip = { element: itemEl, actionId: action.id, summary, html, targetWidth };
+
         const cssClass = hasTable
             ? 'bad-item-summary-tooltip-wrapper bad-summary-has-table-wrapper'
             : 'bad-item-summary-tooltip-wrapper';
@@ -1663,37 +1671,92 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         if (game.tooltip?.activate) {
             game.tooltip.activate(itemEl, {
                 html,
-                direction: this._chooseTooltipDirection(itemEl, hasTable),
+                direction: this._chooseTooltipDirection(itemEl, hasTable, targetWidth ?? 360),
                 cssClass
             });
 
-            if (hasTable) {
-                this._adjustTableTooltipWidth();
+            if (hasTable && targetWidth) {
+                this._applyTooltipWidth(targetWidth);
             }
         }
     }
 
     /**
-     * Dynamically size the tooltip container to the minimal width needed by roll tables
-     * between normal width (340px) and maximal width (680px / 2x normal size).
+     * Measure the minimal width required by tables in an item description
+     * so title rows and column 1 do not wrap, clamped between 340px and 680px.
+     * @param {string} descriptionHtml
+     * @returns {number}
      * @protected
      */
-    _adjustTableTooltipWidth() {
-        const tooltipEl = document.querySelector?.('#tooltip, aside#tooltip, div#tooltip');
-        if (!tooltipEl) return;
-        const table = tooltipEl.querySelector?.('.bad-item-summary-tooltip table');
-        if (!table) return;
-
+    _calculateTableTooltipWidth(descriptionHtml) {
         const normalWidth = 340;
         const maxAllowedWidth = Math.min(680, Math.floor((typeof window !== 'undefined' ? (window.innerWidth ?? 1920) : 1920) * 0.92));
 
-        // Measure table width
-        const tableWidth = Math.ceil(table.getBoundingClientRect?.()?.width ?? table.offsetWidth ?? table.scrollWidth ?? normalWidth);
-        const calculatedWidth = Math.max(normalWidth, Math.min(tableWidth + 24, maxAllowedWidth));
+        if (!descriptionHtml || typeof document === 'undefined' || !document.body) {
+            return normalWidth;
+        }
 
-        tooltipEl.style?.setProperty?.('width', `${calculatedWidth}px`, 'important');
-        tooltipEl.style?.setProperty?.('max-width', `${calculatedWidth}px`, 'important');
-        tooltipEl.style?.setProperty?.('min-width', `${normalWidth}px`, 'important');
+        try {
+            const sandbox = document.createElement('div');
+            sandbox.style.cssText = 'position: absolute; left: -9999px; top: -9999px; visibility: hidden; pointer-events: none; width: max-content; max-width: none; min-width: 0;';
+            sandbox.className = 'bad-summary-desc';
+            sandbox.innerHTML = descriptionHtml;
+            document.body.appendChild(sandbox);
+
+            const tables = sandbox.querySelectorAll('table');
+            let measuredTableWidth = normalWidth;
+
+            tables.forEach(table => {
+                table.style.setProperty('width', 'max-content', 'important');
+                table.style.setProperty('min-width', '0', 'important');
+                table.style.setProperty('max-width', 'none', 'important');
+                table.style.setProperty('display', 'table', 'important');
+
+                const ths = table.querySelectorAll('th, thead td, tr:first-child th, tr:first-child td');
+                ths.forEach(th => th.style.setProperty('white-space', 'nowrap', 'important'));
+
+                const firstColCells = table.querySelectorAll('td:first-child, th:first-child');
+                firstColCells.forEach(td => td.style.setProperty('white-space', 'nowrap', 'important'));
+
+                const rect = table.getBoundingClientRect?.();
+                const w = Math.ceil(rect?.width ?? table.offsetWidth ?? table.scrollWidth ?? normalWidth);
+                if (w > measuredTableWidth) measuredTableWidth = w;
+            });
+
+            sandbox.remove();
+
+            return Math.max(normalWidth, Math.min(measuredTableWidth + 28, maxAllowedWidth));
+        } catch (e) {
+            log.debug('_calculateTableTooltipWidth error:', e);
+            return normalWidth;
+        }
+    }
+
+    /**
+     * Apply custom width to the tooltip DOM element and schedule follow-ups
+     * in case of asynchronous TooltipManager positioning.
+     * @param {number} targetWidth
+     * @protected
+     */
+    _applyTooltipWidth(targetWidth) {
+        const apply = () => {
+            const tooltipEl = document.querySelector?.('#tooltip, aside#tooltip, div#tooltip');
+            if (tooltipEl) {
+                tooltipEl.style?.setProperty?.('--bad-tooltip-width', `${targetWidth}px`);
+                tooltipEl.style?.setProperty?.('--bad-tooltip-max-width', `${targetWidth}px`);
+                tooltipEl.style?.setProperty?.('width', `${targetWidth}px`, 'important');
+                tooltipEl.style?.setProperty?.('max-width', `${targetWidth}px`, 'important');
+                tooltipEl.style?.setProperty?.('min-width', '340px', 'important');
+            }
+        };
+
+        apply();
+        if (typeof requestAnimationFrame !== 'undefined') {
+            requestAnimationFrame(apply);
+        }
+        if (typeof setTimeout !== 'undefined') {
+            setTimeout(apply, 20);
+        }
     }
 
     /**
@@ -1705,6 +1768,8 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         this._activeSummaryTooltip = null;
         const tooltipEl = document.querySelector?.('#tooltip, aside#tooltip, div#tooltip');
         if (tooltipEl) {
+            tooltipEl.style?.removeProperty?.('--bad-tooltip-width');
+            tooltipEl.style?.removeProperty?.('--bad-tooltip-max-width');
             tooltipEl.style?.removeProperty?.('width');
             tooltipEl.style?.removeProperty?.('max-width');
             tooltipEl.style?.removeProperty?.('min-width');

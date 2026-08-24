@@ -1585,9 +1585,9 @@ body > #tooltip.bad-item-summary-tooltip-wrapper,
 .bad-item-summary-tooltip {
     text-align: left !important;
     direction: ltr !important;
-    max-width: 360px !important;
+    max-width: var(--bad-tooltip-max-width, 360px) !important;
     min-width: 260px !important;
-    width: min(340px, 90vw) !important;
+    width: var(--bad-tooltip-width, min(340px, 90vw)) !important;
     white-space: normal !important;
     overflow-x: hidden !important;
     word-break: normal !important;
@@ -1613,8 +1613,8 @@ body > #tooltip.bad-summary-has-table-wrapper,
 .bad-item-summary-tooltip.bad-summary-has-table,
 .bad-item-summary-tooltip:has(table) {
     min-width: min(340px, 90vw) !important;
-    max-width: min(680px, 92vw) !important;
-    width: max-content !important;
+    max-width: var(--bad-tooltip-max-width, min(680px, 92vw)) !important;
+    width: var(--bad-tooltip-width, min(340px, 90vw)) !important;
 }
 
 .bad-summary-has-table .bad-summary-desc,

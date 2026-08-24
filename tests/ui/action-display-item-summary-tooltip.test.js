@@ -578,21 +578,12 @@ test('ActionDisplayApp formats descriptions with roll tables and adds bad-summar
     };
     assert.equal(app._chooseTooltipDirection(leftSideEl, true), 'RIGHT');
 
-    // 4. Verify _adjustTableTooltipWidth dynamic sizing
+    // 4. Verify _calculateTableTooltipWidth and _applyTooltipWidth dynamic sizing
     const mockTooltipEl = {
         style: {
             properties: {},
             setProperty(k, v) { this.properties[k] = v; },
             removeProperty(k) { delete this.properties[k]; }
-        },
-        querySelector(sel) {
-            if (sel.includes('table')) {
-                return {
-                    getBoundingClientRect: () => ({ width: 450 }),
-                    offsetWidth: 450
-                };
-            }
-            return null;
         }
     };
 
@@ -603,24 +594,20 @@ test('ActionDisplayApp formats descriptions with roll tables and adds bad-summar
     };
 
     try {
-        app._adjustTableTooltipWidth();
-        assert.equal(mockTooltipEl.style.properties['width'], '474px', 'Calculated width should be table width (450) + 24px padding = 474px');
-        assert.equal(mockTooltipEl.style.properties['max-width'], '474px');
+        const calculatedWidth = app._calculateTableTooltipWidth(tableHtml);
+        assert.ok(calculatedWidth >= 340 && calculatedWidth <= 680, 'Calculated width should be bounded between 340px and 680px');
+
+        app._applyTooltipWidth(504);
+        assert.equal(mockTooltipEl.style.properties['width'], '504px');
+        assert.equal(mockTooltipEl.style.properties['max-width'], '504px');
         assert.equal(mockTooltipEl.style.properties['min-width'], '340px');
-
-        // Test narrow table (e.g. 200px) -> should stay at 340px minimal width
-        mockTooltipEl.querySelector = () => ({ getBoundingClientRect: () => ({ width: 200 }) });
-        app._adjustTableTooltipWidth();
-        assert.equal(mockTooltipEl.style.properties['width'], '340px', 'Narrow table should stay at normal 340px width');
-
-        // Test huge table (e.g. 900px) -> should be capped at 680px maximal width
-        mockTooltipEl.querySelector = () => ({ getBoundingClientRect: () => ({ width: 900 }) });
-        app._adjustTableTooltipWidth();
-        assert.equal(mockTooltipEl.style.properties['width'], '680px', 'Wide table should be capped at 680px (2x normal width)');
+        assert.equal(mockTooltipEl.style.properties['--bad-tooltip-width'], '504px');
+        assert.equal(mockTooltipEl.style.properties['--bad-tooltip-max-width'], '504px');
 
         // Hide tooltip cleans up style properties
         app._hideItemSummaryTooltip();
         assert.equal(mockTooltipEl.style.properties['width'], undefined);
+        assert.equal(mockTooltipEl.style.properties['--bad-tooltip-width'], undefined);
     } finally {
         document.querySelector = origQuerySelector;
     }
