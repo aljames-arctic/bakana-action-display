@@ -1619,7 +1619,7 @@ body > #tooltip.bad-summary-has-table-wrapper,
 
 .bad-summary-has-table .bad-summary-desc,
 .bad-item-summary-tooltip:has(table) .bad-summary-desc {
-    overflow-x: hidden !important;
+    overflow-x: auto !important;
     overflow-y: auto !important;
     max-width: 100% !important;
 }
@@ -1632,7 +1632,6 @@ body > #tooltip.bad-summary-has-table-wrapper,
     line-height: 1.4;
     color: #e2e8f0;
     width: 100% !important;
-    overflow-x: hidden !important;
     box-sizing: border-box !important;
 }
 
@@ -1704,7 +1703,7 @@ body > #tooltip.bad-summary-has-table-wrapper,
     line-height: 1.4;
     max-height: 280px;
     overflow-y: auto !important;
-    overflow-x: hidden !important;
+    overflow-x: auto !important;
     word-break: normal;
     overflow-wrap: break-word;
     white-space: normal;
@@ -1719,6 +1718,7 @@ body > #tooltip.bad-summary-has-table-wrapper,
 
 .bad-summary-desc::-webkit-scrollbar {
     width: 5px;
+    height: 5px;
 }
 
 .bad-summary-desc::-webkit-scrollbar-track {
