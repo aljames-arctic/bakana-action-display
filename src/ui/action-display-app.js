@@ -1562,13 +1562,20 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
      * @returns {string}
      * @protected
      */
-    _chooseTooltipDirection(element) {
+    _chooseTooltipDirection(element, hasTable = false) {
         if (!element) return 'RIGHT';
         try {
             const rect = element.getBoundingClientRect?.();
             if (rect) {
                 const windowWidth = typeof window !== 'undefined' ? (window.innerWidth ?? 1920) : 1920;
-                if (rect.left > windowWidth / 2) {
+                const neededSpace = hasTable ? 500 : 360;
+                const spaceRight = windowWidth - rect.right;
+                const spaceLeft = rect.left;
+
+                if (spaceRight < neededSpace && spaceLeft > spaceRight) {
+                    return 'LEFT';
+                }
+                if (rect.left > windowWidth / 2 && spaceLeft >= neededSpace) {
                     return 'LEFT';
                 }
             }
@@ -1591,8 +1598,10 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         const img = summary.img ?? '';
         const properties = Array.isArray(summary.properties) ? summary.properties.filter(Boolean) : [];
         const description = summary.description ?? '';
+        const hasTable = Boolean(description && /<table[\s>]/i.test(description));
+        const tableClass = hasTable ? ' bad-summary-has-table' : '';
 
-        let html = '<div class="bad-item-summary-tooltip">';
+        let html = `<div class="bad-item-summary-tooltip${tableClass}">`;
         html += '<div class="bad-summary-header">';
         if (img) {
             html += `<img class="bad-summary-icon" src="${img}" alt="${title}" />`;
@@ -1645,11 +1654,17 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         const html = typeof summary === 'string' ? summary : this._formatItemSummaryHtml(summary);
         this._activeSummaryTooltip = { element: itemEl, actionId: action.id, summary, html };
 
+        const rawDesc = typeof summary === 'string' ? summary : (summary.description ?? '');
+        const hasTable = Boolean(rawDesc && /<table[\s>]/i.test(rawDesc));
+        const cssClass = hasTable
+            ? 'bad-item-summary-tooltip-wrapper bad-summary-has-table-wrapper'
+            : 'bad-item-summary-tooltip-wrapper';
+
         if (game.tooltip?.activate) {
             game.tooltip.activate(itemEl, {
                 html,
-                direction: this._chooseTooltipDirection(itemEl),
-                cssClass: 'bad-item-summary-tooltip-wrapper'
+                direction: this._chooseTooltipDirection(itemEl, hasTable),
+                cssClass
             });
         }
     }

@@ -1594,6 +1594,35 @@ body > #tooltip.bad-item-summary-tooltip-wrapper,
     overflow-wrap: break-word !important;
 }
 
+/* Dynamic Tooltip Expansion for Descriptions with Roll Tables & Data Tables */
+#tooltip:has(.bad-summary-has-table),
+aside#tooltip:has(.bad-summary-has-table),
+div#tooltip:has(.bad-summary-has-table),
+#tooltip:has(.bad-item-summary-tooltip table),
+aside#tooltip:has(.bad-item-summary-tooltip table),
+div#tooltip:has(.bad-item-summary-tooltip table),
+#tooltip.bad-summary-has-table-wrapper,
+aside#tooltip.bad-summary-has-table-wrapper,
+div#tooltip.bad-summary-has-table-wrapper,
+#tooltip.bad-item-summary-tooltip-wrapper:has(table),
+aside#tooltip.bad-item-summary-tooltip-wrapper:has(table),
+div#tooltip.bad-item-summary-tooltip-wrapper:has(table),
+body > #tooltip:has(.bad-summary-has-table),
+body > #tooltip.bad-summary-has-table-wrapper,
+.bad-summary-has-table-wrapper,
+.bad-item-summary-tooltip.bad-summary-has-table,
+.bad-item-summary-tooltip:has(table) {
+    min-width: min(340px, 90vw) !important;
+    max-width: min(720px, 92vw) !important;
+    width: max-content !important;
+}
+
+.bad-summary-has-table .bad-summary-desc,
+.bad-item-summary-tooltip:has(table) .bad-summary-desc {
+    overflow-x: auto !important;
+    max-width: 100% !important;
+}
+
 .bad-item-summary-tooltip {
     display: flex;
     flex-direction: column;
@@ -1674,22 +1703,22 @@ body > #tooltip.bad-item-summary-tooltip-wrapper,
     line-height: 1.4;
     max-height: 260px;
     overflow-y: auto;
-    overflow-x: hidden !important;
-    word-break: break-word !important;
-    overflow-wrap: break-word !important;
-    white-space: normal !important;
+    overflow-x: hidden;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    white-space: normal;
     padding-right: 0.35em;
     border-top: 1px solid rgba(255, 255, 255, 0.08);
     padding-top: 0.45em;
-    box-sizing: border-box !important;
-    width: 100% !important;
+    box-sizing: border-box;
+    width: 100%;
 }
 
 .bad-summary-desc * {
-    max-width: 100% !important;
-    box-sizing: border-box !important;
-    word-break: break-word !important;
-    overflow-wrap: break-word !important;
+    max-width: 100%;
+    box-sizing: border-box;
+    word-break: break-word;
+    overflow-wrap: break-word;
 }
 
 .bad-summary-desc p {
@@ -1698,6 +1727,67 @@ body > #tooltip.bad-item-summary-tooltip-wrapper,
 
 .bad-summary-desc p:last-child {
     margin-bottom: 0;
+}
+
+/* Roll Table and Data Table Formatting in Tooltips */
+.bad-summary-desc table {
+    width: max-content;
+    min-width: 100%;
+    max-width: 100%;
+    border-collapse: collapse;
+    margin: 0.45em 0;
+    font-size: 0.9em;
+    background: rgba(0, 0, 0, 0.28);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 4px;
+    overflow: hidden;
+    display: table;
+}
+
+/* Title rows: thead th/td and first row */
+.bad-summary-desc table thead th,
+.bad-summary-desc table thead td,
+.bad-summary-desc table tr:first-child th,
+.bad-summary-desc table tr:first-child td,
+.bad-summary-desc table th {
+    white-space: nowrap !important;
+    word-break: normal !important;
+    overflow-wrap: normal !important;
+    font-weight: 700 !important;
+    color: #f8fafc !important;
+    background: rgba(167, 139, 250, 0.18) !important;
+    padding: 0.3em 0.6em !important;
+    text-align: left !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+
+/* Column 1: first cell of every row (e.g. d100, roll ranges) */
+.bad-summary-desc table th:first-child,
+.bad-summary-desc table td:first-child,
+.bad-summary-desc table tr td:first-child {
+    white-space: nowrap !important;
+    word-break: normal !important;
+    overflow-wrap: normal !important;
+    font-weight: 600;
+    color: #e9d5ff;
+}
+
+/* General table cells */
+.bad-summary-desc table td {
+    padding: 0.25em 0.55em;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    vertical-align: top;
+    word-break: normal;
+    overflow-wrap: break-word;
+}
+
+/* Alternate row striping & hover */
+.bad-summary-desc table tbody tr:nth-child(even) {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.bad-summary-desc table tbody tr:hover {
+    background: rgba(167, 139, 250, 0.08);
 }
 
 .bad-config-categories-list {

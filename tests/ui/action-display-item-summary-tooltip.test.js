@@ -494,3 +494,91 @@ test('ActionDisplayApp triggers rich tooltip on hover when showItemSummaries tog
 
     await app.close();
 });
+
+test('ActionDisplayApp formats descriptions with roll tables and adds bad-summary-has-table class', async () => {
+    const tableHtml = `
+        <table>
+            <thead>
+                <tr>
+                    <th>d100</th>
+                    <th>Familiarity</th>
+                    <th>Mishap</th>
+                    <th>Similar Area</th>
+                    <th>Off Target</th>
+                    <th>On Target</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>01–05</td>
+                    <td>Permanent circle</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>01–100</td>
+                </tr>
+            </tbody>
+        </table>
+    `;
+
+    const mockItem = {
+        id: 'teleport-1',
+        name: 'Teleport',
+        type: 'spell',
+        system: {
+            description: { value: tableHtml },
+            level: 7,
+            school: 'con'
+        }
+    };
+
+    const action = new Action({
+        id: 'teleport-1',
+        name: 'Teleport',
+        originalItem: mockItem
+    });
+
+    const app = new ActionDisplayApp({
+        actor: { isOwner: true }
+    });
+    app.actions = [action];
+
+    // 1. Format HTML and verify table class is attached
+    const summary = await adapter.getItemSummary(action, mockItem, app.actor);
+    const html = app._formatItemSummaryHtml(summary);
+    assert.ok(html.includes('bad-summary-has-table'), 'Tooltip should have bad-summary-has-table class');
+    assert.ok(html.includes('<table>'), 'Tooltip should contain table element');
+    assert.ok(html.includes('Permanent circle'));
+
+    // 2. Verify _showItemSummaryTooltip passes bad-summary-has-table-wrapper
+    await game.settings.set('bakana-action-display', 'showItemSummaries', true);
+    const itemEl = {
+        tagName: 'DIV',
+        className: 'bad-action-item',
+        dataset: { actionId: 'teleport-1' },
+        closest: (sel) => (sel === '.bad-action-item' ? itemEl : null),
+        getBoundingClientRect: () => ({ left: 200, top: 100, right: 350, bottom: 140 })
+    };
+
+    await app._boundOnPointerOver({ target: itemEl });
+    assert.equal(globalThis.game.tooltip.active, true);
+    assert.ok(globalThis.game.tooltip.options.cssClass.includes('bad-summary-has-table-wrapper'));
+    assert.ok(globalThis.game.tooltip.options.html.includes('bad-summary-has-table'));
+
+    // 3. Verify _chooseTooltipDirection handles wide table tooltips intelligently
+    // Screen width 1920, element at left 1500 (spaceRight = 1920 - 1650 = 270 < 500) -> Should choose LEFT
+    const rightSideEl = {
+        getBoundingClientRect: () => ({ left: 1500, top: 100, right: 1650, bottom: 140 })
+    };
+    assert.equal(app._chooseTooltipDirection(rightSideEl, true), 'LEFT');
+
+    // Element at left 100 (spaceRight = 1920 - 250 = 1670 >= 500) -> Should choose RIGHT
+    const leftSideEl = {
+        getBoundingClientRect: () => ({ left: 100, top: 100, right: 250, bottom: 140 })
+    };
+    assert.equal(app._chooseTooltipDirection(leftSideEl, true), 'RIGHT');
+
+    await game.settings.set('bakana-action-display', 'showItemSummaries', false);
+    await app.close();
+});
+
