@@ -5,7 +5,7 @@ import { actionDisplay } from '../action-display.js';
 
 export const DEFAULT_DND5E_AUTOBAN_CONFIG = Object.freeze({
     enabled: true,
-    vocal: ['silence', 'incapacitated', 'paralyzed', 'petrified', 'stunned', 'unconscious'],
+    vocal: ['silenced', 'incapacitated', 'paralyzed', 'petrified', 'stunned', 'unconscious'],
     somatic: ['restrained', 'incapacitated', 'paralyzed', 'petrified', 'stunned', 'unconscious', 'grappled']
 });
 

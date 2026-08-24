@@ -38,7 +38,7 @@ globalThis.CONFIG.DND5E = globalThis.CONFIG.DND5E ?? {
 };
 
 globalThis.CONFIG.statusEffects = [
-    { id: 'silence', name: 'DND5E.ConSilence', img: 'icons/magic/symbols/silence.svg' },
+    { id: 'silenced', name: 'DND5E.ConSilenced', img: 'icons/magic/symbols/silence.svg' },
     { id: 'restrained', name: 'DND5E.ConRestrained', img: 'icons/svg/net.svg' },
     { id: 'incapacitated', name: 'DND5E.ConIncapacitated', img: 'icons/svg/daze.svg' },
     { id: 'paralyzed', name: 'DND5E.ConParalyzed', img: 'icons/svg/paralysis.svg' },
@@ -289,7 +289,7 @@ const settingsStore = new Map([
     ['bakana-action-display.autoToggleCombat', false],
     ['bakana-action-display.dnd5eAutoBanConditions', {
         enabled: true,
-        vocal: ['silence', 'incapacitated', 'paralyzed', 'petrified', 'stunned', 'unconscious'],
+        vocal: ['silenced', 'incapacitated', 'paralyzed', 'petrified', 'stunned', 'unconscious'],
         somatic: ['restrained', 'incapacitated', 'paralyzed', 'petrified', 'stunned', 'unconscious', 'grappled']
     }]
 ]);

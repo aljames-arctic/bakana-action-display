@@ -179,10 +179,10 @@
             "spellComponents": "Spell Components"
         },
         "dnd5eAutoBan": {
-            "title": "Auto-Ban Spell Components",
-            "menuName": "Auto-Ban Spell Components",
-            "menuLabel": "Configure Auto-Ban Conditions",
-            "menuHint": "Automatically ban Verbal and Somatic spell components when specific status conditions are active on actors.",
+            "title": "D&D 5e Configuration",
+            "menuName": "D&D 5e Configuration",
+            "menuLabel": "Configure D&D5e",
+            "menuHint": "Configure D&D 5e specific settings such as automatic spell component banning.",
             "description": "Configure status conditions that automatically ban Verbal and Somatic spell components on actors when applied.",
             "enableAutoBan": "Enable Auto-Ban Spell Components",
             "verbalTitle": "Verbal (Vocal) Components",
@@ -190,7 +190,7 @@
             "somaticTitle": "Somatic Components",
             "somaticHint": "Spells requiring Somatic components will be banned when the actor has any of these conditions:",
             "noConditions": "No conditions configured",
-            "saved": "Auto-ban spell components configuration saved."
+            "saved": "D&D 5e configuration saved."
         },
         "dnd5e": {
             "upcast": "Upcast"

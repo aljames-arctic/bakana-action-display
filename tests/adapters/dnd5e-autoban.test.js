@@ -17,7 +17,7 @@ test('Dnd5eAutoBanConfigApp prepares context, adds/removes conditions, resets de
     const context = await app._prepareContext({});
     assert.equal(context.config.enabled, true);
     assert.ok(context.availableStatuses.length > 0, 'Available statuses should be populated');
-    assert.ok(context.vocalConditions.some(c => c.id === 'silence'), 'Silence should be in vocal conditions');
+    assert.ok(context.vocalConditions.some(c => c.id === 'silenced'), 'Silenced should be in vocal conditions');
     assert.ok(context.somaticConditions.some(c => c.id === 'restrained'), 'Restrained should be in somatic conditions');
 
     // Test addCondition
@@ -54,7 +54,7 @@ test('Dnd5eSystemAdapter getActorStatuses extracts statuses from actor.statuses 
     const dndAdapter = new Dnd5eSystemAdapter();
 
     const actor = {
-        statuses: new Set(['silence']),
+        statuses: new Set(['silenced']),
         effects: [
             { disabled: false, isSuppressed: false, statuses: new Set(['restrained']) },
             { disabled: true, isSuppressed: false, statuses: new Set(['paralyzed']) },
@@ -63,7 +63,7 @@ test('Dnd5eSystemAdapter getActorStatuses extracts statuses from actor.statuses 
     };
 
     const statuses = dndAdapter.getActorStatuses(actor);
-    assert.equal(statuses.has('silence'), true);
+    assert.equal(statuses.has('silenced'), true);
     assert.equal(statuses.has('restrained'), true);
     assert.equal(statuses.has('blinded'), true);
     assert.equal(statuses.has('paralyzed'), false, 'Disabled effect status ignored');
@@ -92,8 +92,8 @@ test('Dnd5eSystemAdapter syncActorAutoBans applies auto-bans on condition gain a
     assert.equal(tabColumn.activeParents.has('components'), false);
     assert.equal(tabColumn.activeSubTypes.has('vocal'), false);
 
-    // 2. Gain 'silence' -> auto-ban 'vocal'
-    actor.statuses.add('silence');
+    // 2. Gain 'silenced' -> auto-ban 'vocal'
+    actor.statuses.add('silenced');
     adapter.updateTabs(actor, tabColumn);
     assert.equal(tabColumn.activeParents.has('components'), true);
     assert.equal(tabColumn.activeSubTypes.has('vocal'), true);
@@ -107,8 +107,8 @@ test('Dnd5eSystemAdapter syncActorAutoBans applies auto-bans on condition gain a
     assert.equal(tabColumn.activeSubTypes.has('somatic'), true);
     assert.equal(flags.autoBannedComponents?.somatic, true);
 
-    // 4. Lose 'silence' (restrained remains) -> vocal unbanned, somatic remains banned
-    actor.statuses.delete('silence');
+    // 4. Lose 'silenced' (restrained remains) -> vocal unbanned, somatic remains banned
+    actor.statuses.delete('silenced');
     adapter.updateTabs(actor, tabColumn);
     assert.equal(tabColumn.activeParents.has('components'), true);
     assert.equal(tabColumn.activeSubTypes.has('vocal'), false);
