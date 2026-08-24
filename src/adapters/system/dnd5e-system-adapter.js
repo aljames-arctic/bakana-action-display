@@ -1405,6 +1405,15 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
     }
 
     /**
+     * Update active tabs and filter state for D&D 5e (auto-banning verbal/somatic spell components).
+     * @param {Actor} actor
+     * @param {HUDTabColumn} [tabColumn]
+     */
+    updateTabs(actor, tabColumn = null) {
+        this.syncActorAutoBans(actor, tabColumn);
+    }
+
+    /**
      * Synchronize auto-banned spell components (vocal / somatic) on an actor based on active status conditions.
      * @param {Actor} actor The actor to evaluate
      * @param {HUDTabColumn} [tabColumn] Right-side tab column if HUD is active

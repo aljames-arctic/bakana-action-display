@@ -159,7 +159,7 @@ export class Dnd5eAutoBanConfigApp extends adapter.foundry.HandlebarsApplication
         ui?.notifications?.info?.(game.i18n.localize('BAD.dnd5eAutoBan.saved'));
 
         if (actionDisplay.activeApp?.rendered && actionDisplay.activeApp.actor) {
-            adapter.system?.syncActorAutoBans?.(actionDisplay.activeApp.actor, actionDisplay.activeApp.rightTabs);
+            adapter.updateTabs(actionDisplay.activeApp.actor, actionDisplay.activeApp.rightTabs);
             actionDisplay.activeApp.render();
         }
 

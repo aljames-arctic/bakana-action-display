@@ -326,6 +326,16 @@ export class BaseSystemAdapter {
     }
 
     /**
+     * Update active tabs and filter state on actor changes (e.g. status conditions, spell components, resources).
+     * Subclasses override to provide system-specific tab synchronization (e.g. D&D 5e spell component auto-banning).
+     * @param {Actor} actor
+     * @param {HUDTabColumn} [tabColumn]
+     */
+    updateTabs(actor, tabColumn = null) {
+        // NOP for base system adapter
+    }
+
+    /**
      * Get the list of configurable action economy types and default colors for this system.
      * @returns {{ id: string, label: string, defaultColor: string, defaultEnabled: boolean }[]}
      */

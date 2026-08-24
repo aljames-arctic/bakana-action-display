@@ -88,20 +88,20 @@ test('Dnd5eSystemAdapter syncActorAutoBans applies auto-bans on condition gain a
     });
 
     // 1. Initial sync (no conditions) -> no bans
-    dndAdapter.syncActorAutoBans(actor, tabColumn);
+    adapter.updateTabs(actor, tabColumn);
     assert.equal(tabColumn.activeParents.has('components'), false);
     assert.equal(tabColumn.activeSubTypes.has('vocal'), false);
 
     // 2. Gain 'silence' -> auto-ban 'vocal'
     actor.statuses.add('silence');
-    dndAdapter.syncActorAutoBans(actor, tabColumn);
+    adapter.updateTabs(actor, tabColumn);
     assert.equal(tabColumn.activeParents.has('components'), true);
     assert.equal(tabColumn.activeSubTypes.has('vocal'), true);
     assert.equal(flags.autoBannedComponents?.vocal, true);
 
     // 3. Gain 'restrained' -> auto-ban 'somatic'
     actor.statuses.add('restrained');
-    dndAdapter.syncActorAutoBans(actor, tabColumn);
+    dndAdapter.updateTabs(actor, tabColumn);
     assert.equal(tabColumn.activeParents.has('components'), true);
     assert.equal(tabColumn.activeSubTypes.has('vocal'), true);
     assert.equal(tabColumn.activeSubTypes.has('somatic'), true);
@@ -109,7 +109,7 @@ test('Dnd5eSystemAdapter syncActorAutoBans applies auto-bans on condition gain a
 
     // 4. Lose 'silence' (restrained remains) -> vocal unbanned, somatic remains banned
     actor.statuses.delete('silence');
-    dndAdapter.syncActorAutoBans(actor, tabColumn);
+    adapter.updateTabs(actor, tabColumn);
     assert.equal(tabColumn.activeParents.has('components'), true);
     assert.equal(tabColumn.activeSubTypes.has('vocal'), false);
     assert.equal(tabColumn.activeSubTypes.has('somatic'), true);
@@ -118,7 +118,7 @@ test('Dnd5eSystemAdapter syncActorAutoBans applies auto-bans on condition gain a
 
     // 5. Lose 'restrained' -> all conditions lost, somatic unbanned, components parent removed
     actor.statuses.delete('restrained');
-    dndAdapter.syncActorAutoBans(actor, tabColumn);
+    adapter.updateTabs(actor, tabColumn);
     assert.equal(tabColumn.activeParents.has('components'), false);
     assert.equal(tabColumn.activeSubTypes.has('somatic'), false);
     assert.equal(flags.autoBannedComponents?.somatic, false);

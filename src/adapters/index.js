@@ -289,6 +289,15 @@ class Adapter {
     }
 
     /**
+     * Update active tabs and filter state on actor changes via the active system adapter.
+     * @param {Actor} actor
+     * @param {HUDTabColumn} [tabColumn]
+     */
+    updateTabs(actor, tabColumn = null) {
+        this.system?.updateTabs?.(actor, tabColumn);
+    }
+
+    /**
      * Filter subactions through the system adapter.
      * @param {Actor} actor
      * @param {Object[]} subactions

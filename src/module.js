@@ -219,7 +219,7 @@ Hooks.on('updateActor', (actor, changes, options, userId) => {
     if (isMatchingActor(actor, null)) {
         const currentApp = actionDisplay.activeApp ?? activeApp;
         if (currentApp) {
-            adapter.system?.syncActorAutoBans?.(actor, currentApp.rightTabs);
+            adapter.updateTabs(actor, currentApp.rightTabs);
         }
         requestHUDRender();
     }
@@ -231,7 +231,7 @@ function handleActiveEffectChange(effect) {
     if (actor && isMatchingActor(actor, null)) {
         const currentApp = actionDisplay.activeApp ?? activeApp;
         if (currentApp) {
-            adapter.system?.syncActorAutoBans?.(actor, currentApp.rightTabs);
+            adapter.updateTabs(actor, currentApp.rightTabs);
         }
         requestHUDRender();
     }
