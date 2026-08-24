@@ -659,8 +659,8 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
             const combat = game.combat;
             let combatant = null;
             if (combat) {
-                combatant = combat.getCombatantByToken?.(this.token?.id)
-                    ?? combat.combatants?.find?.(c => (c.tokenId && c.tokenId === this.token?.id) || (c.actorId && c.actorId === this.actor?.id))
+                combatant = adapter.foundry.getCombatantByToken(combat, this.token)
+                    ?? (this.actor ? combat.combatants?.find?.(c => c.actorId === this.actor.id) : null)
                     ?? this.actor?.combatant
                     ?? null;
             }
@@ -1173,8 +1173,8 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         const combat = game.combat;
         if (!combat) return;
 
-        const combatant = combat.getCombatantByToken?.(this.token?.id)
-            ?? combat.combatants?.find?.(c => (c.tokenId && c.tokenId === this.token?.id) || (c.actorId && c.actorId === this.actor?.id))
+        const combatant = adapter.foundry.getCombatantByToken(combat, this.token)
+            ?? (this.actor ? combat.combatants?.find?.(c => c.actorId === this.actor.id) : null)
             ?? this.actor?.combatant
             ?? null;
 

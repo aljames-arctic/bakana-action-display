@@ -244,6 +244,7 @@ test('ActionDisplayApp _prepareContext computes showRollInitiativeButton and sho
     globalThis.game.combat = {
         started: true,
         combatants: [mockCombatant],
+        getCombatantsByToken: () => [mockCombatant],
         getCombatantByToken: () => mockCombatant,
         combatant: mockCombatant
     };
@@ -288,6 +289,7 @@ test('ActionDisplayApp _onRollInitiative calls combat.rollInitiative([combatant.
     globalThis.game.combat = {
         started: true,
         combatants: [mockCombatant],
+        getCombatantsByToken: (id) => id === 'token123' ? [mockCombatant] : [],
         getCombatantByToken: (id) => id === 'token123' ? mockCombatant : null,
         rollInitiative: async (ids) => {
             rolledIds = ids;
