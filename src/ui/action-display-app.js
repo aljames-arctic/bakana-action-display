@@ -39,8 +39,8 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         };
         this._tabColumns = {};
 
-        // HUD Attachment/Position Mode (persisted client-side)
-        this.positionMode = game.settings.get(MODULE_ID, 'hudPositionMode') ?? 'attached';
+        // HUD Attachment State (true = attached to token, false = detached floating)
+        this.isAttached = Boolean(game.settings.get(MODULE_ID, 'isAttached') ?? true);
 
         // Dragging state
         this._dragData = null;
@@ -150,15 +150,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
      * @type {boolean}
      */
     get isDetached() {
-        return this.positionMode === 'detached';
-    }
-
-    /**
-     * Is the HUD in attached (dynamic token tracking) mode?
-     * @type {boolean}
-     */
-    get isAttached() {
-        return this.positionMode === 'attached';
+        return !this.isAttached;
     }
 
     /**
@@ -896,21 +888,15 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         event.preventDefault();
         const el = this.element;
 
-        if (this.isAttached) {
-            // Attached -> Detached
-            this.positionMode = 'detached';
+        this.isAttached = !this.isAttached;
 
-            if (el) {
-                const rect = el.getBoundingClientRect();
-                const pos = { left: rect.left, top: rect.top };
-                await game.settings.set(MODULE_ID, 'hudDetachedPosition', pos);
-            }
-        } else {
-            // Detached -> Attached
-            this.positionMode = 'attached';
+        if (!this.isAttached && el) {
+            const rect = el.getBoundingClientRect();
+            const pos = { left: rect.left, top: rect.top };
+            await game.settings.set(MODULE_ID, 'hudDetachedPosition', pos);
         }
 
-        await game.settings.set(MODULE_ID, 'hudPositionMode', this.positionMode);
+        await game.settings.set(MODULE_ID, 'isAttached', this.isAttached);
         this.render();
     }
 
@@ -1759,7 +1745,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
 
         // Dragging while in Attached mode automatically switches to Detached mode
         if (this.isAttached) {
-            this.positionMode = 'detached';
+            this.isAttached = false;
         }
     }
 
@@ -1777,7 +1763,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
             const rect = el.getBoundingClientRect();
             const pos = { left: rect.left, top: rect.top };
             await game.settings.set(MODULE_ID, 'hudDetachedPosition', pos);
-            await game.settings.set(MODULE_ID, 'hudPositionMode', 'detached');
+            await game.settings.set(MODULE_ID, 'isAttached', false);
         }
 
         this._dragData = null;
@@ -1803,7 +1789,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         const appHeight = this._height ?? el.offsetHeight;
         const tabExtension = 150 * scale;
 
-        if (this.positionMode === 'attached' && this.token) {
+        if (this.isAttached && this.token) {
             // --- ATTACHED MODE (Dynamic Token Placement) ---
             const tokenTransform = this.token.worldTransform;
             const canvasScale = game.canvas.stage?.scale?.x ?? 1;

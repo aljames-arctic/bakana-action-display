@@ -207,25 +207,23 @@ test('ActionDisplayApp _onToggleAnchor toggles between attached and detached mod
     };
 
     // 1. Initial mode is attached
-    app.positionMode = 'attached';
+    app.isAttached = true;
     assert.equal(app.isAttached, true);
     assert.equal(app.isDetached, false);
 
     // 2. Toggle to detached
     await app._onToggleAnchor({ preventDefault: () => {} }, {});
-    assert.equal(app.positionMode, 'detached');
     assert.equal(app.isAttached, false);
     assert.equal(app.isDetached, true);
-    assert.equal(game.settings.get(MODULE_ID, 'hudPositionMode'), 'detached');
+    assert.equal(game.settings.get(MODULE_ID, 'isAttached'), false);
     assert.deepEqual(game.settings.get(MODULE_ID, 'hudDetachedPosition'), { left: 250, top: 180 });
     assert.equal(renderCalled, true);
 
     // 3. Toggle back to attached
     renderCalled = false;
     await app._onToggleAnchor({ preventDefault: () => {} }, {});
-    assert.equal(app.positionMode, 'attached');
     assert.equal(app.isAttached, true);
     assert.equal(app.isDetached, false);
-    assert.equal(game.settings.get(MODULE_ID, 'hudPositionMode'), 'attached');
+    assert.equal(game.settings.get(MODULE_ID, 'isAttached'), true);
     assert.equal(renderCalled, true);
 });

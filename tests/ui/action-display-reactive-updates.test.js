@@ -121,12 +121,12 @@ test('ActionDisplayApp setPosition calculates coordinates across attached and de
     app.element = { style: {}, offsetWidth: 300, offsetHeight: 200 };
 
     // 1. Attached mode (default)
-    app.positionMode = 'attached';
+    app.isAttached = true;
     app.setPosition();
     assert.ok(app.element.style.left !== undefined || app.element.style.top !== undefined);
 
     // 2. Detached mode
-    app.positionMode = 'detached';
+    app.isAttached = false;
     app.setPosition();
     assert.ok(app.element.style.left !== undefined);
 

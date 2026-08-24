@@ -8,7 +8,7 @@ import '../../src/module.js';
 test('Detached HUD persistence across token clicks and 4-click periodicity fix', async () => {
     // Enable persistDetached setting and set mode to detached
     game.settings.set(MODULE_ID, 'persistDetached', true);
-    game.settings.set(MODULE_ID, 'hudPositionMode', 'detached');
+    game.settings.set(MODULE_ID, 'isAttached', false);
 
     // Trigger init and ready hooks
     await Hooks.callAll('init');
@@ -90,12 +90,12 @@ test('Detached HUD persistence across token clicks and 4-click periodicity fix',
     // Reset settings & state
     canvas.hud.token.clear();
     game.settings.set(MODULE_ID, 'persistDetached', false);
-    game.settings.set(MODULE_ID, 'hudPositionMode', 'attached');
+    game.settings.set(MODULE_ID, 'isAttached', true);
 });
 
 test('Attached HUD or persistDetached=false closes immediately on click-off', async () => {
     game.settings.set(MODULE_ID, 'persistDetached', false);
-    game.settings.set(MODULE_ID, 'hudPositionMode', 'attached');
+    game.settings.set(MODULE_ID, 'isAttached', true);
 
     const mockToken = new foundry.canvas.placeables.Token();
     mockToken.id = 'token-attached-1';

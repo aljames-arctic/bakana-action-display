@@ -289,7 +289,7 @@ flowchart TD
 ### [`src/ui/action-display-app.js`](../src/ui/action-display-app.js) — UI Window (`ActionDisplayApp`)
 - [**`_prepareContext(options)`**](../src/ui/action-display-app.js#L221-L432): Prepares context data, triggers coordinator pipeline, and builds tab trees.
 - [**`_onRender(context, options)`**](../src/ui/action-display-app.js#L834-L1026): Attaches DOM event listeners and scroll position listeners.
-- [**`setPosition(positionMode, options)`**](../src/ui/action-display-app.js#L1201-L1281): Calculates 60fps HUD positioning relative to token or detached coordinates.
+- [**`setPosition(position)`**](../src/ui/action-display-app.js#L1201-L1281): Calculates 60fps HUD positioning relative to token or detached coordinates.
 - [**`_onRollAction(event)`**](../src/ui/action-display-app.js#L660-L861): Triggers action rolls or toggles multi-option dropdowns.
 - [**`_createContextMenu()`**](../src/ui/action-display-app.js#L828-L899): Spawns custom right-click context menu for action cards.
 - [**`_toggleActionHidden(actionId, shouldHide)`**](../src/ui/action-display-app.js#L1030-L1056): Flags an action card as hidden/unhidden and re-renders.

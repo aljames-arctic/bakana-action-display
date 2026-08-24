@@ -252,7 +252,7 @@ const settingsStore = new Map([
     ['bakana-action-display.enableEconomyIndicators', false],
     ['bakana-action-display.economyColors', {}],
     ['bakana-action-display.categorizationConfig', { enabled: false, categories: [] }],
-    ['bakana-action-display.hudPositionMode', 'attached'],
+    ['bakana-action-display.isAttached', true],
     ['bakana-action-display.persistDetached', true]
 ]);
 

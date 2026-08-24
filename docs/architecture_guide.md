@@ -240,14 +240,13 @@ classDiagram
 
     class ActionDisplayApp {
         +Actor actor
-        +string positionMode
         +boolean isAttached
         +TabSideState leftTabs
         +TabSideState rightTabs
         +render(force, options)
         #_prepareContext(options)
         #_onRender(context, options)
-        +setPosition(positionMode, options)
+        +setPosition(position)
         -_onRollAction(event)
         -_onPointerDownCapture(event)
         -_onContextMenuCapture(event)

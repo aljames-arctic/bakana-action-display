@@ -314,12 +314,12 @@ Hooks.once('init', () => {
         default: false
     });
 
-    // Register HUD Position Mode (attached/detached)
-    game.settings.register(MODULE_ID, 'hudPositionMode', {
+    // Register HUD Attached State (true = attached to token, false = detached floating)
+    game.settings.register(MODULE_ID, 'isAttached', {
         scope: 'client',
         config: false,
-        type: String,
-        default: 'attached'
+        type: Boolean,
+        default: true
     });
 
     // Register HUD Detached Position (coordinates)
