@@ -355,20 +355,13 @@ test('Dropdown context menu actions segmentation when economy colors are disable
     await game.settings.set(MODULE_ID, 'enableEconomyIndicators', false);
 
     const itemDisabled1 = buildSubactionMenuItem(actAction, {});
-    assert.equal(itemDisabled1.name, '');
-    assert.equal(itemDisabled1.rawName, 'Standard Attack');
-    assert.ok(itemDisabled1.icon.includes('Standard Attack'));
-    assert.ok(itemDisabled1.icon.includes('bad-action-name'));
-    assert.ok(itemDisabled1.icon.includes('bad-action-uses-slot'));
-    assert.ok(itemDisabled1.icon.includes('5 / 10'));
+    assert.equal(itemDisabled1.name, 'Standard Attack');
     assert.equal(itemDisabled1.economyHtml, '');
     assert.ok(itemDisabled1.usesSlotHtml.includes('bad-action-uses-slot'));
     assert.ok(itemDisabled1.usesSlotHtml.includes('5 / 10'));
 
     const itemDisabledPassive = buildSubactionMenuItem(actPassive, {});
-    assert.equal(itemDisabledPassive.name, '');
-    assert.equal(itemDisabledPassive.rawName, 'Passive Flow');
-    assert.ok(itemDisabledPassive.icon.includes('Passive Flow'));
+    assert.equal(itemDisabledPassive.name, 'Passive Flow');
     assert.equal(itemDisabledPassive.economyHtml, '');
     assert.equal(itemDisabledPassive.usesSlotHtml, '<div class="bad-action-uses-slot"></div>');
 
@@ -377,16 +370,11 @@ test('Dropdown context menu actions segmentation when economy colors are disable
     await game.settings.set(MODULE_ID, 'economyColors', {});
 
     const itemEnabledAction = buildSubactionMenuItem(actAction, {});
-    assert.ok(itemEnabledAction.icon.includes('bad-economy-bars'));
-    assert.ok(itemEnabledAction.icon.includes('background-color: #3b82f6'));
     assert.ok(itemEnabledAction.economyHtml.includes('bad-economy-bars'));
     assert.ok(itemEnabledAction.economyHtml.includes('background-color: #3b82f6'));
     assert.ok(itemEnabledAction.usesSlotHtml.includes('5 / 10'));
 
     const itemEnabledBonus = buildSubactionMenuItem(actBonus, {});
-    assert.ok(itemEnabledBonus.icon.includes('bad-economy-bars'));
-    assert.ok(itemEnabledBonus.icon.includes('background-color: #14b8a6'));
-    assert.ok(itemEnabledBonus.icon.includes('depleted'));
     assert.ok(itemEnabledBonus.economyHtml.includes('bad-economy-bars'));
     assert.ok(itemEnabledBonus.economyHtml.includes('background-color: #14b8a6'));
     assert.ok(itemEnabledBonus.usesSlotHtml.includes('depleted'));
@@ -399,17 +387,10 @@ test('Dropdown context menu actions segmentation when economy colors are disable
         actor: { isOwner: true }
     };
 
-    const liElements = [];
-    const createMockLi = () => {
-        const li = {
-            dataset: {},
-            innerHTML: '',
-            addEventListener: () => {},
-            querySelector: (sel) => null
-        };
-        liElements.push(li);
-        return li;
-    };
+    const liElements = [
+        { dataset: {}, innerHTML: '', addEventListener: () => {}, querySelector: () => null },
+        { dataset: {}, innerHTML: '', addEventListener: () => {}, querySelector: () => null }
+    ];
 
     const mockTarget = {
         classList: { add: () => {}, remove: () => {} },
@@ -422,7 +403,7 @@ test('Dropdown context menu actions segmentation when economy colors are disable
         children: [],
         querySelectorAll: (sel) => {
             if (sel.includes('.context-item')) {
-                return [createMockLi(), createMockLi()];
+                return liElements;
             }
             return [];
         },

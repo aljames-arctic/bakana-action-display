@@ -71,18 +71,11 @@ export function buildSubactionMenuItem(sub, event, app = null) {
     }
 
     const usesSlotHtml = `<div class="bad-action-uses-slot">${usesHtml}</div>`;
-    const nameHtml = `<span class="bad-action-name bad-menu-name">${sub?.name ?? "Action"}</span>`;
-    const iconWrapHtml = `<span class="bad-menu-icon-wrap">${iconHtml}</span>`;
 
-    // In Foundry VTT ContextMenu templates, {{localize this.name}} escapes HTML while {{{this.icon}}}
-    // renders raw unescaped HTML via triple curlies. Embedding the segmented row directly in this.icon
-    // guarantees instant, flicker-free rendering without raw HTML escaping artifacts.
     return {
-        name: "",
-        rawName: sub?.name ?? "Action",
-        icon: `${iconWrapHtml}${nameHtml}${economyHtml}${usesSlotHtml}`,
+        name: sub?.name ?? "Action",
+        icon: `<span class="bad-menu-icon-wrap">${iconHtml}</span>`,
         iconHtml,
-        nameHtml,
         usesHtml,
         economyHtml,
         usesSlotHtml,
@@ -141,8 +134,64 @@ export function showActivityDropdown(app, target, subactions, event) {
     const ContextMenuClass = adapter.foundry.ContextMenu;
     const targetBody = app?.element?.ownerDocument?.body ?? document.body;
 
+    const formatMenuItems = (menuEl) => {
+        if (!menuEl) return;
+        const lis = menuEl.querySelectorAll('.context-item');
+        lis.forEach((li, idx) => {
+            const sub = subactions[idx];
+            const itemData = menuItems[idx];
+            if (sub) {
+                li.dataset.actionId = sub.id;
+                li._badSubaction = sub;
+
+                const iconWrap = itemData?.icon ?? `<span class="bad-menu-icon-wrap">${itemData?.iconHtml ?? ''}</span>`;
+                const nameHtml = `<span class="bad-action-name bad-menu-name">${sub.name ?? "Action"}</span>`;
+                const econHtml = itemData?.economyHtml ?? '';
+                const usesHtml = itemData?.usesSlotHtml ?? '<div class="bad-action-uses-slot"></div>';
+
+                li.innerHTML = `${iconWrap}${nameHtml}${econHtml}${usesHtml}`;
+
+                if (!li._badListenersAttached) {
+                    li._badListenersAttached = true;
+                    li.addEventListener('pointerover', () => {
+                        app._hoveredActionItem = li;
+                        const showSummaries = app._isQuestionMarkHeld || Boolean(game.settings.get(MODULE_ID, 'showItemSummaries'));
+                        if (showSummaries) {
+                            return app._showItemSummaryTooltip(li);
+                        }
+                    });
+
+                    li.addEventListener('pointerout', (ev) => {
+                        const related = ev.relatedTarget?.closest?.('.context-item');
+                        if (related !== li && app._hoveredActionItem === li) {
+                            app._hoveredActionItem = null;
+                            app._hideItemSummaryTooltip();
+                        }
+                    });
+
+                    li.addEventListener('contextmenu', (ev) => {
+                        ev.preventDefault();
+                        ev.stopPropagation();
+                        ev.stopImmediatePropagation();
+                        app._hideItemSummaryTooltip();
+                        try {
+                            app._activeLeftClickMenu?.close()?.catch?.(err => {
+                                log.debug("LeftClickMenu.close promise rejected:", err);
+                            });
+                        } catch (err) {
+                            log.debug("LeftClickMenu.close threw synchronously:", err);
+                        }
+                        app._activeLeftClickMenu = null;
+                        adapter.openEditSheet(sub);
+                    });
+                }
+            }
+        });
+    };
+
     const applyPositioning = (menuEl) => {
         if (!menuEl) return;
+        formatMenuItems(menuEl);
         if (menuEl.parentElement !== targetBody) {
             targetBody.appendChild(menuEl);
         }
@@ -187,7 +236,7 @@ export function showActivityDropdown(app, target, subactions, event) {
         jQuery: false,
         onOpen: () => {
             const menuEl = document.querySelector('#context-menu, .context-menu');
-            applyPositioning(menuEl);
+            if (menuEl) applyPositioning(menuEl);
         },
         onClose: () => {
             app?._hideItemSummaryTooltip?.();
@@ -228,53 +277,6 @@ export function showActivityDropdown(app, target, subactions, event) {
         const menuEl = document.querySelector('#context-menu, .context-menu');
         if (menuEl) {
             applyPositioning(menuEl);
-
-            const lis = menuEl.querySelectorAll('.context-item');
-            lis.forEach((li, idx) => {
-                const sub = subactions[idx];
-                const itemData = menuItems[idx];
-                if (sub) {
-                    li.dataset.actionId = sub.id;
-                    li._badSubaction = sub;
-
-                    // If not already rendered into the DOM by ContextMenu, ensure structure is present
-                    if (!li.querySelector?.('.bad-action-name') && itemData) {
-                        li.innerHTML = itemData.icon;
-                    }
-
-                    li.addEventListener('pointerover', () => {
-                        app._hoveredActionItem = li;
-                        const showSummaries = app._isQuestionMarkHeld || Boolean(game.settings.get(MODULE_ID, 'showItemSummaries'));
-                        if (showSummaries) {
-                            return app._showItemSummaryTooltip(li);
-                        }
-                    });
-
-                    li.addEventListener('pointerout', (ev) => {
-                        const related = ev.relatedTarget?.closest?.('.context-item');
-                        if (related !== li && app._hoveredActionItem === li) {
-                            app._hoveredActionItem = null;
-                            app._hideItemSummaryTooltip();
-                        }
-                    });
-
-                    li.addEventListener('contextmenu', (ev) => {
-                        ev.preventDefault();
-                        ev.stopPropagation();
-                        ev.stopImmediatePropagation();
-                        app._hideItemSummaryTooltip();
-                        try {
-                            app._activeLeftClickMenu?.close()?.catch?.(err => {
-                                log.debug("LeftClickMenu.close promise rejected:", err);
-                            });
-                        } catch (err) {
-                            log.debug("LeftClickMenu.close threw synchronously:", err);
-                        }
-                        app._activeLeftClickMenu = null;
-                        adapter.openEditSheet(sub);
-                    });
-                }
-            });
         }
     })?.catch?.(e => {
         log.error(`showActivityDropdown | menu.render error:`, e);
