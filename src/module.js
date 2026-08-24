@@ -8,7 +8,6 @@ import { log } from './lib/logger.js';
 import { MODULE_ID } from './constants.js';
 import { syncActorFavorites } from './favorites/favorites-manager.js';
 
-let activeApp = null;
 let closeDetachedHUD = false;
 let renderDebounceTimer = null;
 
@@ -25,7 +24,7 @@ Hooks.once('init', async () => {
     if (originalRightClick) {
         TokenClass.prototype._onClickRight = function (event) {
             const isTokenHUDOpen = Boolean(canvas?.hud?.token?.rendered && (canvas.hud.token.object === this || canvas.hud.token.object?.id === this.id));
-            const currentApp = actionDisplay.activeApp ?? activeApp;
+            const currentApp = actionDisplay.activeApp;
             if (isTokenHUDOpen && (currentApp?.token === this || currentApp?.token?.id === this.id)) {
                 const persist = game.settings.get(MODULE_ID, 'persistDetached');
                 if (persist && currentApp?.isDetached) {
@@ -51,7 +50,7 @@ Hooks.once('init', async () => {
  * or if a close was explicitly triggered by right-clicking the token.
  */
 function handleHUDClose() {
-    const currentApp = actionDisplay.activeApp ?? activeApp;
+    const currentApp = actionDisplay.activeApp;
     if (currentApp) {
         const persist = game.settings.get(MODULE_ID, 'persistDetached');
         const shouldClose = currentApp.isTracked || !persist || closeDetachedHUD;
@@ -61,7 +60,6 @@ function handleHUDClose() {
                 currentApp.element.style.display = 'none';
             }
             currentApp.close();
-            activeApp = null;
             actionDisplay.activeApp = null;
         }
     }
@@ -76,7 +74,7 @@ function handleHUDClose() {
  * @returns {boolean}
  */
 function isMatchingActor(docActor, docParent) {
-    const currentApp = actionDisplay.activeApp ?? activeApp;
+    const currentApp = actionDisplay.activeApp;
     if (!currentApp?.rendered || !currentApp.actor) return false;
     const activeActor = currentApp.actor;
     const activeToken = currentApp.token;
@@ -104,12 +102,12 @@ function isMatchingActor(docActor, docParent) {
  * Request a debounced re-render of the active HUD when documents mutate.
  */
 function requestHUDRender() {
-    const currentApp = actionDisplay.activeApp ?? activeApp;
+    const currentApp = actionDisplay.activeApp;
     if (!currentApp?.rendered) return;
     if (renderDebounceTimer) clearTimeout(renderDebounceTimer);
     renderDebounceTimer = setTimeout(() => {
         renderDebounceTimer = null;
-        const appToRender = actionDisplay.activeApp ?? activeApp;
+        const appToRender = actionDisplay.activeApp;
         if (appToRender?.rendered) {
             appToRender.render();
         }
@@ -159,10 +157,10 @@ Hooks.on('renderTokenHUD', (tokenHUD, html, data) => {
         syncActorFavorites(token.actor);
     }
 
-    const currentApp = actionDisplay.activeApp ?? activeApp;
+    const currentApp = actionDisplay.activeApp;
 
     // If we already have an active rendered app for this token, preserve it to keep its tab/scroll state
-    if ((currentApp?.token === token || currentApp?.token?.id === token.id) && (currentApp?.rendered || currentApp?.element)) {
+    if ((currentApp?.token === token || currentApp?.token?.id === token.id) && currentApp?.rendered) {
         return;
     }
 
@@ -172,14 +170,13 @@ Hooks.on('renderTokenHUD', (tokenHUD, html, data) => {
             currentApp.element.style.display = 'none';
         }
         currentApp.close();
-        activeApp = null;
         actionDisplay.activeApp = null;
     }
 
     // Initialize and render the new Action Display App
-    activeApp = new ActionDisplayApp(token);
-    actionDisplay.activeApp = activeApp;
-    activeApp.render(true);
+    const newApp = new ActionDisplayApp(token);
+    actionDisplay.activeApp = newApp;
+    newApp.render(true);
 });
 
 // Hook into Token HUD closing to close our overlay if tracked or closed via token click
@@ -189,7 +186,7 @@ Hooks.on('closeTokenHUD', (tokenHUD, html) => {
 
 // Hook into canvas pan to update attached HUD position dynamically
 Hooks.on('canvasPan', (canvas, pan) => {
-    const currentApp = actionDisplay.activeApp ?? activeApp;
+    const currentApp = actionDisplay.activeApp;
     if (currentApp?.isTracked) {
         currentApp.setPosition();
     }
@@ -217,10 +214,10 @@ Hooks.on('deleteItem', (item, options, userId) => {
 // Hook into Actor updates (spell slots, resources, hp, flags, status conditions)
 Hooks.on('updateActor', (actor, changes, options, userId) => {
     if (!actor) return;
-    const currentApp = actionDisplay.activeApp ?? activeApp;
+    const currentApp = actionDisplay.activeApp;
     const isCurrent = isMatchingActor(actor, null);
     adapter.updateTabs(actor, isCurrent ? currentApp?.rightTabs : null);
-    if (isCurrent && (currentApp?.rendered || currentApp?.element)) {
+    if (isCurrent && currentApp?.rendered) {
         requestHUDRender();
     }
 });
@@ -229,10 +226,10 @@ Hooks.on('updateActor', (actor, changes, options, userId) => {
 function handleActiveEffectChange(effect) {
     const actor = (effect?.parent instanceof Actor) ? effect.parent : (effect?.target instanceof Actor) ? effect.target : null;
     if (!actor) return;
-    const currentApp = actionDisplay.activeApp ?? activeApp;
+    const currentApp = actionDisplay.activeApp;
     const isCurrent = isMatchingActor(actor, null);
     adapter.updateTabs(actor, isCurrent ? currentApp?.rightTabs : null);
-    if (isCurrent && (currentApp?.rendered || currentApp?.element)) {
+    if (isCurrent && currentApp?.rendered) {
         requestHUDRender();
     }
 }
@@ -269,10 +266,10 @@ export function handleCombatTurnChange(combat) {
         const isMyTurn = Boolean(token && adapter.foundry.isUserInCharge(token));
 
         if (isAutoToggleActive) {
-            const currentApp = actionDisplay.activeApp ?? activeApp;
+            const currentApp = actionDisplay.activeApp;
             if (isMyTurn) {
                 // Transition to "my turn": open HUD (or switch if already open on another token)
-                if (currentApp && (currentApp.rendered || currentApp.element)) {
+                if (currentApp?.rendered) {
                     if (currentApp.token === token || currentApp.token?.id === token.id) {
                         requestHUDRender();
                         return;
@@ -281,7 +278,6 @@ export function handleCombatTurnChange(combat) {
                         currentApp.element.style.display = 'none';
                     }
                     currentApp.close();
-                    activeApp = null;
                     actionDisplay.activeApp = null;
                 }
 
@@ -290,26 +286,25 @@ export function handleCombatTurnChange(combat) {
                     syncActorFavorites(token.actor);
                 }
 
-                activeApp = new ActionDisplayApp(token);
-                actionDisplay.activeApp = activeApp;
-                activeApp.render(true);
+                const newApp = new ActionDisplayApp(token);
+                actionDisplay.activeApp = newApp;
+                newApp.render(true);
                 return;
             } else {
                 // Transition to "not my turn": close HUD if open
-                if (currentApp && (currentApp.rendered || currentApp.element)) {
+                if (currentApp?.rendered) {
                     if (currentApp.element) {
                         currentApp.element.style.display = 'none';
                     }
                     currentApp.close();
-                    activeApp = null;
                     actionDisplay.activeApp = null;
                     return;
                 }
             }
         } else if (isAutoTrackActive && isMyTurn) {
             // Standard auto-track: switch HUD if HUD is already open
-            const currentApp = actionDisplay.activeApp ?? activeApp;
-            if (currentApp && (currentApp.rendered || currentApp.element)) {
+            const currentApp = actionDisplay.activeApp;
+            if (currentApp?.rendered) {
                 if (currentApp.token === token || currentApp.token?.id === token.id) {
                     requestHUDRender();
                     return;
@@ -320,7 +315,6 @@ export function handleCombatTurnChange(combat) {
                     currentApp.element.style.display = 'none';
                 }
                 currentApp.close();
-                activeApp = null;
                 actionDisplay.activeApp = null;
 
                 setLastSelectedToken(token);
@@ -328,9 +322,9 @@ export function handleCombatTurnChange(combat) {
                     syncActorFavorites(token.actor);
                 }
 
-                activeApp = new ActionDisplayApp(token);
-                actionDisplay.activeApp = activeApp;
-                activeApp.render(true);
+                const newApp = new ActionDisplayApp(token);
+                actionDisplay.activeApp = newApp;
+                newApp.render(true);
                 return;
             }
         }
@@ -347,13 +341,12 @@ Hooks.on('updateCombat', (combat, changes, options, userId) => {
 Hooks.on('deleteCombat', (combat, options, userId) => {
     const isAutoToggleActive = Boolean(game.settings.get(MODULE_ID, 'autoToggleCombat'));
     if (isAutoToggleActive) {
-        const currentApp = actionDisplay.activeApp ?? activeApp;
-        if (currentApp && (currentApp.rendered || currentApp.element)) {
+        const currentApp = actionDisplay.activeApp;
+        if (currentApp?.rendered) {
             if (currentApp.element) {
                 currentApp.element.style.display = 'none';
             }
             currentApp.close();
-            activeApp = null;
             actionDisplay.activeApp = null;
         }
     }
@@ -383,15 +376,15 @@ Hooks.on('updateCombatant', (combatant, changes, options, userId) => {
 
 // Hook into synthetic Token document updates (actor delta mutations)
 Hooks.on('updateToken', (tokenDoc, changes, options, userId) => {
-    const currentApp = actionDisplay.activeApp ?? activeApp;
-    if (currentApp && (tokenDoc?.id === currentApp.token?.id || tokenDoc?.actor?.id === currentApp.actor?.id)) {
+    const currentApp = actionDisplay.activeApp;
+    if (currentApp?.rendered && (tokenDoc?.id === currentApp.token?.id || tokenDoc?.actor?.id === currentApp.actor?.id)) {
         requestHUDRender();
     }
 });
 
 // Hook into Application rendering to ensure newly opened sheets/windows sit above the HUD
 Hooks.on('renderApplication', (app, html) => {
-    const currentHUD = actionDisplay?.activeApp ?? activeApp;
+    const currentHUD = actionDisplay?.activeApp;
     if (!currentHUD?.element) return;
     const hudEl = currentHUD.element;
     const appEl = app?.element?.[0] ?? app?.element ?? html?.[0] ?? html;

@@ -70,7 +70,7 @@ export function toggleHUD(explicitToken = null) {
     }
 
     const currentApp = actionDisplay.activeApp;
-    const isCurrentAppOpen = Boolean(currentApp && (currentApp.rendered || currentApp.element));
+    const isCurrentAppOpen = Boolean(currentApp?.rendered);
 
     if (isCurrentAppOpen) {
         // If a different token is now controlled, switch the HUD to the new token
