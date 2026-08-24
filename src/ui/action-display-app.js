@@ -1232,6 +1232,9 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         };
         window.addEventListener('pointerdown', this._boundOutsidePointerDown, { capture: true });
 
+        // Bring HUD to top whenever clicked / interacted with
+        this.element.addEventListener('pointerdown', () => this.bringToTop());
+
         // Attach item summary tooltip event listeners
         this.element.addEventListener('pointerover', this._boundOnPointerOver);
         this.element.addEventListener('pointerout', this._boundOnPointerOut);
@@ -1245,10 +1248,49 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
     }
 
     /**
+     * Bring this application to the top of the z-index stack.
+     * Computes the maximum z-index across all open windows and applications in the DOM.
+     * @returns {number} The newly assigned z-index
+     */
+    bringToTop() {
+        if (!this.element) return 100;
+
+        // Delegate to super.bringToTop() if available on ApplicationV2
+        try {
+            super.bringToTop?.();
+        } catch (_) {}
+
+        // Query open application windows in the DOM to guarantee we are on top of other sheets
+        let maxZ = 100;
+        const currentZ = parseInt(this.element.style?.zIndex, 10);
+        if (!isNaN(currentZ)) maxZ = Math.max(maxZ, currentZ);
+
+        if (typeof document !== 'undefined' && document.querySelectorAll) {
+            const windows = document.querySelectorAll('.window-app, .application, .app');
+            for (const win of windows) {
+                if (win === this.element) continue;
+                const rawZ = win.style?.zIndex ?? (typeof window !== 'undefined' && window.getComputedStyle ? window.getComputedStyle(win)?.zIndex : null);
+                const z = parseInt(rawZ, 10);
+                if (!isNaN(z) && z < 900000) { // Keep below context menus (999999) and tooltips (1000001)
+                    maxZ = Math.max(maxZ, z);
+                }
+            }
+        }
+
+        const newZ = maxZ + 1;
+        if (this.element.style) {
+            this.element.style.zIndex = `${newZ}`;
+        }
+        return newZ;
+    }
+
+    /**
      * Hook into the render lifecycle to position the element and measure its dimensions.
      */
     _onRender(context, options) {
         super._onRender(context, options);
+
+        this.bringToTop();
 
         this._attachSearchListeners();
         this._restoreSearchFocus();

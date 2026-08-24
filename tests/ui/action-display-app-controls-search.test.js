@@ -363,3 +363,50 @@ test('ActionDisplayApp _onToggleCombatAutoTrack toggles setting and switches tok
     await game.settings.set(MODULE_ID, 'autoTrackCombat', false);
     globalThis.game.combat = null;
 });
+
+test('ActionDisplayApp bringToTop elevates HUD z-index above all other open application windows', () => {
+    const app = new ActionDisplayApp({ actor: { id: 'test-actor' } });
+    app.element = { style: { zIndex: '100' } };
+
+    // Simulate other open sheets/windows in DOM
+    const otherWinA = { style: { zIndex: '120' } };
+    const otherWinB = { style: { zIndex: '135' } };
+    const oldQuerySelectorAll = document.querySelectorAll;
+
+    document.querySelectorAll = (sel) => {
+        if (sel.includes('window-app')) {
+            return [app.element, otherWinA, otherWinB];
+        }
+        return [];
+    };
+
+    const newZ = app.bringToTop();
+    assert.equal(newZ, 136, 'HUD z-index should be higher than highest other window (135 + 1)');
+    assert.equal(app.element.style.zIndex, '136');
+
+    // Restore
+    document.querySelectorAll = oldQuerySelectorAll;
+});
+
+test('ActionDisplayApp _onRender calls bringToTop to ensure HUD is placed above existing windows', () => {
+    let bringToTopCalled = false;
+    const app = new ActionDisplayApp({ actor: { id: 'test-actor' } });
+    app.element = {
+        style: { zIndex: '100' },
+        querySelector: () => ({ offsetWidth: 320, offsetHeight: 400 }),
+        offsetWidth: 320,
+        offsetHeight: 400
+    };
+    app.bringToTop = () => {
+        bringToTopCalled = true;
+        return 150;
+    };
+    app._attachSearchListeners = () => {};
+    app._restoreSearchFocus = () => {};
+    app._syncTabWidths = () => {};
+    app._adjustMinHeight = () => {};
+    app.setPosition = () => {};
+
+    app._onRender({}, {});
+    assert.equal(bringToTopCalled, true, '_onRender must call bringToTop()');
+});
