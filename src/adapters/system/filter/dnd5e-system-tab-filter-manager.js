@@ -1,6 +1,5 @@
 import { BaseSystemTabFilterManager } from './base-system-tab-filter-manager.js';
 import { TabRef } from '../../../ui/tab-ref.js';
-import { log } from '../../../lib/logger.js';
 
 const COMPONENT_NAMES = {
     'vocal': ['vocal', 'verbal'],
@@ -132,11 +131,7 @@ export class Dnd5eSystemTabFilterManager extends BaseSystemTabFilterManager {
         return baseFiltered.filter(sub => {
             const hasPropertyMatch = activeCompSubs.some(comp => this.requiresComponent(sub, comp));
             const hasTabMatch = sub.right?.some(tab => tab.root === 'components' && activeCompSubs.includes(tab.label));
-            const isExcluded = hasPropertyMatch || hasTabMatch;
-            if (isExcluded) {
-                log.debug(`Dnd5eSystemTabFilterManager.filterSubactions | Excluding "${sub.name}" — hasPropertyMatch: ${hasPropertyMatch}, hasTabMatch: ${hasTabMatch}, activeCompSubs: [${activeCompSubs.join(', ')}]`);
-            }
-            return !isExcluded;
+            return !hasPropertyMatch && !hasTabMatch;
         });
     }
 }
