@@ -1323,6 +1323,50 @@ test('Dnd5eSystemAdapter modifyContext triggers tokenInfo layout on Page 3', asy
     assert.deepEqual(context.tokenInfo.conditionImmunities, ['Charmed']);
 });
 
+test('Dnd5eSystemAdapter getTokenInfo collapses languages to All when all is selected', async () => {
+    const adapter = new Dnd5eSystemAdapter();
+
+    // 1. Array containing 'all' alongside specific languages
+    const actorWithAll = {
+        id: 'actor-all-lang',
+        name: 'Solar',
+        system: {
+            attributes: { ac: { value: 21 }, movement: { walk: 50, units: 'ft' } },
+            traits: {
+                languages: {
+                    value: ['all', 'common', 'celestial', 'draconic', 'elvish'],
+                    custom: '',
+                    communication: 'Telepathy 120 ft.'
+                }
+            },
+            details: {}
+        }
+    };
+
+    const info1 = await adapter.getTokenInfo(actorWithAll);
+    assert.deepEqual(info1.languages, ['All', 'Telepathy 120 ft.']);
+
+    // 2. Custom string indicating all languages
+    const actorCustomAll = {
+        id: 'actor-custom-all',
+        name: 'Omnilingual Being',
+        system: {
+            attributes: { ac: { value: 10 }, movement: { walk: 30, units: 'ft' } },
+            traits: {
+                languages: {
+                    value: [],
+                    custom: 'all languages'
+                }
+            },
+            details: {}
+        }
+    };
+
+    const info2 = await adapter.getTokenInfo(actorCustomAll);
+    assert.deepEqual(info2.languages, ['All']);
+});
+
+
 
 
 

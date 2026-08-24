@@ -937,14 +937,28 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
             ? langData.value
             : (langData.value instanceof Set ? Array.from(langData.value) : []);
 
-        for (const val of values) {
-            if (!val) continue;
-            const label = this.#formatLabel(val, cfg?.languages);
-            result.push(label);
+        const hasAll = values.some(v => typeof v === 'string' && (v.trim().toLowerCase() === 'all' || v.trim().toLowerCase() === 'alllanguages'));
+
+        if (hasAll) {
+            result.push('All');
+        } else {
+            for (const val of values) {
+                if (!val) continue;
+                const label = this.#formatLabel(val, cfg?.languages);
+                result.push(label);
+            }
         }
 
         if (langData.custom && typeof langData.custom === 'string' && langData.custom.trim().length > 0) {
-            result.push(langData.custom.trim());
+            const customTrimmed = langData.custom.trim();
+            const isCustomAll = customTrimmed.toLowerCase() === 'all' || customTrimmed.toLowerCase() === 'all languages';
+            if (isCustomAll) {
+                if (!result.includes('All')) {
+                    result.unshift('All');
+                }
+            } else {
+                result.push(customTrimmed);
+            }
         }
         if (langData.communication && typeof langData.communication === 'string' && langData.communication.trim().length > 0) {
             result.push(langData.communication.trim());
