@@ -214,13 +214,13 @@ Hooks.on('deleteItem', (item, options, userId) => {
     }
 });
 
-// Hook into Actor updates (spell slots, resources, hp, flags) on the active token's actor
+// Hook into Actor updates (spell slots, resources, hp, flags, status conditions)
 Hooks.on('updateActor', (actor, changes, options, userId) => {
-    if (isMatchingActor(actor, null)) {
-        const currentApp = actionDisplay.activeApp ?? activeApp;
-        if (currentApp) {
-            adapter.updateTabs(actor, currentApp.rightTabs);
-        }
+    if (!actor) return;
+    const currentApp = actionDisplay.activeApp ?? activeApp;
+    const isCurrent = isMatchingActor(actor, null);
+    adapter.updateTabs(actor, isCurrent ? currentApp?.rightTabs : null);
+    if (isCurrent && (currentApp?.rendered || currentApp?.element)) {
         requestHUDRender();
     }
 });
@@ -228,11 +228,11 @@ Hooks.on('updateActor', (actor, changes, options, userId) => {
 // Hook into ActiveEffect updates (status conditions gained/lost) on actors
 function handleActiveEffectChange(effect) {
     const actor = (effect?.parent instanceof Actor) ? effect.parent : (effect?.target instanceof Actor) ? effect.target : null;
-    if (actor && isMatchingActor(actor, null)) {
-        const currentApp = actionDisplay.activeApp ?? activeApp;
-        if (currentApp) {
-            adapter.updateTabs(actor, currentApp.rightTabs);
-        }
+    if (!actor) return;
+    const currentApp = actionDisplay.activeApp ?? activeApp;
+    const isCurrent = isMatchingActor(actor, null);
+    adapter.updateTabs(actor, isCurrent ? currentApp?.rightTabs : null);
+    if (isCurrent && (currentApp?.rendered || currentApp?.element)) {
         requestHUDRender();
     }
 }

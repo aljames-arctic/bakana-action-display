@@ -278,3 +278,40 @@ test('Dnd5eSystemTabFilterManager filters spells matching auto-banned components
     assert.equal(filterManager.matchesEconomyTabs(vocalSpell, unbannedContext), true, 'Vocal spell visible after unban');
     assert.equal(filterManager.matchesEconomyTabs(somaticOnlySpell, unbannedContext), true, 'Somatic spell visible');
 });
+
+test('Status condition change while HUD is closed updates banned options without opening the HUD', () => {
+    const dndAdapter = new Dnd5eSystemAdapter();
+    adapter.system = dndAdapter;
+    game.system = { id: 'dnd5e' };
+
+    const flags = {};
+    const actor = {
+        isOwner: true,
+        statuses: new Set(),
+        effects: [],
+        getFlag: (mod, key) => flags[key] ?? null,
+        setFlag: async (mod, key, val) => { flags[key] = val; }
+    };
+
+    // Ensure activeApp is null (HUD is closed)
+    actionDisplay.activeApp = null;
+
+    // 1. Actor gains 'silenced' while HUD is closed
+    actor.statuses.add('silenced');
+    adapter.updateTabs(actor, null);
+
+    // Verify flags updated in the background without needing a HUD instance
+    assert.deepEqual(flags.autoBanState?.conditions?.vocal, ['silenced']);
+    assert.equal(actionDisplay.activeApp, null, 'HUD remains closed');
+
+    // 2. Later, when the HUD is opened for this actor, verify tabColumn reflects the ban
+    const newHUDTabColumn = new HUDTabColumn({
+        side: 'right',
+        defaultParent: 'all'
+    });
+    adapter.updateTabs(actor, newHUDTabColumn);
+
+    assert.equal(newHUDTabColumn.activeParents.has('components'), true);
+    assert.equal(newHUDTabColumn.activeSubTypes.has('vocal'), true, 'Vocal is banned on open HUD');
+    assert.equal(newHUDTabColumn.activeSubTypes.has('somatic'), false);
+});
