@@ -77,7 +77,7 @@ function handleHUDClose() {
  */
 function isMatchingActor(docActor, docParent) {
     const currentApp = actionDisplay.activeApp ?? activeApp;
-    if (!currentApp || !currentApp.actor) return false;
+    if (!currentApp?.rendered || !currentApp.actor) return false;
     const activeActor = currentApp.actor;
     const activeToken = currentApp.token;
 
@@ -105,12 +105,12 @@ function isMatchingActor(docActor, docParent) {
  */
 function requestHUDRender() {
     const currentApp = actionDisplay.activeApp ?? activeApp;
-    if (!currentApp?.rendered && !currentApp?.element) return;
+    if (!currentApp?.rendered) return;
     if (renderDebounceTimer) clearTimeout(renderDebounceTimer);
     renderDebounceTimer = setTimeout(() => {
         renderDebounceTimer = null;
         const appToRender = actionDisplay.activeApp ?? activeApp;
-        if (appToRender?.rendered || appToRender?.element) {
+        if (appToRender?.rendered) {
             appToRender.render();
         }
     }, 50);

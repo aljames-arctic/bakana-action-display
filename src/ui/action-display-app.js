@@ -267,6 +267,10 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         this._contextMenu = null;
         this.actions = []; // Reset actions array to release references
 
+        if (actionDisplay.activeApp === this) {
+            actionDisplay.activeApp = null;
+        }
+
         const result = await super.close(options);
         return result;
     }

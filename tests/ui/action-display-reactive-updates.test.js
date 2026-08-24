@@ -185,4 +185,36 @@ test('Combat turn advancement hook switches HUD to active combatant when autoTra
     globalThis.game.combat = null;
 });
 
+test('Closed HUD does not re-open when actor status conditions or properties mutate', async () => {
+    let renderCalled = false;
+    const mockToken = {
+        id: 'token-closed-test',
+        name: 'Hero Closed',
+        document: { isOwner: true },
+        actor: { id: 'actor-closed-test', name: 'Hero Closed Actor', isOwner: true, items: new foundry.utils.Collection() }
+    };
+
+    // 1. Open HUD
+    Hooks.callAll('renderTokenHUD', { object: mockToken }, {}, {});
+    const app = actionDisplay.activeApp;
+    assert.ok(app);
+
+    // 2. Explicitly close the HUD
+    await app.close();
+    assert.equal(actionDisplay.activeApp, null, 'activeApp should be null after closing');
+
+    // Spy on render if any instance still existed
+    app.render = () => { renderCalled = true; };
+
+    // 3. Mutate actor with status condition (e.g. petrified)
+    Hooks.callAll('updateActor', { id: 'actor-closed-test' }, { system: { attributes: { hp: { value: 10 } } } }, {}, 'user-1');
+    Hooks.callAll('createActiveEffect', { parent: { id: 'actor-closed-test' }, statuses: new Set(['petrified']) }, {}, 'user-1');
+
+    await new Promise(r => setTimeout(r, 70));
+
+    // Verify HUD was NOT opened or rendered
+    assert.equal(renderCalled, false, 'render must not be called on closed app');
+    assert.equal(actionDisplay.activeApp, null, 'HUD must remain closed');
+});
+
 
