@@ -140,6 +140,14 @@ Hooks.once('init', () => {
         default: false
     });
 
+    // Register Auto-Toggle Combat Turn Visibility Setting (Client Scope, default disabled)
+    game.settings.register(MODULE_ID, 'autoToggleCombat', {
+        scope: 'client',
+        config: false,
+        type: Boolean,
+        default: false
+    });
+
     // ==========================================
     // User Scope Settings & Menus
     // ==========================================

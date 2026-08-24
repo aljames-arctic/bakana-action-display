@@ -610,6 +610,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         context.enableItemSummaryButton = game.settings.get(MODULE_ID, 'enableItemSummaryButton') ?? false;
         context.enableCombatAutoTrackButton = game.settings.get(MODULE_ID, 'enableCombatAutoTrackButton') ?? false;
         context.autoTrackCombat = game.settings.get(MODULE_ID, 'autoTrackCombat') ?? false;
+        context.autoToggleCombat = game.settings.get(MODULE_ID, 'autoToggleCombat') ?? false;
         context.searchQuery = this.searchQuery ?? '';
 
         // Synchronize favorites if system supports them and user is owner
@@ -1113,6 +1114,61 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
                 }
             }
         }
+        this.render();
+    }
+
+    /**
+     * Right-click handler on the Combat Auto-Track (sword) button.
+     * Toggles the "Auto-Toggle Combat Turn Visibility" setting.
+     * When toggled on, immediately follows the in-charge combatant if it is the user's turn, or closes if not.
+     * @param {Event} [event] Triggering event
+     * @param {HTMLElement} [target] Triggering element
+     */
+    async _onRightClickCombatAutoTrack(event, target) {
+        event?.preventDefault?.();
+        const current = Boolean(game.settings.get(MODULE_ID, 'autoToggleCombat'));
+        const next = !current;
+        await game.settings.set(MODULE_ID, 'autoToggleCombat', next);
+
+        if (next) {
+            const combat = game.combat;
+            if (combat?.started && combat.combatant) {
+                const currentCombatant = combat.combatant;
+                const token = currentCombatant.token?.object
+                    ?? canvas?.tokens?.get?.(currentCombatant.tokenId)
+                    ?? (currentCombatant.token && canvas?.tokens?.placeables?.includes(currentCombatant.token) ? currentCombatant.token : null)
+                    ?? currentCombatant.actor?.getActiveTokens?.()?.[0]
+                    ?? null;
+
+                const isMyTurn = Boolean(token && adapter.foundry.isUserInCharge(token));
+                if (isMyTurn) {
+                    if (this.token !== token && this.token?.id !== token.id) {
+                        if (this.element) {
+                            this.element.style.display = 'none';
+                        }
+                        this.close();
+                        actionDisplay.activeApp = null;
+
+                        if (token.actor) {
+                            syncActorFavorites(token.actor);
+                        }
+                        const newApp = new ActionDisplayApp(token);
+                        actionDisplay.activeApp = newApp;
+                        newApp.render(true);
+                        return;
+                    }
+                } else {
+                    // Not user's turn -> close HUD immediately
+                    if (this.element) {
+                        this.element.style.display = 'none';
+                    }
+                    this.close();
+                    actionDisplay.activeApp = null;
+                    return;
+                }
+            }
+        }
+
         this.render();
     }
 
@@ -1751,7 +1807,18 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
      * @private
      */
     _onContextMenuCapture(event) {
-        if (event.target.closest('#context-menu, .context-menu, .context-item')) return;
+        if (event.target?.closest?.('#context-menu, .context-menu, .context-item')) return;
+
+        // Intercept right-clicks on combat auto-track button (sword icon)
+        const combatTrackBtn = event.target?.closest?.('.bad-combat-track-btn');
+        if (combatTrackBtn) {
+            event.preventDefault();
+            event.stopPropagation();
+            event.stopImmediatePropagation();
+            this._onRightClickCombatAutoTrack(event, combatTrackBtn);
+            return;
+        }
+
         if (this._preventReopen) {
             this._preventReopen = false;
 

@@ -328,6 +328,169 @@ test('ActionDisplayApp _onToggleCombatAutoTrack switches only when user is in-ch
     globalThis.game.user = userGM;
 });
 
+test('ActionDisplayApp _onRightClickCombatAutoTrack toggles autoToggleCombat and follows in-charge rules', async () => {
+    const userGM = { id: 'user-gm-rc', name: 'GM', role: 4, isGM: true, active: true };
+    const userPlayer1 = { id: 'user-p1-rc', name: 'Player 1', role: 1, isGM: false, active: true };
+    globalThis.game.users = new foundry.utils.Collection([userGM, userPlayer1]);
+
+    const tokenGoblin = {
+        id: 'token-goblin-rc',
+        name: 'Goblin RC',
+        document: { id: 'token-goblin-rc-doc', ownership: { default: 0 } },
+        actor: { id: 'actor-goblin-rc', name: 'Goblin RC Actor', ownership: { default: 0 }, items: new foundry.utils.Collection() }
+    };
+    const tokenHero = {
+        id: 'token-hero-rc',
+        name: 'Hero RC',
+        document: { id: 'token-hero-rc-doc', ownership: { default: 0, 'user-p1-rc': 3 } },
+        actor: { id: 'actor-hero-rc', name: 'Hero RC Actor', ownership: { default: 0, 'user-p1-rc': 3 }, items: new foundry.utils.Collection() }
+    };
+
+    globalThis.canvas = {
+        tokens: {
+            get: (id) => id === 'token-goblin-rc' ? tokenGoblin : tokenHero,
+            placeables: [tokenGoblin, tokenHero]
+        }
+    };
+
+    // 1. GM client right-clicks sword button during Hero turn (not GM turn) -> HUD should close
+    globalThis.game.user = userGM;
+    const mockCombatHeroTurn = {
+        started: true,
+        combatant: { tokenId: 'token-hero-rc', token: tokenHero, actor: tokenHero.actor }
+    };
+    globalThis.game.combat = mockCombatHeroTurn;
+
+    const initialAppGM = new ActionDisplayApp(tokenGoblin);
+    actionDisplay.activeApp = initialAppGM;
+    initialAppGM.rendered = true;
+
+    await initialAppGM._onRightClickCombatAutoTrack();
+    assert.equal(game.settings.get(MODULE_ID, 'autoToggleCombat'), true);
+    assert.equal(actionDisplay.activeApp, null, 'HUD closed when auto-toggle enabled on not-my-turn');
+
+    // 2. GM client right-clicks sword button again -> toggles off
+    const app2 = new ActionDisplayApp(tokenGoblin);
+    actionDisplay.activeApp = app2;
+    app2.rendered = true;
+
+    await app2._onRightClickCombatAutoTrack();
+    assert.equal(game.settings.get(MODULE_ID, 'autoToggleCombat'), false);
+    assert.equal(actionDisplay.activeApp, app2, 'HUD remains open when toggled off');
+
+    // 3. Test _onContextMenuCapture intercepts right-click on .bad-combat-track-btn
+    let rightClickTriggered = false;
+    app2._onRightClickCombatAutoTrack = async () => { rightClickTriggered = true; };
+    const mockBtn = document.createElement('button');
+    mockBtn.className = 'bad-control-btn bad-combat-track-btn';
+    mockBtn.closest = (sel) => sel.includes('bad-combat-track-btn') ? mockBtn : null;
+    const mockEvent = {
+        target: mockBtn,
+        preventDefault: () => {},
+        stopPropagation: () => {},
+        stopImmediatePropagation: () => {}
+    };
+    app2._onContextMenuCapture(mockEvent);
+    assert.equal(rightClickTriggered, true, '_onContextMenuCapture intercepted right click on sword button');
+
+    // Cleanup
+    if (actionDisplay.activeApp) {
+        actionDisplay.activeApp.close();
+        actionDisplay.activeApp = null;
+    }
+    await game.settings.set(MODULE_ID, 'autoToggleCombat', false);
+    globalThis.game.combat = null;
+    globalThis.game.user = userGM;
+});
+
+test('Combat turn auto-toggle (autoToggleCombat) opens HUD on my turn and closes HUD on not-my-turn', async () => {
+    await game.settings.set(MODULE_ID, 'enableCombatAutoTrackButton', true);
+    await game.settings.set(MODULE_ID, 'autoToggleCombat', true);
+    await game.settings.set(MODULE_ID, 'autoTrackCombat', false);
+
+    const userGM = { id: 'user-gm-toggle-flow', name: 'GM', role: 4, isGM: true, active: true };
+    const userPlayer1 = { id: 'user-p1-toggle-flow', name: 'Player 1', role: 1, isGM: false, active: true };
+    globalThis.game.users = new foundry.utils.Collection([userGM, userPlayer1]);
+
+    const tokenGoblin = {
+        id: 'token-goblin-flow',
+        name: 'Goblin Flow',
+        document: { id: 'token-goblin-flow-doc', ownership: { default: 0 } },
+        actor: { id: 'actor-goblin-flow', name: 'Goblin Flow Actor', ownership: { default: 0 }, items: new foundry.utils.Collection() }
+    };
+    const tokenHero = {
+        id: 'token-hero-flow',
+        name: 'Hero Flow',
+        document: { id: 'token-hero-flow-doc', ownership: { default: 0, 'user-p1-toggle-flow': 3 } },
+        actor: { id: 'actor-hero-flow', name: 'Hero Flow Actor', ownership: { default: 0, 'user-p1-toggle-flow': 3 }, items: new foundry.utils.Collection() }
+    };
+
+    globalThis.canvas = {
+        tokens: {
+            get: (id) => id === 'token-goblin-flow' ? tokenGoblin : tokenHero,
+            placeables: [tokenGoblin, tokenHero]
+        }
+    };
+
+    const mockCombatGoblinTurn = {
+        started: true,
+        combatant: { tokenId: 'token-goblin-flow', token: tokenGoblin, actor: tokenGoblin.actor }
+    };
+    const mockCombatHeroTurn = {
+        started: true,
+        combatant: { tokenId: 'token-hero-flow', token: tokenHero, actor: tokenHero.actor }
+    };
+
+    // --- SCENARIO A: GM client ---
+    globalThis.game.user = userGM;
+    actionDisplay.activeApp = null;
+
+    // 1. Turn starts on Goblin (GM turn) -> GM HUD should automatically OPEN!
+    handleCombatTurnChange(mockCombatGoblinTurn);
+    assert.ok(actionDisplay.activeApp, 'GM HUD automatically opened for Goblin turn');
+    assert.equal(actionDisplay.activeApp.token.id, 'token-goblin-flow');
+
+    // 2. Turn transitions to Hero (Player 1 turn -> not GM turn) -> GM HUD should automatically CLOSE!
+    handleCombatTurnChange(mockCombatHeroTurn);
+    assert.equal(actionDisplay.activeApp, null, 'GM HUD automatically closed on Player 1 turn');
+
+    // 3. Turn transitions back to Goblin (GM turn) -> GM HUD should automatically OPEN again!
+    handleCombatTurnChange(mockCombatGoblinTurn);
+    assert.ok(actionDisplay.activeApp, 'GM HUD automatically opened again for Goblin turn');
+    assert.equal(actionDisplay.activeApp.token.id, 'token-goblin-flow');
+
+    // 4. Combat is deleted / ended -> GM HUD should automatically CLOSE!
+    Hooks.callAll('deleteCombat', mockCombatGoblinTurn, {}, userGM.id);
+    assert.equal(actionDisplay.activeApp, null, 'GM HUD automatically closed when combat deleted');
+
+    // --- SCENARIO B: Player 1 client ---
+    globalThis.game.user = userPlayer1;
+    actionDisplay.activeApp = null;
+
+    // 1. Goblin turn (not Player 1 turn) -> Player 1 HUD remains closed
+    handleCombatTurnChange(mockCombatGoblinTurn);
+    assert.equal(actionDisplay.activeApp, null, 'Player 1 HUD remains closed on Goblin turn');
+
+    // 2. Turn transitions to Hero (Player 1 turn) -> Player 1 HUD automatically OPENS!
+    handleCombatTurnChange(mockCombatHeroTurn);
+    assert.ok(actionDisplay.activeApp, 'Player 1 HUD automatically opened on Hero turn');
+    assert.equal(actionDisplay.activeApp.token.id, 'token-hero-flow');
+
+    // 3. Turn transitions to Goblin -> Player 1 HUD automatically CLOSES!
+    handleCombatTurnChange(mockCombatGoblinTurn);
+    assert.equal(actionDisplay.activeApp, null, 'Player 1 HUD automatically closed when Hero turn ended');
+
+    // Cleanup
+    if (actionDisplay.activeApp) {
+        actionDisplay.activeApp.close();
+        actionDisplay.activeApp = null;
+    }
+    await game.settings.set(MODULE_ID, 'enableCombatAutoTrackButton', false);
+    await game.settings.set(MODULE_ID, 'autoToggleCombat', false);
+    globalThis.game.combat = null;
+    globalThis.game.user = userGM;
+});
+
 test('isUserInCharge considers only currently connected (active: true) users', () => {
     const adapter = new BaseFoundryAdapter();
 
