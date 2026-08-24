@@ -855,8 +855,11 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
             secondaries.push(`Burrow ${burrow} ${units}`);
             speeds.push({ type: 'burrow', label: 'Burrow', value: burrow, text: `${burrow} ${units}`, icon: 'fas fa-shovel' });
         }
-        if (special) {
-            secondaries.push(special);
+        if (special && typeof special === 'string') {
+            const specialParts = special.split(';').map(s => s.trim()).filter(Boolean);
+            for (const part of specialParts) {
+                secondaries.push(part);
+            }
         }
 
         const secondary = secondaries.join(', ');
@@ -865,6 +868,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         return {
             primary,
             secondary,
+            secondaries,
             full,
             speeds,
             units
