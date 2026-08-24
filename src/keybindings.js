@@ -4,18 +4,68 @@ import { ActionDisplayApp } from './ui/action-display-app.js';
 import { syncActorFavorites } from './favorites/favorites-manager.js';
 import { log } from './lib/logger.js';
 
+let lastSelectedTokenRef = null;
+let lastSelectedTokenId = null;
+
 /**
- * Toggle the Action Display HUD for a token or the currently controlled token.
+ * Record a token as the last selected / interacted token.
+ * @param {Token|null} token
+ */
+export function setLastSelectedToken(token) {
+    if (!token) return;
+    if (token.document?.isOwner || token.actor?.isOwner) {
+        lastSelectedTokenRef = token;
+        lastSelectedTokenId = token.id;
+    }
+}
+
+/**
+ * Retrieve the last selected token if it still exists on the active canvas and user has ownership.
+ * @returns {Token|null}
+ */
+export function getLastSelectedToken() {
+    if (!lastSelectedTokenId && !lastSelectedTokenRef) return null;
+
+    let token = null;
+    if (canvas?.tokens?.get && lastSelectedTokenId) {
+        token = canvas.tokens.get(lastSelectedTokenId);
+    }
+    if (!token && lastSelectedTokenRef) {
+        const isPresent = canvas?.tokens?.placeables?.some(t => t === lastSelectedTokenRef || t.id === lastSelectedTokenId);
+        if (isPresent) token = lastSelectedTokenRef;
+    }
+
+    if (token && !token.destroyed && !token._destroyed && (token.document?.isOwner || token.actor?.isOwner)) {
+        return token;
+    }
+
+    return null;
+}
+
+/**
+ * Toggle the Action Display HUD for a token, the currently controlled token, or the last selected token.
  * @param {Token} [explicitToken=null] Optional token to toggle HUD for
  * @returns {boolean} True if a toggle action was executed, false otherwise
  */
 export function toggleHUD(explicitToken = null) {
     let token = explicitToken ?? canvas?.tokens?.controlled?.[0] ?? null;
 
+    // If a token is explicitly passed or currently controlled on canvas, update lastSelectedToken
+    if (token) {
+        setLastSelectedToken(token);
+    } else {
+        // Fall back to the last selected token on canvas
+        token = getLastSelectedToken();
+    }
+
+    // If still no token, fall back to user's assigned character token
     if (!token && game.user?.character) {
         token = game.user.character.getActiveTokens?.()?.[0]
             ?? canvas?.tokens?.placeables?.find(t => t.actor?.id === game.user.character.id)
             ?? null;
+        if (token) {
+            setLastSelectedToken(token);
+        }
     }
 
     const currentApp = actionDisplay.activeApp;
@@ -23,18 +73,20 @@ export function toggleHUD(explicitToken = null) {
 
     if (isCurrentAppOpen) {
         // If a different token is now controlled, switch the HUD to the new token
-        if (token && currentApp.token && currentApp.token !== token && currentApp.token.id !== token.id) {
+        const controlledToken = canvas?.tokens?.controlled?.[0];
+        if (controlledToken && currentApp.token && currentApp.token !== controlledToken && currentApp.token.id !== controlledToken.id) {
             if (currentApp.element) {
                 currentApp.element.style.display = 'none';
             }
             currentApp.close();
             actionDisplay.activeApp = null;
 
-            if (token.document?.isOwner || token.actor?.isOwner) {
-                if (token.actor) {
-                    syncActorFavorites(token.actor);
+            if (controlledToken.document?.isOwner || controlledToken.actor?.isOwner) {
+                setLastSelectedToken(controlledToken);
+                if (controlledToken.actor) {
+                    syncActorFavorites(controlledToken.actor);
                 }
-                const newApp = new ActionDisplayApp(token);
+                const newApp = new ActionDisplayApp(controlledToken);
                 actionDisplay.activeApp = newApp;
                 newApp.render(true);
                 return true;
@@ -56,6 +108,7 @@ export function toggleHUD(explicitToken = null) {
         if (!token.document?.isOwner && !token.actor?.isOwner) {
             return false;
         }
+        setLastSelectedToken(token);
         if (token.actor) {
             syncActorFavorites(token.actor);
         }

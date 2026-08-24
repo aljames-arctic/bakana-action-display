@@ -1,6 +1,6 @@
 // Main entry point for Bakana's Action Display
 import './settings.js';
-import { registerKeybindings } from './keybindings.js';
+import { registerKeybindings, setLastSelectedToken } from './keybindings.js';
 import { adapter } from './adapters/index.js';
 import { actionDisplay } from './action-display.js';
 import { ActionDisplayApp } from './ui/action-display-app.js';
@@ -140,11 +140,19 @@ Hooks.once('ready', async () => {
     }
 });
 
+// Hook into Token selection to track the last selected token for hotkey toggle
+Hooks.on('controlToken', (token, controlled) => {
+    if (controlled && (token?.document?.isOwner || token?.actor?.isOwner)) {
+        setLastSelectedToken(token);
+    }
+});
+
 // Hook into Token HUD rendering to display our overlay
 Hooks.on('renderTokenHUD', (tokenHUD, html, data) => {
     const token = tokenHUD.object;
     if (!token || !token.document.isOwner) return;
 
+    setLastSelectedToken(token);
     closeDetachedHUD = false;
 
     if (token.actor) {

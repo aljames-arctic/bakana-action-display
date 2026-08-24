@@ -154,3 +154,90 @@ test('toggleHUD falls back to game.user.character when no token is controlled', 
     await game.settings.set(MODULE_ID, 'enableToggleHotkey', false);
     globalThis.canvas = { tokens: { controlled: [], placeables: [] } };
 });
+
+test('toggleHUD opens HUD for the last selected token when no token is currently controlled', async () => {
+    registerKeybindings();
+    await game.settings.set(MODULE_ID, 'enableToggleHotkey', true);
+
+    const tokenLast = {
+        id: 'tokenLast123',
+        document: { isOwner: true },
+        actor: { id: 'actorLast123', isOwner: true, items: [], flags: {} }
+    };
+
+    globalThis.canvas = {
+        tokens: {
+            controlled: [tokenLast],
+            placeables: [tokenLast],
+            get: (id) => id === 'tokenLast123' ? tokenLast : null
+        }
+    };
+
+    const binding = game.keybindings.get(MODULE_ID, 'toggleHUD');
+
+    // 1. First select and toggle open tokenLast
+    binding.onDown();
+    assert.equal(actionDisplay.activeApp.token.id, 'tokenLast123');
+    actionDisplay.activeApp.rendered = true;
+
+    // 2. Toggle close
+    binding.onDown();
+    assert.equal(actionDisplay.activeApp, null);
+
+    // 3. User deselects all tokens (controlled is now empty)
+    globalThis.canvas.tokens.controlled = [];
+
+    // 4. Pressing Shift+Space should re-open HUD for tokenLast (the last selected token)
+    const reopenResult = binding.onDown();
+    assert.equal(reopenResult, true, 'Should re-open last selected token');
+    assert.ok(actionDisplay.activeApp);
+    assert.equal(actionDisplay.activeApp.token.id, 'tokenLast123');
+
+    // Clean up
+    if (actionDisplay.activeApp) {
+        actionDisplay.activeApp.close();
+        actionDisplay.activeApp = null;
+    }
+    await game.settings.set(MODULE_ID, 'enableToggleHotkey', false);
+    globalThis.canvas = { tokens: { controlled: [], placeables: [] } };
+});
+
+test('toggleHUD ignores last selected token if it no longer exists or user lacks ownership', async () => {
+    registerKeybindings();
+    await game.settings.set(MODULE_ID, 'enableToggleHotkey', true);
+
+    const tokenTemp = {
+        id: 'tokenTemp456',
+        document: { isOwner: true },
+        actor: { id: 'actorTemp456', isOwner: true, items: [], flags: {} }
+    };
+
+    globalThis.canvas = {
+        tokens: {
+            controlled: [tokenTemp],
+            placeables: [tokenTemp],
+            get: (id) => id === 'tokenTemp456' ? tokenTemp : null
+        }
+    };
+
+    const binding = game.keybindings.get(MODULE_ID, 'toggleHUD');
+
+    // Open & close to register as last selected
+    binding.onDown();
+    actionDisplay.activeApp.rendered = true;
+    binding.onDown();
+    assert.equal(actionDisplay.activeApp, null);
+
+    // Deselect and simulate token deletion from canvas
+    globalThis.canvas.tokens.controlled = [];
+    globalThis.canvas.tokens.placeables = [];
+    globalThis.canvas.tokens.get = () => null;
+
+    // Pressing hotkey should return false because token no longer exists
+    const result = binding.onDown();
+    assert.equal(result, false);
+    assert.equal(actionDisplay.activeApp, null);
+
+    // Clean up
+    await game.settings.set(MODULE_ID, 'enableToggleHotkey', false);
+});
