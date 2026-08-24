@@ -594,8 +594,18 @@ test('ActionDisplayApp formats descriptions with roll tables and adds bad-summar
     };
 
     try {
-        const calculatedWidth = app._calculateTableTooltipWidth(tableHtml);
-        assert.ok(calculatedWidth >= 340 && calculatedWidth <= 680, 'Calculated width should be bounded between 340px and 680px');
+        const metrics = app._calculateTableTooltipWidth(tableHtml);
+        assert.ok(metrics.targetWidth >= 340 && metrics.targetWidth <= 680, 'Calculated width should be bounded between 340px and 680px');
+        assert.equal(metrics.needsHorizontalScroll, false, 'Teleport table fits within 680px so horizontal scroll is not needed');
+
+        // Formatted HTML should not have overflow-x class when table fits
+        const htmlNormal = app._formatItemSummaryHtml(summary, metrics.targetWidth, metrics.needsHorizontalScroll);
+        assert.ok(htmlNormal.includes('bad-summary-has-table'));
+        assert.equal(htmlNormal.includes('bad-summary-overflow-x'), false);
+
+        // When needsHorizontalScroll is true, bad-summary-overflow-x class is attached
+        const htmlOverflow = app._formatItemSummaryHtml(summary, 680, true);
+        assert.ok(htmlOverflow.includes('bad-summary-overflow-x'));
 
         app._applyTooltipWidth(504);
         assert.equal(mockTooltipEl.style.properties['width'], '504px');

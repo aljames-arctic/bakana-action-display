@@ -1589,10 +1589,11 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
      * Format a structured item summary object into HTML.
      * @param {Object} summary
      * @param {number|null} targetWidth
+     * @param {boolean} needsHorizontalScroll
      * @returns {string}
      * @protected
      */
-    _formatItemSummaryHtml(summary, targetWidth = null) {
+    _formatItemSummaryHtml(summary, targetWidth = null, needsHorizontalScroll = false) {
         if (!summary) return '';
         const title = summary.title ?? '';
         const subtitle = summary.subtitle ?? '';
@@ -1600,7 +1601,10 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         const properties = Array.isArray(summary.properties) ? summary.properties.filter(Boolean) : [];
         const description = summary.description ?? '';
         const hasTable = Boolean(description && /<table[\s>]/i.test(description));
-        const tableClass = hasTable ? ' bad-summary-has-table' : '';
+        let tableClass = '';
+        if (hasTable) {
+            tableClass = ' bad-summary-has-table' + (needsHorizontalScroll ? ' bad-summary-overflow-x' : '');
+        }
         const widthStyle = targetWidth ? ` style="--bad-tooltip-width: ${targetWidth}px; --bad-tooltip-max-width: ${targetWidth}px; width: ${targetWidth}px; max-width: ${targetWidth}px;"` : '';
 
         let html = `<div class="bad-item-summary-tooltip${tableClass}"${widthStyle}>`;
@@ -1629,7 +1633,8 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         }
 
         if (description) {
-            html += `<div class="bad-summary-desc">${description}</div>`;
+            const descClass = needsHorizontalScroll ? 'bad-summary-desc bad-summary-overflow-x' : 'bad-summary-desc';
+            html += `<div class="${descClass}">${description}</div>`;
         }
 
         html += '</div>';
@@ -1656,27 +1661,31 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         const rawDesc = typeof summary === 'string' ? summary : (summary.description ?? '');
         const hasTable = Boolean(rawDesc && /<table[\s>]/i.test(rawDesc));
 
-        let targetWidth = null;
+        let tableMetrics = { targetWidth: null, needsHorizontalScroll: false };
         if (hasTable) {
-            targetWidth = this._calculateTableTooltipWidth(rawDesc);
+            tableMetrics = this._calculateTableTooltipWidth(rawDesc);
         }
 
-        const html = typeof summary === 'string' ? summary : this._formatItemSummaryHtml(summary, targetWidth);
-        this._activeSummaryTooltip = { element: itemEl, actionId: action.id, summary, html, targetWidth };
+        const html = typeof summary === 'string' ? summary : this._formatItemSummaryHtml(summary, tableMetrics.targetWidth, tableMetrics.needsHorizontalScroll);
+        this._activeSummaryTooltip = { element: itemEl, actionId: action.id, summary, html, targetWidth: tableMetrics.targetWidth };
 
-        const cssClass = hasTable
-            ? 'bad-item-summary-tooltip-wrapper bad-summary-has-table-wrapper'
-            : 'bad-item-summary-tooltip-wrapper';
+        let cssClass = 'bad-item-summary-tooltip-wrapper';
+        if (hasTable) {
+            cssClass += ' bad-summary-has-table-wrapper';
+            if (tableMetrics.needsHorizontalScroll) {
+                cssClass += ' bad-summary-overflow-x-wrapper';
+            }
+        }
 
         if (game.tooltip?.activate) {
             game.tooltip.activate(itemEl, {
                 html,
-                direction: this._chooseTooltipDirection(itemEl, hasTable, targetWidth ?? 360),
+                direction: this._chooseTooltipDirection(itemEl, hasTable, tableMetrics.targetWidth ?? 360),
                 cssClass
             });
 
-            if (hasTable && targetWidth) {
-                this._applyTooltipWidth(targetWidth);
+            if (hasTable && tableMetrics.targetWidth) {
+                this._applyTooltipWidth(tableMetrics.targetWidth);
             }
         }
     }
@@ -1685,7 +1694,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
      * Measure the minimal width required by tables in an item description
      * so title rows and column 1 do not wrap, clamped between 340px and 680px.
      * @param {string} descriptionHtml
-     * @returns {number}
+     * @returns {{ targetWidth: number, needsHorizontalScroll: boolean }}
      * @protected
      */
     _calculateTableTooltipWidth(descriptionHtml) {
@@ -1693,7 +1702,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         const maxAllowedWidth = Math.min(680, Math.floor((typeof window !== 'undefined' ? (window.innerWidth ?? 1920) : 1920) * 0.92));
 
         if (!descriptionHtml || typeof document === 'undefined' || !document.body) {
-            return normalWidth;
+            return { targetWidth: normalWidth, needsHorizontalScroll: false };
         }
 
         try {
@@ -1725,10 +1734,14 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
 
             sandbox.remove();
 
-            return Math.max(normalWidth, Math.min(measuredTableWidth + 36, maxAllowedWidth));
+            const requiredWidth = measuredTableWidth + 36;
+            const needsHorizontalScroll = requiredWidth > maxAllowedWidth;
+            const targetWidth = Math.max(normalWidth, Math.min(requiredWidth, maxAllowedWidth));
+
+            return { targetWidth, needsHorizontalScroll };
         } catch (e) {
             log.debug('_calculateTableTooltipWidth error:', e);
-            return normalWidth;
+            return { targetWidth: normalWidth, needsHorizontalScroll: false };
         }
     }
 

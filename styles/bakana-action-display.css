@@ -1619,9 +1619,20 @@ body > #tooltip.bad-summary-has-table-wrapper,
 
 .bad-summary-has-table .bad-summary-desc,
 .bad-item-summary-tooltip:has(table) .bad-summary-desc {
-    overflow-x: auto !important;
+    overflow-x: hidden !important;
     overflow-y: auto !important;
     max-width: 100% !important;
+}
+
+.bad-summary-desc.bad-summary-overflow-x,
+.bad-summary-overflow-x .bad-summary-desc {
+    overflow-x: auto !important;
+}
+
+.bad-summary-desc.bad-summary-overflow-x table,
+.bad-summary-overflow-x .bad-summary-desc table {
+    width: max-content !important;
+    max-width: none !important;
 }
 
 .bad-item-summary-tooltip {
@@ -1703,7 +1714,7 @@ body > #tooltip.bad-summary-has-table-wrapper,
     line-height: 1.4;
     max-height: 280px;
     overflow-y: auto !important;
-    overflow-x: auto !important;
+    overflow-x: hidden !important;
     word-break: normal;
     overflow-wrap: break-word;
     white-space: normal;
