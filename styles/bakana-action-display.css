@@ -132,53 +132,83 @@
     border-color: rgba(255, 255, 255, 0.12) !important;
 }
 
+/* Force suppress Foundry default button focus/active outlines on all control buttons */
+.bakana-action-display-container .bad-control-btn:focus,
+.bakana-action-display-container .bad-control-btn:focus-visible,
+.bakana-action-display-container .bad-control-btn:active,
+.bakana-action-display-container button.bad-control-btn:focus,
+.bakana-action-display-container button.bad-control-btn:focus-visible,
+.bakana-action-display-container button.bad-control-btn:active,
+.bad-control-btn:focus,
+.bad-control-btn:focus-visible,
+.bad-control-btn:active {
+    outline: none !important;
+    outline-offset: 0 !important;
+    box-shadow: none !important;
+}
+
+/* Left-Click Selected: Icon is purple (highlighted, no outline) */
+.bakana-action-display-container .bad-control-btn.active,
 .bad-control-btn.active {
     color: #c084fc !important;
     background: rgba(167, 139, 250, 0.18) !important;
     border-color: transparent !important;
     text-shadow: 0 0 6px rgba(167, 139, 250, 0.5);
+    outline: none !important;
+    box-shadow: none !important;
 }
 
+.bakana-action-display-container .bad-control-btn.active:hover,
 .bad-control-btn.active:hover {
     color: #ffffff !important;
     background: rgba(167, 139, 250, 0.28) !important;
     border-color: transparent !important;
+    outline: none !important;
+    box-shadow: none !important;
 }
 
+/* Right-Click Selected: Icon is outlined in orange (no purple highlight) */
+.bakana-action-display-container .bad-control-btn.auto-toggle-active,
 .bad-combat-track-btn.auto-toggle-active,
 .bad-control-btn.auto-toggle-active {
     color: #94a3b8 !important;
     background: rgba(255, 255, 255, 0.03) !important;
-    border-color: rgba(167, 139, 250, 0.75) !important;
+    border-color: #f97316 !important;
     text-shadow: none !important;
+    outline: none !important;
+    box-shadow: 0 0 4px rgba(249, 115, 22, 0.4) !important;
 }
 
+.bakana-action-display-container .bad-control-btn.auto-toggle-active:hover,
 .bad-combat-track-btn.auto-toggle-active:hover,
 .bad-control-btn.auto-toggle-active:hover {
     color: #ffffff !important;
     background: rgba(255, 255, 255, 0.08) !important;
-    border-color: rgba(167, 139, 250, 0.9) !important;
+    border-color: #fb923c !important;
+    outline: none !important;
+    box-shadow: 0 0 6px rgba(249, 115, 22, 0.6) !important;
 }
 
+/* Both Left & Right Click Selected: Icon is purple AND outlined in orange */
+.bakana-action-display-container .bad-control-btn.active.auto-toggle-active,
 .bad-combat-track-btn.active.auto-toggle-active,
 .bad-control-btn.active.auto-toggle-active {
     color: #c084fc !important;
     background: rgba(167, 139, 250, 0.18) !important;
-    border-color: rgba(167, 139, 250, 0.75) !important;
+    border-color: #f97316 !important;
     text-shadow: 0 0 6px rgba(167, 139, 250, 0.5);
+    outline: none !important;
+    box-shadow: 0 0 5px rgba(249, 115, 22, 0.45) !important;
 }
 
+.bakana-action-display-container .bad-control-btn.active.auto-toggle-active:hover,
 .bad-combat-track-btn.active.auto-toggle-active:hover,
 .bad-control-btn.active.auto-toggle-active:hover {
     color: #ffffff !important;
     background: rgba(167, 139, 250, 0.28) !important;
-    border-color: rgba(167, 139, 250, 0.9) !important;
-}
-
-.bad-control-btn:focus,
-.bad-control-btn:focus-visible {
+    border-color: #fb923c !important;
     outline: none !important;
-    box-shadow: none !important;
+    box-shadow: 0 0 7px rgba(249, 115, 22, 0.65) !important;
 }
 
 .bad-summary-toggle-btn i {
