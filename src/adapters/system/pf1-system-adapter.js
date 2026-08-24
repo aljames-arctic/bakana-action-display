@@ -623,7 +623,7 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
 
                 let childItem = null;
                 try {
-                    childItem = foundry.utils.fromUuidSync(child.uuid, { relative: actor });
+                    childItem = this.fromUuidSync(child.uuid, { relative: actor });
                 } catch (e) {
                     log.error(`Pf1SystemAdapter.modifyActions | Failed to resolve child UUID ${child.uuid}:`, e);
                 }

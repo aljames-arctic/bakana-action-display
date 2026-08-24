@@ -37,6 +37,26 @@ export class BaseSystemAdapter {
         return this.foundry?.enrichHTML?.(content, options) ?? content;
     }
 
+    /**
+     * Safely resolve a document from UUID synchronously using the Foundry platform adapter.
+     * @param {string} uuid Document UUID
+     * @param {Object} [options={}] Resolution options
+     * @returns {Document|null}
+     */
+    fromUuidSync(uuid, options = {}) {
+        return this.foundry?.fromUuidSync?.(uuid, options) ?? null;
+    }
+
+    /**
+     * Safely resolve a document from UUID asynchronously using the Foundry platform adapter.
+     * @param {string} uuid Document UUID
+     * @param {Object} [options={}] Resolution options
+     * @returns {Promise<Document|null>}
+     */
+    async fromUuid(uuid, options = {}) {
+        return (await this.foundry?.fromUuid?.(uuid, options)) ?? null;
+    }
+
     getContextMenuItems(app) {
         return this.contextMenuManager.getContextMenuItems(app);
     }

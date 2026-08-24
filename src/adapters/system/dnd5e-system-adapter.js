@@ -534,10 +534,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
             if (!doc) {
                 const uuid = activity.spell?.uuid ?? (activity.spell?.startsWith?.('Compendium.') ? activity.spell : null);
                 if (uuid) {
-                    const syncResolver = foundry?.utils?.fromUuidSync ?? globalThis.fromUuidSync;
-                    try {
-                        doc = syncResolver?.(uuid);
-                    } catch (_) {}
+                    doc = this.fromUuidSync(uuid);
                 }
             }
         }
@@ -590,24 +587,10 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                 if (this.#resolvedSpellCache.has(uuid)) {
                     return this.#resolvedSpellCache.get(uuid);
                 }
-                const syncResolver = foundry?.utils?.fromUuidSync ?? globalThis.fromUuidSync;
-                try {
-                    const doc = syncResolver?.(uuid);
-                    if (doc) {
-                        this.#resolvedSpellCache.set(uuid, doc);
-                        return doc;
-                    }
-                } catch (_) {}
-
-                const asyncResolver = foundry?.utils?.fromUuid ?? globalThis.fromUuid;
-                try {
-                    const doc = await asyncResolver?.(uuid);
-                    if (doc) {
-                        this.#resolvedSpellCache.set(uuid, doc);
-                        return doc;
-                    }
-                } catch (e) {
-                    log.warn(`Failed to resolve compendium spell UUID ${uuid}:`, e);
+                const doc = this.fromUuidSync(uuid) ?? await this.fromUuid(uuid);
+                if (doc) {
+                    this.#resolvedSpellCache.set(uuid, doc);
+                    return doc;
                 }
             }
             if (this.#isItemDocument(activity.spell) || activity.spell?.system) {
@@ -803,8 +786,9 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
     #resolveTargetItem(targetId, item, actor) {
         if (!targetId) return null;
         return targetId.includes('.')
-            ? (foundry.utils.fromUuidSync(targetId, { relative: item })
-               ?? foundry.utils.fromUuidSync(targetId, { relative: actor })
+            ? (this.fromUuidSync(targetId, { relative: item })
+               ?? this.fromUuidSync(targetId, { relative: actor })
+               ?? this.fromUuidSync(targetId)
                ?? actor.items.get(targetId))
             : actor.items.get(targetId);
     }

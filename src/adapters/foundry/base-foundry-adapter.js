@@ -71,7 +71,35 @@ export class BaseFoundryAdapter {
      * @returns {Document|null}
      */
     fromUuidSync(uuid, options = {}) {
-        return foundry.utils.fromUuidSync(uuid, options);
+        if (!uuid) return null;
+        try {
+            if (typeof foundry?.utils?.fromUuidSync === 'function') {
+                return foundry.utils.fromUuidSync(uuid, options) ?? null;
+            }
+            if (typeof globalThis.fromUuidSync === 'function') {
+                return globalThis.fromUuidSync(uuid, options) ?? null;
+            }
+        } catch (_) {}
+        return null;
+    }
+
+    /**
+     * Safely resolve a document from UUID asynchronously.
+     * @param {string} uuid Document UUID
+     * @param {Object} [options={}] Resolution options
+     * @returns {Promise<Document|null>}
+     */
+    async fromUuid(uuid, options = {}) {
+        if (!uuid) return null;
+        try {
+            if (typeof foundry?.utils?.fromUuid === 'function') {
+                return (await foundry.utils.fromUuid(uuid, options)) ?? null;
+            }
+            if (typeof globalThis.fromUuid === 'function') {
+                return (await globalThis.fromUuid(uuid, options)) ?? null;
+            }
+        } catch (_) {}
+        return null;
     }
 
     /**

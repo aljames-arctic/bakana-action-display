@@ -54,6 +54,34 @@ test('BaseFoundryAdapter and FoundryCurrentAdapter getCombatantByToken and getCo
     assert.equal(v14.getCombatantByToken(mockCombatV14, { id: 't1' }), mockCombatant);
 });
 
+test('fromUuid and fromUuidSync resolve cleanly across FoundryAdapter, SystemAdapter, and UnifiedAdapter', async () => {
+    const mockDoc = { id: 'doc1', uuid: 'Item.123' };
+    const origFromUuidSync = globalThis.foundry.utils.fromUuidSync;
+    const origFromUuid = globalThis.foundry.utils.fromUuid;
+
+    globalThis.foundry.utils.fromUuidSync = (uuid) => uuid === 'Item.123' ? mockDoc : null;
+    globalThis.foundry.utils.fromUuid = async (uuid) => uuid === 'Item.123' ? mockDoc : null;
+
+    try {
+        const foundryAdapter = new BaseFoundryAdapter();
+        assert.equal(foundryAdapter.fromUuidSync('Item.123'), mockDoc);
+        assert.equal(foundryAdapter.fromUuidSync('Item.none'), null);
+        assert.equal(await foundryAdapter.fromUuid('Item.123'), mockDoc);
+
+        const systemAdapter = new BaseSystemAdapter('dnd5e', true, foundryAdapter);
+        assert.equal(systemAdapter.fromUuidSync('Item.123'), mockDoc);
+        assert.equal(await systemAdapter.fromUuid('Item.123'), mockDoc);
+
+        const unified = new Adapter();
+        unified.foundry = foundryAdapter;
+        assert.equal(unified.fromUuidSync('Item.123'), mockDoc);
+        assert.equal(await unified.fromUuid('Item.123'), mockDoc);
+    } finally {
+        globalThis.foundry.utils.fromUuidSync = origFromUuidSync;
+        globalThis.foundry.utils.fromUuid = origFromUuid;
+    }
+});
+
 test('initializeSystemAdapter loads matching system adapter or falls back to BaseSystemAdapter with isSupported flag', async () => {
     // Known system: dnd5e
     const dnd5e = await initializeSystemAdapter('dnd5e');

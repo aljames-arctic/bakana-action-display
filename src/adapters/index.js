@@ -386,6 +386,26 @@ class Adapter {
     async enrichHTML(content, options = {}) {
         return this.foundry?.enrichHTML?.(content, options) ?? content;
     }
+
+    /**
+     * Safely resolve a document from UUID synchronously via the active Foundry adapter.
+     * @param {string} uuid Document UUID
+     * @param {Object} [options={}] Resolution options
+     * @returns {Document|null}
+     */
+    fromUuidSync(uuid, options = {}) {
+        return this.foundry?.fromUuidSync?.(uuid, options) ?? null;
+    }
+
+    /**
+     * Safely resolve a document from UUID asynchronously via the active Foundry adapter.
+     * @param {string} uuid Document UUID
+     * @param {Object} [options={}] Resolution options
+     * @returns {Promise<Document|null>}
+     */
+    async fromUuid(uuid, options = {}) {
+        return (await this.foundry?.fromUuid?.(uuid, options)) ?? null;
+    }
 }
 
 export const adapter = new Adapter();
