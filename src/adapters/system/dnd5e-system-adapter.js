@@ -367,9 +367,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         const tools = actor.system?.tools ?? {};
         for (const [toolId, tool] of Object.entries(tools)) {
             const toolConfig = cfg?.tools?.[toolId];
-            const configLabel = toolConfig?.label ?? (typeof toolConfig === 'string' ? toolConfig : null);
-            const rawLabel = tool.label ?? configLabel ?? cfg?.toolIds?.[toolId] ?? toolId;
-            const label = localize(rawLabel, rawLabel);
+            const label = this.#getToolLabel(toolId, tool, cfg);
             const abl = tool.ability ?? toolConfig?.ability ?? 'int';
             const toolImg = tool.img ?? tool.icon ?? toolConfig?.icon ?? abilityIcons[abl] ?? 'icons/svg/d20.svg';
             const toolAction = new Action({
@@ -396,6 +394,65 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         }
 
         return checkActions;
+    }
+
+    /**
+     * Resolve a human-readable display label for a tool proficiency ID in D&D 5e.
+     * @param {string} toolId Tool key or compendium UUID
+     * @param {Object} [tool={}] Tool data from actor.system.tools
+     * @param {Object} [cfg=CONFIG?.DND5E] System config object
+     * @returns {string} Human-readable tool label
+     */
+    #getToolLabel(toolId, tool = {}, cfg = CONFIG?.DND5E) {
+        if (tool.label) return localize(tool.label, tool.label);
+
+        // 1. Try D&D 5e Trait.keyLabel API
+        const traitLabel = globalThis.dnd5e?.documents?.Trait?.keyLabel?.(toolId, { trait: 'tool' })
+            ?? globalThis.dnd5e?.documents?.Trait?.keyLabel?.(toolId);
+        if (traitLabel) return localize(traitLabel, traitLabel);
+
+        // 2. Try resolving via fromUuidSync if toolId or config ID is a Compendium UUID
+        const compendiumId = toolId.startsWith('Compendium.')
+            ? toolId
+            : (cfg?.tools?.[toolId]?.id ?? cfg?.toolIds?.[toolId]);
+        if (compendiumId && typeof compendiumId === 'string' && compendiumId.startsWith('Compendium.')) {
+            try {
+                const doc = globalThis.fromUuidSync?.(compendiumId);
+                if (doc?.name) return doc.name;
+            } catch (err) {
+                log.debug(`Dnd5eSystemAdapter.#getToolLabel | fromUuidSync failed for "${compendiumId}":`, err);
+            }
+        }
+
+        // 3. Try standard D&D 5e CONFIG tables
+        const toolConfig = cfg?.tools?.[toolId];
+        const configLabel = toolConfig?.label ?? (typeof toolConfig === 'string' ? toolConfig : null)
+            ?? cfg?.toolProficiencies?.[toolId]
+            ?? cfg?.toolTypes?.[toolId]
+            ?? cfg?.vehicleTypes?.[toolId];
+        if (configLabel) return localize(configLabel, configLabel);
+
+        // 4. Well-known D&D 5e tool categories / abbreviations fallback
+        const TOOL_FALLBACKS = {
+            art: "Artisan's Tools",
+            artisan: "Artisan's Tools",
+            disg: 'Disguise Kit',
+            forg: 'Forgery Kit',
+            game: 'Gaming Set',
+            herb: 'Herbalism Kit',
+            music: 'Musical Instrument',
+            navg: "Navigator's Tools",
+            pois: "Poisoner's Kit",
+            thief: "Thieves' Tools",
+            vehicle: 'Vehicles',
+            vehicles: 'Vehicles'
+        };
+        if (TOOL_FALLBACKS[toolId]) {
+            return localize(`DND5E.Tool${toolId.charAt(0).toUpperCase() + toolId.slice(1)}`, TOOL_FALLBACKS[toolId]);
+        }
+
+        // 5. Clean string fallback
+        return toolId.charAt(0).toUpperCase() + toolId.slice(1);
     }
 
     // #endregion

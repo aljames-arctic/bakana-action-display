@@ -256,6 +256,69 @@ test('Dnd5eSystemAdapter extractCheckActions generates core saves, core checks, 
     assert.ok(summary.properties.some(p => p.value === 'Proficient'));
 });
 
+test('Dnd5eSystemAdapter resolves clean names for vehicle, jeweler, leatherworker, and Compendium UUIDs', () => {
+    const adapter = new Dnd5eSystemAdapter('dnd5e');
+
+    // Setup globalThis.dnd5e with Trait.keyLabel mock
+    globalThis.dnd5e = {
+        documents: {
+            Trait: {
+                keyLabel(key, options) {
+                    const map = {
+                        vehicle: 'Vehicles',
+                        jeweler: "Jeweler's Tools",
+                        leatherworker: "Leatherworker's Tools"
+                    };
+                    return map[key] ?? null;
+                }
+            }
+        }
+    };
+
+    // Setup fromUuidSync mock
+    globalThis.fromUuidSync = (uuid) => {
+        if (uuid === 'Compendium.dnd5e.equipment24.Item.phbtulJewelersTo') {
+            return { name: "Jeweler's Tools" };
+        }
+        return null;
+    };
+
+    const actor = {
+        system: {
+            skills: {},
+            tools: {
+                vehicle: { ability: 'int' },
+                jeweler: { ability: 'int' },
+                leatherworker: { ability: 'dex' },
+                'Compendium.dnd5e.equipment24.Item.phbtulJewelersTo': { ability: 'int' }
+            }
+        }
+    };
+
+    const checks = adapter.extractCheckActions(actor);
+    const tools = checks.filter(c => c.type === 'tool');
+    assert.equal(tools.length, 4);
+
+    const vehicleAction = tools.find(t => t.id === 'tool-vehicle');
+    assert.equal(vehicleAction.name, 'Vehicles');
+    assert.equal(vehicleAction.right[0].label, 'int');
+
+    const jewelerAction = tools.find(t => t.id === 'tool-jeweler');
+    assert.equal(jewelerAction.name, "Jeweler's Tools");
+    assert.equal(jewelerAction.right[0].label, 'int');
+
+    const leatherAction = tools.find(t => t.id === 'tool-leatherworker');
+    assert.equal(leatherAction.name, "Leatherworker's Tools");
+    assert.equal(leatherAction.right[0].label, 'dex');
+
+    const uuidAction = tools.find(t => t.id === 'tool-Compendium.dnd5e.equipment24.Item.phbtulJewelersTo');
+    assert.equal(uuidAction.name, "Jeweler's Tools");
+
+    // Clean up globals
+    delete globalThis.dnd5e;
+    delete globalThis.fromUuidSync;
+});
+
 test('Dnd5eSystemAdapter modifyContext triggers split layout exclusively on Page 2 for ability/skill checks', () => {
     const adapter = new Dnd5eSystemAdapter();
     const items = [
