@@ -217,8 +217,36 @@ Hooks.on('deleteItem', (item, options, userId) => {
 // Hook into Actor updates (spell slots, resources, hp, flags) on the active token's actor
 Hooks.on('updateActor', (actor, changes, options, userId) => {
     if (isMatchingActor(actor, null)) {
+        const currentApp = actionDisplay.activeApp ?? activeApp;
+        if (currentApp) {
+            adapter.system?.syncActorAutoBans?.(actor, currentApp.rightTabs);
+        }
         requestHUDRender();
     }
+});
+
+// Hook into ActiveEffect updates (status conditions gained/lost) on actors
+function handleActiveEffectChange(effect) {
+    const actor = (effect?.parent instanceof Actor) ? effect.parent : (effect?.target instanceof Actor) ? effect.target : null;
+    if (actor && isMatchingActor(actor, null)) {
+        const currentApp = actionDisplay.activeApp ?? activeApp;
+        if (currentApp) {
+            adapter.system?.syncActorAutoBans?.(actor, currentApp.rightTabs);
+        }
+        requestHUDRender();
+    }
+}
+
+Hooks.on('createActiveEffect', (effect, options, userId) => {
+    handleActiveEffectChange(effect);
+});
+
+Hooks.on('updateActiveEffect', (effect, changes, options, userId) => {
+    handleActiveEffectChange(effect);
+});
+
+Hooks.on('deleteActiveEffect', (effect, options, userId) => {
+    handleActiveEffectChange(effect);
 });
 
 /**

@@ -1,4 +1,5 @@
 import { log } from '../lib/logger.js';
+import { adapter } from '../adapters/index.js';
 
 /**
  * Encapsulates tab column state management and interaction rules for a single HUD column (left or right).
@@ -9,6 +10,7 @@ export class HUDTabColumn {
      * @param {Object} options
      * @param {'left'|'right'} options.side Left or right side column identifier
      * @param {Object} [options.cached] Persisted tab state from cache
+     * @param {string} [options.defaultParent='all'] Default parent tab ID
      * @param {Function} [options.getDefaultSubTypes] Function returning default active sub-types from system adapter
      */
     constructor({ side, cached, defaultParent = 'all', getDefaultSubTypes = () => [] } = {}) {
@@ -34,13 +36,37 @@ export class HUDTabColumn {
     }
 
     /**
-     * Reset parent tabs and sub-tabs on this column to default state ('all' and default sub-types).
+     * Reset parent tabs and sub-tabs on this column to default state ('all' and default sub-types),
+     * while preserving exclusion parent tabs (e.g. 'components') and their active sub-tabs (e.g. 'vocal', 'somatic').
+     * @param {Object} [groups] Tab groups dictionary
      */
-    resetToDefault() {
+    resetToDefault(groups = null) {
+        const exclusionParents = Array.from(this.activeParents).filter(p => adapter.isExclusionTab(p));
+        const exclusionSubIds = new Set();
+        if (groups) {
+            for (const p of exclusionParents) {
+                const g = groups[p];
+                if (g) {
+                    for (const sId of g.getAllSubTabIds?.() ?? []) {
+                        exclusionSubIds.add(sId);
+                    }
+                }
+            }
+        }
+
         this.focusedParent = this.defaultParent;
         this.activeParents.clear();
         this.activeParents.add(this.defaultParent);
-        this.activeSubTypes.clear();
+        for (const p of exclusionParents) {
+            this.activeParents.add(p);
+        }
+
+        // Clear active sub-tabs except those belonging to exclusion parents
+        for (const subId of this.activeSubTypes) {
+            if (!exclusionSubIds.has(subId)) {
+                this.activeSubTypes.delete(subId);
+            }
+        }
         const defaults = this.getDefaultSubTypes();
         for (const sub of defaults) {
             this.activeSubTypes.add(sub);
@@ -50,8 +76,8 @@ export class HUDTabColumn {
     /**
      * Handle left-click selection of a parent tab.
      * Rules:
-     * - Left-clicking 'all' resets column to default.
-     * - Left-clicking a tab deselects other parent tabs and clears their subtabs (exclusive selection).
+     * - Left-clicking 'all' resets column to default (preserving exclusion tabs).
+     * - Left-clicking a tab deselects other category parent tabs and clears their subtabs (exclusive selection).
      * - Left-clicking the sole active parent tab with NO active subtabs disables it and resets column to default.
      * - Left-clicking the sole active parent tab WITH active subtabs keeps it active and focuses it.
      * @param {string} parentId The parent tab ID
@@ -59,7 +85,7 @@ export class HUDTabColumn {
      */
     selectParent(parentId, groups) {
         if (parentId === 'all') {
-            this.resetToDefault();
+            this.resetToDefault(groups);
             return;
         }
 
@@ -68,14 +94,33 @@ export class HUDTabColumn {
         const hasActiveSubs = Array.from(this.activeSubTypes).some(id => validSubIds.has(id));
 
         const isSoleActive = this.activeParents.size === 1 && this.activeParents.has(parentId);
+        const isParentExclusion = adapter.isExclusionTab(parentId);
 
         if (!isSoleActive) {
-            // Deselect other parent tabs and clear their sub-tabs
+            // Deselect other category parent tabs and clear their sub-tabs,
+            // while preserving exclusion parent tabs (e.g. 'components') and their active sub-tabs
+            const exclusionParents = Array.from(this.activeParents).filter(p => adapter.isExclusionTab(p));
+            const exclusionSubIds = new Set();
+            for (const p of exclusionParents) {
+                const g = groups?.[p];
+                if (g) {
+                    for (const sId of g.getAllSubTabIds?.() ?? []) {
+                        exclusionSubIds.add(sId);
+                    }
+                }
+            }
+
             this.activeParents.clear();
             this.activeParents.add(parentId);
+            if (!isParentExclusion) {
+                for (const p of exclusionParents) {
+                    this.activeParents.add(p);
+                }
+            }
             this.focusedParent = parentId;
+
             for (const subId of this.activeSubTypes) {
-                if (!validSubIds.has(subId)) {
+                if (!validSubIds.has(subId) && !exclusionSubIds.has(subId)) {
                     this.activeSubTypes.delete(subId);
                 }
             }
@@ -84,7 +129,7 @@ export class HUDTabColumn {
             this.focusedParent = parentId;
         } else {
             // Already sole active parent with NO active subtabs: disable it and reset to default
-            this.resetToDefault();
+            this.resetToDefault(groups);
         }
     }
 
@@ -95,7 +140,7 @@ export class HUDTabColumn {
      */
     toggleParent(parentId, groups) {
         if (parentId === 'all') {
-            this.resetToDefault();
+            this.resetToDefault(groups);
             return;
         }
 
@@ -125,7 +170,7 @@ export class HUDTabColumn {
             }
         }
         if (this.activeParents.size === 0) {
-            this.resetToDefault();
+            this.resetToDefault(groups);
             return;
         }
     }
@@ -138,6 +183,10 @@ export class HUDTabColumn {
      * @param {boolean} [isExclusion=false] Whether this parent tab is an exclusion filter
      */
     selectSub(parentId, type, groups, isExclusion = false) {
+        if (isExclusion) {
+            this.toggleSub(parentId, type, groups, isExclusion);
+            return;
+        }
         if (parentId) {
             this.activeParents.add(parentId);
             if (!isExclusion) {
@@ -279,6 +328,14 @@ export class HUDTabColumn {
                         this.activeSubTypes.add(ancestorCategory.id);
                     }
                 }
+            }
+        }
+
+        if (isExclusion && group) {
+            const validSubIds = group.getAllSubTabIds?.() ?? new Set();
+            const hasRemainingSubs = Array.from(this.activeSubTypes).some(id => validSubIds.has(id));
+            if (!hasRemainingSubs) {
+                this.activeParents.delete(parentId);
             }
         }
     }

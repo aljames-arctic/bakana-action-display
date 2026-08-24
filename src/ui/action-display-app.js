@@ -438,6 +438,11 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
             }
         }
 
+        // Synchronize auto-banned components based on actor status conditions
+        if (this.actor) {
+            adapter.system?.syncActorAutoBans?.(this.actor, this.rightTabs);
+        }
+
         // 3. Build the right-side hierarchy dynamically using the adapter
         const parentGroups = {};
 

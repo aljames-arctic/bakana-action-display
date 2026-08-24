@@ -1,0 +1,89 @@
+<form class="bad-autoban-config-form" autocomplete="off">
+    <div class="bad-autoban-header">
+        <p class="notes">{{localize "BAD.dnd5eAutoBan.description"}}</p>
+    </div>
+
+    <!-- Master Toggle -->
+    <div class="bad-autoban-group bad-autoban-master">
+        <label class="bad-autoban-checkbox-label">
+            <input type="checkbox" name="enabled" {{#if config.enabled}}checked{{/if}} data-action="toggleEnabled">
+            <span>{{localize "BAD.dnd5eAutoBan.enableAutoBan"}}</span>
+        </label>
+    </div>
+
+    <!-- Verbal Component Auto-Ban Section -->
+    <div class="bad-autoban-section">
+        <h3 class="bad-autoban-section-title">
+            <i class="fas fa-comment"></i> {{localize "BAD.dnd5eAutoBan.verbalTitle"}}
+        </h3>
+        <p class="bad-autoban-section-hint">{{localize "BAD.dnd5eAutoBan.verbalHint"}}</p>
+
+        <div class="bad-autoban-add-row">
+            <select class="bad-status-select" id="bad-vocal-select">
+                {{#each availableStatuses}}
+                <option value="{{this.id}}">{{this.name}}</option>
+                {{/each}}
+            </select>
+            <button type="button" class="bad-btn bad-btn-add" data-action="addCondition" data-type="vocal">
+                <i class="fas fa-plus"></i> {{localize "BAD.common.add"}}
+            </button>
+        </div>
+
+        <div class="bad-condition-tags-container">
+            {{#each vocalConditions}}
+            <div class="bad-condition-tag">
+                {{#if this.img}}<img src="{{this.img}}" class="bad-condition-icon" alt="{{this.name}}"/>{{/if}}
+                <span class="bad-condition-label">{{this.name}}</span>
+                <button type="button" class="bad-condition-delete" data-action="removeCondition" data-type="vocal" data-id="{{this.id}}">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            {{else}}
+            <span class="bad-no-conditions">{{localize "BAD.dnd5eAutoBan.noConditions"}}</span>
+            {{/each}}
+        </div>
+    </div>
+
+    <!-- Somatic Component Auto-Ban Section -->
+    <div class="bad-autoban-section">
+        <h3 class="bad-autoban-section-title">
+            <i class="fas fa-hand-sparkles"></i> {{localize "BAD.dnd5eAutoBan.somaticTitle"}}
+        </h3>
+        <p class="bad-autoban-section-hint">{{localize "BAD.dnd5eAutoBan.somaticHint"}}</p>
+
+        <div class="bad-autoban-add-row">
+            <select class="bad-status-select" id="bad-somatic-select">
+                {{#each availableStatuses}}
+                <option value="{{this.id}}">{{this.name}}</option>
+                {{/each}}
+            </select>
+            <button type="button" class="bad-btn bad-btn-add" data-action="addCondition" data-type="somatic">
+                <i class="fas fa-plus"></i> {{localize "BAD.common.add"}}
+            </button>
+        </div>
+
+        <div class="bad-condition-tags-container">
+            {{#each somaticConditions}}
+            <div class="bad-condition-tag">
+                {{#if this.img}}<img src="{{this.img}}" class="bad-condition-icon" alt="{{this.name}}"/>{{/if}}
+                <span class="bad-condition-label">{{this.name}}</span>
+                <button type="button" class="bad-condition-delete" data-action="removeCondition" data-type="somatic" data-id="{{this.id}}">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            {{else}}
+            <span class="bad-no-conditions">{{localize "BAD.dnd5eAutoBan.noConditions"}}</span>
+            {{/each}}
+        </div>
+    </div>
+
+    <!-- Footer Actions -->
+    <footer class="bad-autoban-footer">
+        <button type="button" class="bad-btn bad-btn-secondary" data-action="resetDefaults">
+            <i class="fas fa-undo"></i> {{localize "BAD.common.resetDefaults"}}
+        </button>
+        <button type="button" class="bad-btn bad-btn-primary" data-action="saveConfig">
+            <i class="fas fa-save"></i> {{localize "BAD.common.save"}}
+        </button>
+    </footer>
+</form>

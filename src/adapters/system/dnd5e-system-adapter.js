@@ -1370,4 +1370,90 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
     }
 
     // #endregion
+
+    // #region Auto-Banning by Status Conditions
+
+    /**
+     * Extract active status condition IDs from an actor.
+     * Inspects actor.statuses and active, non-disabled ActiveEffects.
+     * @param {Actor} actor
+     * @returns {Set<string>}
+     */
+    getActorStatuses(actor) {
+        if (!actor) return new Set();
+        const statuses = new Set();
+
+        if (actor.statuses instanceof Set) {
+            for (const s of actor.statuses) statuses.add(s);
+        } else if (Array.isArray(actor.statuses)) {
+            for (const s of actor.statuses) statuses.add(s);
+        }
+
+        if (actor.effects) {
+            for (const effect of actor.effects) {
+                if (effect.disabled || effect.isSuppressed) continue;
+                if (effect.statuses instanceof Set) {
+                    for (const s of effect.statuses) statuses.add(s);
+                } else if (Array.isArray(effect.statuses)) {
+                    for (const s of effect.statuses) statuses.add(s);
+                }
+                const statusId = effect.getFlag?.('core', 'statusId') ?? effect.flags?.core?.statusId;
+                if (statusId) statuses.add(statusId);
+            }
+        }
+        return statuses;
+    }
+
+    /**
+     * Synchronize auto-banned spell components (vocal / somatic) on an actor based on active status conditions.
+     * @param {Actor} actor The actor to evaluate
+     * @param {HUDTabColumn} [tabColumn] Right-side tab column if HUD is active
+     */
+    syncActorAutoBans(actor, tabColumn = null) {
+        if (!actor || game.system?.id !== 'dnd5e') return;
+
+        const config = game.settings.get(MODULE_ID, 'dnd5eAutoBanConditions');
+        if (!config?.enabled) return;
+
+        const activeStatuses = this.getActorStatuses(actor);
+        const autoBannedFlags = actor.getFlag?.(MODULE_ID, 'autoBannedComponents') ?? {};
+        const updatedFlags = { ...autoBannedFlags };
+
+        let changed = false;
+
+        for (const comp of ['vocal', 'somatic']) {
+            const conditionList = Array.isArray(config[comp]) ? config[comp] : [];
+            const hasCondition = conditionList.some(condId => activeStatuses.has(condId));
+            const wasAutoBanned = Boolean(autoBannedFlags[comp]);
+
+            if (hasCondition && !wasAutoBanned) {
+                // Condition gained -> automatically apply ban
+                updatedFlags[comp] = true;
+                changed = true;
+                if (tabColumn) {
+                    tabColumn.activeParents.add('components');
+                    tabColumn.activeSubTypes.add(comp);
+                }
+            } else if (!hasCondition && wasAutoBanned) {
+                // All conditions lost -> automatically remove ban
+                updatedFlags[comp] = false;
+                changed = true;
+                if (tabColumn) {
+                    tabColumn.activeSubTypes.delete(comp);
+                    const remainingComp = ['vocal', 'somatic', 'material'].some(c => c !== comp && tabColumn.activeSubTypes.has(c));
+                    if (!remainingComp) {
+                        tabColumn.activeParents.delete('components');
+                    }
+                }
+            }
+        }
+
+        if (changed && actor.isOwner && typeof actor.setFlag === 'function') {
+            actor.setFlag(MODULE_ID, 'autoBannedComponents', updatedFlags).catch(err => {
+                log.debug('Error setting autoBannedComponents flag:', err);
+            });
+        }
+    }
+
+    // #endregion
 }

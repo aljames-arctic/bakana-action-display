@@ -4,6 +4,7 @@ import { actionDisplay } from "./action-display.js";
 import { CategorizationConfigApp } from "./categorization/categorization-config-app.js";
 import { EconomyColorsConfigApp } from "./ui/economy-colors-config-app.js";
 import { ModuleIntegrationsConfigApp } from "./ui/module-integrations-config-app.js";
+import { Dnd5eAutoBanConfigApp, DEFAULT_DND5E_AUTOBAN_CONFIG } from "./ui/dnd5e-autoban-config-app.js";
 import { hasActiveModuleAdapters } from "./adapters/module/index.js";
 
 Hooks.once('init', () => {
@@ -49,6 +50,30 @@ Hooks.once('init', () => {
             }
         }
     });
+
+    // Register D&D 5e Auto-Ban Spell Components Configuration Menu (D&D 5e system only)
+    if (game.system?.id === 'dnd5e') {
+        game.settings.registerMenu(MODULE_ID, 'dnd5eAutoBanMenu', {
+            name: game.i18n.localize('BAD.dnd5eAutoBan.menuName'),
+            label: game.i18n.localize('BAD.dnd5eAutoBan.menuLabel'),
+            hint: game.i18n.localize('BAD.dnd5eAutoBan.menuHint'),
+            icon: 'fas fa-magic',
+            type: Dnd5eAutoBanConfigApp,
+            restricted: true
+        });
+
+        game.settings.register(MODULE_ID, 'dnd5eAutoBanConditions', {
+            scope: 'world',
+            config: false,
+            type: Object,
+            default: DEFAULT_DND5E_AUTOBAN_CONFIG,
+            onChange: () => {
+                if (actionDisplay.activeApp?.rendered && actionDisplay.activeApp.actor) {
+                    actionDisplay.activeApp.render();
+                }
+            }
+        });
+    }
 
     // Register Module Integration Configuration Menu Button (only visible if at least one adapter module is loaded)
     if (hasActiveModuleAdapters()) {
@@ -456,7 +481,7 @@ export function injectSettingsHeaders(html, app) {
     // 2. Insert section headers before the respective first setting in each scope
     const sections = [
         {
-            keys: ['categorizationMenu', 'moduleIntegrationsMenu', 'enableCenterOnToken', 'enableItemSummaryButton', 'enableToggleHotkey', 'enableCombatButtons', 'enableCombatAutoTrackButton'],
+            keys: ['categorizationMenu', 'dnd5eAutoBanMenu', 'moduleIntegrationsMenu', 'enableCenterOnToken', 'enableItemSummaryButton', 'enableToggleHotkey', 'enableCombatButtons', 'enableCombatAutoTrackButton'],
             scope: 'world',
             title: game.i18n.localize('BAD.settingsSections.world') ?? 'World Settings',
             icon: 'fas fa-globe'

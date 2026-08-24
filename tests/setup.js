@@ -37,6 +37,19 @@ globalThis.CONFIG.DND5E = globalThis.CONFIG.DND5E ?? {
     }
 };
 
+globalThis.CONFIG.statusEffects = [
+    { id: 'silence', name: 'DND5E.ConSilence', img: 'icons/magic/symbols/silence.svg' },
+    { id: 'restrained', name: 'DND5E.ConRestrained', img: 'icons/svg/net.svg' },
+    { id: 'incapacitated', name: 'DND5E.ConIncapacitated', img: 'icons/svg/daze.svg' },
+    { id: 'paralyzed', name: 'DND5E.ConParalyzed', img: 'icons/svg/paralysis.svg' },
+    { id: 'petrified', name: 'DND5E.ConPetrified', img: 'icons/svg/statue.svg' },
+    { id: 'stunned', name: 'DND5E.ConStunned', img: 'icons/svg/daze.svg' },
+    { id: 'unconscious', name: 'DND5E.ConUnconscious', img: 'icons/svg/unconscious.svg' },
+    { id: 'grappled', name: 'DND5E.ConGrappled', img: 'icons/svg/grab.svg' },
+    { id: 'blinded', name: 'DND5E.ConBlinded', img: 'icons/svg/blind.svg' },
+    { id: 'deafened', name: 'DND5E.ConDeafened', img: 'icons/svg/deaf.svg' }
+];
+
 function getProperty(obj, path) {
     if (!obj || !path) return undefined;
     const parts = String(path).split('.');
@@ -273,7 +286,12 @@ const settingsStore = new Map([
     ['bakana-action-display.isAttached', true],
     ['bakana-action-display.persistDetached', true],
     ['bakana-action-display.autoTrackCombat', false],
-    ['bakana-action-display.autoToggleCombat', false]
+    ['bakana-action-display.autoToggleCombat', false],
+    ['bakana-action-display.dnd5eAutoBanConditions', {
+        enabled: true,
+        vocal: ['silence', 'incapacitated', 'paralyzed', 'petrified', 'stunned', 'unconscious'],
+        somatic: ['restrained', 'incapacitated', 'paralyzed', 'petrified', 'stunned', 'unconscious', 'grappled']
+    }]
 ]);
 
 globalThis.CONST = globalThis.CONST ?? {};
