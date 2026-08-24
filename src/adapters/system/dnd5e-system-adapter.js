@@ -236,7 +236,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                     available: !(isSpellUnprepared || isUnequipped),
                     right: [TabRef.from('economy', 'none')],
                     left: subType ? [type, subType] : [type],
-                    uses: { available: null, max: null },
+                    uses: this.#calculateUses(item),
                     roll: async (event) => {
                         if (activities[0]?.use) {
                             const proxiedEvent = this._createRollEvent(event);
@@ -791,43 +791,46 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
      * @returns {{available: number|null, max: number|null}}
      */
     #calculateUses(item) {
+        const system = item?.system;
+        if (!system) return { available: null, max: null };
+
+        // 1. Limited Uses (standard item charges/uses, innate/monster spells, magic items, features)
+        const limitedUses = this.#calculateLimitedUses(system.uses);
+        if (limitedUses) {
+            // Scale by quantity for consumables
+            const quantity = system.quantity ?? 1;
+            if (quantity > 1 && item.type === 'consumable') {
+                limitedUses.available = limitedUses.available + (quantity - 1) * limitedUses.max;
+                limitedUses.max = limitedUses.max * quantity;
+            }
+            return limitedUses;
+        }
+
+        // 2. Recharge feature/spell/monster power
+        if (system.recharge?.value) {
+            return {
+                available: system.recharge.charged ? 1 : 0,
+                max: 1
+            };
+        }
+
+        // 3. Spells (without item-level limited uses -> spell slots)
         if (item.type === 'spell') {
             return this.#calculateSpellSlots(item);
         }
 
-        const system = item.system;
-
-        // 1. Limited Uses (standard item charges/uses)
-        if (system.uses?.max && system.uses.max !== "0") {
-            let max = parseInt(system.uses.max, 10) || 0;
-
-            if (max > 0) {
-                const spent = system.uses.spent;
-                let available = (spent !== undefined && spent !== null)
-                    ? Math.max(0, max - spent)
-                    : (system.uses.value ?? 0);
-                // Scale by quantity for consumables
-                const quantity = system.quantity ?? 1;
-                if (quantity > 1 && item.type === 'consumable') {
-                    available = available + (quantity - 1) * max;
-                    max = max * quantity;
-                }
-                return { available, max };
-            }
-        }
-
-        // 2. Consumable Quantity (if no explicit charges, quantity is the uses)
+        // 4. Consumable Quantity (if no explicit charges, quantity is the uses)
         if (item.type === 'consumable') {
             return {
-                available: system.quantity ?? 0,
+                available: system.quantity ?? 1,
                 max: null
             };
         }
 
-        // 3. Thrown Weapons (quantity is the uses)
+        // 5. Thrown Weapons (quantity is the uses)
         if (item.type === 'weapon' && this.getProperty(system.properties, 'thr') && !this.getProperty(system.properties, 'ret')) {
             return {
-                available: system.quantity ?? 0,
+                available: system.quantity ?? 1,
                 max: null
             };
         }
@@ -841,9 +844,10 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
      * @returns {boolean} True if the item has limited uses
      */
     #hasLimitedUses(item) {
-        if (this.#calculateLimitedUses(item.system?.uses)) return true;
+        if (this.#calculateLimitedUses(item?.system?.uses)) return true;
+        if (item?.system?.recharge?.value) return true;
         return this.getItemActivities(item)
-            .some(activity => this.#calculateLimitedUses(activity.uses));
+            .some(activity => this.#calculateLimitedUses(activity?.uses));
     }
 
     /**
@@ -852,8 +856,10 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
      * @returns {{available: number|null, max: number|null}|null}
      */
     #calculateLimitedUses(uses) {
-        if (uses?.max && uses.max !== "0") {
-            const max = parseInt(uses.max, 10) || 0;
+        if (!uses) return null;
+
+        if (uses.max !== undefined && uses.max !== null && uses.max !== "0" && uses.max !== 0 && uses.max !== "") {
+            const max = typeof uses.max === 'number' ? uses.max : (parseInt(uses.max, 10) || 0);
             if (max > 0) {
                 const spent = uses.spent;
                 const available = (spent !== undefined && spent !== null)
@@ -862,6 +868,11 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                 return { available, max };
             }
         }
+
+        if (typeof uses.value === 'number' && uses.value > 0 && (uses.max === null || uses.max === undefined || uses.max === "" || uses.max === 0 || uses.max === "0")) {
+            return { available: uses.value, max: null };
+        }
+
         return null;
     }
 
@@ -902,7 +913,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         for (const target of targets) {
             if (target.type === 'activityUses') {
                 // Consumes another activity's uses (or self if target is empty)
-                const targetActivity = target.target ? item.system.activities.get(target.target) : activity;
+                const targetActivity = target.target ? item.system?.activities?.get?.(target.target) : activity;
                 if (targetActivity) {
                     const actUses = this.#calculateLimitedUses(targetActivity.uses);
                     if (actUses) return actUses;
@@ -911,8 +922,19 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                 // Consumes the parent item's uses
                 return this.#calculateUses(item);
             } else if (target.type === 'spellSlots') {
-                // Consumes actor spell slots
-                const level = target.target ?? item.system.level; // Fallback to spell's base level if target is empty (dynamic slots)
+                // If the item itself has limited uses (innate spell, charges, monster 3/day), prioritize item uses over spell slots
+                const itemUses = this.#calculateUses(item);
+                if (itemUses.available !== null) {
+                    return itemUses;
+                }
+
+                // If the spell is innate or at-will without limited uses, it is unlimited / at will
+                if (['innate', 'atwill'].includes(item.system?.method)) {
+                    return { available: null, max: null };
+                }
+
+                // Otherwise, consumes actor spell slots
+                const level = target.target ?? item.system?.level; // Fallback to spell's base level if target is empty (dynamic slots)
                 return this.#getSpellSlotUses(actor, level, highestAvailableSlot);
             } else if (target.type === 'item') {
                 // Consumes quantity of another item (e.g. ammunition) or charges of another item
@@ -929,7 +951,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                         };
                     }
                     // Otherwise, use its quantity (standard ammo/consumable)
-                    const qty = targetItem.system.quantity ?? 0;
+                    const qty = targetItem.system?.quantity ?? 0;
                     return {
                         available: Math.floor(qty / consumed),
                         max: null
@@ -940,7 +962,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                 const targetItem = this.#resolveTargetItem(target.target, item, actor);
 
                 if (targetItem) {
-                    const qty = targetItem.system.quantity ?? 0;
+                    const qty = targetItem.system?.quantity ?? 0;
                     const consumed = target.value ?? 1;
                     return {
                         available: Math.floor(qty / consumed),
@@ -950,13 +972,14 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
             }
         }
         
-        // Fallback for standard spells if no explicit spellSlots consumption target was resolved
-        if (item.type === 'spell') {
-            return this.#calculateUses(item);
+        // 3. Fallback: Check parent item's uses (e.g. innate spell or magic item without explicit consumption targets)
+        const parentItemUses = this.#calculateUses(item);
+        if (parentItemUses.available !== null) {
+            return parentItemUses;
         }
 
         // Fallback for weapons requiring ammunition if no explicit consumption target was resolved
-        if (item.type === 'weapon' && item.system.ammunition?.type) {
+        if (item.type === 'weapon' && item.system?.ammunition?.type) {
             return this.#calculateWeaponAmmunition(item, ammoQuantities);
         }
 

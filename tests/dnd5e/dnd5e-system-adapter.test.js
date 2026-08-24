@@ -951,5 +951,127 @@ test('Dnd5eSystemAdapter modifyActions handles consumable items with quantity > 
     assert.deepEqual(potionAction.uses, { available: 3, max: 3 }, 'Uses should be scaled by quantity');
 });
 
+test('Dnd5eSystemAdapter calculates limited uses correctly for monster/innate spells and recharge abilities', async () => {
+    const adapter = new Dnd5eSystemAdapter();
+
+    // 1. Yeenoghu's Invisibility: 3/day (innate, 1 use spent)
+    const invisibility = {
+        id: 'spell-invis',
+        name: 'Invisibility',
+        type: 'spell',
+        system: {
+            method: 'innate',
+            level: 2,
+            uses: { max: '3', spent: 1 },
+            activities: [
+                {
+                    id: 'act-invis-cast',
+                    name: 'Cast Invisibility',
+                    type: 'utility',
+                    activation: { type: 'action' },
+                    consumption: { targets: [{ type: 'spellSlots', target: '', value: 1 }] }
+                }
+            ]
+        }
+    };
+
+    // 2. Yeenoghu's Detect Magic: At will (innate, no limited uses)
+    const detectMagic = {
+        id: 'spell-detect',
+        name: 'Detect Magic',
+        type: 'spell',
+        system: {
+            method: 'atwill',
+            level: 1,
+            uses: {},
+            activities: [
+                {
+                    id: 'act-detect-cast',
+                    name: 'Cast Detect Magic',
+                    type: 'utility',
+                    activation: { type: 'action' },
+                    consumption: { targets: [{ type: 'spellSlots', target: '', value: 1 }] }
+                }
+            ]
+        }
+    };
+
+    // 3. Monster Breath Weapon: Recharge 5-6 (charged)
+    const breathWeapon = {
+        id: 'feat-breath',
+        name: 'Breath Weapon',
+        type: 'feat',
+        system: {
+            recharge: { value: 5, charged: true },
+            activities: [
+                {
+                    id: 'act-breath',
+                    name: 'Exhale Fire',
+                    type: 'save',
+                    activation: { type: 'action' },
+                    consumption: { targets: [] }
+                }
+            ]
+        }
+    };
+
+    // 4. Monster Breath Weapon: Recharge 5-6 (uncharged/depleted)
+    const breathWeaponUncharged = {
+        id: 'feat-breath-spent',
+        name: 'Breath Weapon (Spent)',
+        type: 'feat',
+        system: {
+            recharge: { value: 5, charged: false },
+            activities: [
+                {
+                    id: 'act-breath-spent',
+                    name: 'Exhale Fire',
+                    type: 'save',
+                    activation: { type: 'action' },
+                    consumption: { targets: [] }
+                }
+            ]
+        }
+    };
+
+    const monsterActor = {
+        items: new foundry.utils.Collection([invisibility, detectMagic, breathWeapon, breathWeaponUncharged]),
+        system: { spells: {} }, // Monsters have no standard spell slots
+        getFlag: () => false
+    };
+
+    adapter.init(monsterActor);
+    const rawActions = [
+        { id: 'spell-invis', originalItem: invisibility },
+        { id: 'spell-detect', originalItem: detectMagic },
+        { id: 'feat-breath', originalItem: breathWeapon }
+    ];
+    const modified = await adapter.modifyActions(rawActions, monsterActor);
+
+    // Verify Invisibility uses
+    const invisAction = modified.find(a => a.id === 'spell-invis');
+    assert.ok(invisAction);
+    assert.deepEqual(invisAction.uses, { available: 2, max: 3 }, 'Invisibility should show 2 / 3 available uses');
+    assert.deepEqual(invisAction.subactions[0].uses, { available: 2, max: 3 });
+
+    // Verify Detect Magic uses (at will -> null)
+    const detectAction = modified.find(a => a.id === 'spell-detect');
+    assert.ok(detectAction);
+    assert.deepEqual(detectAction.uses, { available: null, max: null }, 'At-will spell should have unlimited/null uses');
+
+    // Verify Breath Weapon uses (charged -> 1 / 1)
+    const breathAction = modified.find(a => a.id === 'feat-breath');
+    assert.ok(breathAction);
+    assert.deepEqual(breathAction.uses, { available: 1, max: 1 }, 'Recharged ability should have 1 / 1 uses');
+
+    // Verify Uncharged Breath Weapon
+    assert.deepEqual(adapter.calculateUses(breathWeaponUncharged), { available: 0, max: 1 });
+
+    // Verify Item Summary Tooltip tags
+    const invisSummary = await adapter.getItemSummary(invisAction, invisibility, monsterActor);
+    assert.ok(invisSummary.properties.some(p => p.label === 'Uses' && p.value === '2 / 3'));
+});
+
+
 
 
