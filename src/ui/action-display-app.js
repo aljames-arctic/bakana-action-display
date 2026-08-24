@@ -1120,7 +1120,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
     /**
      * Right-click handler on the Combat Auto-Track (sword) button.
      * Toggles the "Auto-Toggle Combat Turn Visibility" setting.
-     * When toggled on, immediately follows the in-charge combatant if it is the user's turn, or closes if not.
+     * Enabling or disabling the feature does not close the HUD; transitions occur on combat turn changes.
      * @param {Event} [event] Triggering event
      * @param {HTMLElement} [target] Triggering element
      */
@@ -1129,46 +1129,6 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         const current = Boolean(game.settings.get(MODULE_ID, 'autoToggleCombat'));
         const next = !current;
         await game.settings.set(MODULE_ID, 'autoToggleCombat', next);
-
-        if (next) {
-            const combat = game.combat;
-            if (combat?.started && combat.combatant) {
-                const currentCombatant = combat.combatant;
-                const token = currentCombatant.token?.object
-                    ?? canvas?.tokens?.get?.(currentCombatant.tokenId)
-                    ?? (currentCombatant.token && canvas?.tokens?.placeables?.includes(currentCombatant.token) ? currentCombatant.token : null)
-                    ?? currentCombatant.actor?.getActiveTokens?.()?.[0]
-                    ?? null;
-
-                const isMyTurn = Boolean(token && adapter.foundry.isUserInCharge(token));
-                if (isMyTurn) {
-                    if (this.token !== token && this.token?.id !== token.id) {
-                        if (this.element) {
-                            this.element.style.display = 'none';
-                        }
-                        this.close();
-                        actionDisplay.activeApp = null;
-
-                        if (token.actor) {
-                            syncActorFavorites(token.actor);
-                        }
-                        const newApp = new ActionDisplayApp(token);
-                        actionDisplay.activeApp = newApp;
-                        newApp.render(true);
-                        return;
-                    }
-                } else {
-                    // Not user's turn -> close HUD immediately
-                    if (this.element) {
-                        this.element.style.display = 'none';
-                    }
-                    this.close();
-                    actionDisplay.activeApp = null;
-                    return;
-                }
-            }
-        }
-
         this.render();
     }
 

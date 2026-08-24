@@ -353,7 +353,7 @@ test('ActionDisplayApp _onRightClickCombatAutoTrack toggles autoToggleCombat and
         }
     };
 
-    // 1. GM client right-clicks sword button during Hero turn (not GM turn) -> HUD should close
+    // 1. GM client right-clicks sword button during Hero turn -> HUD remains open (enabling feature does not close HUD)
     globalThis.game.user = userGM;
     const mockCombatHeroTurn = {
         started: true,
@@ -367,20 +367,16 @@ test('ActionDisplayApp _onRightClickCombatAutoTrack toggles autoToggleCombat and
 
     await initialAppGM._onRightClickCombatAutoTrack();
     assert.equal(game.settings.get(MODULE_ID, 'autoToggleCombat'), true);
-    assert.equal(actionDisplay.activeApp, null, 'HUD closed when auto-toggle enabled on not-my-turn');
+    assert.equal(actionDisplay.activeApp, initialAppGM, 'HUD remains open when feature is enabled');
 
     // 2. GM client right-clicks sword button again -> toggles off
-    const app2 = new ActionDisplayApp(tokenGoblin);
-    actionDisplay.activeApp = app2;
-    app2.rendered = true;
-
-    await app2._onRightClickCombatAutoTrack();
+    await initialAppGM._onRightClickCombatAutoTrack();
     assert.equal(game.settings.get(MODULE_ID, 'autoToggleCombat'), false);
-    assert.equal(actionDisplay.activeApp, app2, 'HUD remains open when toggled off');
+    assert.equal(actionDisplay.activeApp, initialAppGM, 'HUD remains open when toggled off');
 
     // 3. Test _onContextMenuCapture intercepts right-click on .bad-combat-track-btn
     let rightClickTriggered = false;
-    app2._onRightClickCombatAutoTrack = async () => { rightClickTriggered = true; };
+    initialAppGM._onRightClickCombatAutoTrack = async () => { rightClickTriggered = true; };
     const mockBtn = document.createElement('button');
     mockBtn.className = 'bad-control-btn bad-combat-track-btn';
     mockBtn.closest = (sel) => sel.includes('bad-combat-track-btn') ? mockBtn : null;
@@ -390,7 +386,7 @@ test('ActionDisplayApp _onRightClickCombatAutoTrack toggles autoToggleCombat and
         stopPropagation: () => {},
         stopImmediatePropagation: () => {}
     };
-    app2._onContextMenuCapture(mockEvent);
+    initialAppGM._onContextMenuCapture(mockEvent);
     assert.equal(rightClickTriggered, true, '_onContextMenuCapture intercepted right click on sword button');
 
     // Cleanup
