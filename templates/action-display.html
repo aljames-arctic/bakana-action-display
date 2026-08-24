@@ -339,6 +339,13 @@
             </button>
             {{/if}}
         </div>
+        {{#if isCurrentCombatant}}
+        <!-- End Turn Button (Displayed during active combat turn) -->
+        <button class="bad-end-turn-btn" data-action="endCombatTurn" title="{{localize 'BAD.core.endTurn'}}">
+            <i class="fas fa-hourglass-end"></i>
+            <span>{{localize 'BAD.core.endTurn'}}</span>
+        </button>
+        {{/if}}
         {{#if hasMultiplePages}}
         <!-- Page Controls (Bubbles indicator + left/right buttons) -->
         <div class="bad-page-controls">

@@ -221,6 +221,23 @@ Hooks.on('updateActor', (actor, changes, options, userId) => {
     }
 });
 
+// Hook into Combat updates and turn advancements to update End Turn button visibility
+Hooks.on('updateCombat', (combat, changes, options, userId) => {
+    requestHUDRender();
+});
+
+Hooks.on('deleteCombat', (combat, options, userId) => {
+    requestHUDRender();
+});
+
+Hooks.on('combatTurn', (combat, updateData, updateOptions) => {
+    requestHUDRender();
+});
+
+Hooks.on('combatRound', (combat, updateData, updateOptions) => {
+    requestHUDRender();
+});
+
 // Hook into synthetic Token document updates (actor delta mutations)
 Hooks.on('updateToken', (tokenDoc, changes, options, userId) => {
     const currentApp = actionDisplay.activeApp ?? activeApp;

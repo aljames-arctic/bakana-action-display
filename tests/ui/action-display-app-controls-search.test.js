@@ -227,3 +227,68 @@ test('ActionDisplayApp _onToggleAnchor toggles between attached and detached mod
     assert.equal(game.settings.get(MODULE_ID, 'isAttached'), true);
     assert.equal(renderCalled, true);
 });
+
+test('ActionDisplayApp _prepareContext computes isCurrentCombatant when enableEndTurnButton is enabled and combat turn matches', async () => {
+    actionDisplay.getActions = async () => [];
+
+    const mockToken = { id: 'combatToken1' };
+    const mockActor = { id: 'combatActor1' };
+    const app = new ActionDisplayApp({ token: mockToken, actor: mockActor, id: 'combatToken1' });
+    app.activePage = 1;
+    app._saveTabState = () => {};
+
+    // 1. Setting disabled -> isCurrentCombatant is false even if it is actor's turn
+    await game.settings.set(MODULE_ID, 'enableEndTurnButton', false);
+    globalThis.game.combat = {
+        started: true,
+        combatant: { token: mockToken, actor: mockActor }
+    };
+    let context = await app._prepareContext({});
+    assert.equal(context.isCurrentCombatant, false);
+
+    // 2. Setting enabled, but combat is not started -> isCurrentCombatant is false
+    await game.settings.set(MODULE_ID, 'enableEndTurnButton', true);
+    globalThis.game.combat = {
+        started: false,
+        combatant: { token: mockToken, actor: mockActor }
+    };
+    context = await app._prepareContext({});
+    assert.equal(context.isCurrentCombatant, false);
+
+    // 3. Setting enabled, combat started, but different combatant's turn -> isCurrentCombatant is false
+    globalThis.game.combat = {
+        started: true,
+        combatant: { token: { id: 'otherToken' }, actor: { id: 'otherActor' } }
+    };
+    context = await app._prepareContext({});
+    assert.equal(context.isCurrentCombatant, false);
+
+    // 4. Setting enabled, combat started, matching token/actor turn -> isCurrentCombatant is true
+    globalThis.game.combat = {
+        started: true,
+        combatant: { token: mockToken, actor: mockActor }
+    };
+    context = await app._prepareContext({});
+    assert.equal(context.isCurrentCombatant, true);
+
+    // Clean up
+    await game.settings.set(MODULE_ID, 'enableEndTurnButton', false);
+    globalThis.game.combat = null;
+});
+
+test('ActionDisplayApp _onEndCombatTurn calls combat.nextTurn() during active combat turn', async () => {
+    let nextTurnCalled = false;
+    globalThis.game.combat = {
+        started: true,
+        nextTurn: async () => {
+            nextTurnCalled = true;
+        }
+    };
+
+    const app = new ActionDisplayApp({ token: { id: 'combatToken1' }, actor: { id: 'combatActor1' } });
+    await app._onEndCombatTurn({ preventDefault: () => {}, stopPropagation: () => {} }, {});
+    assert.equal(nextTurnCalled, true, 'combat.nextTurn should be called');
+
+    // Clean up
+    globalThis.game.combat = null;
+});

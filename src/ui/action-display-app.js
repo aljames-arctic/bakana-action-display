@@ -296,6 +296,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
             toggleItemSummaries: ActionDisplayApp.prototype._onToggleItemSummaries,
             recenterToken: ActionDisplayApp.prototype._onRecenterToken,
             clearSearch: ActionDisplayApp.prototype._onClearSearch,
+            endCombatTurn: ActionDisplayApp.prototype._onEndCombatTurn,
             previousPage: ActionDisplayApp.prototype._onPreviousPage,
             nextPage: ActionDisplayApp.prototype._onNextPage,
             changePage: ActionDisplayApp.prototype._onChangePage
@@ -639,6 +640,22 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         context.activePage = currentActivePage;
         context.totalPages = this.totalPages;
         context.hasMultiplePages = this.totalPages > 1;
+
+        // Check if the current actor / token is in combat and it is their turn
+        const enableEndTurn = Boolean(game.settings.get(MODULE_ID, 'enableEndTurnButton'));
+        let isCurrentCombatant = false;
+        if (enableEndTurn) {
+            const combat = game.combat;
+            if (combat && combat.started) {
+                const currentCombatant = combat.combatant;
+                if (currentCombatant) {
+                    const isTokenMatch = Boolean(this.token && (currentCombatant.token === this.token || currentCombatant.token?.id === this.token.id || currentCombatant.tokenId === this.token.id));
+                    const isActorMatch = Boolean(this.actor && (currentCombatant.actor === this.actor || currentCombatant.actor?.id === this.actor.id || currentCombatant.actorId === this.actor.id));
+                    isCurrentCombatant = isTokenMatch || isActorMatch;
+                }
+            }
+        }
+        context.isCurrentCombatant = isCurrentCombatant;
 
         // Delegate to system adapter to allow system-specific context modifications and layout selection
         adapter?.modifyContext?.(context, this);
@@ -1068,6 +1085,25 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         this.searchQuery = '';
         this._isSearching = false;
         this.render();
+    }
+
+    /**
+     * Advance the combat tracker to the next turn when the End Turn button is clicked.
+     * @param {PointerEvent} event Triggering click event
+     * @param {HTMLElement} target Target button element
+     * @protected
+     */
+    async _onEndCombatTurn(event, target) {
+        event?.preventDefault?.();
+        event?.stopPropagation?.();
+        const combat = game.combat;
+        if (!combat || !combat.started) return;
+        log.info(`Ending combat turn for "${this.actor?.name ?? 'Token'}" (Token ID: ${this.token?.id})`);
+        try {
+            await combat.nextTurn();
+        } catch (err) {
+            log.error("Failed to advance combat turn:", err);
+        }
     }
 
     /**

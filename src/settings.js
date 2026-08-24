@@ -102,6 +102,21 @@ Hooks.once('init', () => {
         default: false
     });
 
+    // Register Enable End Turn Button Setting (World Scope, default disabled)
+    game.settings.register(MODULE_ID, 'enableEndTurnButton', {
+        name: game.i18n.localize('BAD.settings.enableEndTurnButton.name'),
+        hint: game.i18n.localize('BAD.settings.enableEndTurnButton.hint'),
+        scope: 'world',
+        config: true,
+        type: Boolean,
+        default: false,
+        onChange: () => {
+            if (actionDisplay.activeApp?.rendered) {
+                actionDisplay.activeApp.render();
+            }
+        }
+    });
+
     // ==========================================
     // User Scope Settings & Menus
     // ==========================================

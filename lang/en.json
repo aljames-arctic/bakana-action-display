@@ -27,6 +27,10 @@
                 "name": "Enable HUD Toggle Hotkey",
                 "hint": "Allow players to toggle open or close the Action Display HUD using the configured keybinding (default: Shift+Space)."
             },
+            "enableEndTurnButton": {
+                "name": "End Turn Button",
+                "hint": "Display an End Turn button in the HUD footer during combat when it is the active character's turn."
+            },
             "economyColorsMenu": {
                 "label": "Configure Colors",
                 "hint": "Customize the indicator bar color for each action economy type for this system."
@@ -150,7 +154,8 @@
             "allItems": "All Items",
             "other": "Other",
             "allActions": "All Actions",
-            "none": "None"
+            "none": "None",
+            "endTurn": "End Turn"
         },
         "common": {
             "save": "Save Changes",
