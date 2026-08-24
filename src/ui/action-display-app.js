@@ -1725,7 +1725,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
 
             sandbox.remove();
 
-            return Math.max(normalWidth, Math.min(measuredTableWidth + 28, maxAllowedWidth));
+            return Math.max(normalWidth, Math.min(measuredTableWidth + 36, maxAllowedWidth));
         } catch (e) {
             log.debug('_calculateTableTooltipWidth error:', e);
             return normalWidth;
