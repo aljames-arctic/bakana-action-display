@@ -1,10 +1,10 @@
-import { FoundryCurrentAdapter } from './foundry-current-adapter.js';
+import { BaseFoundryAdapter } from './base-foundry-adapter.js';
 
 /**
  * Platform adapter for Foundry VTT v12 / v13.
  * Implements platform capabilities using legacy v12/v13 Foundry APIs.
  */
-export class FoundryVTTV12Adapter extends FoundryCurrentAdapter {
+export class FoundryVTTV12Adapter extends BaseFoundryAdapter {
     /**
      * Retrieve all combatants associated with a token in combat for v12/v13.
      * @param {Combat} combat Target combat encounter

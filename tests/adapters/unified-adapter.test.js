@@ -1,7 +1,7 @@
 import '../setup.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { adapter, Adapter, BaseFoundryAdapter, FoundryVTTV12Adapter, FoundryVTTV14Adapter, FoundryCurrentAdapter, BaseSystemAdapter } from '../../src/adapters/index.js';
+import { adapter, Adapter, BaseFoundryAdapter, FoundryVTTV12Adapter, FoundryVTTV14Adapter, BaseSystemAdapter } from '../../src/adapters/index.js';
 import { initializeFoundryAdapter } from '../../src/adapters/foundry/index.js';
 import { initializeSystemAdapter } from '../../src/adapters/system/index.js';
 import { initializeModuleAdapters } from '../../src/adapters/module/index.js';
@@ -122,8 +122,8 @@ test('Unified Adapter init initializes and formats system label correctly for su
         game.system = { id: 'dnd5e' };
         const supportedAdapter = new Adapter();
         await supportedAdapter.init();
-        assert.ok(supportedAdapter.foundry instanceof FoundryCurrentAdapter);
         assert.ok(supportedAdapter.foundry instanceof BaseFoundryAdapter);
+        assert.ok(supportedAdapter.foundry instanceof FoundryVTTV12Adapter);
         assert.equal(supportedAdapter.foundry.generation, 12);
         assert.equal(supportedAdapter.system.systemId, 'dnd5e');
         assert.equal(supportedAdapter.system.isSupported, true);
