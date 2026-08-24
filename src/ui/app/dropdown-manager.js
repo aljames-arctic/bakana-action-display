@@ -72,11 +72,15 @@ export function buildSubactionMenuItem(sub, event, app = null) {
 
     const usesSlotHtml = `<div class="bad-action-uses-slot">${usesHtml}</div>`;
     const nameHtml = `<span class="bad-action-name bad-menu-name">${sub?.name ?? "Action"}</span>`;
+    const iconWrapHtml = `<span class="bad-menu-icon-wrap">${iconHtml}</span>`;
 
+    // In Foundry VTT ContextMenu templates, {{localize this.name}} escapes HTML while {{{this.icon}}}
+    // renders raw unescaped HTML via triple curlies. Embedding the segmented row directly in this.icon
+    // guarantees instant, flicker-free rendering without raw HTML escaping artifacts.
     return {
-        name: `${nameHtml}${economyHtml}${usesSlotHtml}`,
+        name: "",
         rawName: sub?.name ?? "Action",
-        icon: `<span class="bad-menu-icon-wrap">${iconHtml}</span>`,
+        icon: `${iconWrapHtml}${nameHtml}${economyHtml}${usesSlotHtml}`,
         iconHtml,
         nameHtml,
         usesHtml,
@@ -235,8 +239,7 @@ export function showActivityDropdown(app, target, subactions, event) {
 
                     // If not already rendered into the DOM by ContextMenu, ensure structure is present
                     if (!li.querySelector?.('.bad-action-name') && itemData) {
-                        const iconWrap = itemData.icon ?? `<span class="bad-menu-icon-wrap">${itemData.iconHtml ?? ''}</span>`;
-                        li.innerHTML = `${iconWrap}${itemData.name}`;
+                        li.innerHTML = itemData.icon;
                     }
 
                     li.addEventListener('pointerover', () => {
