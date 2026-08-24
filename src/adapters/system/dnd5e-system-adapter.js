@@ -659,7 +659,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         const vulnerabilities = this.#extractTraitList(system.traits?.dv, cfg?.damageTypes, cfg?.physicalWeaponBypasses ?? cfg?.itemProperties);
 
         // 9. Languages
-        const languages = this.#extractLanguages(system.traits?.languages, cfg);
+        const languages = this.#extractLanguages(system.traits?.languages, cfg, system.traits?.communication);
 
         // 10. Senses
         const senses = this.#extractSenses(system.attributes?.senses);
@@ -930,12 +930,13 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         return result;
     }
 
-    #extractLanguages(langData, cfg = CONFIG?.DND5E) {
-        if (!langData) return [];
+    #extractLanguages(langData, cfg = CONFIG?.DND5E, extraComm = null) {
+        if (!langData && !extraComm) return [];
         const result = [];
-        const values = Array.isArray(langData.value)
+        const units = langData?.units ?? extraComm?.units ?? 'ft';
+        const values = Array.isArray(langData?.value)
             ? langData.value
-            : (langData.value instanceof Set ? Array.from(langData.value) : []);
+            : (langData?.value instanceof Set ? Array.from(langData.value) : []);
 
         const hasAll = values.some(v => typeof v === 'string' && (v.trim().toLowerCase() === 'all' || v.trim().toLowerCase() === 'alllanguages'));
 
@@ -949,19 +950,86 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
             }
         }
 
-        if (langData.custom && typeof langData.custom === 'string' && langData.custom.trim().length > 0) {
-            const customTrimmed = langData.custom.trim();
-            const isCustomAll = customTrimmed.toLowerCase() === 'all' || customTrimmed.toLowerCase() === 'all languages';
-            if (isCustomAll) {
-                if (!result.includes('All')) {
-                    result.unshift('All');
+        // Custom Languages (semicolon-separated)
+        if (langData?.custom && typeof langData.custom === 'string' && langData.custom.trim().length > 0) {
+            const customParts = langData.custom.split(';').map(s => s.trim()).filter(Boolean);
+            for (const part of customParts) {
+                const isCustomAll = part.toLowerCase() === 'all' || part.toLowerCase() === 'all languages';
+                if (isCustomAll) {
+                    if (!result.includes('All')) {
+                        result.unshift('All');
+                    }
+                } else if (!result.includes(part)) {
+                    result.push(part);
                 }
-            } else {
-                result.push(customTrimmed);
             }
         }
-        if (langData.communication && typeof langData.communication === 'string' && langData.communication.trim().length > 0) {
-            result.push(langData.communication.trim());
+
+        // Special Communication (semicolon-separated)
+        const specialData = langData?.special;
+        if (specialData) {
+            if (typeof specialData === 'string') {
+                const specialParts = specialData.split(';').map(s => s.trim()).filter(Boolean);
+                for (const part of specialParts) {
+                    if (!result.includes(part)) {
+                        result.push(part);
+                    }
+                }
+            } else if (Array.isArray(specialData) || specialData instanceof Set) {
+                for (const item of specialData) {
+                    if (typeof item === 'string' && item.trim()) {
+                        const parts = item.split(';').map(s => s.trim()).filter(Boolean);
+                        for (const part of parts) {
+                            if (!result.includes(part)) result.push(part);
+                        }
+                    }
+                }
+            }
+        }
+
+        // Communication / Ranged Communication (from langData.communication or extraComm)
+        const commSources = [langData?.communication, extraComm].filter(Boolean);
+        for (const commData of commSources) {
+            if (typeof commData === 'string' && commData.trim().length > 0) {
+                const commParts = commData.split(';').map(s => s.trim()).filter(Boolean);
+                for (const part of commParts) {
+                    if (!result.includes(part)) {
+                        result.push(part);
+                    }
+                }
+            } else if (typeof commData === 'object' && commData !== null) {
+                for (const [commKey, commVal] of Object.entries(commData)) {
+                    if (commKey === 'units' || commVal === null || commVal === undefined || commVal === false) continue;
+                    const commLabel = this.#formatLabel(commKey, cfg?.communication ?? cfg?.languages);
+                    if (typeof commVal === 'number' && commVal > 0) {
+                        const str = `${commLabel} ${commVal} ${units}`;
+                        if (!result.includes(str)) result.push(str);
+                    } else if (typeof commVal === 'object' && commVal !== null) {
+                        const dist = commVal.value ?? commVal.range ?? commVal.distance;
+                        const distUnits = commVal.units ?? units;
+                        if (dist && Number(dist) > 0) {
+                            const str = `${commLabel} ${dist} ${distUnits}`;
+                            if (!result.includes(str)) result.push(str);
+                        } else if (commVal.custom) {
+                            if (!result.includes(commVal.custom)) result.push(commVal.custom);
+                        }
+                    } else if (typeof commVal === 'string' && commVal.trim().length > 0) {
+                        const str = isNaN(Number(commVal)) ? `${commLabel}: ${commVal.trim()}` : `${commLabel} ${commVal.trim()} ${units}`;
+                        if (!result.includes(str)) result.push(str);
+                    }
+                }
+            }
+        }
+
+        // Ranged Communication from langData.ranges if present
+        if (langData?.ranges && typeof langData.ranges === 'object') {
+            for (const [rangeKey, rangeVal] of Object.entries(langData.ranges)) {
+                if (typeof rangeVal === 'number' && rangeVal > 0) {
+                    const rangeLabel = this.#formatLabel(rangeKey, cfg?.communication ?? cfg?.languages);
+                    const str = `${rangeLabel} ${rangeVal} ${units}`;
+                    if (!result.includes(str)) result.push(str);
+                }
+            }
         }
 
         return result;

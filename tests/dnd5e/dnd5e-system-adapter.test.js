@@ -1366,6 +1366,86 @@ test('Dnd5eSystemAdapter getTokenInfo collapses languages to All when all is sel
     assert.deepEqual(info2.languages, ['All']);
 });
 
+test('Dnd5eSystemAdapter getTokenInfo extracts Special (; separated) and Ranged Communication correctly', async () => {
+    const adapter = new Dnd5eSystemAdapter();
+
+    // 1. Semicolon-separated special languages and communication
+    const actorSpecial = {
+        id: 'actor-special-lang',
+        name: 'Mind Flayer',
+        system: {
+            attributes: { ac: { value: 15 }, movement: { walk: 30, units: 'ft' } },
+            traits: {
+                languages: {
+                    value: ['deep', 'undercommon'],
+                    special: 'understands Common and Goblin but cannot speak; telepathy 120 ft.; communicates through thought projection',
+                    units: 'ft'
+                }
+            },
+            details: {}
+        }
+    };
+
+    const info1 = await adapter.getTokenInfo(actorSpecial);
+    assert.deepEqual(info1.languages, [
+        'Deep Speech',
+        'Undercommon',
+        'understands Common and Goblin but cannot speak',
+        'telepathy 120 ft.',
+        'communicates through thought projection'
+    ]);
+
+    // 2. Ranged Communication objects
+    const actorRanged = {
+        id: 'actor-ranged-comm',
+        name: 'Aboleth',
+        system: {
+            attributes: { ac: { value: 17 }, movement: { walk: 10, swim: 40, units: 'ft' } },
+            traits: {
+                languages: {
+                    value: ['deep'],
+                    communication: {
+                        telepathy: 120
+                    },
+                    units: 'ft'
+                }
+            },
+            details: {}
+        }
+    };
+
+    const info2 = await adapter.getTokenInfo(actorRanged);
+    assert.deepEqual(info2.languages, [
+        'Deep Speech',
+        'Telepathy 120 ft'
+    ]);
+
+    // 3. Structured Ranged Communication with custom units
+    const actorMetric = {
+        id: 'actor-metric-comm',
+        name: 'Alien',
+        system: {
+            attributes: { ac: { value: 12 }, movement: { walk: 9, units: 'm' } },
+            traits: {
+                languages: {
+                    value: ['common'],
+                    communication: {
+                        telepathy: { value: 30, units: 'm' }
+                    }
+                }
+            },
+            details: {}
+        }
+    };
+
+    const info3 = await adapter.getTokenInfo(actorMetric);
+    assert.deepEqual(info3.languages, [
+        'Common',
+        'Telepathy 30 m'
+    ]);
+});
+
+
 
 
 
