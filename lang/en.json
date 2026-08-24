@@ -23,6 +23,10 @@
                 "name": "Item Summary Tooltip Button",
                 "hint": "Display a ? button in the HUD control bar to toggle rich item summary tooltips without holding the ? key."
             },
+            "enableToggleHotkey": {
+                "name": "Enable HUD Toggle Hotkey",
+                "hint": "Allow players to toggle open or close the Action Display HUD using the configured keybinding (default: Shift+Space)."
+            },
             "economyColorsMenu": {
                 "label": "Configure Colors",
                 "hint": "Customize the indicator bar color for each action economy type for this system."
@@ -169,6 +173,12 @@
             "savingThrow": "Saving Throw",
             "abilityCheck": "Ability Check",
             "ability": "Ability"
+        },
+        "keybindings": {
+            "toggleHUD": {
+                "name": "Toggle Action Display HUD",
+                "hint": "Open or close the Action Display HUD for the currently controlled token."
+            }
         }
     }
 }

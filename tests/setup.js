@@ -249,12 +249,31 @@ globalThis.foundry = {
 const settingsStore = new Map([
     ['bakana-action-display.showDepleted', false],
     ['bakana-action-display.enableCenterOnToken', false],
+    ['bakana-action-display.enableItemSummaryButton', false],
+    ['bakana-action-display.enableToggleHotkey', false],
     ['bakana-action-display.enableEconomyIndicators', false],
     ['bakana-action-display.economyColors', {}],
     ['bakana-action-display.categorizationConfig', { enabled: false, categories: [] }],
     ['bakana-action-display.isAttached', true],
     ['bakana-action-display.persistDetached', true]
 ]);
+
+globalThis.KeyboardManager = {
+    MODIFIER_KEYS: {
+        CONTROL: 'Control',
+        SHIFT: 'Shift',
+        ALT: 'Alt'
+    }
+};
+
+globalThis.CONST = globalThis.CONST ?? {};
+globalThis.CONST.KEYBINDING_PRECEDENCE = {
+    PRIORITY: 1,
+    NORMAL: 0,
+    DEFERRED: -1
+};
+
+const keybindingsStore = new Map();
 
 globalThis.ui = {
     notifications: {
@@ -368,6 +387,15 @@ globalThis.game = {
         },
         set(moduleId, key, value) {
             settingsStore.set(`${moduleId}.${key}`, value);
+        }
+    },
+    keybindings: {
+        bindings: keybindingsStore,
+        register(moduleId, action, config) {
+            keybindingsStore.set(`${moduleId}.${action}`, config);
+        },
+        get(moduleId, action) {
+            return keybindingsStore.get(`${moduleId}.${action}`);
         }
     },
     keyboard: {

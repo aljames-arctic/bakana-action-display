@@ -92,6 +92,16 @@ Hooks.once('init', () => {
         }
     });
 
+    // Register Enable Toggle Hotkey Setting (World Scope, default disabled)
+    game.settings.register(MODULE_ID, 'enableToggleHotkey', {
+        name: game.i18n.localize('BAD.settings.enableToggleHotkey.name'),
+        hint: game.i18n.localize('BAD.settings.enableToggleHotkey.hint'),
+        scope: 'world',
+        config: true,
+        type: Boolean,
+        default: false
+    });
+
     // ==========================================
     // User Scope Settings & Menus
     // ==========================================

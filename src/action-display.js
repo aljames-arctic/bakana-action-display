@@ -73,6 +73,18 @@ class ActionDisplay {
     }
 
     /**
+     * Active HUD application instance.
+     * @type {ActionDisplayApp|null}
+     */
+    activeApp = null;
+
+    /**
+     * Handler delegate for HUD toggling.
+     * @type {Function|null}
+     */
+    toggleHandler = null;
+
+    /**
      * Run the pipeline to get actions for a given actor via the unified adapter.
      * @param {Actor} actor The actor to extract actions for
      * @returns {Promise<Action[]>} The processed actions
@@ -80,6 +92,15 @@ class ActionDisplay {
     async getActions(actor) {
         if (!actor) return [];
         return adapter.getActions(actor);
+    }
+
+    /**
+     * Toggle the Action Display HUD for a token or the currently controlled token.
+     * @param {Token} [explicitToken=null] Optional token to toggle HUD for
+     * @returns {boolean} True if toggled, false otherwise
+     */
+    toggle(explicitToken = null) {
+        return this.toggleHandler?.(explicitToken) ?? false;
     }
 }
 

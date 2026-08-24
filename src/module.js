@@ -1,5 +1,6 @@
 // Main entry point for Bakana's Action Display
 import './settings.js';
+import { registerKeybindings } from './keybindings.js';
 import { adapter } from './adapters/index.js';
 import { actionDisplay } from './action-display.js';
 import { ActionDisplayApp } from './ui/action-display-app.js';
@@ -15,15 +16,19 @@ let renderDebounceTimer = null;
 Hooks.once('init', async () => {
     log.info("Initializing Bakana's Action Display");
 
+    // Register module keybindings (Shift+Space toggle)
+    registerKeybindings();
+
     // Wrap Token.prototype._onClickRight during init so it is bound correctly by all tokens' InteractionManagers
     const TokenClass = adapter.foundry.Token;
     const originalRightClick = TokenClass.prototype._onClickRight;
     if (originalRightClick) {
         TokenClass.prototype._onClickRight = function (event) {
             const isTokenHUDOpen = Boolean(canvas?.hud?.token?.rendered && (canvas.hud.token.object === this || canvas.hud.token.object?.id === this.id));
-            if (isTokenHUDOpen && (activeApp?.token === this || activeApp?.token?.id === this.id)) {
+            const currentApp = actionDisplay.activeApp ?? activeApp;
+            if (isTokenHUDOpen && (currentApp?.token === this || currentApp?.token?.id === this.id)) {
                 const persist = game.settings.get(MODULE_ID, 'persistDetached');
-                if (persist && activeApp?.isDetached) {
+                if (persist && currentApp?.isDetached) {
                     closeDetachedHUD = true;
                 }
             }
@@ -46,15 +51,16 @@ Hooks.once('init', async () => {
  * or if a close was explicitly triggered by right-clicking the token.
  */
 function handleHUDClose() {
-    if (activeApp) {
+    const currentApp = actionDisplay.activeApp ?? activeApp;
+    if (currentApp) {
         const persist = game.settings.get(MODULE_ID, 'persistDetached');
-        const shouldClose = activeApp.isTracked || !persist || closeDetachedHUD;
+        const shouldClose = currentApp.isTracked || !persist || closeDetachedHUD;
 
         if (shouldClose) {
-            if (activeApp.element) {
-                activeApp.element.style.display = 'none';
+            if (currentApp.element) {
+                currentApp.element.style.display = 'none';
             }
-            activeApp.close();
+            currentApp.close();
             activeApp = null;
             actionDisplay.activeApp = null;
         }
@@ -70,9 +76,10 @@ function handleHUDClose() {
  * @returns {boolean}
  */
 function isMatchingActor(docActor, docParent) {
-    if (!activeApp || !activeApp.actor) return false;
-    const activeActor = activeApp.actor;
-    const activeToken = activeApp.token;
+    const currentApp = actionDisplay.activeApp ?? activeApp;
+    if (!currentApp || !currentApp.actor) return false;
+    const activeActor = currentApp.actor;
+    const activeToken = currentApp.token;
 
     // Check direct actor ID or UUID match
     if (docActor) {
@@ -97,12 +104,14 @@ function isMatchingActor(docActor, docParent) {
  * Request a debounced re-render of the active HUD when documents mutate.
  */
 function requestHUDRender() {
-    if (!activeApp?.rendered && !activeApp?.element) return;
+    const currentApp = actionDisplay.activeApp ?? activeApp;
+    if (!currentApp?.rendered && !currentApp?.element) return;
     if (renderDebounceTimer) clearTimeout(renderDebounceTimer);
     renderDebounceTimer = setTimeout(() => {
         renderDebounceTimer = null;
-        if (activeApp?.rendered || activeApp?.element) {
-            activeApp.render();
+        const appToRender = actionDisplay.activeApp ?? activeApp;
+        if (appToRender?.rendered || appToRender?.element) {
+            appToRender.render();
         }
     }, 50);
 }
@@ -142,17 +151,19 @@ Hooks.on('renderTokenHUD', (tokenHUD, html, data) => {
         syncActorFavorites(token.actor);
     }
 
+    const currentApp = actionDisplay.activeApp ?? activeApp;
+
     // If we already have an active rendered app for this token, preserve it to keep its tab/scroll state
-    if ((activeApp?.token === token || activeApp?.token?.id === token.id) && (activeApp?.rendered || activeApp?.element)) {
+    if ((currentApp?.token === token || currentApp?.token?.id === token.id) && (currentApp?.rendered || currentApp?.element)) {
         return;
     }
 
     // Close any existing app for a different token
-    if (activeApp) {
-        if (activeApp.element) {
-            activeApp.element.style.display = 'none';
+    if (currentApp) {
+        if (currentApp.element) {
+            currentApp.element.style.display = 'none';
         }
-        activeApp.close();
+        currentApp.close();
         activeApp = null;
         actionDisplay.activeApp = null;
     }
@@ -170,8 +181,9 @@ Hooks.on('closeTokenHUD', (tokenHUD, html) => {
 
 // Hook into canvas pan to update attached HUD position dynamically
 Hooks.on('canvasPan', (canvas, pan) => {
-    if (activeApp?.isTracked) {
-        activeApp.setPosition();
+    const currentApp = actionDisplay.activeApp ?? activeApp;
+    if (currentApp?.isTracked) {
+        currentApp.setPosition();
     }
 });
 
@@ -203,7 +215,8 @@ Hooks.on('updateActor', (actor, changes, options, userId) => {
 
 // Hook into synthetic Token document updates (actor delta mutations)
 Hooks.on('updateToken', (tokenDoc, changes, options, userId) => {
-    if (activeApp && (tokenDoc?.id === activeApp.token?.id || tokenDoc?.actor?.id === activeApp.actor?.id)) {
+    const currentApp = actionDisplay.activeApp ?? activeApp;
+    if (currentApp && (tokenDoc?.id === currentApp.token?.id || tokenDoc?.actor?.id === currentApp.actor?.id)) {
         requestHUDRender();
     }
 });
