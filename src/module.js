@@ -147,8 +147,11 @@ Hooks.on('controlToken', (token, controlled) => {
 
 // Hook into Token HUD rendering to display our overlay
 Hooks.on('renderTokenHUD', (tokenHUD, html, data) => {
-    const token = tokenHUD.object;
-    if (!token || !token.document.isOwner) return;
+    const token = tokenHUD?.object;
+    if (!token || !token.document?.isOwner) return;
+
+    // If TokenHUD is closed, do not open Action Display
+    if (tokenHUD.rendered === false) return;
 
     setLastSelectedToken(token);
     closeDetachedHUD = false;

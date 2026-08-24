@@ -19,7 +19,7 @@ test('Reactive document hooks re-render activeApp when item or actor mutates', a
     };
 
     // Open HUD for token
-    Hooks.callAll('renderTokenHUD', { object: mockToken }, {}, {});
+    Hooks.callAll('renderTokenHUD', { object: mockToken, rendered: true }, {}, {});
 
     assert.ok(actionDisplay.activeApp);
     const app = actionDisplay.activeApp;
@@ -79,7 +79,7 @@ test('canvasPan hook updates position on tracked activeApp without error', () =>
     };
 
     // Open HUD for token
-    Hooks.callAll('renderTokenHUD', { object: mockToken }, {}, {});
+    Hooks.callAll('renderTokenHUD', { object: mockToken, rendered: true }, {}, {});
 
     const app = actionDisplay.activeApp;
     assert.ok(app);
@@ -114,7 +114,7 @@ test('ActionDisplayApp setPosition calculates coordinates across attached and de
     };
 
     // Open HUD for token
-    Hooks.callAll('renderTokenHUD', { object: mockToken }, {}, {});
+    Hooks.callAll('renderTokenHUD', { object: mockToken, rendered: true }, {}, {});
 
     const app = actionDisplay.activeApp;
     assert.ok(app);
@@ -195,7 +195,7 @@ test('Closed HUD does not re-open when actor status conditions or properties mut
     };
 
     // 1. Open HUD
-    Hooks.callAll('renderTokenHUD', { object: mockToken }, {}, {});
+    Hooks.callAll('renderTokenHUD', { object: mockToken, rendered: true }, {}, {});
     const app = actionDisplay.activeApp;
     assert.ok(app);
 
@@ -209,6 +209,9 @@ test('Closed HUD does not re-open when actor status conditions or properties mut
     // 3. Mutate actor with status condition (e.g. petrified)
     Hooks.callAll('updateActor', { id: 'actor-closed-test' }, { system: { attributes: { hp: { value: 10 } } } }, {}, 'user-1');
     Hooks.callAll('createActiveEffect', { parent: { id: 'actor-closed-test' }, statuses: new Set(['petrified']) }, {}, 'user-1');
+
+    // 4. Background TokenHUD hook fired during status toggle with rendered: false
+    Hooks.callAll('renderTokenHUD', { object: mockToken, rendered: false }, {}, {});
 
     await new Promise(r => setTimeout(r, 70));
 
