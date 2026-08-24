@@ -938,27 +938,63 @@
 }
 
 /* ==========================================================================
-   COMBAT END TURN BUTTON
+   COMBAT ACTION BUTTONS (Roll Initiative / End Turn)
    ========================================================================== */
-.bad-end-turn-btn {
+.bad-combat-action-btn,
+.bad-end-turn-btn,
+.bad-roll-initiative-btn {
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
     gap: 0.5em !important;
     width: 100% !important;
-    background: linear-gradient(135deg, rgba(239, 68, 68, 0.25) 0%, rgba(220, 38, 38, 0.4) 100%) !important;
-    border: 1px solid rgba(239, 68, 68, 0.45) !important;
     border-radius: 0.43em !important;
-    color: #fef2f2 !important;
     font-size: 0.8em !important;
     font-weight: 600 !important;
     padding: 0.35em 0.7em !important;
     margin: 0 !important;
     cursor: pointer !important;
-    box-shadow: 0 2px 6px rgba(239, 68, 68, 0.2) !important;
     transition: all 0.2s ease !important;
     line-height: normal !important;
     box-sizing: border-box !important;
+}
+
+.bad-roll-initiative-btn {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.25) 0%, rgba(217, 119, 6, 0.4) 100%) !important;
+    border: 1px solid rgba(245, 158, 11, 0.45) !important;
+    color: #fef3c7 !important;
+    box-shadow: 0 2px 6px rgba(245, 158, 11, 0.2) !important;
+}
+
+.bad-roll-initiative-btn:hover {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.4) 0%, rgba(217, 119, 6, 0.6) 100%) !important;
+    border-color: #f59e0b !important;
+    box-shadow: 0 0 10px rgba(245, 158, 11, 0.4) !important;
+    color: #ffffff !important;
+    transform: translateY(-1px);
+}
+
+.bad-roll-initiative-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 3px rgba(245, 158, 11, 0.3) !important;
+}
+
+.bad-roll-initiative-btn i {
+    font-size: 0.9em;
+    color: #fcd34d;
+    transition: transform 0.3s ease;
+}
+
+.bad-roll-initiative-btn:hover i {
+    color: #ffffff;
+    transform: rotate(360deg);
+}
+
+.bad-end-turn-btn {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.25) 0%, rgba(220, 38, 38, 0.4) 100%) !important;
+    border: 1px solid rgba(239, 68, 68, 0.45) !important;
+    color: #fef2f2 !important;
+    box-shadow: 0 2px 6px rgba(239, 68, 68, 0.2) !important;
 }
 
 .bad-end-turn-btn:hover {

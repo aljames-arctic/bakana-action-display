@@ -344,9 +344,16 @@
             </button>
             {{/if}}
         </div>
-        {{#if isCurrentCombatant}}
+        {{#if showRollInitiativeButton}}
+        <!-- Roll Initiative Button (Displayed when token is in combat but hasn't rolled initiative) -->
+        <button class="bad-combat-action-btn bad-roll-initiative-btn" data-action="rollInitiative" title="{{localize 'BAD.core.rollInitiative'}}">
+            <i class="fas fa-dice-d20"></i>
+            <span>{{localize 'BAD.core.rollInitiative'}}</span>
+        </button>
+        {{/if}}
+        {{#if showEndTurnButton}}
         <!-- End Turn Button (Displayed during active combat turn) -->
-        <button class="bad-end-turn-btn" data-action="endCombatTurn" title="{{localize 'BAD.core.endTurn'}}">
+        <button class="bad-combat-action-btn bad-end-turn-btn" data-action="endCombatTurn" title="{{localize 'BAD.core.endTurn'}}">
             <i class="fas fa-hourglass-end"></i>
             <span>{{localize 'BAD.core.endTurn'}}</span>
         </button>

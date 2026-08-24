@@ -102,10 +102,10 @@ Hooks.once('init', () => {
         default: false
     });
 
-    // Register Enable End Turn Button Setting (World Scope, default disabled)
-    game.settings.register(MODULE_ID, 'enableEndTurnButton', {
-        name: game.i18n.localize('BAD.settings.enableEndTurnButton.name'),
-        hint: game.i18n.localize('BAD.settings.enableEndTurnButton.hint'),
+    // Register Enable Combat Action Buttons Setting (World Scope, default disabled)
+    game.settings.register(MODULE_ID, 'enableCombatButtons', {
+        name: game.i18n.localize('BAD.settings.enableCombatButtons.name'),
+        hint: game.i18n.localize('BAD.settings.enableCombatButtons.hint'),
         scope: 'world',
         config: true,
         type: Boolean,
@@ -115,6 +115,14 @@ Hooks.once('init', () => {
                 actionDisplay.activeApp.render();
             }
         }
+    });
+
+    // Register Enable End Turn Button Setting (backwards compatibility alias)
+    game.settings.register(MODULE_ID, 'enableEndTurnButton', {
+        scope: 'world',
+        config: false,
+        type: Boolean,
+        default: false
     });
 
     // Register Combat Auto-Track Button Setting (World Scope, default disabled)
@@ -448,7 +456,7 @@ export function injectSettingsHeaders(html, app) {
     // 2. Insert section headers before the respective first setting in each scope
     const sections = [
         {
-            keys: ['categorizationMenu', 'moduleIntegrationsMenu', 'enableCenterOnToken', 'enableItemSummaryButton', 'enableToggleHotkey', 'enableEndTurnButton', 'enableCombatAutoTrackButton'],
+            keys: ['categorizationMenu', 'moduleIntegrationsMenu', 'enableCenterOnToken', 'enableItemSummaryButton', 'enableToggleHotkey', 'enableCombatButtons', 'enableCombatAutoTrackButton'],
             scope: 'world',
             title: game.i18n.localize('BAD.settingsSections.world') ?? 'World Settings',
             icon: 'fas fa-globe'

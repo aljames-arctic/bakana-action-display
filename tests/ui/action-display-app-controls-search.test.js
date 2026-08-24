@@ -229,51 +229,77 @@ test('ActionDisplayApp _onToggleAnchor toggles between attached and detached mod
     assert.equal(renderCalled, true);
 });
 
-test('ActionDisplayApp _prepareContext computes isCurrentCombatant when enableEndTurnButton is enabled and combat turn matches', async () => {
+test('ActionDisplayApp _prepareContext computes showRollInitiativeButton and showEndTurnButton for combat', async () => {
     actionDisplay.getActions = async () => [];
 
-    const mockToken = { id: 'combatToken1' };
-    const mockActor = { id: 'combatActor1' };
+    const mockToken = { id: 'combatToken1', document: { isOwner: true } };
+    const mockActor = { id: 'combatActor1', isOwner: true };
+    const mockCombatant = { id: 'combatant1', tokenId: 'combatToken1', actorId: 'combatActor1', token: mockToken, actor: mockActor, initiative: null };
     const app = new ActionDisplayApp({ token: mockToken, actor: mockActor, id: 'combatToken1' });
     app.activePage = 1;
     app._saveTabState = () => {};
 
-    // 1. Setting disabled -> isCurrentCombatant is false even if it is actor's turn
-    await game.settings.set(MODULE_ID, 'enableEndTurnButton', false);
+    // 1. Setting disabled -> both buttons are false even if in combat
+    await game.settings.set(MODULE_ID, 'enableCombatButtons', false);
     globalThis.game.combat = {
         started: true,
-        combatant: { token: mockToken, actor: mockActor }
+        combatants: [mockCombatant],
+        getCombatantByToken: () => mockCombatant,
+        combatant: mockCombatant
     };
     let context = await app._prepareContext({});
-    assert.equal(context.isCurrentCombatant, false);
+    assert.equal(context.showRollInitiativeButton, false);
+    assert.equal(context.showEndTurnButton, false);
 
-    // 2. Setting enabled, but combat is not started -> isCurrentCombatant is false
-    await game.settings.set(MODULE_ID, 'enableEndTurnButton', true);
-    globalThis.game.combat = {
-        started: false,
-        combatant: { token: mockToken, actor: mockActor }
-    };
+    // 2. Setting enabled, token in combat without initiative -> showRollInitiativeButton is true
+    await game.settings.set(MODULE_ID, 'enableCombatButtons', true);
     context = await app._prepareContext({});
-    assert.equal(context.isCurrentCombatant, false);
+    assert.equal(context.showRollInitiativeButton, true, 'Unrolled combatant should show roll initiative button');
+    assert.equal(context.showEndTurnButton, false);
 
-    // 3. Setting enabled, combat started, but different combatant's turn -> isCurrentCombatant is false
-    globalThis.game.combat = {
-        started: true,
-        combatant: { token: { id: 'otherToken' }, actor: { id: 'otherActor' } }
-    };
+    // 3. Initiative rolled (e.g. 15), but combat not started / not active combatant's turn -> both false
+    mockCombatant.initiative = 15;
+    globalThis.game.combat.started = false;
     context = await app._prepareContext({});
-    assert.equal(context.isCurrentCombatant, false);
+    assert.equal(context.showRollInitiativeButton, false);
+    assert.equal(context.showEndTurnButton, false);
 
-    // 4. Setting enabled, combat started, matching token/actor turn -> isCurrentCombatant is true
-    globalThis.game.combat = {
-        started: true,
-        combatant: { token: mockToken, actor: mockActor }
-    };
+    // 4. Combat started, different combatant's turn -> both false
+    globalThis.game.combat.started = true;
+    globalThis.game.combat.combatant = { id: 'otherCombatant', tokenId: 'otherToken' };
     context = await app._prepareContext({});
-    assert.equal(context.isCurrentCombatant, true);
+    assert.equal(context.showRollInitiativeButton, false);
+    assert.equal(context.showEndTurnButton, false);
+
+    // 5. Combat started, matching active combatant turn -> showEndTurnButton is true
+    globalThis.game.combat.combatant = mockCombatant;
+    context = await app._prepareContext({});
+    assert.equal(context.showRollInitiativeButton, false);
+    assert.equal(context.showEndTurnButton, true, 'Active combatant whose turn it is should show end turn button');
 
     // Clean up
-    await game.settings.set(MODULE_ID, 'enableEndTurnButton', false);
+    await game.settings.set(MODULE_ID, 'enableCombatButtons', false);
+    globalThis.game.combat = null;
+});
+
+test('ActionDisplayApp _onRollInitiative calls combat.rollInitiative([combatant.id])', async () => {
+    let rolledIds = null;
+    const mockCombatant = { id: 'comb123', tokenId: 'token123' };
+    globalThis.game.combat = {
+        started: true,
+        combatants: [mockCombatant],
+        getCombatantByToken: (id) => id === 'token123' ? mockCombatant : null,
+        rollInitiative: async (ids) => {
+            rolledIds = ids;
+        }
+    };
+
+    const mockToken = { id: 'token123', actor: { id: 'actor123' } };
+    const app = new ActionDisplayApp(mockToken);
+    await app._onRollInitiative({ preventDefault: () => {}, stopPropagation: () => {} }, {});
+    assert.deepEqual(rolledIds, ['comb123'], 'combat.rollInitiative should be called with combatant id');
+
+    // Clean up
     globalThis.game.combat = null;
 });
 

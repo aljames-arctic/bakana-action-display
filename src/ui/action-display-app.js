@@ -300,6 +300,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
             toggleItemSummaries: ActionDisplayApp.prototype._onToggleItemSummaries,
             recenterToken: ActionDisplayApp.prototype._onRecenterToken,
             clearSearch: ActionDisplayApp.prototype._onClearSearch,
+            rollInitiative: ActionDisplayApp.prototype._onRollInitiative,
             endCombatTurn: ActionDisplayApp.prototype._onEndCombatTurn,
             previousPage: ActionDisplayApp.prototype._onPreviousPage,
             nextPage: ActionDisplayApp.prototype._onNextPage,
@@ -647,21 +648,54 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         context.totalPages = this.totalPages;
         context.hasMultiplePages = this.totalPages > 1;
 
-        // Check if the current actor / token is in combat and it is their turn
-        const enableEndTurn = Boolean(game.settings.get(MODULE_ID, 'enableEndTurnButton'));
+        // Check if the current actor / token is in combat and if combat action buttons should be shown
+        let enableCombatButtons = false;
+        try {
+            enableCombatButtons = Boolean(game.settings.get(MODULE_ID, 'enableCombatButtons'));
+        } catch (_) {}
+        if (!enableCombatButtons) {
+            try {
+                enableCombatButtons = Boolean(game.settings.get(MODULE_ID, 'enableEndTurnButton'));
+            } catch (_) {}
+        }
+
+        let showRollInitiativeButton = false;
+        let showEndTurnButton = false;
         let isCurrentCombatant = false;
-        if (enableEndTurn) {
+
+        if (enableCombatButtons) {
             const combat = game.combat;
-            if (combat && combat.started) {
-                const currentCombatant = combat.combatant;
-                if (currentCombatant) {
-                    const isTokenMatch = Boolean(this.token && (currentCombatant.token === this.token || currentCombatant.token?.id === this.token.id || currentCombatant.tokenId === this.token.id));
-                    const isActorMatch = Boolean(this.actor && (currentCombatant.actor === this.actor || currentCombatant.actor?.id === this.actor.id || currentCombatant.actorId === this.actor.id));
-                    isCurrentCombatant = isTokenMatch || isActorMatch;
+            let combatant = null;
+            if (combat) {
+                combatant = combat.getCombatantByToken?.(this.token?.id)
+                    ?? combat.combatants?.find?.(c => (c.tokenId && c.tokenId === this.token?.id) || (c.actorId && c.actorId === this.actor?.id))
+                    ?? this.actor?.combatant
+                    ?? null;
+            }
+
+            if (combatant) {
+                const canInteract = Boolean(this.actor?.isOwner || this.token?.document?.isOwner || game.user?.isGM);
+                if (canInteract) {
+                    const needsInitiative = combatant.initiative === null || combatant.initiative === undefined;
+                    showRollInitiativeButton = needsInitiative;
+
+                    if (!needsInitiative && combat.started) {
+                        const currentCombatant = combat.combatant;
+                        if (currentCombatant) {
+                            const isTokenMatch = Boolean(this.token && (currentCombatant.token === this.token || currentCombatant.token?.id === this.token.id || currentCombatant.tokenId === this.token.id));
+                            const isActorMatch = Boolean(this.actor && (currentCombatant.actor === this.actor || currentCombatant.actor?.id === this.actor.id || currentCombatant.actorId === this.actor.id));
+                            isCurrentCombatant = isTokenMatch || isActorMatch;
+                        }
+                        showEndTurnButton = isCurrentCombatant;
+                    }
                 }
             }
         }
-        context.isCurrentCombatant = isCurrentCombatant;
+
+        context.enableCombatButtons = enableCombatButtons;
+        context.showRollInitiativeButton = showRollInitiativeButton;
+        context.showEndTurnButton = showEndTurnButton;
+        context.isCurrentCombatant = showEndTurnButton || isCurrentCombatant;
 
         // Delegate to system adapter to allow system-specific context modifications and layout selection
         adapter?.modifyContext?.(context, this);
@@ -1133,6 +1167,38 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         this.searchQuery = '';
         this._isSearching = false;
         this.render();
+    }
+
+    /**
+     * Roll initiative for the active token/actor in combat.
+     * @param {PointerEvent} event Triggering click event
+     * @param {HTMLElement} target Target button element
+     * @protected
+     */
+    async _onRollInitiative(event, target) {
+        event?.preventDefault?.();
+        event?.stopPropagation?.();
+        const combat = game.combat;
+        if (!combat) return;
+
+        const combatant = combat.getCombatantByToken?.(this.token?.id)
+            ?? combat.combatants?.find?.(c => (c.tokenId && c.tokenId === this.token?.id) || (c.actorId && c.actorId === this.actor?.id))
+            ?? this.actor?.combatant
+            ?? null;
+
+        if (!combatant) return;
+        log.info(`Rolling initiative for "${this.actor?.name ?? 'Token'}" (Combatant ID: ${combatant.id})`);
+        try {
+            if (typeof combat.rollInitiative === 'function') {
+                await combat.rollInitiative([combatant.id]);
+            } else if (typeof combatant.rollInitiative === 'function') {
+                await combatant.rollInitiative();
+            } else if (typeof this.actor?.rollInitiative === 'function') {
+                await this.actor.rollInitiative();
+            }
+        } catch (err) {
+            log.error("Failed to roll initiative:", err);
+        }
     }
 
     /**

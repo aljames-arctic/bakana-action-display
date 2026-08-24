@@ -27,9 +27,13 @@
                 "name": "Enable HUD Toggle Hotkey",
                 "hint": "Allow players to toggle open or close the Action Display HUD using the configured keybinding (default: Shift+Space)."
             },
+            "enableCombatButtons": {
+                "name": "Combat Action Buttons",
+                "hint": "Display contextual combat buttons (e.g. Roll Initiative, End Turn) in the HUD footer during combat."
+            },
             "enableEndTurnButton": {
-                "name": "End Turn Button",
-                "hint": "Display an End Turn button in the HUD footer during combat when it is the active character's turn."
+                "name": "Combat Action Buttons",
+                "hint": "Display contextual combat buttons (e.g. Roll Initiative, End Turn) in the HUD footer during combat."
             },
             "enableCombatAutoTrackButton": {
                 "name": "Combat Auto-Track Button",
@@ -159,7 +163,8 @@
             "other": "Other",
             "allActions": "All Actions",
             "none": "None",
-            "endTurn": "End Turn"
+            "endTurn": "End Turn",
+            "rollInitiative": "Roll Initiative"
         },
         "common": {
             "save": "Save Changes",

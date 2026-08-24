@@ -286,6 +286,19 @@ Hooks.on('combatRound', (combat, updateData, updateOptions) => {
     handleCombatTurnChange(combat);
 });
 
+// Hook into Combatant changes (token added/removed from combat, initiative rolled)
+Hooks.on('createCombatant', (combatant, options, userId) => {
+    requestHUDRender();
+});
+
+Hooks.on('deleteCombatant', (combatant, options, userId) => {
+    requestHUDRender();
+});
+
+Hooks.on('updateCombatant', (combatant, changes, options, userId) => {
+    requestHUDRender();
+});
+
 // Hook into synthetic Token document updates (actor delta mutations)
 Hooks.on('updateToken', (tokenDoc, changes, options, userId) => {
     const currentApp = actionDisplay.activeApp ?? activeApp;
