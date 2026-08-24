@@ -40,31 +40,53 @@ export function openActivitySubContextMenu(app, targetLi, subaction) {
  * @returns {Object} Menu item configuration
  */
 export function buildSubactionMenuItem(sub, event, app = null) {
-    const uses = sub.uses;
-    const iconHtml = sub.img
-        ? `<img class="bad-menu-icon" src="${sub.img}" />`
-        : '<i class="fas fa-play bad-menu-icon"></i>';
+    const uses = sub?.uses;
+    const iconHtml = sub?.img
+        ? `<img class="bad-menu-icon bad-action-icon" src="${sub.img}" alt="${sub.name ?? ''}" />`
+        : '<div class="bad-action-icon-placeholder"><i class="fas fa-dice-d20"></i></div>';
 
     let usesHtml = "";
-    if (uses && uses.available !== null) {
+    if (uses && uses.available !== null && uses.available !== undefined) {
         const usesText = `${uses.available}${uses.max ? ' / ' + uses.max : ''}`;
         const depletedClass = uses.available === 0 ? " depleted" : "";
         const upcastClass = uses.isUpcast ? " upcast" : "";
-        usesHtml = `<span class="bad-menu-uses${depletedClass}${upcastClass}">${usesText}</span>`;
+        usesHtml = `<span class="bad-menu-uses bad-action-uses${depletedClass}${upcastClass}">${usesText}</span>`;
     }
 
+    const showEconomy = Boolean(game.settings.get(MODULE_ID, 'enableEconomyIndicators'));
+    let economyHtml = "";
+    if (showEconomy) {
+        const userColors = game.settings.get(MODULE_ID, 'economyColors') ?? {};
+        const indicators = adapter.extractEconomyIndicators(sub, userColors);
+        if (indicators?.length) {
+            const slotsHtml = indicators.map(ind => {
+                const slotClass = ind.active ? "" : " bad-economy-slot-empty";
+                const barHtml = ind.active
+                    ? `<span class="bad-economy-bar" style="background-color: ${ind.color}" title="${ind.label}"></span>`
+                    : "";
+                return `<div class="bad-economy-slot${slotClass}">${barHtml}</div>`;
+            }).join("");
+            economyHtml = `<div class="bad-economy-bars">${slotsHtml}</div>`;
+        }
+    }
+
+    const usesSlotHtml = `<div class="bad-action-uses-slot">${usesHtml}</div>`;
+
     return {
-        name: sub.name ?? "Action",
+        name: sub?.name ?? "Action",
         icon: `<span class="bad-menu-icon-wrap">${iconHtml}</span>`,
-        usesHtml: usesHtml,
+        iconHtml,
+        usesHtml,
+        economyHtml,
+        usesSlotHtml,
         callback: () => {
             app?._hideItemSummaryTooltip?.();
-            const item = sub.originalItem ?? sub;
+            const item = sub?.originalItem ?? sub;
             const actor = app?.actor ?? null;
             const token = app?.token ?? null;
             const user = game.user;
-            log.debug(`Rolling subaction "${sub.name}" via dropdown:`, { action: sub, item, actor, token, user });
-            sub.roll(event);
+            log.debug(`Rolling subaction "${sub?.name}" via dropdown:`, { action: sub, item, actor, token, user });
+            sub?.roll?.(event);
         }
     };
 }
@@ -203,9 +225,17 @@ export function showActivityDropdown(app, target, subactions, event) {
             const lis = menuEl.querySelectorAll('.context-item');
             lis.forEach((li, idx) => {
                 const sub = subactions[idx];
+                const itemData = menuItems[idx];
                 if (sub) {
                     li.dataset.actionId = sub.id;
                     li._badSubaction = sub;
+
+                    const iconWrap = itemData?.icon ?? `<span class="bad-menu-icon-wrap">${itemData?.iconHtml ?? ''}</span>`;
+                    const nameHtml = `<span class="bad-action-name bad-menu-name">${sub.name ?? itemData?.name ?? "Action"}</span>`;
+                    const econHtml = itemData?.economyHtml ?? '';
+                    const usesHtml = itemData?.usesSlotHtml ?? '<div class="bad-action-uses-slot"></div>';
+
+                    li.innerHTML = `${iconWrap}${nameHtml}${econHtml}${usesHtml}`;
 
                     li.addEventListener('pointerover', () => {
                         app._hoveredActionItem = li;
@@ -238,10 +268,6 @@ export function showActivityDropdown(app, target, subactions, event) {
                         app._activeLeftClickMenu = null;
                         adapter.openEditSheet(sub);
                     });
-                }
-                const itemData = menuItems[idx];
-                if (itemData?.usesHtml && !li.querySelector('.bad-menu-uses')) {
-                    li.insertAdjacentHTML('beforeend', itemData.usesHtml);
                 }
             });
         }

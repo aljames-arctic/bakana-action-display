@@ -10,6 +10,7 @@ import { adapter } from '../../src/adapters/index.js';
 import { TabRef } from '../../src/ui/tab-ref.js';
 import { ActionDisplayApp } from '../../src/ui/action-display-app.js';
 import { EconomyColorsConfigApp } from '../../src/ui/economy-colors-config-app.js';
+import { buildSubactionMenuItem, showActivityDropdown } from '../../src/ui/app/dropdown-manager.js';
 
 test('BaseSystemAdapter provides default economy types, colors, and grey fallback for undefined', () => {
     const baseAdapter = new BaseSystemAdapter();
@@ -324,4 +325,120 @@ test('EconomyColorsConfigApp prepares economy context, toggles enablement, saves
 
     // Clean up
     game.settings.set(MODULE_ID, 'enableEconomyIndicators', false);
+});
+
+test('Dropdown context menu actions segmentation when economy colors are disabled and enabled', async () => {
+    const actAction = {
+        name: 'Standard Attack',
+        img: 'icons/svg/sword.svg',
+        uses: { available: 5, max: 10 },
+        right: [TabRef.from('economy', 'action')],
+        roll: () => {}
+    };
+
+    const actBonus = {
+        name: 'Quick Strike',
+        img: 'icons/svg/daze.svg',
+        uses: { available: 0, max: 1 },
+        right: [TabRef.from('economy', 'bonus')],
+        roll: () => {}
+    };
+
+    const actPassive = {
+        name: 'Passive Flow',
+        uses: null,
+        right: [],
+        roll: () => {}
+    };
+
+    // 1. When action economy colors are DISABLED
+    await game.settings.set(MODULE_ID, 'enableEconomyIndicators', false);
+
+    const itemDisabled1 = buildSubactionMenuItem(actAction, {});
+    assert.equal(itemDisabled1.name, 'Standard Attack');
+    assert.equal(itemDisabled1.economyHtml, '');
+    assert.ok(itemDisabled1.usesSlotHtml.includes('bad-action-uses-slot'));
+    assert.ok(itemDisabled1.usesSlotHtml.includes('5 / 10'));
+
+    const itemDisabledPassive = buildSubactionMenuItem(actPassive, {});
+    assert.equal(itemDisabledPassive.economyHtml, '');
+    assert.equal(itemDisabledPassive.usesSlotHtml, '<div class="bad-action-uses-slot"></div>');
+
+    // 2. When action economy colors are ENABLED
+    await game.settings.set(MODULE_ID, 'enableEconomyIndicators', true);
+    await game.settings.set(MODULE_ID, 'economyColors', {});
+
+    const itemEnabledAction = buildSubactionMenuItem(actAction, {});
+    assert.ok(itemEnabledAction.economyHtml.includes('bad-economy-bars'));
+    assert.ok(itemEnabledAction.economyHtml.includes('background-color: #3b82f6'));
+    assert.ok(itemEnabledAction.usesSlotHtml.includes('5 / 10'));
+
+    const itemEnabledBonus = buildSubactionMenuItem(actBonus, {});
+    assert.ok(itemEnabledBonus.economyHtml.includes('bad-economy-bars'));
+    assert.ok(itemEnabledBonus.economyHtml.includes('background-color: #14b8a6'));
+    assert.ok(itemEnabledBonus.usesSlotHtml.includes('depleted'));
+
+    // 3. Verify showActivityDropdown populates li DOM elements with exact segmented structure
+    const mockApp = {
+        _activeLeftClickMenu: null,
+        _activeMenuTarget: null,
+        element: { ownerDocument: { body: document.body } },
+        actor: { isOwner: true }
+    };
+
+    const liElements = [];
+    const createMockLi = () => {
+        const li = {
+            dataset: {},
+            innerHTML: '',
+            addEventListener: () => {},
+            querySelector: (sel) => null
+        };
+        liElements.push(li);
+        return li;
+    };
+
+    const mockTarget = {
+        classList: { add: () => {}, remove: () => {} },
+        getBoundingClientRect: () => ({ left: 100, top: 200, right: 300, bottom: 230, width: 200, height: 30 })
+    };
+
+    const originalQuerySelector = document.querySelector;
+    const mockMenuEl = {
+        style: { setProperty: () => {} },
+        children: [],
+        querySelectorAll: (sel) => {
+            if (sel.includes('.context-item')) {
+                return [createMockLi(), createMockLi()];
+            }
+            return [];
+        },
+        remove: () => {}
+    };
+
+    document.querySelector = (sel) => {
+        if (sel.includes('#context-menu') || sel.includes('.context-menu')) return mockMenuEl;
+        return null;
+    };
+
+    try {
+        await showActivityDropdown(mockApp, mockTarget, [actAction, actBonus], { preventDefault() {}, stopPropagation() {} });
+        
+        assert.equal(liElements.length, 2);
+        // Both LIs should have icon, bad-action-name, bad-economy-bars, and bad-action-uses-slot
+        for (const li of liElements) {
+            assert.ok(li.innerHTML.includes('bad-menu-icon-wrap'), 'Should include icon wrap');
+            assert.ok(li.innerHTML.includes('bad-action-name'), 'Should include bad-action-name');
+            assert.ok(li.innerHTML.includes('bad-economy-bars'), 'Should include bad-economy-bars');
+            assert.ok(li.innerHTML.includes('bad-action-uses-slot'), 'Should include bad-action-uses-slot');
+        }
+
+        // Action 1 should have action indicator in economy bars
+        assert.ok(liElements[0].innerHTML.includes('#3b82f6'), 'Should have blue action color');
+        // Action 2 should have bonus indicator in economy bars
+        assert.ok(liElements[1].innerHTML.includes('#14b8a6'), 'Should have teal bonus color');
+    } finally {
+        document.querySelector = originalQuerySelector;
+        await game.settings.set(MODULE_ID, 'enableEconomyIndicators', false);
+    }
 });
