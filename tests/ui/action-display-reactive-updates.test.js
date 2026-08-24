@@ -2,7 +2,7 @@ import '../setup.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { actionDisplay } from '../../src/action-display.js';
-import '../../src/module.js';
+import { handleHUDBind } from '../../src/module.js';
 
 test('Reactive document hooks re-render activeApp when item or actor mutates', async () => {
     let renderCount = 0;
@@ -19,7 +19,7 @@ test('Reactive document hooks re-render activeApp when item or actor mutates', a
     };
 
     // Open HUD for token
-    Hooks.callAll('renderTokenHUD', { object: mockToken, rendered: true }, {}, {});
+    handleHUDBind(mockToken);
 
     assert.ok(actionDisplay.activeApp);
     const app = actionDisplay.activeApp;
@@ -79,7 +79,7 @@ test('canvasPan hook updates position on tracked activeApp without error', () =>
     };
 
     // Open HUD for token
-    Hooks.callAll('renderTokenHUD', { object: mockToken, rendered: true }, {}, {});
+    handleHUDBind(mockToken);
 
     const app = actionDisplay.activeApp;
     assert.ok(app);
@@ -114,7 +114,7 @@ test('ActionDisplayApp setPosition calculates coordinates across attached and de
     };
 
     // Open HUD for token
-    Hooks.callAll('renderTokenHUD', { object: mockToken, rendered: true }, {}, {});
+    handleHUDBind(mockToken);
 
     const app = actionDisplay.activeApp;
     assert.ok(app);
@@ -160,7 +160,7 @@ test('Combat turn advancement hook switches HUD to active combatant when autoTra
     };
 
     // 1. Initial state: HUD open for Hero
-    Hooks.callAll('renderTokenHUD', { object: tokenHero }, {}, {});
+    handleHUDBind(tokenHero);
     assert.ok(actionDisplay.activeApp);
     assert.equal(actionDisplay.activeApp.token.id, 'token-hero-combat');
     actionDisplay.activeApp.rendered = true;
@@ -195,7 +195,7 @@ test('Closed HUD does not re-open when actor status conditions or properties mut
     };
 
     // 1. Open HUD
-    Hooks.callAll('renderTokenHUD', { object: mockToken, rendered: true }, {}, {});
+    handleHUDBind(mockToken);
     const app = actionDisplay.activeApp;
     assert.ok(app);
 
@@ -210,7 +210,7 @@ test('Closed HUD does not re-open when actor status conditions or properties mut
     Hooks.callAll('updateActor', { id: 'actor-closed-test' }, { system: { attributes: { hp: { value: 10 } } } }, {}, 'user-1');
     Hooks.callAll('createActiveEffect', { parent: { id: 'actor-closed-test' }, statuses: new Set(['petrified']) }, {}, 'user-1');
 
-    // 4. Background TokenHUD hook fired during status toggle with rendered: false
+    // 4. Background TokenHUD hook fired during status toggle with TokenHUD closed
     Hooks.callAll('renderTokenHUD', { object: mockToken, rendered: false }, {}, {});
 
     await new Promise(r => setTimeout(r, 70));
@@ -219,5 +219,47 @@ test('Closed HUD does not re-open when actor status conditions or properties mut
     assert.equal(renderCalled, false, 'render must not be called on closed app');
     assert.equal(actionDisplay.activeApp, null, 'HUD must remain closed');
 });
+
+test('Toggling status conditions on open TokenHUD does not re-open closed Action Display', async () => {
+    const mockToken = {
+        id: 'token-hud-test',
+        name: 'Hero HUD',
+        document: { isOwner: true },
+        actor: { id: 'actor-hud-test', name: 'Hero HUD Actor', isOwner: true, items: new foundry.utils.Collection() }
+    };
+
+    // 1. Initial right-click: TokenHUD binds and opens Action Display
+    handleHUDBind(mockToken);
+    assert.ok(actionDisplay.activeApp);
+    assert.equal(actionDisplay.activeApp.token.id, 'token-hud-test');
+
+    // 2. User explicitly closes Action Display (TokenHUD remains open on screen)
+    await actionDisplay.activeApp.close();
+    assert.equal(actionDisplay.activeApp, null);
+
+    // 3. User toggles a status condition in TokenHUD (TokenHUD re-renders)
+    Hooks.callAll('createActiveEffect', { parent: { id: 'actor-hud-test' }, statuses: new Set(['grappled']) }, {}, 'user-1');
+    Hooks.callAll('renderTokenHUD', { object: mockToken, rendered: true }, {}, {});
+
+    await new Promise(r => setTimeout(r, 70));
+
+    // Action Display must remain closed
+    assert.equal(actionDisplay.activeApp, null, 'Action Display must stay closed when TokenHUD re-renders after status toggle');
+
+    // 4. When TokenHUD is newly bound to another token (or re-bound), Action Display opens
+    const otherToken = {
+        id: 'token-other-test',
+        name: 'Other Token',
+        document: { isOwner: true },
+        actor: { id: 'actor-other-test', name: 'Other Actor', isOwner: true, items: new foundry.utils.Collection() }
+    };
+    handleHUDBind(otherToken);
+    assert.ok(actionDisplay.activeApp);
+    assert.equal(actionDisplay.activeApp.token.id, 'token-other-test');
+
+    // Cleanup
+    await actionDisplay.activeApp.close();
+});
+
 
 

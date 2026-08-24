@@ -18,9 +18,12 @@ Hooks.once('init', async () => {
     // Register module keybindings (Shift+Space toggle)
     registerKeybindings();
 
+    // Wrap TokenHUD prototype methods (bind, clear, close)
+    wrapTokenHUD();
+
     // Wrap Token.prototype._onClickRight during init so it is bound correctly by all tokens' InteractionManagers
     const TokenClass = adapter.foundry.Token;
-    const originalRightClick = TokenClass.prototype._onClickRight;
+    const originalRightClick = TokenClass?.prototype?._onClickRight;
     if (originalRightClick) {
         TokenClass.prototype._onClickRight = function (event) {
             const isTokenHUDOpen = Boolean(canvas?.hud?.token?.rendered && (canvas.hud.token.object === this || canvas.hud.token.object?.id === this.id));
@@ -44,6 +47,35 @@ Hooks.once('init', async () => {
     // Expose the official API for other modules and macros
     game.modules.get(MODULE_ID).api = actionDisplay;
 });
+
+/**
+ * Wrap TokenHUD prototype methods (bind, clear, close) to coordinate HUD lifecycle.
+ */
+function wrapTokenHUD() {
+    const hudClass = canvas?.hud?.token?.constructor;
+    if (!hudClass?.prototype || hudClass._badWrapped) return;
+    hudClass._badWrapped = true;
+    log.info(`Wrapping ${hudClass.name}.prototype.bind, clear, and close`);
+
+    const originalBind = hudClass.prototype.bind;
+    hudClass.prototype.bind = function (object, ...args) {
+        const result = originalBind.apply(this, [object, ...args]);
+        handleHUDBind(object);
+        return result;
+    };
+
+    const originalClear = hudClass.prototype.clear;
+    hudClass.prototype.clear = function (...args) {
+        handleHUDClose();
+        return originalClear.apply(this, args);
+    };
+
+    const originalClose = hudClass.prototype.close;
+    hudClass.prototype.close = function (...args) {
+        handleHUDClose();
+        return originalClose.apply(this, args);
+    };
+}
 
 /**
  * Shared helper to close the HUD if it is attached, if persistence is disabled,
@@ -118,40 +150,16 @@ function requestHUDRender() {
 Hooks.once('ready', async () => {
     log.info("Ready");
 
-    // Wrap the clear and close methods on the actual HUD class prototype (e.g. TokenHUD or TokenHUDPF)
-    // to ensure it works across scene changes and supports custom system HUDs in all closing scenarios.
-    if (canvas?.hud?.token) {
-        const hudClass = canvas.hud.token.constructor;
-        log.info(`Wrapping ${hudClass.name}.prototype.clear and close`);
-
-        const originalClear = hudClass.prototype.clear;
-        hudClass.prototype.clear = function (...args) {
-            handleHUDClose();
-            return originalClear.apply(this, args);
-        };
-
-        const originalClose = hudClass.prototype.close;
-        hudClass.prototype.close = function (...args) {
-            handleHUDClose();
-            return originalClose.apply(this, args);
-        };
-    }
+    // Wrap TokenHUD prototype methods on ready if not already wrapped
+    wrapTokenHUD();
 });
 
-// Hook into Token selection to track the last selected token for hotkey toggle
-Hooks.on('controlToken', (token, controlled) => {
-    if (controlled && (token?.document?.isOwner || token?.actor?.isOwner)) {
-        setLastSelectedToken(token);
-    }
-});
-
-// Hook into Token HUD rendering to display our overlay
-Hooks.on('renderTokenHUD', (tokenHUD, html, data) => {
-    const token = tokenHUD?.object;
+/**
+ * Handle initial binding of TokenHUD to a token (opening TokenHUD).
+ * @param {Token} token
+ */
+export function handleHUDBind(token) {
     if (!token || !token.document?.isOwner) return;
-
-    // If TokenHUD is closed, do not open Action Display
-    if (tokenHUD.rendered === false) return;
 
     setLastSelectedToken(token);
     closeDetachedHUD = false;
@@ -180,6 +188,23 @@ Hooks.on('renderTokenHUD', (tokenHUD, html, data) => {
     const newApp = new ActionDisplayApp(token);
     actionDisplay.activeApp = newApp;
     newApp.render(true);
+}
+
+// Hook into Token selection to track the last selected token for hotkey toggle
+Hooks.on('controlToken', (token, controlled) => {
+    if (controlled && (token?.document?.isOwner || token?.actor?.isOwner)) {
+        setLastSelectedToken(token);
+    }
+});
+
+// Hook into Token HUD rendering to re-render attached overlay if open
+Hooks.on('renderTokenHUD', (tokenHUD, html, data) => {
+    const token = tokenHUD?.object;
+    if (!token) return;
+    const currentApp = actionDisplay.activeApp;
+    if (currentApp?.rendered && (currentApp.token === token || currentApp.token?.id === token.id)) {
+        requestHUDRender();
+    }
 });
 
 // Hook into Token HUD closing to close our overlay if tracked or closed via token click
