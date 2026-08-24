@@ -1,44 +1,42 @@
 import '../setup.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { adapter, Adapter, BaseFoundryAdapter, FoundryVTTV12Adapter, FoundryVTTV14Adapter, BaseSystemAdapter } from '../../src/adapters/index.js';
+import { adapter, Adapter, BaseFoundryAdapter, FoundryCurrentAdapter, BaseSystemAdapter } from '../../src/adapters/index.js';
 import { initializeFoundryAdapter } from '../../src/adapters/foundry/index.js';
 import { initializeSystemAdapter } from '../../src/adapters/system/index.js';
 import { initializeModuleAdapters } from '../../src/adapters/module/index.js';
 import { MODULE_ID } from '../../src/constants.js';
 import { log } from '../../src/lib/logger.js';
 
-test('initializeFoundryAdapter returns FoundryVTTV12Adapter or FoundryVTTV14Adapter based on release generation', () => {
-    // V12
+test('initializeFoundryAdapter returns BaseFoundryAdapter on v12/v13 baseline and FoundryCurrentAdapter on v14+', () => {
+    // V12 baseline
     game.release = { generation: 12 };
     game.version = '12.331';
     const v12 = initializeFoundryAdapter();
-    assert.ok(v12 instanceof FoundryVTTV12Adapter);
     assert.ok(v12 instanceof BaseFoundryAdapter);
     assert.equal(v12.generation, 12);
 
-    // V13
+    // V13 baseline
     game.release = { generation: 13 };
     game.version = '13.300';
     const v13 = initializeFoundryAdapter();
-    assert.ok(v13 instanceof FoundryVTTV12Adapter);
     assert.ok(v13 instanceof BaseFoundryAdapter);
     assert.equal(v13.generation, 13);
 
-    // V14
+    // V14 modern
     game.release = { generation: 14 };
     game.version = '14.000';
     const v14 = initializeFoundryAdapter();
-    assert.ok(v14 instanceof FoundryVTTV14Adapter);
+    assert.ok(v14 instanceof FoundryCurrentAdapter);
     assert.ok(v14 instanceof BaseFoundryAdapter);
     assert.equal(v14.generation, 14);
 });
 
-test('FoundryVTTV12Adapter and FoundryVTTV14Adapter getCombatantByToken and getCombatantsByToken contracts', () => {
+test('BaseFoundryAdapter and FoundryCurrentAdapter getCombatantByToken and getCombatantsByToken contracts', () => {
     const mockCombatant = { id: 'c1', tokenId: 't1' };
 
-    // V12 Adapter uses Combat#getCombatantByToken
-    const v12 = new FoundryVTTV12Adapter();
+    // BaseFoundryAdapter (v12 baseline) uses Combat#getCombatantByToken
+    const v12 = new BaseFoundryAdapter();
     const mockCombatV12 = {
         getCombatantByToken: (id) => id === 't1' ? mockCombatant : null
     };
@@ -46,8 +44,8 @@ test('FoundryVTTV12Adapter and FoundryVTTV14Adapter getCombatantByToken and getC
     assert.deepEqual(v12.getCombatantsByToken(mockCombatV12, 't1'), [mockCombatant]);
     assert.equal(v12.getCombatantByToken(mockCombatV12, { id: 't1' }), mockCombatant);
 
-    // V14 Adapter uses Combat#getCombatantsByToken
-    const v14 = new FoundryVTTV14Adapter();
+    // FoundryCurrentAdapter (v14 modern) uses Combat#getCombatantsByToken
+    const v14 = new FoundryCurrentAdapter();
     const mockCombatV14 = {
         getCombatantsByToken: (id) => id === 't1' ? [mockCombatant] : []
     };
@@ -123,7 +121,6 @@ test('Unified Adapter init initializes and formats system label correctly for su
         const supportedAdapter = new Adapter();
         await supportedAdapter.init();
         assert.ok(supportedAdapter.foundry instanceof BaseFoundryAdapter);
-        assert.ok(supportedAdapter.foundry instanceof FoundryVTTV12Adapter);
         assert.equal(supportedAdapter.foundry.generation, 12);
         assert.equal(supportedAdapter.system.systemId, 'dnd5e');
         assert.equal(supportedAdapter.system.isSupported, true);
