@@ -427,10 +427,11 @@ test('Dropdown context menu actions segmentation when economy colors are disable
             assert.ok(li.innerHTML.includes('bad-action-uses-slot'), 'Should include bad-action-uses-slot');
         }
 
-        // Action 1 should have action indicator in economy bars
-        assert.ok(liElements[0].innerHTML.includes('#3b82f6'), 'Should have blue action color');
-        // Action 2 should have bonus indicator in economy bars
-        assert.ok(liElements[1].innerHTML.includes('#14b8a6'), 'Should have teal bonus color');
+        // Find LIs corresponding to each subaction
+        const quickLi = liElements.find(li => li.innerHTML.includes('Quick Strike'));
+        const standardLi = liElements.find(li => li.innerHTML.includes('Standard Attack'));
+        assert.ok(standardLi?.innerHTML.includes('#3b82f6'), 'Should have blue action color');
+        assert.ok(quickLi?.innerHTML.includes('#14b8a6'), 'Should have teal bonus color');
     } finally {
         document.querySelector = originalQuerySelector;
         await game.settings.set(MODULE_ID, 'enableEconomyIndicators', false);

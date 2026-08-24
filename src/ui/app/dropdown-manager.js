@@ -101,7 +101,8 @@ export function buildSubactionMenuItem(sub, event, app = null) {
 export function showActivityDropdown(app, target, subactions, event) {
     event?.preventDefault?.();
     event?.stopPropagation?.();
-    const menuItems = subactions.map(sub => buildSubactionMenuItem(sub, event, app));
+    const sortedSubactions = [...(subactions ?? [])].sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''));
+    const menuItems = sortedSubactions.map(sub => buildSubactionMenuItem(sub, event, app));
 
     if (app._activeLeftClickMenu) {
         const prevLeftMenu = app._activeLeftClickMenu;
@@ -138,7 +139,7 @@ export function showActivityDropdown(app, target, subactions, event) {
         if (!menuEl) return;
         const lis = menuEl.querySelectorAll('.context-item');
         lis.forEach((li, idx) => {
-            const sub = subactions[idx];
+            const sub = sortedSubactions[idx];
             const itemData = menuItems[idx];
             if (sub) {
                 li.dataset.actionId = sub.id;
@@ -200,7 +201,7 @@ export function showActivityDropdown(app, target, subactions, event) {
         const viewportHeight = window?.innerHeight ?? 1080;
         const spaceBelow = viewportHeight - rect.bottom - 15;
         const spaceAbove = rect.top - 15;
-        const neededHeight = subactions.length * 36 + 15;
+        const neededHeight = sortedSubactions.length * 36 + 15;
 
         // Prefer down: only place above if space below is critically constrained (< 80px) and space above is larger
         const placeAbove = spaceBelow < Math.min(neededHeight, 80) && spaceAbove > spaceBelow;

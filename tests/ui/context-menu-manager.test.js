@@ -404,3 +404,68 @@ test('ActionDisplayApp _boundOutsidePointerDown closes active dropdown when clic
     app._boundOutsidePointerDown(fakeEventMenu);
     assert.equal(clearMenuStateCalled, false, 'Clicking inside the menu should not trigger outside click close');
 });
+
+test('showActivityDropdown displays subactions in alphabetical order', async () => {
+    const mockApp = {
+        _activeLeftClickMenu: null,
+        _activeMenuTarget: null,
+        element: { ownerDocument: { body: document.body } }
+    };
+
+    const renderedLis = [];
+    const mockMenuEl = {
+        querySelectorAll: (sel) => {
+            if (sel === '.context-item') return renderedLis;
+            return [];
+        },
+        children: [],
+        style: { setProperty: () => {} }
+    };
+
+    // Create 3 mock li elements for the 3 subactions
+    for (let i = 0; i < 3; i++) {
+        renderedLis.push({
+            dataset: {},
+            innerHTML: '',
+            addEventListener: () => {}
+        });
+    }
+
+    const originalQuerySelector = document.querySelector;
+    document.querySelector = (sel) => {
+        if (sel.includes('#context-menu') || sel.includes('.context-menu')) return mockMenuEl;
+        return null;
+    };
+
+    const mockTarget = {
+        classList: { add: () => {}, remove: () => {} },
+        getBoundingClientRect: () => ({ left: 0, top: 0, right: 100, bottom: 30, width: 100, height: 30 })
+    };
+
+    // Unsorted subactions: "Zebra Attack", "Apple Attack", "Mango Attack"
+    const subactions = [
+        { id: 'act-z', name: 'Zebra Attack', roll: () => {} },
+        { id: 'act-a', name: 'Apple Attack', roll: () => {} },
+        { id: 'act-m', name: 'Mango Attack', roll: () => {} }
+    ];
+
+    try {
+        await showActivityDropdown(mockApp, mockTarget, subactions, { preventDefault() {}, stopPropagation() {} });
+        
+        // Assert that the rendered items are in alphabetical order: Apple, Mango, Zebra
+        assert.equal(renderedLis[0].dataset.actionId, 'act-a');
+        assert.ok(renderedLis[0].innerHTML.includes('Apple Attack'));
+
+        assert.equal(renderedLis[1].dataset.actionId, 'act-m');
+        assert.ok(renderedLis[1].innerHTML.includes('Mango Attack'));
+
+        assert.equal(renderedLis[2].dataset.actionId, 'act-z');
+        assert.ok(renderedLis[2].innerHTML.includes('Zebra Attack'));
+    } finally {
+        document.querySelector = originalQuerySelector;
+        if (mockApp._activeLeftClickMenu) {
+            await mockApp._activeLeftClickMenu.close();
+        }
+    }
+});
+
