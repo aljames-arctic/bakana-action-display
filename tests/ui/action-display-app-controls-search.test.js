@@ -365,7 +365,7 @@ test('ActionDisplayApp _onToggleCombatAutoTrack toggles setting and switches tok
     globalThis.game.combat = null;
 });
 
-test('ActionDisplayApp bringToTop elevates HUD z-index and synchronizes globalThis._maxZ', () => {
+test('ActionDisplayApp bringToTop elevates HUD z-index above all other open application windows', () => {
     const app = new ActionDisplayApp({ actor: { id: 'test-actor' } });
     app.element = { style: { zIndex: '100' } };
 
@@ -384,7 +384,6 @@ test('ActionDisplayApp bringToTop elevates HUD z-index and synchronizes globalTh
     const newZ = app.bringToTop();
     assert.equal(newZ, 136, 'HUD z-index should be higher than highest other window (135 + 1)');
     assert.equal(app.element.style.zIndex, '136');
-    assert.equal(globalThis._maxZ, 136, 'globalThis._maxZ should be updated so windows activated later sit above HUD');
 
     // Restore
     document.querySelectorAll = oldQuerySelectorAll;

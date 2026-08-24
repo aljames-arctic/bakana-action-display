@@ -310,6 +310,5 @@ Hooks.on('renderApplication', (app, html) => {
         if (appEl.style) {
             appEl.style.zIndex = `${newZ}`;
         }
-        globalThis._maxZ = Math.max(globalThis._maxZ ?? 100, newZ);
     }
 });

@@ -1252,7 +1252,6 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
                 if (targetZ <= hudZ) {
                     const newZ = hudZ + 1;
                     targetWindow.style.zIndex = `${newZ}`;
-                    globalThis._maxZ = Math.max(globalThis._maxZ ?? 100, newZ);
                 }
             }
         };
@@ -1272,7 +1271,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
 
     /**
      * Bring this application to the top of the z-index stack.
-     * Synchronizes with Foundry's global window manager stack (_maxZ) and queries open windows in the DOM.
+     * Computes the maximum z-index across all open windows and applications in the DOM.
      * @returns {number} The newly assigned z-index
      */
     bringToTop() {
@@ -1284,12 +1283,12 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         } catch (_) {}
 
         // Query open application windows in the DOM to calculate highest active z-index
-        let maxZ = Math.max(globalThis._maxZ ?? 100, 100);
+        let maxZ = 100;
         const currentZ = parseInt(this.element.style?.zIndex, 10);
         if (!isNaN(currentZ)) maxZ = Math.max(maxZ, currentZ);
 
         if (typeof document !== 'undefined' && document.querySelectorAll) {
-            const windows = document.querySelectorAll('.window-app, .application, .app');
+            const windows = document.querySelectorAll('.window-app, .application, .app, .dialog, .sidebar-popout');
             for (const win of windows) {
                 if (win === this.element) continue;
                 const rawZ = win.style?.zIndex ?? (typeof window !== 'undefined' && window.getComputedStyle ? window.getComputedStyle(win)?.zIndex : null);
@@ -1301,7 +1300,6 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         }
 
         const newZ = maxZ + 1;
-        globalThis._maxZ = newZ;
         if (this.element.style) {
             this.element.style.zIndex = `${newZ}`;
         }
