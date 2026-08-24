@@ -57,6 +57,47 @@ export class BaseSystemAdapter {
         return (await this.foundry?.fromUuid?.(uuid, options)) ?? null;
     }
 
+    /**
+     * Merge two objects recursively using the Foundry platform adapter.
+     * @param {Object} original Target object
+     * @param {Object} [other={}] Source object
+     * @param {Object} [options={}] Merge options
+     * @returns {Object}
+     */
+    mergeObject(original, other = {}, options = {}) {
+        return this.foundry?.mergeObject?.(original, other, options) ?? Object.assign(original, other);
+    }
+
+    /**
+     * Deep duplicate an object using the Foundry platform adapter.
+     * @param {Object} obj Target object
+     * @returns {Object}
+     */
+    duplicate(obj) {
+        return this.foundry?.duplicate?.(obj) ?? JSON.parse(JSON.stringify(obj));
+    }
+
+    /**
+     * Retrieve a property from an object by dot path using the Foundry platform adapter.
+     * @param {Object} obj Target object
+     * @param {string} path Dot path
+     * @returns {*}
+     */
+    getProperty(obj, path) {
+        return this.foundry?.getProperty?.(obj, path);
+    }
+
+    /**
+     * Set a property on an object by dot path using the Foundry platform adapter.
+     * @param {Object} obj Target object
+     * @param {string} path Dot path
+     * @param {*} value Property value
+     * @returns {boolean}
+     */
+    setProperty(obj, path, value) {
+        return this.foundry?.setProperty?.(obj, path, value);
+    }
+
     getContextMenuItems(app) {
         return this.contextMenuManager.getContextMenuItems(app);
     }

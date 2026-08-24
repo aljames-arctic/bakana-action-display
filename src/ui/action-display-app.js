@@ -195,7 +195,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         if (game.settings.get(MODULE_ID, 'persistTabState')) {
             try {
                 const MAX_PERSISTED_ACTORS = 25;
-                const allStates = foundry.utils.duplicate(game.settings.get(MODULE_ID, 'hudTabStates') ?? {});
+                const allStates = adapter.foundry.duplicate(game.settings.get(MODULE_ID, 'hudTabStates') ?? {});
 
                 // Re-insert key to refresh its LRU position (most recent at end)
                 delete allStates[actorKey];
@@ -2030,7 +2030,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
                 targetPosition.left = left;
             }
 
-            const result = super.setPosition(foundry.utils.mergeObject(position, targetPosition));
+            const result = super.setPosition(adapter.foundry.mergeObject(position, targetPosition));
             el.style.height = 'auto';
 
             if (isHorizontal) {
@@ -2065,7 +2065,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
             const left = Math.clamp(savedPos?.left ?? 100, 10, window.innerWidth - appWidth - 10);
             const top = Math.clamp(savedPos?.top ?? 100, 10, window.innerHeight - appHeight - 10);
 
-            const targetPosition = foundry.utils.mergeObject(position, {
+            const targetPosition = adapter.foundry.mergeObject(position, {
                 left,
                 top,
                 width: 'auto',

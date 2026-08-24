@@ -406,6 +406,65 @@ class Adapter {
     async fromUuid(uuid, options = {}) {
         return (await this.foundry?.fromUuid?.(uuid, options)) ?? null;
     }
+
+    /**
+     * Merge two objects recursively via the active Foundry adapter.
+     * @param {Object} original Target object
+     * @param {Object} [other={}] Source object
+     * @param {Object} [options={}] Merge options
+     * @returns {Object}
+     */
+    mergeObject(original, other = {}, options = {}) {
+        return this.foundry?.mergeObject?.(original, other, options) ?? Object.assign(original, other);
+    }
+
+    /**
+     * Deep duplicate an object via the active Foundry adapter.
+     * @param {Object} obj Target object
+     * @returns {Object}
+     */
+    duplicate(obj) {
+        return this.foundry?.duplicate?.(obj) ?? JSON.parse(JSON.stringify(obj));
+    }
+
+    /**
+     * Retrieve a property from an object by dot path via the active Foundry adapter.
+     * @param {Object} obj Target object
+     * @param {string} path Dot path
+     * @returns {*}
+     */
+    getProperty(obj, path) {
+        return this.foundry?.getProperty?.(obj, path);
+    }
+
+    /**
+     * Set a property on an object by dot path via the active Foundry adapter.
+     * @param {Object} obj Target object
+     * @param {string} path Dot path
+     * @param {*} value Property value
+     * @returns {boolean}
+     */
+    setProperty(obj, path, value) {
+        return this.foundry?.setProperty?.(obj, path, value);
+    }
+
+    /**
+     * Generate a random string identifier via the active Foundry adapter.
+     * @param {number} [length=16] Length of the identifier
+     * @returns {string}
+     */
+    randomID(length = 16) {
+        return this.foundry?.randomID?.(length) ?? Math.random().toString(36).substring(2, 2 + length);
+    }
+
+    /**
+     * Test whether an object is empty via the active Foundry adapter.
+     * @param {Object} obj Target object
+     * @returns {boolean}
+     */
+    isEmpty(obj) {
+        return this.foundry?.isEmpty?.(obj) ?? (obj ? Object.keys(obj).length === 0 : true);
+    }
 }
 
 export const adapter = new Adapter();

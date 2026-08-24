@@ -759,7 +759,7 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
      * @returns {Object[]} Array of category definition objects
      */
     getDefaultCategories(overrides = {}) {
-        const categories = super.getDefaultCategories(foundry.utils.mergeObject({
+        const categories = super.getDefaultCategories(this.mergeObject({
             weapon: {
                 expression: `item.type === 'weapon' || item.type === 'attack' || item.type === 'equipment'`
             },
@@ -817,7 +817,7 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
         for (const cat of pf1Categories) {
             const key = cat.id.replace('cat_', '');
             const catOverride = overrides[cat.id] ?? overrides[key] ?? {};
-            categories.push(foundry.utils.mergeObject(cat, catOverride, { inplace: false, overwrite: true }));
+            categories.push(this.mergeObject(cat, catOverride, { inplace: false, overwrite: true }));
         }
 
         return categories;

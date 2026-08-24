@@ -107,7 +107,7 @@ export class FantasySystemAdapter extends BaseSystemAdapter {
         return DEFAULT_CATEGORIES.map(defaultCat => {
             const key = defaultCat.id.replace('cat_', '').replace(/s$/, ''); // e.g. 'weapon', 'spell', 'feature'
             const catOverride = overrides[defaultCat.id] ?? overrides[key] ?? {};
-            return foundry.utils.mergeObject(defaultCat, catOverride, { inplace: false, overwrite: true });
+            return this.mergeObject(defaultCat, catOverride, { inplace: false, overwrite: true });
         });
     }
 }

@@ -133,6 +133,35 @@ export class BaseFoundryAdapter {
     }
 
     /**
+     * Set a property on an object by dot-separated path.
+     * @param {Object} obj Target object
+     * @param {string} path Dot path
+     * @param {*} value Property value
+     * @returns {boolean}
+     */
+    setProperty(obj, path, value) {
+        return foundry.utils.setProperty(obj, path, value);
+    }
+
+    /**
+     * Generate a random string identifier.
+     * @param {number} [length=16] Length of the identifier
+     * @returns {string}
+     */
+    randomID(length = 16) {
+        return foundry.utils.randomID?.(length) ?? Math.random().toString(36).substring(2, 2 + length);
+    }
+
+    /**
+     * Test whether an object is empty.
+     * @param {Object} obj Target object
+     * @returns {boolean}
+     */
+    isEmpty(obj) {
+        return foundry.utils.isEmpty?.(obj) ?? (obj ? Object.keys(obj).length === 0 : true);
+    }
+
+    /**
      * The active TextEditor constructor / implementation.
      */
     get TextEditor() {

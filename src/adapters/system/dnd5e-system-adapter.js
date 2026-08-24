@@ -736,7 +736,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         }
 
         // 3. Thrown Weapons (quantity is the uses)
-        if (item.type === 'weapon' && foundry.utils.getProperty(system.properties, 'thr') && !foundry.utils.getProperty(system.properties, 'ret')) {
+        if (item.type === 'weapon' && this.getProperty(system.properties, 'thr') && !this.getProperty(system.properties, 'ret')) {
             return {
                 available: system.quantity ?? 0,
                 max: null
@@ -1175,7 +1175,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         for (const cat of dnd5eCategories) {
             const key = cat.id.replace('cat_', '');
             const catOverride = overrides[cat.id] ?? overrides[key] ?? {};
-            categories.push(foundry.utils.mergeObject(cat, catOverride, { inplace: false, overwrite: true }));
+            categories.push(this.mergeObject(cat, catOverride, { inplace: false, overwrite: true }));
         }
 
         return categories;
