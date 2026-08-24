@@ -71,11 +71,14 @@ export function buildSubactionMenuItem(sub, event, app = null) {
     }
 
     const usesSlotHtml = `<div class="bad-action-uses-slot">${usesHtml}</div>`;
+    const nameHtml = `<span class="bad-action-name bad-menu-name">${sub?.name ?? "Action"}</span>`;
 
     return {
-        name: sub?.name ?? "Action",
+        name: `${nameHtml}${economyHtml}${usesSlotHtml}`,
+        rawName: sub?.name ?? "Action",
         icon: `<span class="bad-menu-icon-wrap">${iconHtml}</span>`,
         iconHtml,
+        nameHtml,
         usesHtml,
         economyHtml,
         usesSlotHtml,
@@ -230,12 +233,11 @@ export function showActivityDropdown(app, target, subactions, event) {
                     li.dataset.actionId = sub.id;
                     li._badSubaction = sub;
 
-                    const iconWrap = itemData?.icon ?? `<span class="bad-menu-icon-wrap">${itemData?.iconHtml ?? ''}</span>`;
-                    const nameHtml = `<span class="bad-action-name bad-menu-name">${sub.name ?? itemData?.name ?? "Action"}</span>`;
-                    const econHtml = itemData?.economyHtml ?? '';
-                    const usesHtml = itemData?.usesSlotHtml ?? '<div class="bad-action-uses-slot"></div>';
-
-                    li.innerHTML = `${iconWrap}${nameHtml}${econHtml}${usesHtml}`;
+                    // If not already rendered into the DOM by ContextMenu, ensure structure is present
+                    if (!li.querySelector?.('.bad-action-name') && itemData) {
+                        const iconWrap = itemData.icon ?? `<span class="bad-menu-icon-wrap">${itemData.iconHtml ?? ''}</span>`;
+                        li.innerHTML = `${iconWrap}${itemData.name}`;
+                    }
 
                     li.addEventListener('pointerover', () => {
                         app._hoveredActionItem = li;

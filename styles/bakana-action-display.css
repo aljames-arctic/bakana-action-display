@@ -1014,8 +1014,8 @@
 
 /* Context menu icon styling */
 #context-menu .bad-menu-icon, .context-menu .bad-menu-icon {
-    width: 1.2em !important;
-    height: 1.2em !important;
+    width: 1.35em !important;
+    height: 1.35em !important;
     border: 1px solid rgba(255, 255, 255, 0.15) !important;
     vertical-align: middle;
     border-radius: 0.2em !important;
@@ -1024,8 +1024,8 @@
 }
 
 #context-menu .bad-action-icon-placeholder, .context-menu .bad-action-icon-placeholder {
-    width: 1.2em !important;
-    height: 1.2em !important;
+    width: 1.35em !important;
+    height: 1.35em !important;
     border-radius: 0.2em !important;
     border: 1px solid rgba(255, 255, 255, 0.15) !important;
     display: flex !important;
@@ -1033,14 +1033,14 @@
     justify-content: center !important;
     background: rgba(255, 255, 255, 0.05) !important;
     color: #94a3b8 !important;
-    font-size: 0.8em !important;
+    font-size: 0.9em !important;
     flex-shrink: 0 !important;
 }
 
 /* Context menu activity / action name (flex: 1 1 auto to take remaining space) */
 #context-menu .bad-action-name, .context-menu .bad-action-name,
 #context-menu .bad-menu-name, .context-menu .bad-menu-name {
-    font-size: 0.85em !important;
+    font-size: 1em !important;
     color: #f1f5f9 !important;
     flex: 1 1 auto !important;
     min-width: 0 !important;
@@ -1110,11 +1110,11 @@
 /* Uses badge inside dropdown context menu */
 #context-menu .bad-menu-uses, .context-menu .bad-menu-uses,
 #context-menu .bad-action-uses, .context-menu .bad-action-uses {
-    font-size: 0.75em !important;
+    font-size: 0.85em !important;
     background: rgba(255, 255, 255, 0.08) !important;
     border: 1px solid rgba(255, 255, 255, 0.1) !important;
     border-radius: 0.28em !important;
-    padding: 0.14em 0.43em !important;
+    padding: 0.15em 0.45em !important;
     color: #94a3b8 !important;
     font-weight: bold !important;
     flex-shrink: 0 !important;

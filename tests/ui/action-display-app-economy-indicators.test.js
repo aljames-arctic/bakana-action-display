@@ -355,12 +355,14 @@ test('Dropdown context menu actions segmentation when economy colors are disable
     await game.settings.set(MODULE_ID, 'enableEconomyIndicators', false);
 
     const itemDisabled1 = buildSubactionMenuItem(actAction, {});
-    assert.equal(itemDisabled1.name, 'Standard Attack');
+    assert.equal(itemDisabled1.rawName, 'Standard Attack');
+    assert.ok(itemDisabled1.name.includes('Standard Attack'));
     assert.equal(itemDisabled1.economyHtml, '');
     assert.ok(itemDisabled1.usesSlotHtml.includes('bad-action-uses-slot'));
     assert.ok(itemDisabled1.usesSlotHtml.includes('5 / 10'));
 
     const itemDisabledPassive = buildSubactionMenuItem(actPassive, {});
+    assert.equal(itemDisabledPassive.rawName, 'Passive Flow');
     assert.equal(itemDisabledPassive.economyHtml, '');
     assert.equal(itemDisabledPassive.usesSlotHtml, '<div class="bad-action-uses-slot"></div>');
 
