@@ -31,10 +31,6 @@
                 "name": "Combat Action Buttons",
                 "hint": "Display contextual combat buttons (e.g. Roll Initiative, End Turn) in the HUD footer during combat."
             },
-            "enableEndTurnButton": {
-                "name": "Combat Action Buttons",
-                "hint": "Display contextual combat buttons (e.g. Roll Initiative, End Turn) in the HUD footer during combat."
-            },
             "enableCombatAutoTrackButton": {
                 "name": "Combat Auto-Track Button",
                 "hint": "Display a combat turn tracking button (sword icon) in the HUD control bar to automatically follow the active character's turn during combat."

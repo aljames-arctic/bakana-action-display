@@ -649,15 +649,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         context.hasMultiplePages = this.totalPages > 1;
 
         // Check if the current actor / token is in combat and if combat action buttons should be shown
-        let enableCombatButtons = false;
-        try {
-            enableCombatButtons = Boolean(game.settings.get(MODULE_ID, 'enableCombatButtons'));
-        } catch (_) {}
-        if (!enableCombatButtons) {
-            try {
-                enableCombatButtons = Boolean(game.settings.get(MODULE_ID, 'enableEndTurnButton'));
-            } catch (_) {}
-        }
+        const enableCombatButtons = Boolean(game.settings.get(MODULE_ID, 'enableCombatButtons'));
 
         let showRollInitiativeButton = false;
         let showEndTurnButton = false;

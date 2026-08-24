@@ -117,14 +117,6 @@ Hooks.once('init', () => {
         }
     });
 
-    // Register Enable End Turn Button Setting (backwards compatibility alias)
-    game.settings.register(MODULE_ID, 'enableEndTurnButton', {
-        scope: 'world',
-        config: false,
-        type: Boolean,
-        default: false
-    });
-
     // Register Combat Auto-Track Button Setting (World Scope, default disabled)
     game.settings.register(MODULE_ID, 'enableCombatAutoTrackButton', {
         name: game.i18n.localize('BAD.settings.enableCombatAutoTrackButton.name'),
