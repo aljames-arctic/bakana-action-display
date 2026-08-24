@@ -334,10 +334,20 @@ class Adapter {
      * Allow system adapter to modify Handlebars context before rendering.
      * @param {Object} context
      * @param {Object} options
-     * @returns {void}
+     * @returns {Promise<void>}
      */
-    modifyContext(context, options) {
-        return this.system?.modifyContext?.(context, options);
+    async modifyContext(context, options) {
+        return (await this.system?.modifyContext?.(context, options));
+    }
+
+    /**
+     * Extract structured token information for showcase display.
+     * @param {Actor} actor
+     * @param {Token} [token]
+     * @returns {Promise<Object|null>}
+     */
+    async getTokenInfo(actor, token = null) {
+        return (await this.system?.getTokenInfo?.(actor, token)) ?? null;
     }
 
     /**

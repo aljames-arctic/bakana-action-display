@@ -202,6 +202,28 @@
             "tools": "Tools",
             "tool": "Tools"
         },
+        "page3": {
+            "tokenInfo": "Token Information",
+            "armorClass": "Armor Class",
+            "movementSpeed": "Movement Speed",
+            "resistances": "Damage Resistances",
+            "immunities": "Immunities",
+            "damageImmunities": "Damage Immunities",
+            "conditionImmunities": "Condition Immunities",
+            "vulnerabilities": "Damage Vulnerabilities",
+            "languages": "Languages",
+            "creatureType": "Creature Type",
+            "biography": "Biography",
+            "senses": "Senses",
+            "noBiography": "No biography details available.",
+            "none": "None",
+            "walk": "Walk",
+            "fly": "Fly",
+            "swim": "Swim",
+            "climb": "Climb",
+            "burrow": "Burrow",
+            "hover": "Hover"
+        },
         "keybindings": {
             "toggleHUD": {
                 "name": "Toggle Action Display HUD",

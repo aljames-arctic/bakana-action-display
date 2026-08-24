@@ -80,7 +80,179 @@
     <div class="bad-main-layout">
         <!-- Main Content Area -->
         <div class="bad-tab-content">
-            {{#if isCategorized}}
+            {{#if (eq layout "tokenInfo")}}
+                <!-- Token Information Showcase (Page 3) -->
+                {{#if tokenInfo}}
+                <div class="bad-token-info-container">
+                    <!-- Token Header: Portrait, Name, Creature Type / Race, Size, Alignment, CR / Level -->
+                    <div class="bad-token-info-header">
+                        {{#if tokenInfo.img}}
+                        <img class="bad-token-info-portrait" src="{{tokenInfo.img}}" alt="{{tokenInfo.name}}" />
+                        {{/if}}
+                        <div class="bad-token-info-title-group">
+                            <div class="bad-token-info-name">{{tokenInfo.name}}</div>
+                            <div class="bad-token-info-meta">
+                                {{#if tokenInfo.typeLabel}}
+                                <span class="bad-token-info-badge bad-badge-type">{{tokenInfo.typeLabel}}</span>
+                                {{/if}}
+                                {{#if tokenInfo.crLabel}}
+                                <span class="bad-token-info-badge bad-badge-cr">{{tokenInfo.crLabel}}</span>
+                                {{/if}}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Core Combat Stats: Armor Class & Movement Speed -->
+                    <div class="bad-token-info-stats-grid">
+                        <!-- Armor Class Card -->
+                        <div class="bad-token-stat-card bad-stat-ac">
+                            <div class="bad-token-stat-icon"><i class="fas fa-shield-alt"></i></div>
+                            <div class="bad-token-stat-body">
+                                <div class="bad-token-stat-value">{{tokenInfo.ac.value}}</div>
+                                <div class="bad-token-stat-label">{{localize "BAD.page3.armorClass"}}</div>
+                                {{#if tokenInfo.ac.label}}
+                                <div class="bad-token-stat-sub">{{tokenInfo.ac.label}}</div>
+                                {{/if}}
+                            </div>
+                        </div>
+
+                        <!-- Movement Speed Card -->
+                        <div class="bad-token-stat-card bad-stat-speed">
+                            <div class="bad-token-stat-icon"><i class="fas fa-running"></i></div>
+                            <div class="bad-token-stat-body">
+                                <div class="bad-token-stat-value">{{tokenInfo.movement.primary}}</div>
+                                <div class="bad-token-stat-label">{{localize "BAD.page3.movementSpeed"}}</div>
+                                {{#if tokenInfo.movement.secondary}}
+                                <div class="bad-token-stat-sub">{{tokenInfo.movement.secondary}}</div>
+                                {{/if}}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Traits & Defenses: Resistances, Immunities, Vulnerabilities, Languages, Senses -->
+                    <div class="bad-token-info-section bad-token-traits-section">
+                        <!-- Damage Resistances -->
+                        <div class="bad-token-trait-row">
+                            <div class="bad-token-trait-header">
+                                <i class="fas fa-shield-halved"></i>
+                                <span class="bad-token-trait-label">{{localize "BAD.page3.resistances"}}</span>
+                            </div>
+                            <div class="bad-token-trait-content">
+                                {{#if tokenInfo.resistances.length}}
+                                    <div class="bad-token-tags">
+                                        {{#each tokenInfo.resistances}}
+                                        <span class="bad-token-tag bad-tag-resistance">{{this}}</span>
+                                        {{/each}}
+                                    </div>
+                                {{else}}
+                                    <span class="bad-token-trait-empty">{{localize "BAD.page3.none"}}</span>
+                                {{/if}}
+                            </div>
+                        </div>
+
+                        <!-- Immunities (Damage & Condition) -->
+                        <div class="bad-token-trait-row">
+                            <div class="bad-token-trait-header">
+                                <i class="fas fa-certificate"></i>
+                                <span class="bad-token-trait-label">{{localize "BAD.page3.immunities"}}</span>
+                            </div>
+                            <div class="bad-token-trait-content">
+                                {{#if tokenInfo.hasImmunities}}
+                                    <div class="bad-token-tags">
+                                        {{#each tokenInfo.damageImmunities}}
+                                        <span class="bad-token-tag bad-tag-damage-immunity" title="{{localize 'BAD.page3.damageImmunities'}}">{{this}}</span>
+                                        {{/each}}
+                                        {{#each tokenInfo.conditionImmunities}}
+                                        <span class="bad-token-tag bad-tag-condition-immunity" title="{{localize 'BAD.page3.conditionImmunities'}}">{{this}}</span>
+                                        {{/each}}
+                                    </div>
+                                {{else}}
+                                    <span class="bad-token-trait-empty">{{localize "BAD.page3.none"}}</span>
+                                {{/if}}
+                            </div>
+                        </div>
+
+                        <!-- Damage Vulnerabilities -->
+                        <div class="bad-token-trait-row">
+                            <div class="bad-token-trait-header">
+                                <i class="fas fa-heart-crack"></i>
+                                <span class="bad-token-trait-label">{{localize "BAD.page3.vulnerabilities"}}</span>
+                            </div>
+                            <div class="bad-token-trait-content">
+                                {{#if tokenInfo.vulnerabilities.length}}
+                                    <div class="bad-token-tags">
+                                        {{#each tokenInfo.vulnerabilities}}
+                                        <span class="bad-token-tag bad-tag-vulnerability">{{this}}</span>
+                                        {{/each}}
+                                    </div>
+                                {{else}}
+                                    <span class="bad-token-trait-empty">{{localize "BAD.page3.none"}}</span>
+                                {{/if}}
+                            </div>
+                        </div>
+
+                        <!-- Languages -->
+                        <div class="bad-token-trait-row">
+                            <div class="bad-token-trait-header">
+                                <i class="fas fa-comments"></i>
+                                <span class="bad-token-trait-label">{{localize "BAD.page3.languages"}}</span>
+                            </div>
+                            <div class="bad-token-trait-content">
+                                {{#if tokenInfo.languages.length}}
+                                    <div class="bad-token-tags">
+                                        {{#each tokenInfo.languages}}
+                                        <span class="bad-token-tag bad-tag-language">{{this}}</span>
+                                        {{/each}}
+                                    </div>
+                                {{else}}
+                                    <span class="bad-token-trait-empty">{{localize "BAD.page3.none"}}</span>
+                                {{/if}}
+                            </div>
+                        </div>
+
+                        {{#if tokenInfo.senses.length}}
+                        <!-- Senses -->
+                        <div class="bad-token-trait-row">
+                            <div class="bad-token-trait-header">
+                                <i class="fas fa-eye"></i>
+                                <span class="bad-token-trait-label">{{localize "BAD.page3.senses"}}</span>
+                            </div>
+                            <div class="bad-token-trait-content">
+                                <div class="bad-token-tags">
+                                    {{#each tokenInfo.senses}}
+                                    <span class="bad-token-tag bad-tag-sense">{{this}}</span>
+                                    {{/each}}
+                                </div>
+                            </div>
+                        </div>
+                        {{/if}}
+                    </div>
+
+                    <!-- Biography Section -->
+                    <div class="bad-token-info-section bad-token-biography-section">
+                        <div class="bad-token-section-header">
+                            <i class="fas fa-book-open"></i>
+                            <span>{{localize "BAD.page3.biography"}}</span>
+                        </div>
+                        <div class="bad-token-biography-content">
+                            {{#if tokenInfo.biographyHTML}}
+                                {{{tokenInfo.biographyHTML}}}
+                            {{else if tokenInfo.biography}}
+                                <p>{{tokenInfo.biography}}</p>
+                            {{else}}
+                                <div class="bad-token-biography-empty">
+                                    <em>{{localize "BAD.page3.noBiography"}}</em>
+                                </div>
+                            {{/if}}
+                        </div>
+                    </div>
+                </div>
+                {{else}}
+                <div class="bad-no-actions">
+                    <i class="fas fa-info-circle"></i> {{localize "BAD.core.noActions"}}
+                </div>
+                {{/if}}
+            {{else if isCategorized}}
                 {{#if categorizedSections.length}}
                     {{#each categorizedSections}}
                     <div class="bad-category-header {{#unless this.name}}bad-category-header-empty{{/unless}}">

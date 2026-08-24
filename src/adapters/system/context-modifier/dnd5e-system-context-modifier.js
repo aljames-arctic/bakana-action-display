@@ -129,7 +129,7 @@ export class Dnd5eSystemContextModifier extends BaseSystemContextModifier {
     modifyContext(context, app) {
         const findParent = id => context.itemTypes?.find(t => t.id === id);
 
-        const showAll = app.actor?.getFlag(MODULE_ID, 'showAll') ?? false;
+        const showAll = app?.actor?.getFlag?.(MODULE_ID, 'showAll') ?? false;
 
         const allParent = findParent('all');
         if (allParent) {
@@ -138,43 +138,43 @@ export class Dnd5eSystemContextModifier extends BaseSystemContextModifier {
 
         const spellParent = findParent('spell');
         if (spellParent) {
-            const showUnprepared = app.actor?.getFlag(MODULE_ID, 'showUnprepared') ?? false;
+            const showUnprepared = app?.actor?.getFlag?.(MODULE_ID, 'showUnprepared') ?? false;
             spellParent.showUnprepared = Boolean(showUnprepared || showAll);
         }
 
         const weaponParent = findParent('weapon');
         if (weaponParent) {
-            const showUnequippedWeapon = app.actor?.getFlag(MODULE_ID, 'showUnequipped_weapon') ?? false;
+            const showUnequippedWeapon = app?.actor?.getFlag?.(MODULE_ID, 'showUnequipped_weapon') ?? false;
             weaponParent.showUnprepared = Boolean(showUnequippedWeapon || showAll);
         }
 
         const equipmentParent = findParent('equipment');
         if (equipmentParent) {
-            const showUnequippedEquipment = app.actor?.getFlag(MODULE_ID, 'showUnequipped_equipment') ?? false;
+            const showUnequippedEquipment = app?.actor?.getFlag?.(MODULE_ID, 'showUnequipped_equipment') ?? false;
             equipmentParent.showUnprepared = Boolean(showUnequippedEquipment || showAll);
         }
 
         const consumableParent = findParent('consumable');
         if (consumableParent) {
-            const showUnequippedConsumable = app.actor?.getFlag(MODULE_ID, 'showUnequipped_consumable') ?? false;
+            const showUnequippedConsumable = app?.actor?.getFlag?.(MODULE_ID, 'showUnequipped_consumable') ?? false;
             consumableParent.showUnprepared = Boolean(showUnequippedConsumable || showAll);
         }
 
         const toolParent = findParent('tool');
         if (toolParent) {
-            const showUnequippedTool = app.actor?.getFlag(MODULE_ID, 'showUnequipped_tool') ?? false;
+            const showUnequippedTool = app?.actor?.getFlag?.(MODULE_ID, 'showUnequipped_tool') ?? false;
             toolParent.showUnprepared = Boolean(showUnequippedTool || showAll);
         }
 
         const backpackParent = findParent('backpack');
         if (backpackParent) {
-            const showUnequippedBackpack = app.actor?.getFlag(MODULE_ID, 'showUnequipped_backpack') ?? false;
+            const showUnequippedBackpack = app?.actor?.getFlag?.(MODULE_ID, 'showUnequipped_backpack') ?? false;
             backpackParent.showUnprepared = Boolean(showUnequippedBackpack || showAll);
         }
 
         const lootParent = findParent('loot');
         if (lootParent) {
-            const showUnequippedLoot = app.actor?.getFlag(MODULE_ID, 'showUnequipped_loot') ?? false;
+            const showUnequippedLoot = app?.actor?.getFlag?.(MODULE_ID, 'showUnequipped_loot') ?? false;
             lootParent.showUnprepared = Boolean(showUnequippedLoot || showAll);
         }
 
@@ -193,16 +193,16 @@ export class Dnd5eSystemContextModifier extends BaseSystemContextModifier {
      * @param {boolean} [forceShow=false] Force orange indicator if showAll is true
      */
     #ensureAllSubTab(parent, app, label, flagKey, requireSubTabs = false, forceShow = false) {
-        if (!parent || (requireSubTabs && parent.subTabs.length === 0)) return;
-        const flagValue = app.actor?.getFlag(MODULE_ID, flagKey) ?? false;
+        if (!parent || typeof parent.addSubTab !== 'function' || (requireSubTabs && parent.subTabs?.length === 0)) return;
+        const flagValue = app?.actor?.getFlag?.(MODULE_ID, flagKey) ?? false;
         const showUnprepared = Boolean(forceShow || flagValue);
         parent.addSubTab({
             id: 'all',
             label,
-            active: app.leftTabs.activeParents.has(parent.id) && app.leftTabs.activeSubTypes.size === 0,
+            active: Boolean(app?.leftTabs?.activeParents?.has(parent.id) && app?.leftTabs?.activeSubTypes?.size === 0),
             showUnprepared
         });
-        parent.updateOrder(Object.keys(SORT_ORDERS.tabs[parent.id]));
+        parent.updateOrder?.(Object.keys(SORT_ORDERS.tabs[parent.id]));
     }
 
     /**

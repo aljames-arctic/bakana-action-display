@@ -164,4 +164,66 @@ test('ActionDisplayApp Page 2 populates Tools left filter tab and filters tool p
     assert.equal(ctxDexTools.items[0].id, 'tool-thief');
 });
 
+test('ActionDisplayApp Page 3 renders token information showcase with 3 pages in pagination', async () => {
+    adapter.system = new Dnd5eSystemAdapter();
+    const actor = {
+        id: 'test-actor-3',
+        name: 'Gimli',
+        img: 'icons/dwarf.png',
+        getFlag: () => false,
+        flags: {},
+        system: {
+            attributes: {
+                ac: { value: 17, calc: 'armored' },
+                movement: { walk: 25, units: 'ft' }
+            },
+            traits: {
+                size: 'med',
+                dr: { value: ['poison'] },
+                di: { value: [] },
+                ci: { value: [] },
+                dv: { value: [] },
+                languages: { value: ['common', 'dwarvish'] }
+            },
+            details: {
+                race: 'Dwarf',
+                biography: { value: '<p>A mighty axe wielder.</p>' }
+            }
+        },
+        getRollData: () => ({ name: 'Gimli' })
+    };
+
+    const app = new ActionDisplayApp({ actor });
+    app.activePage = 3;
+    app._saveTabState = () => {};
+
+    const mockActions = [
+        { id: 'act-1', name: 'Battleaxe', page: 1, left: ['weapon'] },
+        { id: 'act-2', name: 'Strength Save', page: 2, left: ['savingThrow'] },
+        { id: 'token-info-test-actor-3', name: 'Gimli', page: 3, type: 'info' }
+    ];
+
+    actionDisplay.getActions = async () => mockActions;
+
+    const context = await app._prepareContext({});
+    assert.equal(context.totalPages, 3);
+    assert.equal(context.activePage, 3);
+    assert.equal(context.hasMultiplePages, true);
+    assert.equal(context.pages.length, 3);
+    assert.deepEqual(context.pages[0], { page: 1, active: false });
+    assert.deepEqual(context.pages[1], { page: 2, active: false });
+    assert.deepEqual(context.pages[2], { page: 3, active: true });
+    assert.equal(context.layout, 'tokenInfo');
+    assert.equal(context.isCategorized, false);
+    assert.deepEqual(context.itemTypes, []);
+    assert.deepEqual(context.actionTypes, []);
+    assert.ok(context.tokenInfo);
+    assert.equal(context.tokenInfo.name, 'Gimli');
+    assert.equal(context.tokenInfo.ac.value, 17);
+    assert.equal(context.tokenInfo.movement.primary, '25 ft');
+    assert.deepEqual(context.tokenInfo.languages, ['Common', 'Dwarvish']);
+    assert.deepEqual(context.tokenInfo.resistances, ['Poison']);
+});
+
+
 

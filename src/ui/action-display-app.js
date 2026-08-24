@@ -700,7 +700,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         context.isCurrentCombatant = showEndTurnButton || isCurrentCombatant;
 
         // Delegate to system adapter to allow system-specific context modifications and layout selection
-        adapter?.modifyContext?.(context, this);
+        await adapter?.modifyContext?.(context, this);
 
         // Save serialized tab selections for active actor
         this._saveTabState();

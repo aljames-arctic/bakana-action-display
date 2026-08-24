@@ -254,6 +254,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         }
 
         modified.push(...this.extractCheckActions(actor));
+        modified.push(...this.extractInfoActions(actor));
 
         return modified;
     }
@@ -394,6 +395,26 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         }
 
         return checkActions;
+    }
+
+    /**
+     * Extract token information showcase action for Page 3.
+     * @param {Actor} actor
+     * @returns {Action[]}
+     */
+    extractInfoActions(actor) {
+        if (!actor) return [];
+        const infoAction = new Action({
+            id: `token-info-${actor.id ?? 'actor'}`,
+            name: actor.name ?? localize('BAD.page3.tokenInfo', 'Token Info'),
+            type: 'info',
+            img: actor.img ?? 'icons/svg/mystery-man.svg',
+            available: true,
+            page: 3,
+            uses: { available: null, max: null }
+        });
+        infoAction.page = 3;
+        return [infoAction];
     }
 
     /**
@@ -565,17 +586,389 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
     }
 
     /**
-     * Modify the Handlebars rendering context for D&D 5e (splits into ability/skill check layout on Page 2).
+     * Modify the Handlebars rendering context for D&D 5e (splits into ability/skill check layout on Page 2, token info showcase on Page 3).
      * @param {Object} context Handlebars template context
      * @param {ApplicationV2} app Active HUD application
-     * @returns {Object}
+     * @returns {Promise<Object>}
      */
-    modifyContext(context, app) {
+    async modifyContext(context, app) {
         super.modifyContext(context, app);
-        if (Number(app?.activePage) === 2) {
+        const activePage = Number(app?.activePage);
+        if (activePage === 2) {
             this.formatSplitLayout(context);
+        } else if (activePage === 3) {
+            await this.formatTokenInfoLayout(context, app?.actor, app?.token);
         }
         return context;
+    }
+
+    /**
+     * Apply token information layout template for Page 3 showcase.
+     * @param {Object} context Handlebars render context
+     * @param {Actor} [actor]
+     * @param {Token} [token]
+     */
+    async formatTokenInfoLayout(context, actor = null, token = null) {
+        context.layout = 'tokenInfo';
+        context.isCategorized = false;
+        context.itemTypes = [];
+        context.actionTypes = [];
+        const targetActor = actor ?? this.actor;
+        if (targetActor) {
+            context.tokenInfo = await this.getTokenInfo(targetActor, token);
+        } else {
+            context.tokenInfo = null;
+        }
+    }
+
+    /**
+     * Extract structured token information for Page 3 showcase.
+     * @param {Actor} actor
+     * @param {Token} [token]
+     * @returns {Promise<Object|null>}
+     */
+    async getTokenInfo(actor, token = null) {
+        if (!actor) return null;
+
+        const system = actor.system ?? {};
+        const cfg = CONFIG?.DND5E;
+
+        // 1. Name and Image
+        const name = token?.name ?? actor.name ?? '';
+        const img = token?.texture?.src ?? actor.img ?? 'icons/svg/mystery-man.svg';
+
+        // 2. Creature Type & Race details
+        const typeInfo = this.#extractCreatureType(actor, cfg);
+
+        // 3. Armor Class
+        const acInfo = this.#extractArmorClass(actor, cfg);
+
+        // 4. Movement Speeds
+        const movementInfo = this.#extractMovement(actor);
+
+        // 5. Damage Resistances
+        const resistances = this.#extractTraitList(system.traits?.dr, cfg?.damageTypes, cfg?.physicalWeaponBypasses ?? cfg?.itemProperties);
+
+        // 6. Damage Immunities
+        const damageImmunities = this.#extractTraitList(system.traits?.di, cfg?.damageTypes, cfg?.physicalWeaponBypasses ?? cfg?.itemProperties);
+
+        // 7. Condition Immunities
+        const conditionImmunities = this.#extractConditionImmunities(system.traits?.ci, cfg);
+
+        // 8. Damage Vulnerabilities
+        const vulnerabilities = this.#extractTraitList(system.traits?.dv, cfg?.damageTypes, cfg?.physicalWeaponBypasses ?? cfg?.itemProperties);
+
+        // 9. Languages
+        const languages = this.#extractLanguages(system.traits?.languages, cfg);
+
+        // 10. Senses
+        const senses = this.#extractSenses(system.attributes?.senses);
+
+        // 11. Biography
+        const rawBio = system.details?.biography?.value ?? system.details?.biography?.public ?? '';
+        let biographyHTML = '';
+        if (rawBio && typeof rawBio === 'string' && rawBio.trim().length > 0) {
+            biographyHTML = await this.enrichHTML(rawBio, {
+                relativeTo: actor,
+                rollData: actor.getRollData?.() ?? {},
+                secrets: false,
+                async: true
+            });
+        }
+
+        return {
+            name,
+            img,
+            typeLabel: typeInfo.fullLabel,
+            type: typeInfo.type,
+            subtype: typeInfo.subtype,
+            size: typeInfo.size,
+            crLabel: typeInfo.crLabel,
+            alignment: typeInfo.alignment,
+            ac: acInfo,
+            movement: movementInfo,
+            resistances,
+            hasResistances: resistances.length > 0,
+            damageImmunities,
+            conditionImmunities,
+            hasImmunities: damageImmunities.length > 0 || conditionImmunities.length > 0,
+            vulnerabilities,
+            hasVulnerabilities: vulnerabilities.length > 0,
+            languages,
+            hasLanguages: languages.length > 0,
+            senses,
+            hasSenses: senses.length > 0,
+            biography: rawBio,
+            biographyHTML,
+            hasBiography: Boolean(biographyHTML || rawBio)
+        };
+    }
+
+    #formatLabel(key, configMap = null) {
+        if (!key || typeof key !== 'string') return '';
+        const config = configMap?.[key];
+        const rawLabel = config ? (config.label ?? (typeof config === 'string' ? config : null)) : null;
+        if (rawLabel) {
+            if (rawLabel.startsWith('DND5E.') || rawLabel.startsWith('BAD.')) {
+                const localized = localize(rawLabel, null);
+                if (localized && localized !== rawLabel) return localized;
+            } else {
+                return rawLabel;
+            }
+        }
+        return key.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+    }
+
+    #extractCreatureType(actor, cfg = CONFIG?.DND5E) {
+        const system = actor?.system ?? {};
+        const details = system.details ?? {};
+        const traits = system.traits ?? {};
+
+        // Size
+        const sizeKey = traits.size ?? 'med';
+        const sizeLabel = this.#formatLabel(sizeKey, cfg?.actorSizes) || 'Medium';
+
+        // Alignment
+        const alignment = details.alignment ? localize(details.alignment, details.alignment) : '';
+
+        // CR or Level
+        let crLabel = '';
+        if (details.cr !== undefined && details.cr !== null && details.cr !== '') {
+            crLabel = `CR ${details.cr}`;
+        } else if (details.level !== undefined && details.level !== null && details.level !== '') {
+            crLabel = `Level ${details.level}`;
+        }
+
+        // Check if NPC type object or PC race
+        const typeData = details.type;
+        let rawType = '';
+        let subtype = '';
+        let swarm = '';
+        let custom = '';
+
+        if (typeof typeData === 'object' && typeData !== null) {
+            rawType = typeData.value ?? '';
+            subtype = typeData.subtype ?? '';
+            swarm = typeData.swarm ?? '';
+            custom = typeData.custom ?? '';
+        } else if (typeof typeData === 'string') {
+            rawType = typeData;
+        }
+
+        const raceData = details.race;
+        const raceName = (typeof raceData === 'object' && raceData !== null)
+            ? (raceData.name ?? '')
+            : (typeof raceData === 'string' ? raceData : '');
+
+        const typeLabel = this.#formatLabel(rawType, cfg?.creatureTypes);
+        const raceLabel = raceName ? (raceName.charAt(0).toUpperCase() + raceName.slice(1)) : '';
+
+        let fullLabel = '';
+        if (swarm) {
+            const swarmSizeLabel = this.#formatLabel(swarm, cfg?.actorSizes) || swarm;
+            fullLabel = `Swarm of ${swarmSizeLabel} ${typeLabel || 'Creature'}s`;
+        } else if (raceLabel && rawType && raceLabel !== typeLabel) {
+            fullLabel = `${sizeLabel} ${typeLabel} (${raceLabel})`;
+        } else if (raceLabel && !rawType) {
+            fullLabel = `${sizeLabel} ${raceLabel}`;
+        } else if (subtype && typeLabel) {
+            fullLabel = `${sizeLabel} ${typeLabel} (${subtype})`;
+        } else if (custom) {
+            fullLabel = `${sizeLabel} ${custom}`;
+        } else if (typeLabel) {
+            fullLabel = `${sizeLabel} ${typeLabel}`;
+        } else {
+            fullLabel = `${sizeLabel} Creature`;
+        }
+
+        if (alignment) {
+            fullLabel = `${fullLabel}, ${alignment}`;
+        }
+
+        return {
+            fullLabel: fullLabel.trim(),
+            size: sizeLabel,
+            type: typeLabel || raceLabel || 'Creature',
+            subtype: subtype || raceName,
+            alignment,
+            crLabel
+        };
+    }
+
+    #extractArmorClass(actor, cfg = CONFIG?.DND5E) {
+        const acData = actor?.system?.attributes?.ac ?? {};
+        const value = acData.value ?? 10;
+        const calc = acData.calc ?? 'default';
+        const formula = acData.formula ?? '';
+        const shield = acData.shield ?? 0;
+
+        let label = '';
+        if (calc && calc !== 'default') {
+            label = this.#formatLabel(calc, cfg?.armorClasses);
+        } else if (formula) {
+            label = formula;
+        }
+
+        if (shield > 0) {
+            label = label ? `${label} (+${shield} Shield)` : `+${shield} Shield`;
+        }
+
+        return {
+            value,
+            calc,
+            label
+        };
+    }
+
+    #extractMovement(actor) {
+        const mov = actor?.system?.attributes?.movement ?? {};
+        const units = mov.units ?? 'ft';
+        const walk = mov.walk ?? 0;
+        const fly = mov.fly ?? 0;
+        const swim = mov.swim ?? 0;
+        const climb = mov.climb ?? 0;
+        const burrow = mov.burrow ?? 0;
+        const hover = Boolean(mov.hover);
+        const special = mov.special ?? '';
+
+        const primary = `${walk} ${units}`;
+        const secondaries = [];
+        const speeds = [
+            { type: 'walk', label: 'Walk', value: walk, text: `${walk} ${units}`, icon: 'fas fa-walking' }
+        ];
+
+        if (fly > 0) {
+            const hoverText = hover ? ' (hover)' : '';
+            const flyText = `${fly} ${units}${hoverText}`;
+            secondaries.push(`Fly ${flyText}`);
+            speeds.push({ type: 'fly', label: 'Fly', value: fly, text: flyText, icon: 'fas fa-feather-alt', hover });
+        }
+        if (swim > 0) {
+            secondaries.push(`Swim ${swim} ${units}`);
+            speeds.push({ type: 'swim', label: 'Swim', value: swim, text: `${swim} ${units}`, icon: 'fas fa-water' });
+        }
+        if (climb > 0) {
+            secondaries.push(`Climb ${climb} ${units}`);
+            speeds.push({ type: 'climb', label: 'Climb', value: climb, text: `${climb} ${units}`, icon: 'fas fa-mountain' });
+        }
+        if (burrow > 0) {
+            secondaries.push(`Burrow ${burrow} ${units}`);
+            speeds.push({ type: 'burrow', label: 'Burrow', value: burrow, text: `${burrow} ${units}`, icon: 'fas fa-shovel' });
+        }
+        if (special) {
+            secondaries.push(special);
+        }
+
+        const secondary = secondaries.join(', ');
+        const full = secondaries.length > 0 ? `${primary}, ${secondary}` : primary;
+
+        return {
+            primary,
+            secondary,
+            full,
+            speeds,
+            units
+        };
+    }
+
+    #extractTraitList(traitData, typeMap = CONFIG?.DND5E?.damageTypes, bypassMap = CONFIG?.DND5E?.physicalWeaponBypasses) {
+        if (!traitData) return [];
+        const result = [];
+        const values = Array.isArray(traitData.value)
+            ? traitData.value
+            : (traitData.value instanceof Set ? Array.from(traitData.value) : []);
+
+        const bypasses = Array.isArray(traitData.bypasses)
+            ? traitData.bypasses
+            : (traitData.bypasses instanceof Set ? Array.from(traitData.bypasses) : []);
+
+        let bypassSuffix = '';
+        if (bypasses.length > 0) {
+            const bypassLabels = bypasses.map(b => this.#formatLabel(b, bypassMap));
+            bypassSuffix = ` (non-${bypassLabels.join('/')})`;
+        }
+
+        for (const val of values) {
+            if (!val) continue;
+            const label = this.#formatLabel(val, typeMap);
+            const isPhysical = ['bludgeoning', 'piercing', 'slashing'].includes(val);
+            if (isPhysical && bypassSuffix) {
+                result.push(`${label}${bypassSuffix}`);
+            } else {
+                result.push(label);
+            }
+        }
+
+        if (traitData.custom && typeof traitData.custom === 'string' && traitData.custom.trim().length > 0) {
+            result.push(traitData.custom.trim());
+        }
+
+        return result;
+    }
+
+    #extractConditionImmunities(ciData, cfg = CONFIG?.DND5E) {
+        if (!ciData) return [];
+        const result = [];
+        const values = Array.isArray(ciData.value)
+            ? ciData.value
+            : (ciData.value instanceof Set ? Array.from(ciData.value) : []);
+
+        for (const val of values) {
+            if (!val) continue;
+            let label = this.#formatLabel(val, cfg?.conditionTypes);
+            if (!label && CONFIG?.statusEffects) {
+                const effect = CONFIG.statusEffects.find(e => e.id === val);
+                if (effect?.name) label = localize(effect.name, effect.name);
+            }
+            result.push(label || val);
+        }
+
+        if (ciData.custom && typeof ciData.custom === 'string' && ciData.custom.trim().length > 0) {
+            result.push(ciData.custom.trim());
+        }
+
+        return result;
+    }
+
+    #extractLanguages(langData, cfg = CONFIG?.DND5E) {
+        if (!langData) return [];
+        const result = [];
+        const values = Array.isArray(langData.value)
+            ? langData.value
+            : (langData.value instanceof Set ? Array.from(langData.value) : []);
+
+        for (const val of values) {
+            if (!val) continue;
+            const label = this.#formatLabel(val, cfg?.languages);
+            result.push(label);
+        }
+
+        if (langData.custom && typeof langData.custom === 'string' && langData.custom.trim().length > 0) {
+            result.push(langData.custom.trim());
+        }
+        if (langData.communication && typeof langData.communication === 'string' && langData.communication.trim().length > 0) {
+            result.push(langData.communication.trim());
+        }
+
+        return result;
+    }
+
+    #extractSenses(sensesData) {
+        if (!sensesData) return [];
+        const result = [];
+        const units = sensesData.units ?? 'ft';
+        const senses = ['darkvision', 'blindsight', 'tremorsense', 'truesight'];
+        for (const s of senses) {
+            const val = sensesData[s];
+            if (val && Number(val) > 0) {
+                const label = s.charAt(0).toUpperCase() + s.slice(1);
+                result.push(`${label} ${val} ${units}`);
+            }
+        }
+        if (sensesData.special && typeof sensesData.special === 'string' && sensesData.special.trim().length > 0) {
+            result.push(sensesData.special.trim());
+        }
+        return result;
     }
 
     // #endregion

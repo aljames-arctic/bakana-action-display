@@ -178,6 +178,25 @@ export class BaseSystemAdapter {
     }
 
     /**
+     * Extract token information showcase actions for Page 3.
+     * @param {Actor} actor
+     * @returns {Action[]}
+     */
+    extractInfoActions(actor) {
+        return [];
+    }
+
+    /**
+     * Extract structured token information for showcase display.
+     * @param {Actor} actor
+     * @param {Token} [token]
+     * @returns {Promise<Object|null>}
+     */
+    async getTokenInfo(actor, token = null) {
+        return null;
+    }
+
+    /**
      * Open the sheet or edit dialog for an action or its underlying item/activity.
      * @param {Object} action The Action instance to edit
      */
@@ -198,6 +217,20 @@ export class BaseSystemAdapter {
      */
     formatFlatLayout(context) {
         context.layout = 'flat';
+    }
+
+    /**
+     * Apply a token information layout template to the HUD context.
+     * @param {Object} context The Handlebars render context
+     * @param {Actor} [actor]
+     * @param {Token} [token]
+     */
+    async formatTokenInfoLayout(context, actor = null, token = null) {
+        context.layout = 'tokenInfo';
+        context.isCategorized = false;
+        context.itemTypes = [];
+        context.actionTypes = [];
+        context.tokenInfo = await this.getTokenInfo(actor, token);
     }
 
     /**

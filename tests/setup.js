@@ -34,6 +34,94 @@ globalThis.CONFIG.DND5E = globalThis.CONFIG.DND5E ?? {
         combat: 'DND5E.ActivityActivationCombat',
         monster: 'DND5E.ActivityActivationMonster',
         vehicle: 'DND5E.ActivityActivationVehicle'
+    },
+    actorSizes: {
+        tiny: { label: 'Tiny' },
+        sm: { label: 'Small' },
+        med: { label: 'Medium' },
+        lg: { label: 'Large' },
+        huge: { label: 'Huge' },
+        grg: { label: 'Gargantuan' }
+    },
+    creatureTypes: {
+        aberration: { label: 'Aberration' },
+        beast: { label: 'Beast' },
+        celestial: { label: 'Celestial' },
+        construct: { label: 'Construct' },
+        dragon: { label: 'Dragon' },
+        elemental: { label: 'Elemental' },
+        fey: { label: 'Fey' },
+        fiend: { label: 'Fiend' },
+        giant: { label: 'Giant' },
+        humanoid: { label: 'Humanoid' },
+        monstrosity: { label: 'Monstrosity' },
+        ooze: { label: 'Ooze' },
+        plant: { label: 'Plant' },
+        undead: { label: 'Undead' }
+    },
+    damageTypes: {
+        acid: { label: 'Acid' },
+        bludgeoning: { label: 'Bludgeoning' },
+        cold: { label: 'Cold' },
+        fire: { label: 'Fire' },
+        force: { label: 'Force' },
+        lightning: { label: 'Lightning' },
+        necrotic: { label: 'Necrotic' },
+        piercing: { label: 'Piercing' },
+        poison: { label: 'Poison' },
+        psychic: { label: 'Psychic' },
+        radiant: { label: 'Radiant' },
+        slashing: { label: 'Slashing' },
+        thunder: { label: 'Thunder' }
+    },
+    conditionTypes: {
+        blinded: { label: 'Blinded' },
+        charmed: { label: 'Charmed' },
+        deafened: { label: 'Deafened' },
+        exhaustion: { label: 'Exhaustion' },
+        frightened: { label: 'Frightened' },
+        grappled: { label: 'Grappled' },
+        incapacitated: { label: 'Incapacitated' },
+        invisible: { label: 'Invisible' },
+        paralyzed: { label: 'Paralyzed' },
+        petrified: { label: 'Petrified' },
+        poisoned: { label: 'Poisoned' },
+        prone: { label: 'Prone' },
+        restrained: { label: 'Restrained' },
+        stunned: { label: 'Stunned' },
+        unconscious: { label: 'Unconscious' }
+    },
+    languages: {
+        common: { label: 'Common' },
+        dwarvish: { label: 'Dwarvish' },
+        elvish: { label: 'Elvish' },
+        giant: { label: 'Giant' },
+        gnomish: { label: 'Gnomish' },
+        goblin: { label: 'Goblin' },
+        halfling: { label: 'Halfling' },
+        orc: { label: 'Orc' },
+        abyssal: { label: 'Abyssal' },
+        celestial: { label: 'Celestial' },
+        draconic: { label: 'Draconic' },
+        deep: { label: 'Deep Speech' },
+        infernal: { label: 'Infernal' },
+        primordial: { label: 'Primordial' },
+        sylvan: { label: 'Sylvan' },
+        undercommon: { label: 'Undercommon' }
+    },
+    armorClasses: {
+        armored: { label: 'Armored' },
+        natural: { label: 'Natural Armor' },
+        unarmored: { label: 'Unarmored' },
+        draconic: { label: 'Draconic Resilience' },
+        mage: { label: 'Mage Armor' },
+        custom: { label: 'Custom' },
+        flat: { label: 'Flat' }
+    },
+    physicalWeaponBypasses: {
+        ada: { label: 'Adamantine' },
+        mgc: { label: 'Magical' },
+        sil: { label: 'Silvered' }
     }
 };
 

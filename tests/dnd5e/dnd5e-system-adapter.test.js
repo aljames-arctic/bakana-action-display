@@ -945,7 +945,7 @@ test('Dnd5eSystemAdapter modifyActions handles consumable items with quantity > 
     const rawActions = [{ id: 'potion-healing', originalItem: potion }];
     const modified = await adapter.modifyActions(rawActions, actor);
 
-    assert.equal(modified.length, 7, '1 consumable action on Page 1 + 6 core abilities on Page 2');
+    assert.equal(modified.length, 8, '1 consumable action on Page 1 + 6 core abilities on Page 2 + 1 token info on Page 3');
     const potionAction = modified.find(a => a.id === 'potion-healing');
     assert.ok(potionAction, 'Potion action should be created');
     assert.deepEqual(potionAction.uses, { available: 3, max: 3 }, 'Uses should be scaled by quantity');
@@ -1071,6 +1071,258 @@ test('Dnd5eSystemAdapter calculates limited uses correctly for monster/innate sp
     const invisSummary = await adapter.getItemSummary(invisAction, invisibility, monsterActor);
     assert.ok(invisSummary.properties.some(p => p.label === 'Uses' && p.value === '2 / 3'));
 });
+
+test('Dnd5eSystemAdapter extractInfoActions generates a valid token info action for Page 3', () => {
+    const adapter = new Dnd5eSystemAdapter();
+    const actor = {
+        id: 'actor-123',
+        name: 'Red Dragon',
+        img: 'icons/creatures/dragons/red.webp'
+    };
+
+    const infoActions = adapter.extractInfoActions(actor);
+    assert.equal(infoActions.length, 1, 'Should extract exactly 1 token info action');
+    assert.equal(infoActions[0].id, 'token-info-actor-123');
+    assert.equal(infoActions[0].name, 'Red Dragon');
+    assert.equal(infoActions[0].page, 3, 'Action should belong to Page 3');
+    assert.equal(infoActions[0].type, 'info');
+    assert.equal(infoActions[0].img, 'icons/creatures/dragons/red.webp');
+
+    // Null actor safety
+    assert.deepEqual(adapter.extractInfoActions(null), []);
+});
+
+test('Dnd5eSystemAdapter getTokenInfo extracts complete token statistics and details for Page 3 showcase', async () => {
+    const adapter = new Dnd5eSystemAdapter();
+
+    // 1. Monster / NPC Token with complex defenses, movement, and biography
+    const adultRedDragon = {
+        id: 'dragon-1',
+        name: 'Adult Red Dragon',
+        img: 'icons/creatures/dragons/red.webp',
+        system: {
+            attributes: {
+                ac: { value: 19, calc: 'natural', shield: 0 },
+                movement: {
+                    walk: 40,
+                    fly: 80,
+                    hover: true,
+                    climb: 40,
+                    burrow: 0,
+                    swim: 0,
+                    units: 'ft'
+                },
+                senses: {
+                    darkvision: 120,
+                    blindsight: 60,
+                    units: 'ft',
+                    special: 'Passive Perception 23'
+                }
+            },
+            traits: {
+                size: 'huge',
+                dr: {
+                    value: ['bludgeoning', 'piercing', 'slashing'],
+                    bypasses: ['mgc'],
+                    custom: 'cold iron'
+                },
+                di: {
+                    value: ['fire'],
+                    custom: ''
+                },
+                ci: {
+                    value: ['charmed', 'frightened', 'paralyzed'],
+                    custom: ''
+                },
+                dv: {
+                    value: ['cold'],
+                    custom: ''
+                },
+                languages: {
+                    value: ['common', 'draconic'],
+                    custom: 'Telepathy 120 ft.'
+                }
+            },
+            details: {
+                type: {
+                    value: 'dragon',
+                    subtype: 'red',
+                    swarm: '',
+                    custom: ''
+                },
+                cr: 17,
+                alignment: 'Chaotic Evil',
+                biography: {
+                    value: '<p>The <strong>Adult Red Dragon</strong> is a fierce master of volcanoes.</p>'
+                }
+            }
+        },
+        getRollData: () => ({ name: 'Adult Red Dragon' })
+    };
+
+    const token = {
+        name: 'Adult Red Dragon (Token)',
+        texture: { src: 'tokens/dragon.png' }
+    };
+
+    const info = await adapter.getTokenInfo(adultRedDragon, token);
+
+    // Header & Meta
+    assert.equal(info.name, 'Adult Red Dragon (Token)');
+    assert.equal(info.img, 'tokens/dragon.png');
+    assert.equal(info.size, 'Huge');
+    assert.equal(info.type, 'Dragon');
+    assert.equal(info.subtype, 'red');
+    assert.equal(info.crLabel, 'CR 17');
+    assert.equal(info.alignment, 'Chaotic Evil');
+    assert.equal(info.typeLabel, 'Huge Dragon (red), Chaotic Evil');
+
+    // Armor Class
+    assert.equal(info.ac.value, 19);
+    assert.equal(info.ac.calc, 'natural');
+    assert.equal(info.ac.label, 'Natural Armor');
+
+    // Movement Speeds
+    assert.equal(info.movement.primary, '40 ft');
+    assert.equal(info.movement.secondary, 'Fly 80 ft (hover), Climb 40 ft');
+    assert.equal(info.movement.full, '40 ft, Fly 80 ft (hover), Climb 40 ft');
+    assert.equal(info.movement.speeds.length, 3);
+    assert.equal(info.movement.speeds[1].type, 'fly');
+    assert.equal(info.movement.speeds[1].hover, true);
+
+    // Defenses: Resistances, Immunities, Vulnerabilities
+    assert.equal(info.hasResistances, true);
+    assert.ok(info.resistances.some(r => r.includes('Bludgeoning (non-Magical)')));
+    assert.ok(info.resistances.some(r => r.includes('Piercing (non-Magical)')));
+    assert.ok(info.resistances.some(r => r.includes('Slashing (non-Magical)')));
+    assert.ok(info.resistances.includes('cold iron'));
+
+    assert.equal(info.hasImmunities, true);
+    assert.deepEqual(info.damageImmunities, ['Fire']);
+    assert.deepEqual(info.conditionImmunities, ['Charmed', 'Frightened', 'Paralyzed']);
+
+    assert.equal(info.hasVulnerabilities, true);
+    assert.deepEqual(info.vulnerabilities, ['Cold']);
+
+    // Languages & Senses
+    assert.equal(info.hasLanguages, true);
+    assert.ok(info.languages.includes('Common'));
+    assert.ok(info.languages.includes('Draconic'));
+    assert.ok(info.languages.includes('Telepathy 120 ft.'));
+
+    assert.equal(info.hasSenses, true);
+    assert.ok(info.senses.includes('Darkvision 120 ft'));
+    assert.ok(info.senses.includes('Blindsight 60 ft'));
+    assert.ok(info.senses.includes('Passive Perception 23'));
+
+    // Biography details with HTML enrichment
+    assert.equal(info.hasBiography, true);
+    assert.ok(info.biographyHTML.includes('<strong>Adult Red Dragon</strong>'));
+});
+
+test('Dnd5eSystemAdapter getTokenInfo handles Player Character actor schema and fallback defaults', async () => {
+    const adapter = new Dnd5eSystemAdapter();
+
+    const pcActor = {
+        id: 'hero-1',
+        name: 'Valeros',
+        img: 'icons/characters/fighter.webp',
+        system: {
+            attributes: {
+                ac: { value: 18, calc: 'armored', shield: 2 },
+                movement: {
+                    walk: 30,
+                    units: 'ft'
+                }
+            },
+            traits: {
+                size: 'med',
+                dr: { value: [], bypasses: [], custom: '' },
+                di: { value: [], custom: '' },
+                ci: { value: [], custom: '' },
+                dv: { value: [], custom: '' },
+                languages: {
+                    value: ['common', 'dwarvish'],
+                    custom: ''
+                }
+            },
+            details: {
+                race: { name: 'Mountain Dwarf' },
+                level: 5,
+                alignment: 'Neutral Good',
+                biography: { value: '<p>A seasoned warrior from the high peaks.</p>' }
+            }
+        },
+        getRollData: () => ({ name: 'Valeros' })
+    };
+
+    const info = await adapter.getTokenInfo(pcActor, null);
+    assert.equal(info.name, 'Valeros');
+    assert.equal(info.img, 'icons/characters/fighter.webp');
+    assert.equal(info.crLabel, 'Level 5');
+    assert.equal(info.typeLabel, 'Medium Mountain Dwarf, Neutral Good');
+    assert.equal(info.ac.value, 18);
+    assert.equal(info.ac.label, 'Armored (+2 Shield)');
+    assert.equal(info.movement.primary, '30 ft');
+    assert.equal(info.movement.secondary, '');
+    assert.equal(info.hasResistances, false);
+    assert.equal(info.hasImmunities, false);
+    assert.equal(info.hasVulnerabilities, false);
+    assert.equal(info.hasLanguages, true);
+    assert.deepEqual(info.languages, ['Common', 'Dwarvish']);
+    assert.equal(info.hasBiography, true);
+
+    // Null actor handling
+    assert.equal(await adapter.getTokenInfo(null), null);
+});
+
+test('Dnd5eSystemAdapter modifyContext triggers tokenInfo layout on Page 3', async () => {
+    const adapter = new Dnd5eSystemAdapter();
+    const actor = {
+        id: 'test-pc',
+        name: 'Elven Ranger',
+        img: 'icons/elf.png',
+        system: {
+            attributes: {
+                ac: { value: 16 },
+                movement: { walk: 35, units: 'ft' }
+            },
+            traits: {
+                size: 'med',
+                dr: { value: [] },
+                di: { value: [] },
+                ci: { value: ['charmed'] },
+                dv: { value: [] },
+                languages: { value: ['common', 'elvish'] }
+            },
+            details: {
+                race: 'Elf',
+                biography: { value: 'Forest guardian.' }
+            }
+        }
+    };
+
+    const context = {
+        items: [{ id: 'item-1', name: 'Bow' }],
+        itemTypes: [{ id: 'weapon' }],
+        actionTypes: [{ id: 'economy' }],
+        layout: 'flat'
+    };
+
+    await adapter.modifyContext(context, { activePage: 3, actor });
+
+    assert.equal(context.layout, 'tokenInfo');
+    assert.equal(context.isCategorized, false);
+    assert.deepEqual(context.itemTypes, []);
+    assert.deepEqual(context.actionTypes, []);
+    assert.ok(context.tokenInfo);
+    assert.equal(context.tokenInfo.name, 'Elven Ranger');
+    assert.equal(context.tokenInfo.ac.value, 16);
+    assert.equal(context.tokenInfo.movement.primary, '35 ft');
+    assert.deepEqual(context.tokenInfo.languages, ['Common', 'Elvish']);
+    assert.deepEqual(context.tokenInfo.conditionImmunities, ['Charmed']);
+});
+
 
 
 
