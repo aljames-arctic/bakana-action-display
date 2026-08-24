@@ -1589,9 +1589,9 @@ body > #tooltip.bad-item-summary-tooltip-wrapper,
     min-width: 260px !important;
     width: var(--bad-tooltip-width, min(340px, 90vw)) !important;
     white-space: normal !important;
-    overflow-x: hidden !important;
     word-break: normal !important;
     overflow-wrap: break-word !important;
+    overflow: visible !important;
 }
 
 /* Dynamic Tooltip Expansion for Descriptions with Roll Tables & Data Tables */
@@ -1615,6 +1615,7 @@ body > #tooltip.bad-summary-has-table-wrapper,
     min-width: min(340px, 90vw) !important;
     max-width: var(--bad-tooltip-max-width, min(680px, 92vw)) !important;
     width: var(--bad-tooltip-width, min(340px, 90vw)) !important;
+    overflow: visible !important;
 }
 
 .bad-summary-has-table .bad-summary-desc,
@@ -1644,6 +1645,7 @@ body > #tooltip.bad-summary-has-table-wrapper,
     color: #e2e8f0;
     width: 100% !important;
     box-sizing: border-box !important;
+    overflow: visible !important;
 }
 
 .bad-summary-header {
@@ -1718,32 +1720,34 @@ body > #tooltip.bad-summary-has-table-wrapper,
     word-break: normal;
     overflow-wrap: break-word;
     white-space: normal;
-    padding-right: 0.45em;
+    padding-right: 6px;
     border-top: 1px solid rgba(255, 255, 255, 0.08);
     padding-top: 0.45em;
     box-sizing: border-box;
     width: 100%;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(167, 139, 250, 0.5) rgba(0, 0, 0, 0.2);
+    scrollbar-width: thin !important;
+    scrollbar-color: #a78bfa rgba(0, 0, 0, 0.35) !important;
 }
 
 .bad-summary-desc::-webkit-scrollbar {
-    width: 5px;
-    height: 5px;
+    width: 6px !important;
+    height: 6px !important;
+    display: block !important;
 }
 
 .bad-summary-desc::-webkit-scrollbar-track {
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: 3px;
+    background: rgba(0, 0, 0, 0.35) !important;
+    border-radius: 4px !important;
 }
 
 .bad-summary-desc::-webkit-scrollbar-thumb {
-    background: rgba(167, 139, 250, 0.5);
-    border-radius: 3px;
+    background: #a78bfa !important;
+    border-radius: 4px !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
 }
 
 .bad-summary-desc::-webkit-scrollbar-thumb:hover {
-    background: rgba(167, 139, 250, 0.8);
+    background: #c4b5fd !important;
 }
 
 .bad-summary-desc * {
