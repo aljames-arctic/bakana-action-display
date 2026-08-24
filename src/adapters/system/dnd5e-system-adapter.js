@@ -48,13 +48,28 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
             for (const item of actor.items.values()) {
                 const cachedFor = item.flags?.dnd5e?.cachedFor ?? item.getFlag?.('dnd5e', 'cachedFor');
                 if (cachedFor) {
-                    const lastDot = cachedFor.lastIndexOf('.');
-                    const actId = lastDot !== -1 ? cachedFor.slice(lastDot + 1) : cachedFor;
-                    this.#cachedForMap.set(actId, item);
                     this.#cachedForMap.set(cachedFor, item);
+                    const normalized = this.#normalizeCachedForKey(cachedFor);
+                    if (normalized) {
+                        this.#cachedForMap.set(normalized, item);
+                    }
                 }
             }
         }
+    }
+
+    /**
+     * Normalize a D&D 5e cachedFor flag string into a consistent 'itemId.activityId' key.
+     * @param {string} cachedFor
+     * @returns {string|null}
+     */
+    #normalizeCachedForKey(cachedFor) {
+        if (!cachedFor || typeof cachedFor !== 'string') return null;
+        const match = cachedFor.match(/(?:Item\.)?([^.]+)\.(?:Activity\.)?([^.]+)$/);
+        if (match) {
+            return `${match[1]}.${match[2]}`;
+        }
+        return cachedFor;
     }
 
     get highestAvailableSlot() {
@@ -146,7 +161,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
             if (activities.length > 0) {
                 // Map D&D 5e Activities to sub-actions for the generic HUD item model
                 const rawActivities = await Promise.all(activities.map(async (activity) => {
-                    const linkedAction = await this.#resolveActivityLinkedAction(activity, actor);
+                    const linkedAction = await this.#resolveActivityLinkedAction(activity, actor, item);
                     const activationType = this.#getActivityActivationType(activity, item, linkedAction);
                     if (!activationType || activationType === 'none') return null;
 
@@ -1093,9 +1108,17 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
 
         let doc = sub.linkedAction;
         const activity = sub.originalActivity;
-        if (!doc && activity) {
-            doc = this.#cachedForMap.get(activity.id)
-                ?? this.#actor?.items?.find?.(i => (i.flags?.dnd5e?.cachedFor ?? i.getFlag?.('dnd5e', 'cachedFor'))?.endsWith(activity.id));
+        if (!doc && activity && activity.type === 'cast') {
+            const actId = activity.id ?? activity._id;
+            const parentItemId = activity.item?.id ?? sub.originalItem?.id ?? parentItem?.id;
+            const fullKey = parentItemId && actId ? `${parentItemId}.${actId}` : null;
+            if (fullKey) {
+                doc = this.#cachedForMap.get(fullKey)
+                    ?? this.#actor?.items?.find?.(i => {
+                        const cf = i.flags?.dnd5e?.cachedFor ?? i.getFlag?.('dnd5e', 'cachedFor');
+                        return this.#normalizeCachedForKey(cf) === fullKey;
+                    });
+            }
             if (!doc) {
                 doc = this.#extractItemSpell(activity);
             }
@@ -1119,14 +1142,13 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
             }
         }
 
-        if (doc) return doc;
-
-        if (activity?.spell && !this.#isItemDocument(activity.spell)) {
-            return activity.spell;
-        }
+        if (doc && (doc.type === 'spell' || doc.type === 'cast' || doc.spell)) return doc;
 
         if (activity?.type === 'cast') {
-            return activity.spell ?? activity;
+            if (activity.spell && !this.#isItemDocument(activity.spell)) {
+                return activity.spell;
+            }
+            return activity.spell ?? null;
         }
 
         const origItem = sub.originalItem ?? parentItem;
@@ -1141,32 +1163,45 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
      * Resolve linked action document for a D&D 5e Activity.
      * @param {Activity} activity
      * @param {Actor} [actor]
-     * @returns {Promise<Document|Object>}
+     * @param {Item} [item]
+     * @returns {Promise<Document|Object|null>}
      */
-    async #resolveActivityLinkedAction(activity, actor) {
-        if (actor) {
-            const cached = this.#cachedForMap.get(activity.id)
-                ?? actor.items?.find?.(i => (i.flags?.dnd5e?.cachedFor ?? i.getFlag?.('dnd5e', 'cachedFor'))?.endsWith(activity.id));
+    async #resolveActivityLinkedAction(activity, actor, item = null) {
+        if (activity.type !== 'cast') {
+            return null;
+        }
+
+        const actId = activity.id ?? activity._id;
+        const parentItemId = activity.item?.id ?? item?.id;
+        const fullKey = parentItemId && actId ? `${parentItemId}.${actId}` : null;
+
+        if (fullKey && this.#cachedForMap.has(fullKey)) {
+            return this.#cachedForMap.get(fullKey);
+        }
+
+        if (actor && fullKey) {
+            const cached = actor.items?.find?.(i => {
+                const cf = i.flags?.dnd5e?.cachedFor ?? i.getFlag?.('dnd5e', 'cachedFor');
+                return this.#normalizeCachedForKey(cf) === fullKey;
+            });
             if (cached) return cached;
         }
-        if (activity.type === 'cast') {
-            const uuid = activity.spell?.uuid ?? (activity.spell?.startsWith?.('Compendium.') ? activity.spell : null);
-            if (uuid) {
-                if (this.#resolvedSpellCache.has(uuid)) {
-                    return this.#resolvedSpellCache.get(uuid);
-                }
-                const doc = this.fromUuidSync(uuid) ?? await this.fromUuid(uuid);
-                if (doc) {
-                    this.#resolvedSpellCache.set(uuid, doc);
-                    return doc;
-                }
+
+        const uuid = activity.spell?.uuid ?? (activity.spell?.startsWith?.('Compendium.') ? activity.spell : null);
+        if (uuid) {
+            if (this.#resolvedSpellCache.has(uuid)) {
+                return this.#resolvedSpellCache.get(uuid);
             }
-            if (this.#isItemDocument(activity.spell) || activity.spell?.system) {
-                return activity.spell;
+            const doc = this.fromUuidSync(uuid) ?? await this.fromUuid(uuid);
+            if (doc) {
+                this.#resolvedSpellCache.set(uuid, doc);
+                return doc;
             }
-            return activity.spell ?? activity;
         }
-        return activity;
+        if (this.#isItemDocument(activity.spell) || activity.spell?.system) {
+            return activity.spell;
+        }
+        return activity.spell ?? null;
     }
 
     /**
@@ -2069,15 +2104,19 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         const conditions = autoBanState.conditions ?? {};
         const manualUnbans = { ...(autoBanState.manualUnbans ?? {}) };
 
-        // If isActive is false (tab deactivated by user), mark manual unban = true.
-        // If isActive is true (tab activated by user), mark manual unban = false.
+        // Only write to actor flag if this component actually has active conditions imposing an auto-ban or previous manual unbans
+        const hasActiveConditions = Array.isArray(conditions[subId]) && conditions[subId].length > 0;
+        if (!hasActiveConditions && !manualUnbans[subId]) {
+            return;
+        }
+
         manualUnbans[subId] = !isActive;
 
         if (actor.isOwner && typeof actor.setFlag === 'function') {
             actor.setFlag(MODULE_ID, 'autoBanState', {
                 conditions,
                 manualUnbans
-            }).catch(err => {
+            }, { badInternal: true }).catch(err => {
                 log.debug('Error setting autoBanState flag on manual toggle:', err);
             });
         }
@@ -2160,7 +2199,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
             actor.setFlag(MODULE_ID, 'autoBanState', {
                 conditions: updatedConditions,
                 manualUnbans: updatedManualUnbans
-            }).catch(err => {
+            }, { badInternal: true }).catch(err => {
                 log.debug('Error setting autoBanState flag:', err);
             });
         }

@@ -242,6 +242,20 @@ Hooks.on('deleteItem', (item, options, userId) => {
 // Hook into Actor updates (spell slots, resources, hp, flags, status conditions)
 Hooks.on('updateActor', (actor, changes, options, userId) => {
     if (!actor) return;
+    if (options?.badInternal) return;
+
+    // If the only change is internal autoBanState flag, do not trigger a second HUD render
+    const keys = Object.keys(changes ?? {});
+    if (keys.length === 1 && keys[0] === 'flags') {
+        const flagKeys = Object.keys(changes.flags ?? {});
+        if (flagKeys.length === 1 && flagKeys[0] === MODULE_ID) {
+            const badFlagKeys = Object.keys(changes.flags[MODULE_ID] ?? {});
+            if (badFlagKeys.every(k => k === 'autoBanState')) {
+                return;
+            }
+        }
+    }
+
     const currentApp = actionDisplay.activeApp;
     const isCurrent = isMatchingActor(actor, null);
     adapter.updateTabs(actor, isCurrent ? currentApp?.rightTabs : null);

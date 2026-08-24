@@ -1,31 +1,18 @@
 import { BaseSystemTabFilterManager } from './base-system-tab-filter-manager.js';
 import { TabRef } from '../../../ui/tab-ref.js';
+import { log } from '../../../lib/logger.js';
 
-const COMPONENT_ALIASES = {
+const COMPONENT_NAMES = {
     'vocal': ['vocal', 'verbal'],
     'somatic': ['somatic'],
     'material': ['material']
 };
 
-/**
- * Check if a container (Set, Array, or Object map) contains a specific spell component identifier.
- * @param {Set|Array|Object} container
- * @param {string} component Component identifier (e.g. 'vocal', 'somatic', 'material')
- * @returns {boolean}
- */
-function containerHasComponent(container, component) {
-    if (!container) return false;
-    const target = container.value ?? container;
-    const aliases = COMPONENT_ALIASES[component] ?? [component];
-
-    if (target instanceof Set) {
-        return aliases.some(alias => target.has(alias));
-    }
-    if (Array.isArray(target)) {
-        return aliases.some(alias => target.includes(alias));
-    }
-    return aliases.some(alias => Boolean(target[alias]));
-}
+const COMPONENT_SHORT_KEYS = {
+    'vocal': 'v',
+    'somatic': 's',
+    'material': 'm'
+};
 
 /**
  * Check if a document or its system properties/components include a given spell component.
@@ -35,17 +22,25 @@ function containerHasComponent(container, component) {
  */
 function docHasComponent(doc, component) {
     if (!doc) return false;
-    return containerHasComponent(doc, component) ||
-           containerHasComponent(doc.properties, component) ||
-           containerHasComponent(doc.system?.properties, component) ||
-           containerHasComponent(doc.system?.components, component) ||
-           containerHasComponent(doc.components, component) ||
-           containerHasComponent(doc.spell?.properties, component) ||
-           containerHasComponent(doc.spell?.system?.properties, component) ||
-           containerHasComponent(doc.spell?.system?.components, component) ||
-           containerHasComponent(doc.spell?.components, component) ||
-           containerHasComponent(doc.item?.system?.properties, component) ||
-           containerHasComponent(doc.item?.system?.components, component);
+    const names = COMPONENT_NAMES[component] ?? [component];
+    const shortKey = COMPONENT_SHORT_KEYS[component];
+
+    // 1. Check system.properties (Set or Array of full spell property names: 'vocal', 'somatic', 'material')
+    const props = doc.system?.properties ?? doc.properties ?? doc.spell?.system?.properties ?? doc.spell?.properties;
+    if (props instanceof Set) {
+        if (names.some(name => props.has(name))) return true;
+    } else if (Array.isArray(props)) {
+        if (names.some(name => props.includes(name))) return true;
+    }
+
+    // 2. Check system.components (Boolean map: { vocal: true } or legacy { v: true })
+    const comps = doc.system?.components ?? doc.components ?? doc.spell?.system?.components ?? doc.spell?.components;
+    if (comps && typeof comps === 'object') {
+        if (names.some(name => comps[name] === true)) return true;
+        if (shortKey && comps[shortKey] === true) return true;
+    }
+
+    return false;
 }
 
 /**
@@ -62,22 +57,42 @@ export class Dnd5eSystemTabFilterManager extends BaseSystemTabFilterManager {
 
     /**
      * Check if a spell, item, or activity requires a given verbal/somatic/material component.
+     * Non-spell items (weapons, equipment, feats, tools, etc.) without a cast activity or linked spell do not require spell components.
      * @param {Object} sub Subaction, activity, or item object
      * @param {string} component Component identifier ('vocal'|'somatic'|'material')
      * @returns {boolean}
      */
     requiresComponent(sub, component) {
         if (!sub) return false;
+
+        // 1. Direct spell document check (item or subaction of type 'spell')
+        if (sub.type === 'spell') {
+            return docHasComponent(sub, component);
+        }
+
+        const origItem = sub.originalItem;
+        if (origItem?.type === 'spell') {
+            return docHasComponent(origItem, component);
+        }
+
+        // 2. Cast activity check (activities that cast a spell)
+        const activity = sub.originalActivity;
+        if (activity?.type === 'cast') {
+            if (docHasComponent(activity, component)) return true;
+            if (activity.spell && docHasComponent(activity.spell, component)) return true;
+        }
+
+        // 3. Linked spell document check (compendium spell or cached spell)
         const rootDoc = this.adapter.resolveRootSpellDocument?.(sub) ?? null;
-        const docsToCheck = [
-            sub,
-            sub.linkedAction,
-            sub.originalActivity,
-            sub.originalActivity?.spell,
-            sub.originalItem,
-            rootDoc
-        ];
-        return docsToCheck.some(doc => docHasComponent(doc, component));
+        if (rootDoc && (rootDoc.type === 'spell' || rootDoc.type === 'cast' || rootDoc.spell)) {
+            if (docHasComponent(rootDoc, component)) return true;
+        }
+
+        if (sub.linkedAction && (sub.linkedAction.type === 'spell' || sub.linkedAction.type === 'cast' || sub.linkedAction.spell)) {
+            if (docHasComponent(sub.linkedAction, component)) return true;
+        }
+
+        return false;
     }
 
     /**
@@ -117,7 +132,12 @@ export class Dnd5eSystemTabFilterManager extends BaseSystemTabFilterManager {
         return baseFiltered.filter(sub => {
             const hasPropertyMatch = activeCompSubs.some(comp => this.requiresComponent(sub, comp));
             const hasTabMatch = sub.right?.some(tab => tab.root === 'components' && activeCompSubs.includes(tab.label));
-            return !hasPropertyMatch && !hasTabMatch;
+            const isExcluded = hasPropertyMatch || hasTabMatch;
+            if (isExcluded) {
+                log.debug(`Dnd5eSystemTabFilterManager.filterSubactions | Excluding "${sub.name}" — hasPropertyMatch: ${hasPropertyMatch}, hasTabMatch: ${hasTabMatch}, activeCompSubs: [${activeCompSubs.join(', ')}]`);
+            }
+            return !isExcluded;
         });
     }
 }
+

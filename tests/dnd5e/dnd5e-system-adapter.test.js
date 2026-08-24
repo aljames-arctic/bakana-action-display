@@ -1445,6 +1445,185 @@ test('Dnd5eSystemAdapter getTokenInfo extracts Special (; separated) and Ranged 
     ]);
 });
 
+test('Dnd5eSystemAdapter and Dnd5eSystemTabFilterManager do not match spell components on non-spell items (weapons, feats, attacks)', async () => {
+    const adapter = new Dnd5eSystemAdapter();
+    const filterManager = adapter.filterManager;
+
+    const flail = {
+        id: 'flail-1',
+        name: 'Triple Flail',
+        type: 'weapon',
+        img: 'icons/flail.png',
+        system: {
+            equipped: true,
+            material: { value: 'steel' },
+            properties: new Set(['ver', 'mgc']),
+            activities: new Map([
+                ['act1', {
+                    id: 'act1',
+                    name: 'Triple Flail Attack',
+                    type: 'attack',
+                    activation: { type: 'action', override: false },
+                    use: () => {}
+                }]
+            ])
+        }
+    };
+
+    const bite = {
+        id: 'bite-1',
+        name: 'Bite',
+        type: 'feat',
+        img: 'icons/bite.png',
+        system: {
+            activities: new Map([
+                ['act2', {
+                    id: 'act2',
+                    name: 'Bite Attack',
+                    type: 'attack',
+                    activation: { type: 'action', override: false },
+                    use: () => {}
+                }]
+            ])
+        }
+    };
+
+    const charge = {
+        id: 'charge-1',
+        name: 'Charge',
+        type: 'feat',
+        img: 'icons/charge.png',
+        system: {
+            activities: new Map([
+                ['act3', {
+                    id: 'act3',
+                    name: 'Charge',
+                    type: 'utility',
+                    activation: { type: 'special', override: false },
+                    use: () => {}
+                }]
+            ])
+        }
+    };
+
+    const fearSpell = {
+        id: 'fear-1',
+        name: 'Fear',
+        type: 'spell',
+        img: 'icons/fear.png',
+        system: {
+            level: 3,
+            method: 'innate',
+            prepared: true,
+            properties: new Set(['vocal', 'somatic', 'material']),
+            activities: new Map([
+                ['act4', {
+                    id: 'act4',
+                    name: 'Cast Fear',
+                    type: 'cast',
+                    activation: { type: 'action', override: false },
+                    use: () => {}
+                }]
+            ])
+        }
+    };
+
+    const actor = {
+        items: new Map([
+            ['flail-1', flail],
+            ['bite-1', bite],
+            ['charge-1', charge],
+            ['fear-1', fearSpell]
+        ])
+    };
+
+    const actions = [
+        { originalItem: flail },
+        { originalItem: bite },
+        { originalItem: charge },
+        { originalItem: fearSpell }
+    ];
+
+    const modified = await adapter.modifyActions(actions, actor);
+    const flailAction = modified.find(a => a.name === 'Triple Flail');
+    const biteAction = modified.find(a => a.name === 'Bite');
+    const chargeAction = modified.find(a => a.name === 'Charge');
+    const fearAction = modified.find(a => a.name === 'Fear');
+
+    // Verify component tabs are NOT assigned to non-spell actions
+    assert.equal(filterManager.requiresComponent(flailAction.subactions[0], 'vocal'), false);
+    assert.equal(filterManager.requiresComponent(flailAction.subactions[0], 'somatic'), false);
+    assert.equal(filterManager.requiresComponent(flailAction.subactions[0], 'material'), false);
+    assert.equal(filterManager.requiresComponent(biteAction.subactions[0], 'vocal'), false);
+    assert.equal(filterManager.requiresComponent(chargeAction.subactions[0], 'vocal'), false);
+
+    // Verify component tabs ARE assigned to spell actions
+    assert.equal(filterManager.requiresComponent(fearAction.subactions[0], 'vocal'), true);
+    assert.equal(filterManager.requiresComponent(fearAction.subactions[0], 'somatic'), true);
+    assert.equal(filterManager.requiresComponent(fearAction.subactions[0], 'material'), true);
+
+    const groups = {
+        'all': { getAllSubTabIds: () => new Set(['all']) },
+        'economy': { getAllSubTabIds: () => new Set(['action', 'bonus', 'reaction', 'special', 'none']) },
+        'components': { getAllSubTabIds: () => new Set(['vocal', 'somatic', 'material']) }
+    };
+
+    // Filter context with verbal banned
+    const filterContextVerbalBanned = {
+        right: {
+            activeParents: new Set(['all', 'components']),
+            activeSubTypes: new Set(['vocal']),
+            groups
+        }
+    };
+
+    assert.equal(filterManager.matchesEconomyTabs(flailAction, filterContextVerbalBanned), true, 'Triple Flail visible when vocal banned');
+    assert.equal(filterManager.matchesEconomyTabs(biteAction, filterContextVerbalBanned), true, 'Bite visible when vocal banned');
+    assert.equal(filterManager.matchesEconomyTabs(chargeAction, filterContextVerbalBanned), true, 'Charge visible when vocal banned');
+    assert.equal(filterManager.matchesEconomyTabs(fearAction, filterContextVerbalBanned), false, 'Fear filtered out when vocal banned');
+
+    // Filter context with somatic banned
+    const filterContextSomaticBanned = {
+        right: {
+            activeParents: new Set(['all', 'components']),
+            activeSubTypes: new Set(['somatic']),
+            groups
+        }
+    };
+
+    assert.equal(filterManager.matchesEconomyTabs(flailAction, filterContextSomaticBanned), true, 'Triple Flail visible when somatic banned');
+    assert.equal(filterManager.matchesEconomyTabs(biteAction, filterContextSomaticBanned), true, 'Bite visible when somatic banned');
+    assert.equal(filterManager.matchesEconomyTabs(fearAction, filterContextSomaticBanned), false, 'Fear filtered out when somatic banned');
+
+    // Filter context with material banned
+    const filterContextMaterialBanned = {
+        right: {
+            activeParents: new Set(['all', 'components']),
+            activeSubTypes: new Set(['material']),
+            groups
+        }
+    };
+
+    assert.equal(filterManager.matchesEconomyTabs(flailAction, filterContextMaterialBanned), true, 'Triple Flail visible when material banned');
+    assert.equal(filterManager.matchesEconomyTabs(biteAction, filterContextMaterialBanned), true, 'Bite visible when material banned');
+    assert.equal(filterManager.matchesEconomyTabs(fearAction, filterContextMaterialBanned), false, 'Fear filtered out when material banned');
+
+    // Filter context after verbal unbanned
+    const filterContextUnbanned = {
+        right: {
+            activeParents: new Set(['all']),
+            activeSubTypes: new Set([]),
+            groups
+        }
+    };
+
+    assert.equal(filterManager.matchesEconomyTabs(flailAction, filterContextUnbanned), true, 'Triple Flail visible when unbanned');
+    assert.equal(filterManager.matchesEconomyTabs(biteAction, filterContextUnbanned), true, 'Bite visible when unbanned');
+    assert.equal(filterManager.matchesEconomyTabs(chargeAction, filterContextUnbanned), true, 'Charge visible when unbanned');
+    assert.equal(filterManager.matchesEconomyTabs(fearAction, filterContextUnbanned), true, 'Fear visible when unbanned');
+});
+
+
 
 
 

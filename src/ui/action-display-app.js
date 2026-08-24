@@ -767,13 +767,20 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
             });
         });
 
-        if (!matchesLeft) return false;
+        if (!matchesLeft) {
+            log.debug(`ActionDisplayApp._matchesFilters | "${action.name}" failed left filter (categories: ${JSON.stringify(categories)}, activeParents: [${Array.from(this.leftTabs.activeParents).join(', ')}])`);
+            return false;
+        }
 
         // Filter by Right Side (Action Type & Economy Tabs)
         if (!action.right) return false;
 
         const filterContext = this._getFilterContext();
-        return adapter.matchesEconomyTabs(action, filterContext);
+        const matchesRight = adapter.matchesEconomyTabs(action, filterContext);
+        if (!matchesRight) {
+            log.debug(`ActionDisplayApp._matchesFilters | "${action.name}" failed right filter (right: ${JSON.stringify(action.right.map(t => t?.path ?? t?.label))}, activeParents: [${Array.from(this.rightTabs.activeParents).join(', ')}], activeSubs: [${Array.from(this.rightTabs.activeSubTypes).join(', ')}])`);
+        }
+        return matchesRight;
     }
 
     /**
