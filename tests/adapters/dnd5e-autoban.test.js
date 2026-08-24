@@ -315,3 +315,95 @@ test('Status condition change while HUD is closed updates banned options without
     assert.equal(newHUDTabColumn.activeSubTypes.has('vocal'), true, 'Vocal is banned on open HUD');
     assert.equal(newHUDTabColumn.activeSubTypes.has('somatic'), false);
 });
+
+test('Manual component toggles when no conditions active alternate cleanly on every click', () => {
+    const dndAdapter = new Dnd5eSystemAdapter();
+    adapter.system = dndAdapter;
+    game.system = { id: 'dnd5e' };
+
+    const flags = {};
+    const actor = {
+        isOwner: true,
+        statuses: new Set(),
+        effects: [],
+        getFlag: (mod, key) => flags[key] ?? null,
+        setFlag: async (mod, key, val) => { flags[key] = val; }
+    };
+
+    const tabColumn = new HUDTabColumn({
+        side: 'right',
+        defaultParent: 'all'
+    });
+
+    const groups = {
+        'all': { getAllSubTabIds: () => new Set(['all']) },
+        'components': { getAllSubTabIds: () => new Set(['vocal', 'somatic', 'material']) }
+    };
+
+    // Initial sync
+    adapter.updateTabs(actor, tabColumn);
+    assert.equal(tabColumn.activeSubTypes.has('vocal'), false);
+
+    // Click 1: Unselected -> Selected
+    tabColumn.selectSub('components', 'vocal', groups, true);
+    adapter.recordManualTabToggle(actor, 'components', 'vocal', tabColumn.activeSubTypes.has('vocal'));
+    adapter.updateTabs(actor, tabColumn);
+    assert.equal(tabColumn.activeSubTypes.has('vocal'), true, 'Click 1 selects vocal');
+
+    // Click 2: Selected -> Unselected
+    tabColumn.selectSub('components', 'vocal', groups, true);
+    adapter.recordManualTabToggle(actor, 'components', 'vocal', tabColumn.activeSubTypes.has('vocal'));
+    adapter.updateTabs(actor, tabColumn);
+    assert.equal(tabColumn.activeSubTypes.has('vocal'), false, 'Click 2 unselects vocal');
+
+    // Click 3: Unselected -> Selected
+    tabColumn.selectSub('components', 'vocal', groups, true);
+    adapter.recordManualTabToggle(actor, 'components', 'vocal', tabColumn.activeSubTypes.has('vocal'));
+    adapter.updateTabs(actor, tabColumn);
+    assert.equal(tabColumn.activeSubTypes.has('vocal'), true, 'Click 3 selects vocal');
+
+    // Click 4: Selected -> Unselected
+    tabColumn.selectSub('components', 'vocal', groups, true);
+    adapter.recordManualTabToggle(actor, 'components', 'vocal', tabColumn.activeSubTypes.has('vocal'));
+    adapter.updateTabs(actor, tabColumn);
+    assert.equal(tabColumn.activeSubTypes.has('vocal'), false, 'Click 4 unselects vocal');
+});
+
+test('Manual unban while grappled unselects somatic on the very first click without reversion', () => {
+    const dndAdapter = new Dnd5eSystemAdapter();
+    adapter.system = dndAdapter;
+    game.system = { id: 'dnd5e' };
+
+    const flags = {};
+    const actor = {
+        isOwner: true,
+        statuses: new Set(['grappled']),
+        effects: [],
+        getFlag: (mod, key) => flags[key] ?? null,
+        setFlag: async (mod, key, val) => { flags[key] = val; }
+    };
+
+    const tabColumn = new HUDTabColumn({
+        side: 'right',
+        defaultParent: 'all'
+    });
+
+    const groups = {
+        'all': { getAllSubTabIds: () => new Set(['all']) },
+        'components': { getAllSubTabIds: () => new Set(['vocal', 'somatic', 'material']) }
+    };
+
+    // Initial sync on HUD open while grappled
+    adapter.updateTabs(actor, tabColumn);
+    assert.equal(tabColumn.activeSubTypes.has('somatic'), true, 'Somatic is auto-banned');
+
+    // Click 1: User clicks somatic to unban it
+    tabColumn.selectSub('components', 'somatic', groups, true);
+    adapter.recordManualTabToggle(actor, 'components', 'somatic', tabColumn.activeSubTypes.has('somatic'));
+    adapter.updateTabs(actor, tabColumn);
+    assert.equal(tabColumn.activeSubTypes.has('somatic'), false, 'First click immediately unbans somatic');
+
+    // Subsequent renders while grappled must not re-ban it
+    adapter.updateTabs(actor, tabColumn);
+    assert.equal(tabColumn.activeSubTypes.has('somatic'), false, 'Subsequent render preserves unban');
+});

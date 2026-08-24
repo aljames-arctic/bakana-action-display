@@ -1459,6 +1459,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         const updatedConditions = { ...previousConditionsMap };
         const updatedManualUnbans = { ...previousManualUnbans };
 
+        const isInitialTabSync = Boolean(tabColumn && !tabColumn._autoBanInitialized);
         let changed = false;
 
         for (const comp of ['vocal', 'somatic']) {
@@ -1468,7 +1469,10 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
             const wasManualUnbanned = Boolean(previousManualUnbans[comp]);
 
             const hasNewCondition = currentConditions.some(condId => !previousConditions.includes(condId));
-            const hasNoConditions = currentConditions.length === 0;
+            const allConditionsLost = currentConditions.length === 0 && previousConditions.length > 0;
+            const conditionsChanged = currentConditions.length !== previousConditions.length ||
+                hasNewCondition ||
+                previousConditions.some(condId => !currentConditions.includes(condId));
 
             if (hasNewCondition) {
                 // A new status condition was gained -> automatically apply/re-apply ban and reset manual unban
@@ -1477,7 +1481,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                     tabColumn.activeParents.add('components');
                     tabColumn.activeSubTypes.add(comp);
                 }
-            } else if (hasNoConditions) {
+            } else if (allConditionsLost) {
                 // All status conditions for this component are cleared -> remove ban and reset manual unban
                 updatedManualUnbans[comp] = false;
                 if (tabColumn) {
@@ -1487,18 +1491,13 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                         tabColumn.activeParents.delete('components');
                     }
                 }
-            } else {
-                // Status conditions are active, but no new condition was gained.
-                // If not manually unbanned, ensure ban is present in tabColumn.
-                if (!wasManualUnbanned && tabColumn) {
+            } else if (isInitialTabSync) {
+                // Initial sync for a new HUD tab column instance
+                if (currentConditions.length > 0 && !wasManualUnbanned) {
                     tabColumn.activeParents.add('components');
                     tabColumn.activeSubTypes.add(comp);
                 }
             }
-
-            // Check if tracked conditions list changed
-            const conditionsChanged = currentConditions.length !== previousConditions.length ||
-                currentConditions.some(c => !previousConditions.includes(c));
 
             if (conditionsChanged) {
                 updatedConditions[comp] = currentConditions;
@@ -1508,6 +1507,10 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
             if (updatedManualUnbans[comp] !== wasManualUnbanned) {
                 changed = true;
             }
+        }
+
+        if (tabColumn) {
+            tabColumn._autoBanInitialized = true;
         }
 
         if (changed && actor.isOwner && typeof actor.setFlag === 'function') {
