@@ -40,7 +40,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         this._tabColumns = {};
 
         // HUD Attachment/Position Mode (persisted client-side)
-        this.positionMode = game.settings.get(MODULE_ID, 'hudPositionMode');
+        this.positionMode = game.settings.get(MODULE_ID, 'hudPositionMode') ?? 'attached';
 
         // Dragging state
         this._dragData = null;
@@ -162,19 +162,11 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
     }
 
     /**
-     * Is the HUD in pinned (fixed offset token tracking) mode?
-     * @type {boolean}
-     */
-    get isPinned() {
-        return this.positionMode === 'pinned';
-    }
-
-    /**
-     * Is the HUD tracking token position (either attached or pinned)?
+     * Is the HUD tracking token position (attached mode)?
      * @type {boolean}
      */
     get isTracked() {
-        return this.positionMode !== 'detached';
+        return this.isAttached;
     }
 
     // #endregion
@@ -613,7 +605,6 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         context.items = visibleActions;
         context.layout = 'flat'; // Default layout template mode
         context.isAttached = this.isAttached;
-        context.isPinned = this.isPinned;
         context.isDetached = this.isDetached;
         context.showDepleted = game.settings.get(MODULE_ID, 'showDepleted') ?? false;
         context.showItemSummaries = game.settings.get(MODULE_ID, 'showItemSummaries') ?? false;
@@ -899,27 +890,14 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
     }
 
     /**
-     * Toggle between Attached (dynamic), Pinned (fixed offset), and Detached (floating) modes.
+     * Toggle between Attached (dynamic token tracking) and Detached (floating) modes.
      */
     async _onToggleAnchor(event, target) {
         event.preventDefault();
         const el = this.element;
 
         if (this.isAttached) {
-            // Attached -> Pinned
-            this.positionMode = 'pinned';
-
-            if (el && this.token) {
-                const tokenTransform = this.token.worldTransform;
-                const rect = el.getBoundingClientRect();
-                const offset = {
-                    x: rect.left - tokenTransform.tx,
-                    y: rect.top - tokenTransform.ty
-                };
-                await game.settings.set(MODULE_ID, 'hudPinnedOffset', offset);
-            }
-        } else if (this.isPinned) {
-            // Pinned -> Detached
+            // Attached -> Detached
             this.positionMode = 'detached';
 
             if (el) {
@@ -933,7 +911,6 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         }
 
         await game.settings.set(MODULE_ID, 'hudPositionMode', this.positionMode);
-
         this.render();
     }
 
@@ -1780,9 +1757,9 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         el.style.bottom = '';
         el.style.right = '';
 
-        // Dragging while in Attached mode automatically switches to Pinned mode
+        // Dragging while in Attached mode automatically switches to Detached mode
         if (this.isAttached) {
-            this.positionMode = 'pinned';
+            this.positionMode = 'detached';
         }
     }
 
@@ -1798,20 +1775,9 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         const el = this.element;
         if (el && this._dragData) {
             const rect = el.getBoundingClientRect();
-
-            if (this.positionMode === 'pinned' && this.token) {
-                const tokenTransform = this.token.worldTransform;
-                const offset = {
-                    x: rect.left - tokenTransform.tx,
-                    y: rect.top - tokenTransform.ty
-                };
-                await game.settings.set(MODULE_ID, 'hudPinnedOffset', offset);
-                await game.settings.set(MODULE_ID, 'hudPositionMode', 'pinned');
-            } else {
-                const pos = { left: rect.left, top: rect.top };
-                await game.settings.set(MODULE_ID, 'hudDetachedPosition', pos);
-                await game.settings.set(MODULE_ID, 'hudPositionMode', 'detached');
-            }
+            const pos = { left: rect.left, top: rect.top };
+            await game.settings.set(MODULE_ID, 'hudDetachedPosition', pos);
+            await game.settings.set(MODULE_ID, 'hudPositionMode', 'detached');
         }
 
         this._dragData = null;
@@ -1822,8 +1788,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
 
     /**
      * Position the application window.
-     * In Attached mode, anchors dynamically around token in preference order.
-     * In Pinned mode, pins top-left of HUD to token top-left with fixed offset (clamped to page).
+     * In Attached mode, anchors dynamically around token in preference order (above/below or right/left).
      * In Detached mode, places it at the user's last dragged screen coordinates.
      */
     setPosition(position = {}) {
@@ -1902,41 +1867,6 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
                     el.style.bottom = '';
                 }
             }
-
-            return result;
-
-        } else if (this.positionMode === 'pinned' && this.token) {
-            // --- PINNED MODE (Fixed Offset to Token Top-Left, Clamped to Page) ---
-            const tokenTransform = this.token.worldTransform;
-            const tokenLeft = tokenTransform.tx;
-            const tokenTop = tokenTransform.ty;
-
-            const pinnedOffset = game.settings.get(MODULE_ID, 'hudPinnedOffset') ?? { x: 0, y: -50 };
-
-            // Top-left corner of HUD is pinned relative to token top-left
-            let left = tokenLeft + pinnedOffset.x;
-            let top = tokenTop + pinnedOffset.y;
-
-            // Clamp to screen bounds so it is ALWAYS fully on the page
-            const minLeft = Math.max(10, tabExtension);
-            const maxLeft = Math.min(window.innerWidth - appWidth - 10, window.innerWidth - appWidth - tabExtension);
-
-            left = Math.clamp(left, minLeft, maxLeft);
-            top = Math.clamp(top, 10, window.innerHeight - appHeight - 10);
-
-            const targetPosition = foundry.utils.mergeObject(position, {
-                left,
-                top,
-                width: 'auto',
-                height: 'auto'
-            });
-
-            const result = super.setPosition(targetPosition);
-            el.style.height = 'auto';
-            el.style.left = `${left}px`;
-            el.style.top = `${top}px`;
-            el.style.bottom = '';
-            el.style.right = '';
 
             return result;
 

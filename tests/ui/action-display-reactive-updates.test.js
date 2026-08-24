@@ -97,7 +97,7 @@ test('canvasPan hook updates position on tracked activeApp without error', () =>
     Hooks.callAll('closeTokenHUD', {}, {});
 });
 
-test('ActionDisplayApp setPosition calculates coordinates across attached, pinned, and detached modes', () => {
+test('ActionDisplayApp setPosition calculates coordinates across attached and detached modes', () => {
     const mockToken = {
         id: 'token-hero-pos',
         name: 'Hero Pos',
@@ -125,13 +125,7 @@ test('ActionDisplayApp setPosition calculates coordinates across attached, pinne
     app.setPosition();
     assert.ok(app.element.style.left !== undefined || app.element.style.top !== undefined);
 
-    // 2. Pinned mode
-    app.positionMode = 'pinned';
-    app.setPosition();
-    assert.ok(app.element.style.left !== undefined);
-    assert.ok(app.element.style.top !== undefined);
-
-    // 3. Detached mode
+    // 2. Detached mode
     app.positionMode = 'detached';
     app.setPosition();
     assert.ok(app.element.style.left !== undefined);

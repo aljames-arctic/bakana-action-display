@@ -31,7 +31,7 @@ This document provides a complete call tree and API reference for **Bakana's Act
   │    └── activeApp.render()
   │
   ├── Hooks.on('refreshToken') / Hooks.on('canvasPan')
-  │    └── if ['attached', 'pinned'].includes(activeApp.positionMode) & rendered ──► activeApp.setPosition()
+  │    └── if activeApp?.isTracked & rendered ──► activeApp.setPosition()
   │
   └── Hooks.on('updateActor') / Hooks.on('updateItem')
        └── activeApp.render()

@@ -314,20 +314,12 @@ Hooks.once('init', () => {
         default: false
     });
 
-    // Register HUD Position Mode (attached/pinned/detached)
+    // Register HUD Position Mode (attached/detached)
     game.settings.register(MODULE_ID, 'hudPositionMode', {
         scope: 'client',
         config: false,
         type: String,
         default: 'attached'
-    });
-
-    // Register HUD Pinned Offset (fixed offset relative to token top-left)
-    game.settings.register(MODULE_ID, 'hudPinnedOffset', {
-        scope: 'client',
-        config: false,
-        type: Object,
-        default: { x: 0, y: -50 }
     });
 
     // Register HUD Detached Position (coordinates)

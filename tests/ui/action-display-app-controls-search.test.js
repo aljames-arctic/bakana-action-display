@@ -197,3 +197,35 @@ test('ActionDisplayApp _syncTabWidths synchronizes tab widths to maximal width p
     assert.equal(mockRight.properties.get('--bad-depth-3-width'), '140px');
     assert.equal(mockLeft.properties.get('--bad-depth-3-width'), '140px');
 });
+
+test('ActionDisplayApp _onToggleAnchor toggles between attached and detached modes', async () => {
+    let renderCalled = false;
+    const app = new ActionDisplayApp({ actor: { id: 'test-actor' } });
+    app.render = () => { renderCalled = true; };
+    app.element = {
+        getBoundingClientRect: () => ({ left: 250, top: 180 })
+    };
+
+    // 1. Initial mode is attached
+    app.positionMode = 'attached';
+    assert.equal(app.isAttached, true);
+    assert.equal(app.isDetached, false);
+
+    // 2. Toggle to detached
+    await app._onToggleAnchor({ preventDefault: () => {} }, {});
+    assert.equal(app.positionMode, 'detached');
+    assert.equal(app.isAttached, false);
+    assert.equal(app.isDetached, true);
+    assert.equal(game.settings.get(MODULE_ID, 'hudPositionMode'), 'detached');
+    assert.deepEqual(game.settings.get(MODULE_ID, 'hudDetachedPosition'), { left: 250, top: 180 });
+    assert.equal(renderCalled, true);
+
+    // 3. Toggle back to attached
+    renderCalled = false;
+    await app._onToggleAnchor({ preventDefault: () => {} }, {});
+    assert.equal(app.positionMode, 'attached');
+    assert.equal(app.isAttached, true);
+    assert.equal(app.isDetached, false);
+    assert.equal(game.settings.get(MODULE_ID, 'hudPositionMode'), 'attached');
+    assert.equal(renderCalled, true);
+});
