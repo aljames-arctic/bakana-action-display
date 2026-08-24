@@ -221,9 +221,57 @@ Hooks.on('updateActor', (actor, changes, options, userId) => {
     }
 });
 
-// Hook into Combat updates and turn advancements to update End Turn button visibility
-Hooks.on('updateCombat', (combat, changes, options, userId) => {
+/**
+ * Handle combat turn updates, dynamically switching the HUD token if Combat Auto-Track is enabled.
+ * @param {Combat} combat Active combat document
+ */
+export function handleCombatTurnChange(combat) {
+    const isFeatureEnabled = Boolean(game.settings.get(MODULE_ID, 'enableCombatAutoTrackButton'));
+    const isAutoTrackActive = Boolean(game.settings.get(MODULE_ID, 'autoTrackCombat'));
+
+    if (isFeatureEnabled && isAutoTrackActive && combat?.started && combat.combatant) {
+        const currentCombatant = combat.combatant;
+        const token = currentCombatant.token?.object
+            ?? canvas?.tokens?.get?.(currentCombatant.tokenId)
+            ?? (currentCombatant.token && canvas?.tokens?.placeables?.includes(currentCombatant.token) ? currentCombatant.token : null)
+            ?? currentCombatant.actor?.getActiveTokens?.()?.[0]
+            ?? null;
+
+        if (token && (token.document?.isOwner || token.actor?.isOwner || game.user?.isGM)) {
+            const currentApp = actionDisplay.activeApp ?? activeApp;
+            if (currentApp && (currentApp.rendered || currentApp.element)) {
+                if (currentApp.token === token || currentApp.token?.id === token.id) {
+                    requestHUDRender();
+                    return;
+                }
+
+                // Switch HUD to the active combatant token
+                if (currentApp.element) {
+                    currentApp.element.style.display = 'none';
+                }
+                currentApp.close();
+                activeApp = null;
+                actionDisplay.activeApp = null;
+
+                setLastSelectedToken(token);
+                if (token.actor) {
+                    syncActorFavorites(token.actor);
+                }
+
+                activeApp = new ActionDisplayApp(token);
+                actionDisplay.activeApp = activeApp;
+                activeApp.render(true);
+                return;
+            }
+        }
+    }
+
     requestHUDRender();
+}
+
+// Hook into Combat updates and turn advancements to update End Turn button visibility and auto-track
+Hooks.on('updateCombat', (combat, changes, options, userId) => {
+    handleCombatTurnChange(combat);
 });
 
 Hooks.on('deleteCombat', (combat, options, userId) => {
@@ -231,11 +279,11 @@ Hooks.on('deleteCombat', (combat, options, userId) => {
 });
 
 Hooks.on('combatTurn', (combat, updateData, updateOptions) => {
-    requestHUDRender();
+    handleCombatTurnChange(combat);
 });
 
 Hooks.on('combatRound', (combat, updateData, updateOptions) => {
-    requestHUDRender();
+    handleCombatTurnChange(combat);
 });
 
 // Hook into synthetic Token document updates (actor delta mutations)

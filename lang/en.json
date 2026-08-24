@@ -31,6 +31,10 @@
                 "name": "End Turn Button",
                 "hint": "Display an End Turn button in the HUD footer during combat when it is the active character's turn."
             },
+            "enableCombatAutoTrackButton": {
+                "name": "Combat Auto-Track Button",
+                "hint": "Display a combat turn tracking button (sword icon) in the HUD control bar to automatically follow the active character's turn during combat."
+            },
             "economyColorsMenu": {
                 "label": "Configure Colors",
                 "hint": "Customize the indicator bar color for each action economy type for this system."

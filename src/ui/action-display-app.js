@@ -293,6 +293,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
             closeHUD: ActionDisplayApp.prototype._onCloseHUD,
             rollAction: ActionDisplayApp.prototype._onRollAction,
             toggleFilterResources: ActionDisplayApp.prototype._onToggleFilterResources,
+            toggleCombatAutoTrack: ActionDisplayApp.prototype._onToggleCombatAutoTrack,
             toggleItemSummaries: ActionDisplayApp.prototype._onToggleItemSummaries,
             recenterToken: ActionDisplayApp.prototype._onRecenterToken,
             clearSearch: ActionDisplayApp.prototype._onClearSearch,
@@ -603,6 +604,8 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         context.showItemSummaries = game.settings.get(MODULE_ID, 'showItemSummaries') ?? false;
         context.enableCenterOnToken = game.settings.get(MODULE_ID, 'enableCenterOnToken') ?? false;
         context.enableItemSummaryButton = game.settings.get(MODULE_ID, 'enableItemSummaryButton') ?? false;
+        context.enableCombatAutoTrackButton = game.settings.get(MODULE_ID, 'enableCombatAutoTrackButton') ?? false;
+        context.autoTrackCombat = game.settings.get(MODULE_ID, 'autoTrackCombat') ?? false;
         context.searchQuery = this.searchQuery ?? '';
 
         // Synchronize favorites if system supports them and user is owner
@@ -1039,6 +1042,48 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         const current = Boolean(game.settings.get(MODULE_ID, 'showDepleted'));
         const next = target?.checked ?? !current;
         await game.settings.set(MODULE_ID, 'showDepleted', next);
+        this.render();
+    }
+
+    /**
+     * Toggle the "Auto-Track Combat Turn" setting.
+     * When toggled on during active combat, immediately switches the HUD to the current combatant if permitted.
+     */
+    async _onToggleCombatAutoTrack(event, target) {
+        event?.preventDefault?.();
+        const current = Boolean(game.settings.get(MODULE_ID, 'autoTrackCombat'));
+        const next = target?.checked ?? !current;
+        await game.settings.set(MODULE_ID, 'autoTrackCombat', next);
+
+        if (next) {
+            const combat = game.combat;
+            if (combat?.started && combat.combatant) {
+                const currentCombatant = combat.combatant;
+                const token = currentCombatant.token?.object
+                    ?? canvas?.tokens?.get?.(currentCombatant.tokenId)
+                    ?? (currentCombatant.token && canvas?.tokens?.placeables?.includes(currentCombatant.token) ? currentCombatant.token : null)
+                    ?? currentCombatant.actor?.getActiveTokens?.()?.[0]
+                    ?? null;
+
+                if (token && (token.document?.isOwner || token.actor?.isOwner || game.user?.isGM)) {
+                    if (this.token !== token && this.token?.id !== token.id) {
+                        if (this.element) {
+                            this.element.style.display = 'none';
+                        }
+                        this.close();
+                        actionDisplay.activeApp = null;
+
+                        if (token.actor) {
+                            syncActorFavorites(token.actor);
+                        }
+                        const newApp = new ActionDisplayApp(token);
+                        actionDisplay.activeApp = newApp;
+                        newApp.render(true);
+                        return;
+                    }
+                }
+            }
+        }
         this.render();
     }
 

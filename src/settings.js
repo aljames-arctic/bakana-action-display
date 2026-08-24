@@ -117,6 +117,29 @@ Hooks.once('init', () => {
         }
     });
 
+    // Register Combat Auto-Track Button Setting (World Scope, default disabled)
+    game.settings.register(MODULE_ID, 'enableCombatAutoTrackButton', {
+        name: game.i18n.localize('BAD.settings.enableCombatAutoTrackButton.name'),
+        hint: game.i18n.localize('BAD.settings.enableCombatAutoTrackButton.hint'),
+        scope: 'world',
+        config: true,
+        type: Boolean,
+        default: false,
+        onChange: () => {
+            if (actionDisplay.activeApp?.rendered) {
+                actionDisplay.activeApp.render();
+            }
+        }
+    });
+
+    // Register Auto-Track Combat Turn Setting (Client Scope, default disabled)
+    game.settings.register(MODULE_ID, 'autoTrackCombat', {
+        scope: 'client',
+        config: false,
+        type: Boolean,
+        default: false
+    });
+
     // ==========================================
     // User Scope Settings & Menus
     // ==========================================
@@ -425,7 +448,7 @@ export function injectSettingsHeaders(html, app) {
     // 2. Insert section headers before the respective first setting in each scope
     const sections = [
         {
-            keys: ['categorizationMenu', 'moduleIntegrationsMenu', 'enableCenterOnToken', 'enableItemSummaryButton'],
+            keys: ['categorizationMenu', 'moduleIntegrationsMenu', 'enableCenterOnToken', 'enableItemSummaryButton', 'enableToggleHotkey', 'enableEndTurnButton', 'enableCombatAutoTrackButton'],
             scope: 'world',
             title: game.i18n.localize('BAD.settingsSections.world') ?? 'World Settings',
             icon: 'fas fa-globe'

@@ -292,3 +292,74 @@ test('ActionDisplayApp _onEndCombatTurn calls combat.nextTurn() during active co
     // Clean up
     globalThis.game.combat = null;
 });
+
+test('ActionDisplayApp _prepareContext reflects enableCombatAutoTrackButton and autoTrackCombat settings', async () => {
+    actionDisplay.getActions = async () => [];
+
+    const app = new ActionDisplayApp({ actor: { id: 'test-actor' } });
+    app.activePage = 1;
+    app._saveTabState = () => {};
+
+    // 1. Default disabled
+    await game.settings.set(MODULE_ID, 'enableCombatAutoTrackButton', false);
+    await game.settings.set(MODULE_ID, 'autoTrackCombat', false);
+    let context = await app._prepareContext({});
+    assert.equal(context.enableCombatAutoTrackButton, false);
+    assert.equal(context.autoTrackCombat, false);
+
+    // 2. Enabled via settings
+    await game.settings.set(MODULE_ID, 'enableCombatAutoTrackButton', true);
+    await game.settings.set(MODULE_ID, 'autoTrackCombat', true);
+    context = await app._prepareContext({});
+    assert.equal(context.enableCombatAutoTrackButton, true);
+    assert.equal(context.autoTrackCombat, true);
+
+    // Reset
+    await game.settings.set(MODULE_ID, 'enableCombatAutoTrackButton', false);
+    await game.settings.set(MODULE_ID, 'autoTrackCombat', false);
+});
+
+test('ActionDisplayApp _onToggleCombatAutoTrack toggles setting and switches token during active combat', async () => {
+    const combatToken = {
+        id: 'monster1',
+        document: { isOwner: true },
+        actor: { id: 'actorMonster1', isOwner: true, items: [], flags: {} }
+    };
+    const playerToken = {
+        id: 'player1',
+        document: { isOwner: true },
+        actor: { id: 'actorPlayer1', isOwner: true, items: [], flags: {} }
+    };
+
+    globalThis.canvas = {
+        tokens: {
+            get: (id) => id === 'monster1' ? combatToken : playerToken,
+            placeables: [combatToken, playerToken]
+        }
+    };
+
+    globalThis.game.combat = {
+        started: true,
+        combatant: { tokenId: 'monster1', token: combatToken, actor: combatToken.actor }
+    };
+
+    const initialApp = new ActionDisplayApp(playerToken);
+    actionDisplay.activeApp = initialApp;
+    initialApp.rendered = true;
+
+    // Toggle on: should switch HUD to monster1
+    await game.settings.set(MODULE_ID, 'autoTrackCombat', false);
+    await initialApp._onToggleCombatAutoTrack({ preventDefault: () => {} }, {});
+
+    assert.equal(game.settings.get(MODULE_ID, 'autoTrackCombat'), true);
+    assert.ok(actionDisplay.activeApp);
+    assert.equal(actionDisplay.activeApp.token.id, 'monster1');
+
+    // Clean up
+    if (actionDisplay.activeApp) {
+        actionDisplay.activeApp.close();
+        actionDisplay.activeApp = null;
+    }
+    await game.settings.set(MODULE_ID, 'autoTrackCombat', false);
+    globalThis.game.combat = null;
+});

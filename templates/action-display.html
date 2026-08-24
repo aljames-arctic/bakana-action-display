@@ -5,6 +5,11 @@
             <button class="bad-control-btn bad-filter-resources-btn {{#if showDepleted}}active{{/if}}" data-action="toggleFilterResources">
                 <i class="fas {{#if showDepleted}}fa-eye{{else}}fa-eye-slash{{/if}}"></i>
             </button>
+            {{#if enableCombatAutoTrackButton}}
+            <button class="bad-control-btn bad-combat-track-btn {{#if autoTrackCombat}}active{{/if}}" data-action="toggleCombatAutoTrack">
+                <i class="fas fa-sword"></i>
+            </button>
+            {{/if}}
             {{#if enableItemSummaryButton}}
             <button class="bad-control-btn bad-summary-toggle-btn {{#if showItemSummaries}}active{{/if}}" data-action="toggleItemSummaries">
                 <i class="fas fa-question"></i>

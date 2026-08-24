@@ -134,4 +134,55 @@ test('ActionDisplayApp setPosition calculates coordinates across attached and de
     Hooks.callAll('closeTokenHUD', {}, {});
 });
 
+test('Combat turn advancement hook switches HUD to active combatant when autoTrackCombat is enabled', async () => {
+    const MODULE_ID = 'bakana-action-display';
+    await game.settings.set(MODULE_ID, 'enableCombatAutoTrackButton', true);
+    await game.settings.set(MODULE_ID, 'autoTrackCombat', true);
+
+    const tokenGoblin = {
+        id: 'token-goblin',
+        name: 'Goblin',
+        document: { isOwner: true },
+        actor: { id: 'actor-goblin', name: 'Goblin Actor', isOwner: true, items: new foundry.utils.Collection() }
+    };
+    const tokenHero = {
+        id: 'token-hero-combat',
+        name: 'Hero Combat',
+        document: { isOwner: true },
+        actor: { id: 'actor-hero-combat', name: 'Hero Combat Actor', isOwner: true, items: new foundry.utils.Collection() }
+    };
+
+    globalThis.canvas = {
+        tokens: {
+            get: (id) => id === 'token-goblin' ? tokenGoblin : tokenHero,
+            placeables: [tokenGoblin, tokenHero]
+        }
+    };
+
+    // 1. Initial state: HUD open for Hero
+    Hooks.callAll('renderTokenHUD', { object: tokenHero }, {}, {});
+    assert.ok(actionDisplay.activeApp);
+    assert.equal(actionDisplay.activeApp.token.id, 'token-hero-combat');
+    actionDisplay.activeApp.rendered = true;
+
+    // 2. Combat turn advances to Goblin
+    const mockCombat = {
+        started: true,
+        combatant: { tokenId: 'token-goblin', token: tokenGoblin, actor: tokenGoblin.actor }
+    };
+    globalThis.game.combat = mockCombat;
+
+    Hooks.callAll('combatTurn', mockCombat, {}, {});
+
+    // HUD should now be switched to Goblin!
+    assert.ok(actionDisplay.activeApp);
+    assert.equal(actionDisplay.activeApp.token.id, 'token-goblin');
+
+    // Clean up
+    Hooks.callAll('closeTokenHUD', {}, {});
+    await game.settings.set(MODULE_ID, 'enableCombatAutoTrackButton', false);
+    await game.settings.set(MODULE_ID, 'autoTrackCombat', false);
+    globalThis.game.combat = null;
+});
+
 
