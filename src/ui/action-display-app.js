@@ -1094,7 +1094,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
                     ?? currentCombatant.actor?.getActiveTokens?.()?.[0]
                     ?? null;
 
-                if (token && (token.document?.isOwner || token.actor?.isOwner || game.user?.isGM)) {
+                if (token && adapter.foundry.isUserInCharge(token)) {
                     if (this.token !== token && this.token?.id !== token.id) {
                         if (this.element) {
                             this.element.style.display = 'none';

@@ -280,6 +280,20 @@ globalThis.CONST.KEYBINDING_PRECEDENCE = {
     NORMAL: 0,
     DEFERRED: -1
 };
+globalThis.CONST.USER_ROLES = {
+    NONE: 0,
+    PLAYER: 1,
+    TRUSTED: 2,
+    ASSISTANT: 3,
+    GAMEMASTER: 4
+};
+globalThis.CONST.DOCUMENT_OWNERSHIP_LEVELS = {
+    INHERIT: -1,
+    NONE: 0,
+    LIMITED: 1,
+    OBSERVER: 2,
+    OWNER: 3
+};
 
 const keybindingsStore = new Map();
 
@@ -424,5 +438,14 @@ globalThis.game = {
             this.active = false;
         }
     },
-    canvas: globalThis.canvas
+    canvas: globalThis.canvas,
+    users: new Collection(),
+    user: {
+        id: 'user-gm',
+        name: 'Gamemaster',
+        role: 4,
+        isGM: true,
+        isTrusted: true,
+        active: true
+    }
 };

@@ -1,8 +1,8 @@
-import { BaseFoundryAdapter } from './base-foundry-adapter.js';
+import { BaseFoundryAdapter, USER_PERMISSION_TIERS } from './base-foundry-adapter.js';
 import { FoundryCurrentAdapter } from './foundry-current-adapter.js';
 import { log } from '../../lib/logger.js';
 
-export { BaseFoundryAdapter, FoundryCurrentAdapter };
+export { BaseFoundryAdapter, FoundryCurrentAdapter, USER_PERMISSION_TIERS };
 
 /**
  * Initialize and return the active Foundry VTT platform adapter.

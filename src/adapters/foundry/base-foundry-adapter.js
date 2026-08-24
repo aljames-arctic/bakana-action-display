@@ -1,4 +1,17 @@
 /**
+ * User permission tiers for ownership priority evaluation.
+ * Tier 1: Players (least permissions)
+ * Tier 2: Trusted Players
+ * Tier 3: GM / Co-GM (most permissions)
+ * @type {Readonly<{ PLAYER: 1, TRUSTED: 2, GM: 3 }>}
+ */
+export const USER_PERMISSION_TIERS = Object.freeze({
+    PLAYER: 1,
+    TRUSTED: 2,
+    GM: 3
+});
+
+/**
  * Baseline Foundry VTT platform adapter.
  * Abstract interface for versioned Foundry Application, ContextMenu, interaction, and utility operations.
  */
@@ -219,5 +232,157 @@ export class BaseFoundryAdapter {
             return combat.getCombatantByToken(tokenId) ?? null;
         }
         return combat.combatants?.find?.(c => c.tokenId === tokenId || c.token?.id === tokenId) ?? null;
+    }
+
+    /**
+     * User permission tiers for ownership priority evaluation.
+     * @type {Readonly<{ PLAYER: 1, TRUSTED: 2, GM: 3 }>}
+     */
+    get USER_PERMISSION_TIERS() {
+        return USER_PERMISSION_TIERS;
+    }
+
+    /**
+     * Classify a Foundry User into a standard permission tier (1: Player, 2: Trusted Player, 3: GM / Co-GM).
+     * @param {User} user Concrete User document
+     * @returns {number|null} 1 for Player, 2 for Trusted, 3 for GM, or null if invalid/none
+     */
+    getUserPermissionTier(user) {
+        if (!user) return null;
+        const isGM = Boolean(user.isGM);
+        const userRole = typeof user.role === 'number' ? user.role : null;
+        const assistantRole = globalThis.CONST?.USER_ROLES?.ASSISTANT ?? 3;
+        const trustedRole = globalThis.CONST?.USER_ROLES?.TRUSTED ?? 2;
+        const playerRole = globalThis.CONST?.USER_ROLES?.PLAYER ?? 1;
+
+        if (isGM || (userRole !== null && userRole >= assistantRole)) {
+            return USER_PERMISSION_TIERS.GM;
+        }
+        if ((userRole !== null && userRole === trustedRole) || (Boolean(user.isTrusted) && !isGM)) {
+            return USER_PERMISSION_TIERS.TRUSTED;
+        }
+        if ((userRole !== null && userRole === playerRole) || (!isGM && !user.isTrusted && userRole !== 0)) {
+            return USER_PERMISSION_TIERS.PLAYER;
+        }
+        return null;
+    }
+
+    /**
+     * Test whether a user possesses an ownership role for a given actor and token document.
+     * @param {User} user Concrete User document
+     * @param {Actor|null} actor Concrete Actor document
+     * @param {Document|null} tokenDoc Concrete TokenDocument
+     * @returns {boolean} True if the user has an ownership role
+     */
+    isUserDocumentOwner(user, actor, tokenDoc) {
+        if (!user) return false;
+
+        // GM / Co-GM always has ownership over all documents in Foundry
+        if (this.getUserPermissionTier(user) === USER_PERMISSION_TIERS.GM) {
+            return true;
+        }
+
+        const ownerLevel = globalThis.CONST?.DOCUMENT_OWNERSHIP_LEVELS?.OWNER ?? 3;
+
+        // Test actor document permissions
+        if (actor) {
+            if (typeof actor.testUserPermission === 'function') {
+                if (Boolean(actor.testUserPermission(user, 'OWNER'))) return true;
+            }
+            if (typeof actor.getUserLevel === 'function') {
+                if (actor.getUserLevel(user) >= ownerLevel) return true;
+            }
+            if (actor.ownership) {
+                const level = actor.ownership[user.id] ?? actor.ownership.default ?? 0;
+                if (level >= ownerLevel) return true;
+            }
+            if ((user.id === game.user?.id || user === game.user) && Boolean(actor.isOwner)) {
+                return true;
+            }
+        }
+
+        // Test token document permissions
+        if (tokenDoc) {
+            if (typeof tokenDoc.testUserPermission === 'function') {
+                if (Boolean(tokenDoc.testUserPermission(user, 'OWNER'))) return true;
+            }
+            if (typeof tokenDoc.getUserLevel === 'function') {
+                if (tokenDoc.getUserLevel(user) >= ownerLevel) return true;
+            }
+            if (tokenDoc.ownership) {
+                const level = tokenDoc.ownership[user.id] ?? tokenDoc.ownership.default ?? 0;
+                if (level >= ownerLevel) return true;
+            }
+            if ((user.id === game.user?.id || user === game.user) && Boolean(tokenDoc.isOwner)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Determine if a user is "in-charge" of a token.
+     * A user is in-charge of a token if:
+     * 1. The user has an ownership role of the token.
+     * 2. There is no other currently connected user with fewer permissions (lower tier) who also has an ownership role of that token.
+     *
+     * Ownership priority tiers (among currently connected users):
+     * Players who own -> Trusted Players who own -> GM / Co-GM who own.
+     *
+     * @param {Token|TokenDocument} token Token placeable or TokenDocument
+     * @param {User} [user=game.user] Target user to evaluate (defaults to active client user)
+     * @returns {boolean} True if the user is in-charge of the token
+     */
+    isUserInCharge(token, user = game.user) {
+        if (!token || !user) return false;
+
+        const tokenDoc = token.document ?? (typeof token.testUserPermission === 'function' ? token : null);
+        const actor = token.actor ?? tokenDoc?.actor ?? null;
+
+        if (!this.isUserDocumentOwner(user, actor, tokenDoc)) {
+            return false;
+        }
+
+        const userTier = this.getUserPermissionTier(user);
+        if (!userTier) return false;
+
+        // Tier 1 (Player) is the lowest permission tier; if they own it, they are in-charge.
+        if (userTier === USER_PERMISSION_TIERS.PLAYER) {
+            return true;
+        }
+
+        const usersCollection = game.users;
+        const allUsers = usersCollection?.contents
+            ?? (Array.isArray(usersCollection) ? usersCollection : null)
+            ?? (usersCollection?.values ? Array.from(usersCollection.values()) : null)
+            ?? (user ? [user] : []);
+
+        // Filter to only currently connected (active) other users
+        const activeOtherUsers = allUsers.filter(otherUser => {
+            if (otherUser.id === user.id || otherUser === user) return false;
+            return Boolean(otherUser.active);
+        });
+
+        // Tier 2 (Trusted Player): in-charge only if NO connected Tier 1 (Player) owns it
+        if (userTier === USER_PERMISSION_TIERS.TRUSTED) {
+            const hasConnectedPlayerOwner = activeOtherUsers.some(otherUser => {
+                return this.getUserPermissionTier(otherUser) === USER_PERMISSION_TIERS.PLAYER
+                    && this.isUserDocumentOwner(otherUser, actor, tokenDoc);
+            });
+            return !hasConnectedPlayerOwner;
+        }
+
+        // Tier 3 (GM / Co-GM): in-charge only if NO connected Tier 1 (Player) and NO connected Tier 2 (Trusted Player) owns it
+        if (userTier === USER_PERMISSION_TIERS.GM) {
+            const hasConnectedLowerTierOwner = activeOtherUsers.some(otherUser => {
+                const otherTier = this.getUserPermissionTier(otherUser);
+                return (otherTier === USER_PERMISSION_TIERS.PLAYER || otherTier === USER_PERMISSION_TIERS.TRUSTED)
+                    && this.isUserDocumentOwner(otherUser, actor, tokenDoc);
+            });
+            return !hasConnectedLowerTierOwner;
+        }
+
+        return false;
     }
 }

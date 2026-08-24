@@ -237,7 +237,7 @@ export function handleCombatTurnChange(combat) {
             ?? currentCombatant.actor?.getActiveTokens?.()?.[0]
             ?? null;
 
-        if (token && (token.document?.isOwner || token.actor?.isOwner || game.user?.isGM)) {
+        if (token && adapter.foundry.isUserInCharge(token)) {
             const currentApp = actionDisplay.activeApp ?? activeApp;
             if (currentApp && (currentApp.rendered || currentApp.element)) {
                 if (currentApp.token === token || currentApp.token?.id === token.id) {
