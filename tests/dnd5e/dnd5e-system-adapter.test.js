@@ -392,6 +392,10 @@ test('Dnd5eSystemAdapter default categorization presets categorize ability and s
             skills: {
                 ath: { ability: 'str', label: 'Athletics' },
                 ste: { ability: 'dex', label: 'Stealth' }
+            },
+            tools: {
+                thief: { ability: 'dex', label: "Thieves' Tools" },
+                jeweler: { ability: 'int', label: "Jeweler's Tools" }
             }
         }
     };
@@ -413,6 +417,16 @@ test('Dnd5eSystemAdapter default categorization presets categorize ability and s
     const dexSub = skillSection.subsections.find(s => s.name === 'Dexterity');
     assert.ok(dexSub);
     assert.equal(dexSub.items.some(i => i.name === 'Stealth'), true);
+
+    const toolSection = categorized.find(c => c.name === 'Tools');
+    assert.ok(toolSection);
+    const dexToolSub = toolSection.subsections.find(s => s.name === 'Dexterity');
+    assert.ok(dexToolSub);
+    assert.equal(dexToolSub.items.some(i => i.name === "Thieves' Tools"), true);
+
+    const intToolSub = toolSection.subsections.find(s => s.name === 'Intelligence');
+    assert.ok(intToolSub);
+    assert.equal(intToolSub.items.some(i => i.name === "Jeweler's Tools"), true);
 });
 
 test('Dnd5eSystemAdapter onTabRightClick toggles actor flags', () => {
