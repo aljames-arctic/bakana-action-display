@@ -2,6 +2,7 @@ import { MODULE_ID } from './constants.js';
 import { actionDisplay } from './action-display.js';
 import { ActionDisplayApp } from './ui/action-display-app.js';
 import { syncActorFavorites } from './favorites/favorites-manager.js';
+import { adapter } from './adapters/index.js';
 import { log } from './lib/logger.js';
 
 let lastSelectedTokenRef = null;
@@ -135,7 +136,7 @@ export function registerKeybindings() {
         name: 'BAD.keybindings.toggleHUD.name',
         hint: 'BAD.keybindings.toggleHUD.hint',
         editable: [
-            { key: 'Space', modifiers: [globalThis.KeyboardManager?.MODIFIER_KEYS?.SHIFT ?? 'Shift'] }
+            { key: 'Space', modifiers: [adapter.foundry.KeyboardManager?.MODIFIER_KEYS?.SHIFT ?? 'Shift'] }
         ],
         onDown: () => {
             const isEnabled = Boolean(game.settings.get(MODULE_ID, 'enableToggleHotkey'));

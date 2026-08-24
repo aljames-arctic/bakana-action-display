@@ -274,14 +274,6 @@ const settingsStore = new Map([
     ['bakana-action-display.persistDetached', true]
 ]);
 
-globalThis.KeyboardManager = {
-    MODIFIER_KEYS: {
-        CONTROL: 'Control',
-        SHIFT: 'Shift',
-        ALT: 'Alt'
-    }
-};
-
 globalThis.CONST = globalThis.CONST ?? {};
 globalThis.CONST.KEYBINDING_PRECEDENCE = {
     PRIORITY: 1,

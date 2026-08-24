@@ -534,7 +534,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
             if (!doc) {
                 const uuid = activity.spell?.uuid ?? (activity.spell?.startsWith?.('Compendium.') ? activity.spell : null);
                 if (uuid) {
-                    const syncResolver = globalThis.fromUuidSync ?? foundry?.utils?.fromUuidSync;
+                    const syncResolver = foundry?.utils?.fromUuidSync ?? globalThis.fromUuidSync;
                     try {
                         doc = syncResolver?.(uuid);
                     } catch (_) {}
@@ -590,7 +590,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                 if (this.#resolvedSpellCache.has(uuid)) {
                     return this.#resolvedSpellCache.get(uuid);
                 }
-                const syncResolver = globalThis.fromUuidSync ?? foundry?.utils?.fromUuidSync;
+                const syncResolver = foundry?.utils?.fromUuidSync ?? globalThis.fromUuidSync;
                 try {
                     const doc = syncResolver?.(uuid);
                     if (doc) {
@@ -599,7 +599,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                     }
                 } catch (_) {}
 
-                const asyncResolver = globalThis.fromUuid ?? foundry?.utils?.fromUuid;
+                const asyncResolver = foundry?.utils?.fromUuid ?? globalThis.fromUuid;
                 try {
                     const doc = await asyncResolver?.(uuid);
                     if (doc) {
