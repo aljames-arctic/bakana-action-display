@@ -54,8 +54,8 @@ const PF2E_ACTION_TYPE_MAP = {
  * Modifies the base actions list by mapping feats and spells, and injecting Strikes (attacks).
  */
 export class Pf2eSystemAdapter extends FantasySystemAdapter {
-    constructor() {
-        super('pf2e', true);
+    constructor(foundry = null) {
+        super('pf2e', true, foundry);
         this.contextMenuManager = new Pf2eSystemContextMenuManager(this);
     }
 
@@ -851,9 +851,9 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
         }
 
         let description = system.description?.value ?? '';
-        if (description && typeof globalThis.TextEditor?.enrichHTML === 'function') {
+        if (description) {
             const rollData = targetItem?.getRollData?.() ?? actor?.getRollData?.() ?? {};
-            description = await globalThis.TextEditor.enrichHTML(description, {
+            description = await this.enrichHTML(description, {
                 rollData,
                 relativeTo: targetItem ?? actor,
                 secrets: false,

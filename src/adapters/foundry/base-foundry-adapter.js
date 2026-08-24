@@ -105,6 +105,13 @@ export class BaseFoundryAdapter {
     }
 
     /**
+     * The active TextEditor constructor / implementation.
+     */
+    get TextEditor() {
+        return foundry.applications.ux.TextEditor.implementation;
+    }
+
+    /**
      * Enrich an HTML string with Foundry enrichers, roll data, and document links.
      * @param {string} content HTML string to enrich
      * @param {Object} [options={}] Enrichment options (rollData, secrets, relativeTo, etc.)
@@ -112,8 +119,8 @@ export class BaseFoundryAdapter {
      */
     async enrichHTML(content, options = {}) {
         if (!content) return '';
-        if (typeof globalThis.TextEditor?.enrichHTML === 'function') {
-            return globalThis.TextEditor.enrichHTML(content, { secrets: false, async: true, ...options });
+        if (typeof this.TextEditor?.enrichHTML === 'function') {
+            return this.TextEditor.enrichHTML(content, { secrets: false, async: true, ...options });
         }
         return content;
     }

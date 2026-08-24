@@ -202,6 +202,22 @@ globalThis.foundry = {
                     this._setPosition?.(null, target);
                 }
                 async close() {}
+            },
+            TextEditor: {
+                implementation: {
+                    async enrichHTML(content, options = {}) {
+                        if (!content) return '';
+                        let enriched = String(content);
+                        const name = options.rollData?.name ?? options.relativeTo?.name ?? '';
+                        if (name) {
+                            enriched = enriched.replace(/\[\[lookup\s+@name\s+lowercase\]\]\{([^}]*)\}/gi, name.toLowerCase());
+                            enriched = enriched.replace(/\[\[lookup\s+@name\]\]\{([^}]*)\}/gi, name);
+                        } else {
+                            enriched = enriched.replace(/\[\[lookup\s+@[^\]]+\]\]\{([^}]*)\}/gi, '$1');
+                        }
+                        return enriched;
+                    }
+                }
             }
         }
     },
@@ -417,19 +433,4 @@ globalThis.game = {
         }
     },
     canvas: globalThis.canvas
-};
-
-globalThis.TextEditor = {
-    async enrichHTML(content, options = {}) {
-        if (!content) return '';
-        let enriched = String(content);
-        const name = options.rollData?.name ?? options.relativeTo?.name ?? '';
-        if (name) {
-            enriched = enriched.replace(/\[\[lookup\s+@name\s+lowercase\]\]\{([^}]*)\}/gi, name.toLowerCase());
-            enriched = enriched.replace(/\[\[lookup\s+@name\]\]\{([^}]*)\}/gi, name);
-        } else {
-            enriched = enriched.replace(/\[\[lookup\s+@[^\]]+\]\]\{([^}]*)\}/gi, '$1');
-        }
-        return enriched;
-    }
 };

@@ -23,8 +23,8 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
     #resolvedSpellCache = new Map();
     #cachedForMap = new Map();
 
-    constructor() {
-        super('dnd5e', true);
+    constructor(foundry = null) {
+        super('dnd5e', true, foundry);
         this.contextMenuManager = new Dnd5eSystemContextMenuManager(this);
         this.filterManager = new Dnd5eSystemTabFilterManager(this);
         this.contextModifier = new Dnd5eSystemContextModifier(this);
@@ -1314,9 +1314,9 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
 
         // 11. Description
         let description = activity?.description?.chat || activity?.description?.value || system.description?.value || system.description?.chat || action?.linkedAction?.system?.description?.value || '';
-        if (description && typeof globalThis.TextEditor?.enrichHTML === 'function') {
+        if (description) {
             const rollData = targetItem?.getRollData?.() ?? actor?.getRollData?.() ?? {};
-            description = await globalThis.TextEditor.enrichHTML(description, {
+            description = await this.enrichHTML(description, {
                 rollData,
                 relativeTo: targetItem ?? actor,
                 secrets: false,

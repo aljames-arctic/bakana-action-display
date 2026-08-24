@@ -1,5 +1,6 @@
 import { MODULE_ID } from '../../constants.js';
 import { log } from '../../lib/logger.js';
+import { BaseFoundryAdapter } from '../foundry/base-foundry-adapter.js';
 import { BaseSystemContextMenuManager } from './context-menu/base-system-context-menu-manager.js';
 import { BaseSystemTabFilterManager } from './filter/base-system-tab-filter-manager.js';
 import { BaseSystemContextModifier } from './context-modifier/base-system-context-modifier.js';
@@ -17,12 +18,23 @@ const MODIFIER_KEY_MAP = {
  * They also define the localization labels and icons for the HUD tabs.
  */
 export class BaseSystemAdapter {
-    constructor(systemId, isSupported = false) {
+    constructor(systemId, isSupported = false, foundry = null) {
         this.systemId = systemId;
         this.isSupported = Boolean(isSupported);
+        this.foundry = foundry ?? new BaseFoundryAdapter();
         this.contextMenuManager = new BaseSystemContextMenuManager(this);
         this.filterManager = new BaseSystemTabFilterManager(this);
         this.contextModifier = new BaseSystemContextModifier(this);
+    }
+
+    /**
+     * Enrich an HTML string using the Foundry platform adapter.
+     * @param {string} content HTML string to enrich
+     * @param {Object} [options={}] Enrichment options
+     * @returns {Promise<string>}
+     */
+    async enrichHTML(content, options = {}) {
+        return this.foundry?.enrichHTML?.(content, options) ?? content;
     }
 
     getContextMenuItems(app) {
@@ -465,9 +477,9 @@ export class BaseSystemAdapter {
         }
 
         let description = targetItem?.system?.description?.value ?? targetItem?.system?.description ?? '';
-        if (description && typeof globalThis.TextEditor?.enrichHTML === 'function') {
+        if (description) {
             const rollData = targetItem?.getRollData?.() ?? actor?.getRollData?.() ?? {};
-            description = await globalThis.TextEditor.enrichHTML(description, {
+            description = await this.enrichHTML(description, {
                 rollData,
                 relativeTo: targetItem ?? actor,
                 secrets: false,

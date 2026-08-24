@@ -48,8 +48,8 @@ const ICONS = {
  * Handles PF1e's multi-action items, prepared/spontaneous spellcasting, and toggleable buffs.
  */
 export class Pf1SystemAdapter extends FantasySystemAdapter {
-    constructor() {
-        super('pf1', true);
+    constructor(foundry = null) {
+        super('pf1', true, foundry);
         this.contextMenuManager = new Pf1SystemContextMenuManager(this);
     }
 
@@ -861,9 +861,9 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
         }
 
         let description = system.description?.value ?? '';
-        if (description && typeof globalThis.TextEditor?.enrichHTML === 'function') {
+        if (description) {
             const rollData = targetItem?.getRollData?.() ?? actor?.getRollData?.() ?? {};
-            description = await globalThis.TextEditor.enrichHTML(description, {
+            description = await this.enrichHTML(description, {
                 rollData,
                 relativeTo: targetItem ?? actor,
                 secrets: false,
