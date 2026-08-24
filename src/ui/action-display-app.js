@@ -910,6 +910,9 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         }
         const subTab = this.parentGroups?.[parentId]?.getSubTab(target.dataset.type);
         subTab?.onLeftClick(this, this.rightTabs, this.parentGroups, event);
+        if (this.actor && parentId) {
+            adapter.recordManualTabToggle(this.actor, parentId, target.dataset.type, this.rightTabs.activeSubTypes.has(target.dataset.type));
+        }
         this.render();
     }
 
@@ -933,6 +936,9 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         const parentId = parentGroup?.querySelector('.bad-right-tab')?.dataset.type;
         const subTab = this.parentGroups?.[parentId]?.getSubTab(type);
         subTab?.onRightClick(this, this.rightTabs, this.parentGroups);
+        if (this.actor && parentId) {
+            adapter.recordManualTabToggle(this.actor, parentId, type, this.rightTabs.activeSubTypes.has(type));
+        }
         this.render();
     }
 

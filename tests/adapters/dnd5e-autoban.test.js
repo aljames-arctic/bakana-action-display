@@ -97,7 +97,7 @@ test('Dnd5eSystemAdapter syncActorAutoBans applies auto-bans on condition gain a
     adapter.updateTabs(actor, tabColumn);
     assert.equal(tabColumn.activeParents.has('components'), true);
     assert.equal(tabColumn.activeSubTypes.has('vocal'), true);
-    assert.equal(flags.autoBannedComponents?.vocal, true);
+    assert.deepEqual(flags.autoBanState?.conditions?.vocal, ['silenced']);
 
     // 3. Gain 'restrained' -> auto-ban 'somatic'
     actor.statuses.add('restrained');
@@ -105,7 +105,7 @@ test('Dnd5eSystemAdapter syncActorAutoBans applies auto-bans on condition gain a
     assert.equal(tabColumn.activeParents.has('components'), true);
     assert.equal(tabColumn.activeSubTypes.has('vocal'), true);
     assert.equal(tabColumn.activeSubTypes.has('somatic'), true);
-    assert.equal(flags.autoBannedComponents?.somatic, true);
+    assert.deepEqual(flags.autoBanState?.conditions?.somatic, ['restrained']);
 
     // 4. Lose 'silenced' (restrained remains) -> vocal unbanned, somatic remains banned
     actor.statuses.delete('silenced');
@@ -113,15 +113,80 @@ test('Dnd5eSystemAdapter syncActorAutoBans applies auto-bans on condition gain a
     assert.equal(tabColumn.activeParents.has('components'), true);
     assert.equal(tabColumn.activeSubTypes.has('vocal'), false);
     assert.equal(tabColumn.activeSubTypes.has('somatic'), true);
-    assert.equal(flags.autoBannedComponents?.vocal, false);
-    assert.equal(flags.autoBannedComponents?.somatic, true);
+    assert.deepEqual(flags.autoBanState?.conditions?.vocal, []);
+    assert.deepEqual(flags.autoBanState?.conditions?.somatic, ['restrained']);
 
     // 5. Lose 'restrained' -> all conditions lost, somatic unbanned, components parent removed
     actor.statuses.delete('restrained');
     adapter.updateTabs(actor, tabColumn);
     assert.equal(tabColumn.activeParents.has('components'), false);
     assert.equal(tabColumn.activeSubTypes.has('somatic'), false);
-    assert.equal(flags.autoBannedComponents?.somatic, false);
+    assert.deepEqual(flags.autoBanState?.conditions?.somatic, []);
+});
+
+test('Dnd5eSystemAdapter re-bans spell component when gaining a new condition after manual unban', () => {
+    const dndAdapter = new Dnd5eSystemAdapter();
+    adapter.system = dndAdapter;
+    game.system = { id: 'dnd5e' };
+
+    const flags = {};
+    const actor = {
+        isOwner: true,
+        statuses: new Set(),
+        effects: [],
+        getFlag: (mod, key) => flags[key] ?? null,
+        setFlag: async (mod, key, val) => { flags[key] = val; }
+    };
+
+    const tabColumn = new HUDTabColumn({
+        side: 'right',
+        defaultParent: 'all'
+    });
+
+    const groups = {
+        'all': { getAllSubTabIds: () => new Set(['all']) },
+        'components': { getAllSubTabIds: () => new Set(['vocal', 'somatic', 'material']) }
+    };
+
+    // 1. Actor becomes 'grappled' -> somatic is auto-banned
+    actor.statuses.add('grappled');
+    adapter.updateTabs(actor, tabColumn);
+    assert.equal(tabColumn.activeParents.has('components'), true);
+    assert.equal(tabColumn.activeSubTypes.has('somatic'), true, 'Somatic banned when grappled');
+
+    // 2. Player manually unbans somatic
+    tabColumn.selectSub('components', 'somatic', groups, true);
+    adapter.recordManualTabToggle(actor, 'components', 'somatic', tabColumn.activeSubTypes.has('somatic'));
+    assert.equal(tabColumn.activeSubTypes.has('somatic'), false, 'Somatic manually unbanned');
+    assert.equal(flags.autoBanState?.manualUnbans?.somatic, true, 'Manual unban recorded in flag');
+
+    // Re-renders/updates while still grappled should keep somatic unbanned
+    adapter.updateTabs(actor, tabColumn);
+    assert.equal(tabColumn.activeSubTypes.has('somatic'), false, 'Somatic remains unbanned on re-render while grappled');
+
+    // 3. Actor becomes 'petrified' (while still 'grappled') -> somatic should be banned AGAIN
+    actor.statuses.add('petrified');
+    adapter.updateTabs(actor, tabColumn);
+    assert.equal(tabColumn.activeParents.has('components'), true);
+    assert.equal(tabColumn.activeSubTypes.has('somatic'), true, 'Somatic banned again upon gaining petrified');
+    assert.equal(flags.autoBanState?.manualUnbans?.somatic, false, 'Manual unban reset on new condition');
+
+    // 4. Player manually unbans somatic again
+    tabColumn.selectSub('components', 'somatic', groups, true);
+    adapter.recordManualTabToggle(actor, 'components', 'somatic', tabColumn.activeSubTypes.has('somatic'));
+    assert.equal(tabColumn.activeSubTypes.has('somatic'), false, 'Somatic manually unbanned again');
+
+    // 5. Actor loses 'petrified' (still 'grappled') -> somatic stays unbanned
+    actor.statuses.delete('petrified');
+    adapter.updateTabs(actor, tabColumn);
+    assert.equal(tabColumn.activeSubTypes.has('somatic'), false, 'Somatic stays unbanned when losing petrified');
+
+    // 6. Actor loses 'grappled' (all conditions gone) -> clean reset
+    actor.statuses.delete('grappled');
+    adapter.updateTabs(actor, tabColumn);
+    assert.equal(tabColumn.activeParents.has('components'), false);
+    assert.equal(tabColumn.activeSubTypes.has('somatic'), false);
+    assert.equal(flags.autoBanState?.manualUnbans?.somatic, false);
 });
 
 test('HUDTabColumn preserves banned components when selecting action economy or all actions tabs', () => {

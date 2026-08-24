@@ -336,6 +336,18 @@ export class BaseSystemAdapter {
     }
 
     /**
+     * Record a manual tab/sub-tab user interaction for system-specific override tracking.
+     * Subclasses override if they manage manual state (e.g. D&D 5e manual unbanning).
+     * @param {Actor} actor
+     * @param {string} parentId
+     * @param {string} subId
+     * @param {boolean} isActive
+     */
+    recordManualTabToggle(actor, parentId, subId, isActive) {
+        // NOP for base system adapter
+    }
+
+    /**
      * Get the list of configurable action economy types and default colors for this system.
      * @returns {{ id: string, label: string, defaultColor: string, defaultEnabled: boolean }[]}
      */

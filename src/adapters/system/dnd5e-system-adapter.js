@@ -1414,6 +1414,33 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
     }
 
     /**
+     * Record manual tab toggle for D&D 5e (tracking manual unbanning of vocal/somatic components).
+     * @param {Actor} actor
+     * @param {string} parentId
+     * @param {string} subId
+     * @param {boolean} isActive
+     */
+    recordManualTabToggle(actor, parentId, subId, isActive) {
+        if (!actor || parentId !== 'components' || !['vocal', 'somatic'].includes(subId)) return;
+        const autoBanState = actor.getFlag?.(MODULE_ID, 'autoBanState') ?? {};
+        const conditions = autoBanState.conditions ?? {};
+        const manualUnbans = { ...(autoBanState.manualUnbans ?? {}) };
+
+        // If isActive is false (tab deactivated by user), mark manual unban = true.
+        // If isActive is true (tab activated by user), mark manual unban = false.
+        manualUnbans[subId] = !isActive;
+
+        if (actor.isOwner && typeof actor.setFlag === 'function') {
+            actor.setFlag(MODULE_ID, 'autoBanState', {
+                conditions,
+                manualUnbans
+            }).catch(err => {
+                log.debug('Error setting autoBanState flag on manual toggle:', err);
+            });
+        }
+    }
+
+    /**
      * Synchronize auto-banned spell components (vocal / somatic) on an actor based on active status conditions.
      * @param {Actor} actor The actor to evaluate
      * @param {HUDTabColumn} [tabColumn] Right-side tab column if HUD is active
@@ -1425,28 +1452,34 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         if (!config?.enabled) return;
 
         const activeStatuses = this.getActorStatuses(actor);
-        const autoBannedFlags = actor.getFlag?.(MODULE_ID, 'autoBannedComponents') ?? {};
-        const updatedFlags = { ...autoBannedFlags };
+        const autoBanState = actor.getFlag?.(MODULE_ID, 'autoBanState') ?? {};
+        const previousConditionsMap = autoBanState.conditions ?? {};
+        const previousManualUnbans = autoBanState.manualUnbans ?? {};
+
+        const updatedConditions = { ...previousConditionsMap };
+        const updatedManualUnbans = { ...previousManualUnbans };
 
         let changed = false;
 
         for (const comp of ['vocal', 'somatic']) {
             const conditionList = Array.isArray(config[comp]) ? config[comp] : [];
-            const hasCondition = conditionList.some(condId => activeStatuses.has(condId));
-            const wasAutoBanned = Boolean(autoBannedFlags[comp]);
+            const currentConditions = conditionList.filter(condId => activeStatuses.has(condId));
+            const previousConditions = Array.isArray(previousConditionsMap[comp]) ? previousConditionsMap[comp] : [];
+            const wasManualUnbanned = Boolean(previousManualUnbans[comp]);
 
-            if (hasCondition && !wasAutoBanned) {
-                // Condition gained -> automatically apply ban
-                updatedFlags[comp] = true;
-                changed = true;
+            const hasNewCondition = currentConditions.some(condId => !previousConditions.includes(condId));
+            const hasNoConditions = currentConditions.length === 0;
+
+            if (hasNewCondition) {
+                // A new status condition was gained -> automatically apply/re-apply ban and reset manual unban
+                updatedManualUnbans[comp] = false;
                 if (tabColumn) {
                     tabColumn.activeParents.add('components');
                     tabColumn.activeSubTypes.add(comp);
                 }
-            } else if (!hasCondition && wasAutoBanned) {
-                // All conditions lost -> automatically remove ban
-                updatedFlags[comp] = false;
-                changed = true;
+            } else if (hasNoConditions) {
+                // All status conditions for this component are cleared -> remove ban and reset manual unban
+                updatedManualUnbans[comp] = false;
                 if (tabColumn) {
                     tabColumn.activeSubTypes.delete(comp);
                     const remainingComp = ['vocal', 'somatic', 'material'].some(c => c !== comp && tabColumn.activeSubTypes.has(c));
@@ -1454,12 +1487,35 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                         tabColumn.activeParents.delete('components');
                     }
                 }
+            } else {
+                // Status conditions are active, but no new condition was gained.
+                // If not manually unbanned, ensure ban is present in tabColumn.
+                if (!wasManualUnbanned && tabColumn) {
+                    tabColumn.activeParents.add('components');
+                    tabColumn.activeSubTypes.add(comp);
+                }
+            }
+
+            // Check if tracked conditions list changed
+            const conditionsChanged = currentConditions.length !== previousConditions.length ||
+                currentConditions.some(c => !previousConditions.includes(c));
+
+            if (conditionsChanged) {
+                updatedConditions[comp] = currentConditions;
+                changed = true;
+            }
+
+            if (updatedManualUnbans[comp] !== wasManualUnbanned) {
+                changed = true;
             }
         }
 
         if (changed && actor.isOwner && typeof actor.setFlag === 'function') {
-            actor.setFlag(MODULE_ID, 'autoBannedComponents', updatedFlags).catch(err => {
-                log.debug('Error setting autoBannedComponents flag:', err);
+            actor.setFlag(MODULE_ID, 'autoBanState', {
+                conditions: updatedConditions,
+                manualUnbans: updatedManualUnbans
+            }).catch(err => {
+                log.debug('Error setting autoBanState flag:', err);
             });
         }
     }

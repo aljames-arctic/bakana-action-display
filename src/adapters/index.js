@@ -298,6 +298,17 @@ class Adapter {
     }
 
     /**
+     * Record a manual tab/sub-tab user interaction via the active system adapter.
+     * @param {Actor} actor
+     * @param {string} parentId
+     * @param {string} subId
+     * @param {boolean} isActive
+     */
+    recordManualTabToggle(actor, parentId, subId, isActive) {
+        this.system?.recordManualTabToggle?.(actor, parentId, subId, isActive);
+    }
+
+    /**
      * Filter subactions through the system adapter.
      * @param {Actor} actor
      * @param {Object[]} subactions
