@@ -192,7 +192,6 @@ test('Dnd5eSystemAdapter modifyActions full transformation pipeline', async () =
 
     const dexAbility = page2Actions.find(a => a.id === 'ability-dex');
     assert.equal(dexAbility.type, 'ability');
-    assert.equal(dexAbility.section, 'core');
     assert.deepEqual(dexAbility.left, ['savingThrow']);
     assert.deepEqual(dexAbility.itemCategories, [['savingThrow'], ['abilityCheck']]);
     assert.equal(dexAbility.subactions.length, 2);
@@ -225,15 +224,15 @@ test('Dnd5eSystemAdapter extractCheckActions generates core saves, core checks, 
 
     const coreAbilities = checks.filter(c => c.type === 'ability');
     assert.equal(coreAbilities.length, 6);
-    assert.ok(coreAbilities.every(c => c.section === 'core' && c.page === 2 && c.subactions.length === 2));
+    assert.ok(coreAbilities.every(c => c.page === 2 && c.subactions.length === 2));
 
     const skills = checks.filter(c => c.type === 'skill');
     assert.equal(skills.length, 2);
-    assert.ok(skills.every(s => s.section === 'other' && s.page === 2 && s.left[0] === 'abilityCheck'));
+    assert.ok(skills.every(s => s.page === 2 && s.left[0] === 'abilityCheck'));
 
     const tools = checks.filter(c => c.type === 'tool');
     assert.equal(tools.length, 2);
-    assert.ok(tools.every(t => t.section === 'other' && t.page === 2 && t.left[0] === 'tool'));
+    assert.ok(tools.every(t => t.page === 2 && t.left[0] === 'tool'));
 
     const thiefTool = tools.find(t => t.id === 'tool-thief');
     assert.equal(thiefTool.name, "Thieves' Tools");

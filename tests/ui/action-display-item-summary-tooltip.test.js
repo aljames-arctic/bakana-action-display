@@ -127,19 +127,22 @@ test('Dnd5eSystemAdapter.getItemSummary formats weapons, spells, feats, and Page
         id: 'ability-dex',
         name: 'Dexterity',
         type: 'ability',
-        extra: { section: 'core', ability: 'dex' }
+        page: 2,
+        extra: { page: 2, ability: 'dex' }
     });
     const saveAction = new Action({
         id: 'save-dex',
         name: 'Dexterity Save',
         type: 'save',
-        extra: { section: 'core', ability: 'dex' }
+        page: 2,
+        extra: { page: 2, ability: 'dex' }
     });
     const skillAction = new Action({
         id: 'skill-acr',
         name: 'Acrobatics',
         type: 'skill',
-        extra: { section: 'core' }
+        page: 2,
+        extra: { page: 2 }
     });
 
     const checkSummary = await dnd5eAdapter.getItemSummary(checkAction, null, mockActor);

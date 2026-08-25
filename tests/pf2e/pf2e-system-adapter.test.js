@@ -378,7 +378,6 @@ test('Pf2eSystemAdapter extractCheckActions generates abilities, saves, and skil
     const fortAction = checkActions.find(a => a.id === 'save-fortitude');
     assert.ok(fortAction);
     assert.equal(fortAction.page, 2);
-    assert.equal(fortAction.section, 'core');
     assert.equal(fortAction.type, 'save');
     assert.deepEqual(fortAction.left, ['savingThrow']);
     await fortAction.roll({});
@@ -400,7 +399,6 @@ test('Pf2eSystemAdapter extractCheckActions generates abilities, saves, and skil
     const perceptionAction = checkActions.find(a => a.id === 'check-perception');
     assert.ok(perceptionAction);
     assert.equal(perceptionAction.page, 2);
-    assert.equal(perceptionAction.section, 'core');
     await perceptionAction.roll({});
     assert.equal(rolledPerception, true);
 
@@ -408,7 +406,6 @@ test('Pf2eSystemAdapter extractCheckActions generates abilities, saves, and skil
     const athSkill = checkActions.find(a => a.id === 'skill-athletics');
     assert.ok(athSkill);
     assert.equal(athSkill.page, 2);
-    assert.equal(athSkill.section, 'other');
     await athSkill.roll({});
     assert.equal(rolledSkill, 'athletics');
 

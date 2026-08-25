@@ -344,9 +344,8 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                 uses: { available: null, max: null },
                 subactions: [saveSub, checkSub],
                 collapseDropdownIfSingle: true,
-                extra: { section: 'core', page: 2, ability: abl }
+                extra: { page: 2, ability: abl }
             });
-            coreAction.section = 'core';
             coreAction.page = 2;
             checkActions.push(coreAction);
         }
@@ -372,9 +371,8 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                     return actor.rollSkill?.({ skill: skillId, event: rollEvent })
                         ?? actor.rollSkill?.(skillId, { event: rollEvent });
                 },
-                extra: { section: 'other', page: 2, ability: abl }
+                extra: { page: 2, ability: abl }
             });
-            skillAction.section = 'other';
             skillAction.page = 2;
             checkActions.push(skillAction);
         }
@@ -402,9 +400,8 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                         ?? actor.rollTool?.({ tool: toolId, event: rollEvent })
                         ?? actor.rollTool?.(toolId, { event: rollEvent });
                 },
-                extra: { section: 'other', page: 2, ability: abl, toolId }
+                extra: { page: 2, ability: abl, toolId }
             });
-            toolAction.section = 'other';
             toolAction.page = 2;
             checkActions.push(toolAction);
         }
@@ -1852,7 +1849,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
     async getItemSummary(action, item = action?.originalItem, actor = null) {
         if (!action && !item) return null;
 
-        const isPage2Check = action?.page === 2 || action?.extra?.page === 2 || action?.extra?.section === 'core';
+        const isPage2Check = action?.page === 2 || action?.extra?.page === 2;
         const isCoreCheck = (isPage2Check && ['ability', 'abilityCheck', 'save', 'skill', 'tool'].includes(action?.type))
             || (!action?.originalItem && ['ability', 'abilityCheck', 'save', 'skill', 'tool'].includes(action?.type));
         if (isCoreCheck) {

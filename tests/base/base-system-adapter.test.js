@@ -153,25 +153,17 @@ test('BaseSystemAdapter default active sub-types and HUDTabColumn initialization
     assert.equal(page2Column.activeParents.has('all'), true);
 });
 
-test('BaseSystemAdapter formatFlatLayout and formatSplitLayout templates', () => {
+test('BaseSystemAdapter formatFlatLayout template', () => {
     const adapter = new BaseSystemAdapter('test-system');
     const items = [
-        { id: 'b', name: 'B-Skill', section: 'other' },
-        { id: 'a', name: 'A-Core', section: 'core' },
-        { id: 'c', name: 'C-Core', section: 'core' }
+        { id: 'b', name: 'B-Skill' },
+        { id: 'a', name: 'A-Core' },
+        { id: 'c', name: 'C-Core' }
     ];
 
     const flatContext = { items };
     adapter.formatFlatLayout(flatContext);
     assert.equal(flatContext.layout, 'flat');
-
-    const splitContext = { items };
-    adapter.formatSplitLayout(splitContext);
-    assert.equal(splitContext.layout, 'split');
-    assert.equal(splitContext.coreItems.length, 2);
-    assert.equal(splitContext.coreItems[0].id, 'a'); // Sorted alphabetically
-    assert.equal(splitContext.otherItems.length, 1);
-    assert.equal(splitContext.showSeparator, true);
 });
 
 test('BaseSystemAdapter getPageConfig defaults to flat layout for all pages', async () => {

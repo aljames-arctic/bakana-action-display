@@ -187,9 +187,8 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
                     return actor.system.saves.fortitude.roll({ event: rollEvent });
                 }
             },
-            extra: { section: 'core', page: 2, ability: 'con' }
+            extra: { page: 2, ability: 'con' }
         });
-        fortitude.section = 'core';
         fortitude.page = 2;
         checkActions.push(fortitude);
 
@@ -210,9 +209,8 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
                     return actor.system.saves.reflex.roll({ event: rollEvent });
                 }
             },
-            extra: { section: 'core', page: 2, ability: 'dex' }
+            extra: { page: 2, ability: 'dex' }
         });
-        reflex.section = 'core';
         reflex.page = 2;
         checkActions.push(reflex);
 
@@ -233,9 +231,8 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
                     return actor.system.saves.will.roll({ event: rollEvent });
                 }
             },
-            extra: { section: 'core', page: 2, ability: 'wis' }
+            extra: { page: 2, ability: 'wis' }
         });
-        will.section = 'core';
         will.page = 2;
         checkActions.push(will);
 
@@ -253,9 +250,8 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
                 return actor.perception?.roll?.({ event: rollEvent }) ??
                     actor.system?.attributes?.perception?.roll?.({ event: rollEvent });
             },
-            extra: { section: 'core', page: 2, ability: 'wis' }
+            extra: { page: 2, ability: 'wis' }
         });
-        perception.section = 'core';
         perception.page = 2;
         checkActions.push(perception);
 
@@ -317,9 +313,8 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
                         }
                     }
                 },
-                extra: { section: 'other', page: 2, ability: abl }
+                extra: { page: 2, ability: abl }
             });
-            skillAction.section = 'other';
             skillAction.page = 2;
             checkActions.push(skillAction);
         }

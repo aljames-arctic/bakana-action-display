@@ -314,9 +314,8 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
                 uses: { available: null, max: null },
                 subactions,
                 collapseDropdownIfSingle: true,
-                extra: { section: 'core', page: 2, ability: abl }
+                extra: { page: 2, ability: abl }
             });
-            coreAction.section = 'core';
             coreAction.page = 2;
             checkActions.push(coreAction);
         }
@@ -340,9 +339,8 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
                     const rollEvent = this._createRollEvent(event);
                     return actor.rollSkill?.(skillId, { event: rollEvent });
                 },
-                extra: { section: 'other', page: 2, ability: abl }
+                extra: { page: 2, ability: abl }
             });
-            skillAction.section = 'other';
             skillAction.page = 2;
             checkActions.push(skillAction);
 
@@ -363,9 +361,8 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
                             const rollEvent = this._createRollEvent(event);
                             return actor.rollSkill?.(`${skillId}.subSkills.${subId}`, { event: rollEvent });
                         },
-                        extra: { section: 'other', page: 2, ability: subAbl }
+                        extra: { page: 2, ability: subAbl }
                     });
-                    subAction.section = 'other';
                     subAction.page = 2;
                     checkActions.push(subAction);
                 }
