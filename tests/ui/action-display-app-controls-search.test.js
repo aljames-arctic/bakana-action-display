@@ -393,7 +393,7 @@ test('ActionDisplayApp _onToggleCombatAutoTrack toggles setting and switches tok
     globalThis.game.combat = null;
 });
 
-test('ActionDisplayApp bringToTop elevates HUD z-index above all other open application windows', () => {
+test('ActionDisplayApp bringToFront elevates HUD z-index above all other open application windows', () => {
     const app = new ActionDisplayApp({ actor: { id: 'test-actor' } });
     app.element = { style: { zIndex: '100' } };
 
@@ -409,7 +409,7 @@ test('ActionDisplayApp bringToTop elevates HUD z-index above all other open appl
         return [];
     };
 
-    const newZ = app.bringToTop();
+    const newZ = app.bringToFront();
     assert.equal(newZ, 136, 'HUD z-index should be higher than highest other window (135 + 1)');
     assert.equal(app.element.style.zIndex, '136');
 
@@ -417,8 +417,8 @@ test('ActionDisplayApp bringToTop elevates HUD z-index above all other open appl
     document.querySelectorAll = oldQuerySelectorAll;
 });
 
-test('ActionDisplayApp _onFirstRender calls bringToTop on initial open, while _onRender preserves z-index', () => {
-    let bringToTopCount = 0;
+test('ActionDisplayApp _onFirstRender calls bringToFront on initial open, while _onRender preserves z-index', () => {
+    let bringToFrontCount = 0;
     const app = new ActionDisplayApp({ actor: { id: 'test-actor' } });
     const mockElement = {
         style: { zIndex: '100' },
@@ -429,8 +429,8 @@ test('ActionDisplayApp _onFirstRender calls bringToTop on initial open, while _o
         offsetHeight: 400
     };
     app.element = mockElement;
-    app.bringToTop = () => {
-        bringToTopCount++;
+    app.bringToFront = () => {
+        bringToFrontCount++;
         return 150;
     };
     app._attachSearchListeners = () => {};
@@ -440,13 +440,13 @@ test('ActionDisplayApp _onFirstRender calls bringToTop on initial open, while _o
     app.setPosition = () => {};
     app._createContextMenu = () => null;
 
-    // 1. Initial open calls bringToTop
+    // 1. Initial open calls bringToFront
     app._onFirstRender({}, {});
-    assert.equal(bringToTopCount, 1, '_onFirstRender must call bringToTop() on initial open');
+    assert.equal(bringToFrontCount, 1, '_onFirstRender must call bringToFront() on initial open');
 
-    // 2. Background re-render preserves z-index (does NOT call bringToTop)
+    // 2. Background re-render preserves z-index (does NOT call bringToFront)
     app._onRender({}, {});
-    assert.equal(bringToTopCount, 1, '_onRender must not call bringToTop() so subsequent windows remain on top');
+    assert.equal(bringToFrontCount, 1, '_onRender must not call bringToFront() so subsequent windows remain on top');
 });
 
 test('Clicking or rendering another application elevates that window above the HUD', () => {

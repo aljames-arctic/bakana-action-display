@@ -1329,14 +1329,14 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
 
         // Window Stacking Management:
         // Ensure that whichever window (our HUD or any other Foundry sheet/dialog) was interacted with most recently is placed on top.
-        this.bringToTop();
+        this.bringToFront();
         this._boundWindowStackPointerDown = (event) => {
             if (!this.element) return;
             const targetWindow = event.target?.closest?.('.window-app, .application, .app, .dialog, .sidebar-popout');
             if (!targetWindow) return;
 
             if (targetWindow === this.element || this.element.contains(targetWindow)) {
-                this.bringToTop();
+                this.bringToFront();
             } else {
                 if (targetWindow.closest?.('#context-menu, .context-menu, .bad-item-summary-tooltip')) return;
                 const hudZ = parseInt(this.element.style?.zIndex, 10) || 100;
@@ -1362,16 +1362,16 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
     }
 
     /**
-     * Bring this application to the top of the z-index stack.
+     * Bring this application to the front of the z-index stack (ApplicationV2 standard).
      * Computes the maximum z-index across all open windows and applications in the DOM.
      * @returns {number} The newly assigned z-index
      */
-    bringToTop() {
+    bringToFront() {
         if (!this.element) return 100;
 
-        // Delegate to super.bringToTop() if available on ApplicationV2
+        // Delegate to super.bringToFront() if available on ApplicationV2
         try {
-            super.bringToTop?.();
+            super.bringToFront?.();
         } catch (_) {}
 
         // Query open application windows in the DOM to calculate highest active z-index

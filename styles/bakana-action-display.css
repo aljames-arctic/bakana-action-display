@@ -3,7 +3,7 @@
     position: fixed;
     pointer-events: all;
     opacity: var(--bad-hud-opacity, 0.88); /* Configurable opacity */
-    /* Dynamic z-index managed by bringToTop() on render and interaction */
+    /* Dynamic z-index managed by bringToFront() on render and interaction */
     font-size: calc(var(--bad-hud-font-size, 14px) * var(--bad-hud-scale, 1.0)); /* Combined scaling */
 }
 
