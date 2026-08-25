@@ -1980,7 +1980,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
      * @returns {Object}
      */
     #getCheckSummary(action, actor) {
-        const title = action.name ?? '';
+        let title = action.name ?? '';
         const img = action.img ?? '';
         const properties = [];
         let subtitle = '';
@@ -1988,6 +1988,9 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         if (action.type === 'ability') {
             const ability = action.extra?.ability ?? action.id.replace(/^ability-/, '');
             const ablData = actor?.system?.abilities?.[ability];
+            if (ablData?.value !== undefined) {
+                title = `${action.name ?? ''} [Score: ${ablData.value}]`;
+            }
             subtitle = 'Ability Check / Saving Throw';
             if (ablData) {
                 const mod = ablData.mod ?? 0;
@@ -2001,10 +2004,6 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                     saveMod = rawSave.total;
                 } else if (typeof ablData.mod === 'number') {
                     saveMod = ablData.mod;
-                }
-
-                if (ablData.value !== undefined) {
-                    properties.push([{ label: 'Score', value: String(ablData.value) }]);
                 }
 
                 const checkRow = ['Check:', { label: 'Modifier', value: mod >= 0 ? `+${mod}` : `${mod}` }];
@@ -2064,10 +2063,12 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         } else {
             const ability = action.extra?.ability ?? action.id.replace(/^(check|abilityCheck|ability)-/, '');
             const ablData = actor?.system?.abilities?.[ability];
+            if (ablData?.value !== undefined) {
+                title = `${action.name ?? ''} [Score: ${ablData.value}]`;
+            }
             subtitle = 'Ability Check';
             if (ablData) {
                 const mod = ablData.mod ?? 0;
-                if (ablData.value !== undefined) properties.push({ label: 'Score', value: String(ablData.value) });
                 properties.push({ label: 'Modifier', value: mod >= 0 ? `+${mod}` : `${mod}` });
             }
         }

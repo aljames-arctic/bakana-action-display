@@ -152,17 +152,15 @@ test('Dnd5eSystemAdapter.getItemSummary formats weapons, spells, feats, and Page
     });
 
     const abilitySummary = await dnd5eAdapter.getItemSummary(abilityAction, null, mockActor);
-    assert.equal(abilitySummary.title, 'Dexterity');
+    assert.equal(abilitySummary.title, 'Dexterity [Score: 16]');
     assert.equal(abilitySummary.subtitle, 'Ability Check / Saving Throw');
-    assert.deepEqual(abilitySummary.properties[0], [{ label: 'Score', value: '16' }]);
-    assert.deepEqual(abilitySummary.properties[1], ['Check:', { label: 'Modifier', value: '+3' }]);
-    assert.deepEqual(abilitySummary.properties[2], ['Save:', { label: 'Modifier', value: '+5' }, { value: 'Proficient' }]);
+    assert.deepEqual(abilitySummary.properties[0], ['Check:', { label: 'Modifier', value: '+3' }]);
+    assert.deepEqual(abilitySummary.properties[1], ['Save:', { label: 'Modifier', value: '+5' }, { value: 'Proficient' }]);
 
     const checkSummary = await dnd5eAdapter.getItemSummary(checkAction, null, mockActor);
-    assert.equal(checkSummary.title, 'Dexterity Check');
+    assert.equal(checkSummary.title, 'Dexterity Check [Score: 16]');
     assert.equal(checkSummary.subtitle, 'Ability Check');
     assert.ok(checkSummary.properties.some(p => p.label === 'Modifier' && p.value === '+3'));
-    assert.ok(checkSummary.properties.some(p => p.label === 'Score' && p.value === '16'));
 
     const saveSummary = await dnd5eAdapter.getItemSummary(saveAction, null, mockActor);
     assert.equal(saveSummary.subtitle, 'Saving Throw');
