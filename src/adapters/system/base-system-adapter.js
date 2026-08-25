@@ -290,6 +290,10 @@ export class BaseSystemAdapter {
         return this.filterManager.isExclusionTab(parentId);
     }
 
+    getExclusionSubTabs(parentId) {
+        return this.filterManager.getExclusionSubTabs(parentId);
+    }
+
     isIntersectionTab(parentId) {
         return this.filterManager.isIntersectionTab(parentId);
     }

@@ -53,6 +53,15 @@ export class BaseSystemTabFilterManager {
     }
 
     /**
+     * Get the canonical sub-tab IDs for an exclusion parent tab.
+     * @param {string} parentId Parent tab ID
+     * @returns {string[]}
+     */
+    getExclusionSubTabs(parentId) {
+        return [];
+    }
+
+    /**
      * Check if a parent tab acts as an intersection / conjunction filter.
      * @param {string} parentId Parent tab ID
      * @returns {boolean}

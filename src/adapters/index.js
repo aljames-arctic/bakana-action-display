@@ -169,6 +169,15 @@ class Adapter {
     }
 
     /**
+     * Get canonical sub-tabs for an exclusion parent tab.
+     * @param {string} parentId
+     * @returns {string[]}
+     */
+    getExclusionSubTabs(parentId) {
+        return this.system?.getExclusionSubTabs?.(parentId) ?? [];
+    }
+
+    /**
      * Delegate tab right-click handling to the system adapter.
      * @param {ApplicationV2} app
      * @param {HTMLElement} tab

@@ -120,6 +120,15 @@ export class Dnd5eSystemTabFilterManager extends BaseSystemTabFilterManager {
     }
 
     /**
+     * Get the canonical sub-tab IDs for an exclusion parent tab ('components' -> ['vocal', 'somatic', 'material']).
+     * @param {string} parentId Parent tab ID
+     * @returns {string[]}
+     */
+    getExclusionSubTabs(parentId) {
+        return parentId === 'components' ? ['vocal', 'somatic', 'material'] : super.getExclusionSubTabs(parentId);
+    }
+
+    /**
      * Filter subactions taking D&D 5e spell component exclusions into account.
      * @param {Object[]} subactions Array of subactions
      * @param {Object} filterContext Active filter state

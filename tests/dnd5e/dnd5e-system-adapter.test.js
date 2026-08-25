@@ -1700,3 +1700,92 @@ test('Dnd5eSystemAdapter recordManualTabToggle handles vocal, somatic, and mater
     assert.equal(flagWritten.val.manualUnbans.material, true);
 });
 
+test('Dnd5eSystemAdapter and ActionDisplayApp populate all canonical spell components (vocal, somatic, material) under components tab', async () => {
+    const adapter = new Dnd5eSystemAdapter();
+    assert.deepEqual(adapter.getExclusionSubTabs('components'), ['vocal', 'somatic', 'material']);
+
+    const actor = {
+        id: 'actor-akra-test',
+        isOwner: true,
+        flags: {
+            'bakana-action-display': {
+                autoBanState: {
+                    conditions: { vocal: ['incapacitated'], somatic: ['incapacitated'] },
+                    manualUnbans: { vocal: true, somatic: true }
+                }
+            }
+        },
+        getFlag: (s, k) => actor.flags?.[s]?.[k],
+        system: {
+            spells: {
+                spell1: { value: 0 },
+                spell2: { value: 0 },
+                pact: { value: 0 }
+            }
+        },
+        items: [
+            // Cantrip 1: Vocal only
+            {
+                id: 'cantrip-thaum',
+                name: 'Thaumaturgy',
+                type: 'spell',
+                system: {
+                    level: 0,
+                    method: 'spell',
+                    prepared: 0,
+                    properties: new Set(['vocal']),
+                    activities: {
+                        a1: { id: 'a1', type: 'utility', activation: { type: 'action' } }
+                    }
+                }
+            },
+            // Cantrip 2: Vocal + Somatic
+            {
+                id: 'cantrip-guide',
+                name: 'Guidance',
+                type: 'spell',
+                system: {
+                    level: 0,
+                    method: 'spell',
+                    prepared: 0,
+                    properties: new Set(['vocal', 'somatic']),
+                    activities: {
+                        a2: { id: 'a2', type: 'utility', activation: { type: 'action' } }
+                    }
+                }
+            },
+            // Level 1 spell (depleted because spell1.value === 0): Vocal + Somatic + Material
+            {
+                id: 'spell-bless',
+                name: 'Bless',
+                type: 'spell',
+                system: {
+                    level: 1,
+                    method: 'spell',
+                    prepared: 1,
+                    properties: new Set(['vocal', 'somatic', 'material']),
+                    materials: { value: 'A sprinkling of holy water' },
+                    activities: {
+                        a3: { id: 'a3', type: 'utility', activation: { type: 'action' }, consumption: { spellSlot: true } }
+                    }
+                }
+            }
+        ]
+    };
+
+    const { ActionDisplayApp } = await import('../../src/ui/action-display-app.js');
+    const { actionDisplay } = await import('../../src/action-display.js');
+    actionDisplay.registerSystemAdapter(adapter);
+
+    const token = { id: 'tok-akra-test', document: { id: 'tok-akra-test', isOwner: true }, actor };
+    const app = new ActionDisplayApp(token);
+    const context = await app._prepareContext();
+
+    const componentsTab = context.actionTypes.find(t => t.id === 'components');
+    assert.ok(componentsTab !== undefined, 'components tab should be present');
+    assert.deepEqual(componentsTab.subTabs.map(s => s.id), ['vocal', 'somatic', 'material'], 'components tab must include vocal, somatic, and material');
+
+    await app.close();
+});
+
+

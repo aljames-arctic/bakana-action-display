@@ -534,6 +534,26 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
             }
         }
 
+        // Ensure all canonical sub-tabs exist for exclusion groups (e.g. vocal, somatic, material under components)
+        for (const parent of Object.values(parentGroups)) {
+            if (adapter.isExclusionTab(parent.id)) {
+                const canonicalSubs = adapter.getExclusionSubTabs(parent.id);
+                for (const subId of canonicalSubs) {
+                    let subTab = parent.subTabs.find(t => t.id === subId);
+                    if (!subTab) {
+                        const isActive = this.rightTabs.activeParents.has(parent.id);
+                        const isSubActive = this.rightTabs.activeSubTypes.has(subId);
+                        parent.addSubTab({
+                            id: subId,
+                            label: adapter.getActionSubTabLabel(subId),
+                            active: false,
+                            excluded: isActive && isSubActive
+                        });
+                    }
+                }
+            }
+        }
+
         // Convert to array and sort by system adapter order
         const actionTypes = Object.values(parentGroups);
         actionTypes.sort((a, b) => adapter.getActionTypeSortOrder(a.id) - adapter.getActionTypeSortOrder(b.id));
