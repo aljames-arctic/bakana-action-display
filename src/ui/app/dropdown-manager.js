@@ -256,7 +256,7 @@ export function showActivityDropdown(app, target, subactions, event) {
     };
     menu.setPosition = menu._setPosition;
 
-    const origClose = typeof menu.close === 'function' ? menu.close.bind(menu) : null;
+    const origClose = menu.close?.bind(menu);
     menu.close = async (closeOptions = {}) => {
         app?._hideItemSummaryTooltip?.();
         const menuEl = document.querySelector('#context-menu, .context-menu');

@@ -2061,18 +2061,14 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         if (!actor) return new Set();
         const statuses = new Set();
 
-        if (actor.statuses instanceof Set) {
-            for (const s of actor.statuses) statuses.add(s);
-        } else if (Array.isArray(actor.statuses)) {
+        if (actor.statuses) {
             for (const s of actor.statuses) statuses.add(s);
         }
 
         if (actor.effects) {
             for (const effect of actor.effects) {
                 if (effect.disabled || effect.isSuppressed) continue;
-                if (effect.statuses instanceof Set) {
-                    for (const s of effect.statuses) statuses.add(s);
-                } else if (Array.isArray(effect.statuses)) {
+                if (effect.statuses) {
                     for (const s of effect.statuses) statuses.add(s);
                 }
                 const statusId = effect.getFlag?.('core', 'statusId') ?? effect.flags?.core?.statusId;

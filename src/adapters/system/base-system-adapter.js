@@ -404,14 +404,10 @@ export class BaseSystemAdapter {
         if (!type?.id || type.id === 'none' || type.id === 'all') return false;
 
         const disabled = userColors.disabled;
-        if (disabled && (disabled[type.id] || (Array.isArray(disabled) && disabled.includes(type.id)))) {
-            return false;
-        }
+        if (disabled?.[type.id] || disabled?.includes?.(type.id)) return false;
 
         const enabled = userColors.enabled;
-        if (enabled && (enabled[type.id] || (Array.isArray(enabled) && enabled.includes(type.id)))) {
-            return true;
-        }
+        if (enabled?.[type.id] || enabled?.includes?.(type.id)) return true;
 
         return Boolean(type.defaultEnabled);
     }

@@ -24,17 +24,15 @@ function docHasComponent(doc, component) {
     const names = COMPONENT_NAMES[component] ?? [component];
     const shortKey = COMPONENT_SHORT_KEYS[component];
 
-    // 1. Check system.properties (Set or Array of full spell property names: 'vocal', 'somatic', 'material')
+    // 1. Check system.properties (Set of full spell property names: 'vocal', 'somatic', 'material')
     const props = doc.system?.properties ?? doc.properties ?? doc.spell?.system?.properties ?? doc.spell?.properties;
-    if (props instanceof Set) {
-        if (names.some(name => props.has(name))) return true;
-    } else if (Array.isArray(props)) {
-        if (names.some(name => props.includes(name))) return true;
+    if (props) {
+        if (names.some(name => props.has ? props.has(name) : props.includes?.(name))) return true;
     }
 
-    // 2. Check system.components (Boolean map: { vocal: true } or legacy { v: true })
+    // 2. Check system.components (Boolean map: { vocal: true, v: true })
     const comps = doc.system?.components ?? doc.components ?? doc.spell?.system?.components ?? doc.spell?.components;
-    if (comps && typeof comps === 'object') {
+    if (comps) {
         if (names.some(name => comps[name] === true)) return true;
         if (shortKey && comps[shortKey] === true) return true;
     }

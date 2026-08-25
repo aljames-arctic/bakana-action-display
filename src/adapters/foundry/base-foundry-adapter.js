@@ -229,7 +229,7 @@ export class BaseFoundryAdapter {
     getUserPermissionTier(user) {
         if (!user) return null;
         const isGM = Boolean(user.isGM);
-        const userRole = typeof user.role === 'number' ? user.role : null;
+        const userRole = user.role ?? null;
         const assistantRole = globalThis.CONST?.USER_ROLES?.ASSISTANT ?? 3;
         const trustedRole = globalThis.CONST?.USER_ROLES?.TRUSTED ?? 2;
         const playerRole = globalThis.CONST?.USER_ROLES?.PLAYER ?? 1;
@@ -308,7 +308,7 @@ export class BaseFoundryAdapter {
     isUserInCharge(token, user = game.user) {
         if (!token || !user) return false;
 
-        const tokenDoc = token.document ?? (typeof token.testUserPermission === 'function' ? token : null);
+        const tokenDoc = token.document ?? token;
         const actor = token.actor ?? tokenDoc?.actor ?? null;
 
         if (!this.isUserDocumentOwner(user, actor, tokenDoc)) {
@@ -325,9 +325,8 @@ export class BaseFoundryAdapter {
 
         const usersCollection = game.users;
         const allUsers = usersCollection?.contents
-            ?? (Array.isArray(usersCollection) ? usersCollection : null)
             ?? (usersCollection?.values ? Array.from(usersCollection.values()) : null)
-            ?? (user ? [user] : []);
+            ?? (usersCollection ? Array.from(usersCollection) : [user]);
 
         // Filter to only currently connected (active) other users
         const activeOtherUsers = allUsers.filter(otherUser => {
