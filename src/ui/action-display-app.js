@@ -67,6 +67,8 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         this._boundOnKeyDown = this._onKeyDown.bind(this);
         this._boundOnKeyUp = this._onKeyUp.bind(this);
         this._boundOnWindowBlur = this._onWindowBlur.bind(this);
+        this._boundOnWheel = this._onWheel.bind(this);
+        this._boundOnWindowWheel = this._onWindowWheel.bind(this);
     }
 
     /**
@@ -261,6 +263,12 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         }
         if (this._boundOnWindowBlur) {
             window.removeEventListener('blur', this._boundOnWindowBlur);
+        }
+        if (this._boundOnWheel) {
+            this.element?.removeEventListener?.('wheel', this._boundOnWheel, { passive: false });
+        }
+        if (this._boundOnWindowWheel) {
+            window.removeEventListener('wheel', this._boundOnWindowWheel, { passive: false });
         }
         this._hoveredActionItem = null;
         this._isQuestionMarkHeld = false;
@@ -1351,6 +1359,9 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         window.addEventListener('keyup', this._boundOnKeyUp);
         window.addEventListener('blur', this._boundOnWindowBlur);
 
+        this.element.addEventListener('wheel', this._boundOnWheel, { passive: false });
+        window.addEventListener('wheel', this._boundOnWindowWheel, { passive: false });
+
         // Initialize the context menu for action items once
         this._contextMenu = this._createContextMenu();
     }
@@ -1770,7 +1781,10 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
      * @protected
      */
     _hideItemSummaryTooltip() {
-        if (!this._activeSummaryTooltip) return;
+        if (Boolean(game.tooltip?.locked)) return;
+        const lockedEl = document.querySelector?.('#tooltip.locked, aside#tooltip.locked, .tooltip.locked');
+        if (lockedEl?.classList?.contains?.('locked')) return;
+
         this._activeSummaryTooltip = null;
         const tooltipEl = document.querySelector?.('#tooltip, aside#tooltip, div#tooltip');
         if (tooltipEl) {
@@ -1782,6 +1796,54 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         }
         if (game.tooltip?.deactivate) {
             game.tooltip.deactivate();
+        }
+    }
+
+    /**
+     * Handle wheel events occurring inside the HUD element.
+     * When a rich item summary tooltip is focused/locked via middle-click, forward wheel scrolling
+     * directly to the tooltip's description container instead of scrolling the action display tab content.
+     * @param {WheelEvent} event
+     * @protected
+     */
+    _onWheel(event) {
+        if (!event) return;
+        const isLocked = Boolean(game.tooltip?.locked) || Boolean(document.querySelector?.('#tooltip.locked, aside#tooltip.locked, .tooltip.locked'));
+        if (isLocked) {
+            const descEl = document.querySelector?.('#tooltip.locked .bad-summary-desc, aside#tooltip.locked .bad-summary-desc, #tooltip .bad-summary-desc, aside#tooltip .bad-summary-desc, .bad-item-summary-tooltip .bad-summary-desc');
+            if (descEl) {
+                event.preventDefault?.();
+                event.stopPropagation?.();
+                if (descEl.classList?.contains?.('bad-summary-overflow-x') && (event.shiftKey || event.deltaX)) {
+                    descEl.scrollLeft = (descEl.scrollLeft ?? 0) + (event.deltaX || (event.shiftKey ? event.deltaY : 0));
+                } else {
+                    descEl.scrollTop = (descEl.scrollTop ?? 0) + (event.deltaY ?? 0);
+                }
+            }
+        }
+    }
+
+    /**
+     * Handle wheel events occurring on the window.
+     * If the event target is inside an active/locked item summary tooltip, ensure scrolling is applied
+     * directly to its description container without propagating or chaining to underlying windows.
+     * @param {WheelEvent} event
+     * @protected
+     */
+    _onWindowWheel(event) {
+        if (!event) return;
+        const tooltipEl = event.target?.closest?.('#tooltip, aside#tooltip, .bad-item-summary-tooltip, .bad-item-summary-tooltip-wrapper');
+        if (tooltipEl) {
+            const descEl = tooltipEl.querySelector?.('.bad-summary-desc') ?? (event.target?.classList?.contains?.('bad-summary-desc') ? event.target : null);
+            if (descEl) {
+                event.preventDefault?.();
+                event.stopPropagation?.();
+                if (descEl.classList?.contains?.('bad-summary-overflow-x') && (event.shiftKey || event.deltaX)) {
+                    descEl.scrollLeft = (descEl.scrollLeft ?? 0) + (event.deltaX || (event.shiftKey ? event.deltaY : 0));
+                } else {
+                    descEl.scrollTop = (descEl.scrollTop ?? 0) + (event.deltaY ?? 0);
+                }
+            }
         }
     }
 

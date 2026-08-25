@@ -1592,6 +1592,25 @@ body > #tooltip.bad-item-summary-tooltip-wrapper,
     word-break: normal !important;
     overflow-wrap: break-word !important;
     overflow: visible !important;
+    overscroll-behavior: contain !important;
+}
+
+#tooltip.locked:has(.bad-item-summary-tooltip),
+aside#tooltip.locked:has(.bad-item-summary-tooltip),
+div#tooltip.locked:has(.bad-item-summary-tooltip),
+#tooltip.locked.bad-item-summary-tooltip-wrapper,
+aside#tooltip.locked.bad-item-summary-tooltip-wrapper,
+div#tooltip.locked.bad-item-summary-tooltip-wrapper,
+body > #tooltip.locked:has(.bad-item-summary-tooltip),
+body > #tooltip.locked.bad-item-summary-tooltip-wrapper,
+#tooltip.locked:has(.bad-summary-has-table),
+aside#tooltip.locked:has(.bad-summary-has-table),
+div#tooltip.locked:has(.bad-summary-has-table),
+#tooltip.locked.bad-summary-has-table-wrapper,
+aside#tooltip.locked.bad-summary-has-table-wrapper,
+div#tooltip.locked.bad-summary-has-table-wrapper {
+    pointer-events: auto !important;
+    z-index: 1000002 !important;
 }
 
 /* Dynamic Tooltip Expansion for Descriptions with Roll Tables & Data Tables */
@@ -1717,6 +1736,7 @@ body > #tooltip.bad-summary-has-table-wrapper,
     max-height: 280px;
     overflow-y: auto !important;
     overflow-x: hidden !important;
+    overscroll-behavior: contain !important;
     word-break: normal;
     overflow-wrap: break-word;
     white-space: normal;

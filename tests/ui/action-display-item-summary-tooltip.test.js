@@ -626,4 +626,131 @@ test('ActionDisplayApp formats descriptions with roll tables and adds bad-summar
     await app.close();
 });
 
+test('ActionDisplayApp forwards wheel scrolling to focused/locked tooltip description when HUD or tooltip is scrolled', async () => {
+    await game.settings.set('bakana-action-display', 'showItemSummaries', true);
+
+    const token = {
+        id: 'token-wheel-tooltip',
+        document: { id: 'token-wheel-tooltip', isOwner: true },
+        actor: {
+            id: 'actor-wheel-tooltip',
+            name: 'Wheel Scroller',
+            isOwner: true,
+            items: [
+                {
+                    id: 'spell-long-desc',
+                    name: 'Very Long Spell',
+                    type: 'spell',
+                    system: {
+                        description: { value: '<p>Line 1</p><p>Line 2</p><p>Line 3</p><p>Line 4</p><p>Line 5</p>' },
+                        level: 1,
+                        method: 'prepared',
+                        prepared: true
+                    }
+                }
+            ]
+        }
+    };
+
+    const app = new ActionDisplayApp(token);
+    await app.render(true);
+
+    const mockDescEl = {
+        tagName: 'DIV',
+        className: 'bad-summary-desc',
+        classList: { contains: (c) => c === 'bad-summary-desc' },
+        scrollTop: 0,
+        scrollLeft: 0,
+        scrollHeight: 500,
+        clientHeight: 200
+    };
+
+    const mockTooltipEl = {
+        tagName: 'ASIDE',
+        id: 'tooltip',
+        className: 'locked bad-item-summary-tooltip-wrapper',
+        classList: { contains: (c) => c === 'locked' || c === 'bad-item-summary-tooltip-wrapper' },
+        querySelector: (sel) => sel.includes('bad-summary-desc') ? mockDescEl : null,
+        closest: (sel) => sel.includes('bad-item-summary-tooltip') || sel.includes('tooltip') ? mockTooltipEl : null,
+        style: {
+            properties: {},
+            setProperty(prop, val) { this.properties[prop] = val; },
+            removeProperty(prop) { delete this.properties[prop]; }
+        }
+    };
+
+    const origQuerySelector = document.querySelector;
+    document.querySelector = (sel) => {
+        if (sel.includes('bad-summary-desc')) return mockDescEl;
+        if (sel.includes('tooltip')) return mockTooltipEl;
+        return null;
+    };
+
+    try {
+        game.tooltip.locked = true;
+
+        // 1. Wheel event inside the HUD element while tooltip is locked -> scrolls mockDescEl
+        let prevented = false;
+        let stopped = false;
+        const hudWheelEvent = {
+            deltaY: 40,
+            deltaX: 0,
+            preventDefault() { prevented = true; },
+            stopPropagation() { stopped = true; }
+        };
+
+        app._onWheel(hudWheelEvent);
+        assert.equal(prevented, true, 'Wheel event on HUD should be prevented when tooltip is locked');
+        assert.equal(stopped, true, 'Wheel event on HUD should be stopped when tooltip is locked');
+        assert.equal(mockDescEl.scrollTop, 40, 'Tooltip description scrollTop should advance by deltaY');
+
+        // 2. Wheel event directly on window with tooltip target -> scrolls mockDescEl
+        prevented = false;
+        stopped = false;
+        const windowWheelEvent = {
+            deltaY: 50,
+            deltaX: 0,
+            target: mockTooltipEl,
+            preventDefault() { prevented = true; },
+            stopPropagation() { stopped = true; }
+        };
+
+        app._onWindowWheel(windowWheelEvent);
+        assert.equal(prevented, true, 'Window wheel event on tooltip should be prevented');
+        assert.equal(stopped, true, 'Window wheel event on tooltip should be stopped');
+        assert.equal(mockDescEl.scrollTop, 90, 'Tooltip description scrollTop should advance to 90');
+
+        // 3. Horizontal scrolling when shift key is held and bad-summary-overflow-x is present
+        mockDescEl.classList.contains = (c) => c === 'bad-summary-desc' || c === 'bad-summary-overflow-x';
+        const shiftWheelEvent = {
+            deltaY: 30,
+            deltaX: 0,
+            shiftKey: true,
+            target: mockTooltipEl,
+            preventDefault() {},
+            stopPropagation() {}
+        };
+        app._onWindowWheel(shiftWheelEvent);
+        assert.equal(mockDescEl.scrollLeft, 30, 'Shift wheel should scroll horizontally');
+
+        // 4. _hideItemSummaryTooltip does NOT dismiss when locked is true
+        app._activeSummaryTooltip = { element: {} };
+        app._hideItemSummaryTooltip();
+        assert.ok(app._activeSummaryTooltip !== null, '_activeSummaryTooltip should remain active when locked');
+
+        // 5. When unlocked, _hideItemSummaryTooltip cleans up normally
+        game.tooltip.locked = false;
+        document.querySelector = () => null;
+        app._hideItemSummaryTooltip();
+        assert.equal(app._activeSummaryTooltip, null, '_activeSummaryTooltip should be cleared when unlocked');
+    } finally {
+        game.tooltip.locked = false;
+        document.querySelector = origQuerySelector;
+    }
+
+    await game.settings.set('bakana-action-display', 'showItemSummaries', false);
+    await app.close();
+});
+
+
 
