@@ -49,10 +49,13 @@ test('ActionDisplayAPI resolveToken resolves tokens across polymorphic inputs', 
     // 5. Token UUID string via fromUuidSync
     assert.deepEqual(api.resolveToken('Scene.1.Token.tok6'), { id: 'tok6', actor: { id: 'act6' } });
 
-    // 6. Invalid / null inputs
+    // 6. Omitted inputs return null
     assert.equal(api.resolveToken(null), null);
     assert.equal(api.resolveToken(undefined), null);
-    assert.equal(api.resolveToken('non-existent'), null);
+
+    // 7. Invalid explicit inputs throw errors
+    assert.throws(() => api.resolveToken('non-existent'), /Cannot resolve Token from identifier "non-existent"/);
+    assert.throws(() => api.resolveToken(12345), /Invalid token target/);
 });
 
 test('ActionDisplayAPI open opens HUD for specific token with target page and selected tabs', async () => {
@@ -149,16 +152,21 @@ test('ActionDisplayAPI close, toggle, setPage, setTabs, and getActions methods',
     assert.ok(Array.isArray(actions));
 });
 
-test('API normalizers strictly convert loose external parameters into concrete contracts', () => {
+test('API normalizers strictly convert valid parameters and throw on invalid inputs', () => {
     // Page normalizer
     assert.equal(normalizePage(undefined), null);
+    assert.equal(normalizePage(null), null);
+    assert.equal(normalizePage(2), 2);
     assert.equal(normalizePage('2'), 2);
-    assert.equal(normalizePage(3.7), 3);
-    assert.equal(normalizePage(-1), null);
-    assert.equal(normalizePage('abc'), null);
+    assert.throws(() => normalizePage(3.7), /expected a positive integer/);
+    assert.throws(() => normalizePage(-1), /expected a positive integer/);
+    assert.throws(() => normalizePage(0), /expected a positive integer/);
+    assert.throws(() => normalizePage('abc'), /expected a positive integer/);
+    assert.throws(() => normalizePage({}), /expected a positive integer/);
 
     // Tab column state normalizer
     assert.equal(normalizeTabColumnState(undefined), null);
+    assert.equal(normalizeTabColumnState(null), null);
     assert.deepEqual(normalizeTabColumnState('spells'), {
         parents: ['spells'],
         focusedParent: 'spells',
@@ -180,6 +188,13 @@ test('API normalizers strictly convert loose external parameters into concrete c
         subTypes: ['level-1', 'level-2']
     });
 
+    // Tab column validation errors
+    assert.throws(() => normalizeTabColumnState(''), /cannot be empty/);
+    assert.throws(() => normalizeTabColumnState([]), /cannot be empty/);
+    assert.throws(() => normalizeTabColumnState([123]), /expected non-empty string identifier/);
+    assert.throws(() => normalizeTabColumnState(123), /Invalid tab column input type/);
+    assert.throws(() => normalizeTabColumnState({ unrelated: true }), /must specify parent tab or sub-type identifiers/);
+
     // Tab config normalizer
     const config = normalizeTabConfig({
         leftTabs: 'spells',
@@ -195,5 +210,30 @@ test('API normalizers strictly convert loose external parameters into concrete c
         focusedParent: 'bonus',
         subTypes: ['level-1']
     });
+
+    // Tab config validation errors
+    assert.throws(() => normalizeTabConfig('invalid'), /expected an options object/);
+    assert.throws(() => normalizeTabConfig({ tabs: 'invalid' }), /expected an object/);
 });
+
+test('ActionDisplayAPI methods throw errors when invalid inputs or prerequisites are unmet', async () => {
+    const coordinator = new ActionDisplay();
+    const api = createAPI(coordinator);
+
+    // 1. setPage throws when closed or when invalid page provided
+    await assert.rejects(async () => await api.setPage(), /Page number is required/);
+    await assert.rejects(async () => await api.setPage(1), /Action Display HUD is not open/);
+
+    // 2. setTabs throws when closed or when invalid tabs provided
+    await assert.rejects(async () => await api.setTabs(), /Tab configuration is required/);
+    await assert.rejects(async () => await api.setTabs({ left: 'spells' }), /Action Display HUD is not open/);
+
+    // 3. getActions throws when target is missing or invalid
+    await assert.rejects(async () => await api.getActions(), /Actor or token target is required/);
+    await assert.rejects(async () => await api.getActions('non-existent-actor'), /Cannot resolve/);
+
+    // 4. open throws when token is invalid
+    await assert.rejects(async () => await api.open('non-existent-token'), /Cannot resolve/);
+});
+
 

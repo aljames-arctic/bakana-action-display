@@ -36,18 +36,20 @@ export class ActionDisplayAPI {
     }
 
     /**
-     * Resolve a token from external polymorphic input.
+     * Resolve a token from external input.
      * @param {UnverifiedTokenInput} target The target token, document, actor, ID, or UUID
-     * @returns {Token|null} Concrete Token instance or null
+     * @returns {Token|null} Concrete Token instance or null if target was omitted
+     * @throws {TypeError|Error} If target is provided but invalid or unresolvable
      */
     resolveToken(target) {
         return normalizeToken(target);
     }
 
     /**
-     * Resolve an actor from external polymorphic input.
+     * Resolve an actor from external input.
      * @param {UnverifiedActorInput} target The target actor, token, document, ID, or UUID
-     * @returns {Actor|null} Concrete Actor instance or null
+     * @returns {Actor|null} Concrete Actor instance or null if target was omitted
+     * @throws {TypeError|Error} If target is provided but invalid or unresolvable
      */
     resolveActor(target) {
         return normalizeActor(target);
@@ -64,9 +66,10 @@ export class ActionDisplayAPI {
      * - Multi-tab with sub-types: `api.open(token, { tabs: { left: { parents: ['spells', 'features'], focusedParent: 'spells', subTypes: ['level-1', 'level-2'] } } })`
      * - Options object only: `api.open({ token, page: 2, tabs: { left: ['spells', 'features'] } })`
      *
-     * @param {UnverifiedTokenInput|UnverifiedOpenOptions} tokenOrOptions Token instance/identifier or options object
+     * @param {UnverifiedTokenInput|UnverifiedOpenOptions} [tokenOrOptions] Token instance/identifier or options object
      * @param {UnverifiedOpenOptions} [options={}] Additional configuration options
-     * @returns {Promise<ActionDisplayApp|null>} The opened ActionDisplayApp instance
+     * @returns {Promise<ActionDisplayApp>} The opened ActionDisplayApp instance
+     * @throws {TypeError|Error} If token cannot be resolved, or page/tabs configuration is invalid
      */
     async open(tokenOrOptions, options = {}) {
         let rawToken = tokenOrOptions;
@@ -85,8 +88,7 @@ export class ActionDisplayAPI {
             ?? null;
 
         if (!token) {
-            log.warn("Cannot open Action Display: no valid token could be resolved.");
-            return null;
+            throw new Error("Cannot open Action Display: no token provided and no controlled or character token is active on canvas.");
         }
 
         const targetPage = normalizePage(rawConfig.page);
@@ -139,6 +141,7 @@ export class ActionDisplayAPI {
      * @param {UnverifiedTokenInput|UnverifiedOpenOptions} [tokenOrOptions] Target token or options
      * @param {UnverifiedOpenOptions} [options] Options passed to open() if toggling open
      * @returns {Promise<boolean>} True if opened, false if closed
+     * @throws {TypeError|Error} If token cannot be resolved, or page/tabs configuration is invalid
      */
     async toggle(tokenOrOptions, options = {}) {
         if (this.isOpen()) {
@@ -155,17 +158,21 @@ export class ActionDisplayAPI {
 
     /**
      * Set the active page on the currently open HUD.
-     * @param {UnverifiedPageInput} page Page number
-     * @returns {Promise<ActionDisplayApp|null>}
+     * @param {UnverifiedPageInput} page Positive integer page number
+     * @returns {Promise<ActionDisplayApp>}
+     * @throws {TypeError|Error} If HUD is not open or page number is invalid
      */
     async setPage(page) {
-        const app = this._actionDisplay?.activeApp;
-        if (!app) return null;
-        const pageNum = normalizePage(page);
-        if (pageNum !== null) {
-            app.activePage = pageNum;
-            await app.render(false);
+        if (page === undefined || page === null) {
+            throw new TypeError("Page number is required.");
         }
+        const app = this._actionDisplay?.activeApp;
+        if (!app) {
+            throw new Error("Cannot set page: Action Display HUD is not open.");
+        }
+        const pageNum = normalizePage(page);
+        app.activePage = pageNum;
+        await app.render(false);
         return app;
     }
 
@@ -173,13 +180,19 @@ export class ActionDisplayAPI {
      * Set tab selections on the currently open HUD.
      * @param {UnverifiedTabSelectionConfig|Object} rawTabs Tab configuration for left and/or right columns
      * @param {UnverifiedPageInput} [page] Optional page to configure (defaults to activePage)
-     * @returns {Promise<ActionDisplayApp|null>}
+     * @returns {Promise<ActionDisplayApp>}
+     * @throws {TypeError|Error} If HUD is not open or tab configuration is invalid
      */
     async setTabs(rawTabs, page) {
+        if (rawTabs === undefined || rawTabs === null) {
+            throw new TypeError("Tab configuration is required.");
+        }
         const app = this._actionDisplay?.activeApp;
-        if (!app) return null;
+        if (!app) {
+            throw new Error("Cannot set tabs: Action Display HUD is not open.");
+        }
         const tabConfig = normalizeTabConfig({ tabs: rawTabs });
-        const targetPage = normalizePage(page) ?? app.activePage;
+        const targetPage = page !== undefined ? normalizePage(page) : app.activePage;
         app.setTabs(tabConfig, targetPage);
         await app.render(false);
         return app;
@@ -189,10 +202,13 @@ export class ActionDisplayAPI {
      * Get processed actions for a given actor or token via the unified adapter pipeline.
      * @param {UnverifiedActorInput} actorOrToken
      * @returns {Promise<Action[]>}
+     * @throws {TypeError|Error} If actorOrToken is missing or unresolvable
      */
     async getActions(actorOrToken) {
+        if (actorOrToken === undefined || actorOrToken === null) {
+            throw new TypeError("Actor or token target is required.");
+        }
         const actor = normalizeActor(actorOrToken);
-        if (!actor) return [];
         return this._actionDisplay?.getActions(actor) ?? [];
     }
 }
