@@ -564,7 +564,8 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
 
         return {
             value: normal,
-            label: subParts.join(', ')
+            label: subParts.join(', '),
+            secondaries: subParts
         };
     }
 

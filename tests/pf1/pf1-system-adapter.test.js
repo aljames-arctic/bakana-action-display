@@ -383,6 +383,7 @@ test('Pf1SystemAdapter getTokenInfo extracts complete token statistics and detai
     assert.equal(info.ac.value, 21);
     assert.ok(info.ac.label.includes('Touch: 11'));
     assert.ok(info.ac.label.includes('Flat-Footed: 20'));
+    assert.deepEqual(info.ac.secondaries, ['Touch: 11', 'Flat-Footed: 20']);
     assert.equal(info.movement.primary, '30 ft');
     assert.ok(info.movement.secondaries.some(s => s.includes('Fly 60 ft')));
     assert.ok(info.movement.secondaries.some(s => s.includes('Swim 20 ft')));

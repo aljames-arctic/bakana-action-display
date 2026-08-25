@@ -493,6 +493,7 @@ test('Pf2eSystemAdapter getTokenInfo extracts complete token statistics and deta
     assert.equal(info.ac.value, 30);
     assert.ok(info.ac.label.includes('+2 Shield AC'));
     assert.ok(info.ac.label.includes('Hardness 10'));
+    assert.deepEqual(info.ac.secondaries, ['+2 Shield AC', 'Hardness 10']);
     assert.equal(info.movement.primary, '40 ft');
     assert.ok(info.movement.secondaries.some(s => s.includes('Fly 120 ft')));
     assert.ok(info.movement.secondaries.some(s => s.includes('Burrow 20 ft')));

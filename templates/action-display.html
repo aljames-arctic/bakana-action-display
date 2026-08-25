@@ -110,7 +110,13 @@
                             <div class="bad-token-stat-body">
                                 <div class="bad-token-stat-value">{{tokenInfo.ac.value}}</div>
                                 <div class="bad-token-stat-label">{{localize "BAD.page3.armorClass"}}</div>
-                                {{#if tokenInfo.ac.label}}
+                                {{#if tokenInfo.ac.secondaries.length}}
+                                <div class="bad-token-stat-speeds">
+                                    {{#each tokenInfo.ac.secondaries}}
+                                    <div class="bad-token-stat-speed-item">{{this}}</div>
+                                    {{/each}}
+                                </div>
+                                {{else if tokenInfo.ac.label}}
                                 <div class="bad-token-stat-sub">{{tokenInfo.ac.label}}</div>
                                 {{/if}}
                             </div>

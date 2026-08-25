@@ -594,9 +594,9 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
         const ac = actor?.armorClass?.value ?? actor?.system?.attributes?.ac?.value ?? 10;
         const shield = actor?.system?.attributes?.shield;
 
+        const parts = [];
         let shieldLabel = '';
         if (shield?.raised || (shield?.hp?.value ?? 0) > 0) {
-            const parts = [];
             if (shield.ac) parts.push(`+${shield.ac} Shield AC`);
             if (shield.hardness) parts.push(`Hardness ${shield.hardness}`);
             if (parts.length > 0) shieldLabel = `Shield: ${parts.join(', ')}`;
@@ -604,7 +604,8 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
 
         return {
             value: ac,
-            label: shieldLabel
+            label: shieldLabel,
+            secondaries: parts
         };
     }
 
