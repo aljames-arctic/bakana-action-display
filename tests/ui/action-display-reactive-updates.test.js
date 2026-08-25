@@ -50,12 +50,21 @@ test('Reactive document hooks re-render activeApp when item or actor mutates', a
     await new Promise(r => setTimeout(r, 70));
     assert.equal(renderCount, 4);
 
-    // 5. Updating different actor does NOT trigger render
+    // 5. Updating active actor with only module flags (including _id and _stats metadata) does NOT trigger secondary render
+    Hooks.callAll('updateActor', { id: 'actor-hero' }, {
+        _id: 'actor-hero',
+        'flags.bakana-action-display.autoBanState': { conditions: {}, manualUnbans: { vocal: true } },
+        _stats: { modifiedTime: Date.now() }
+    }, {}, 'user-1');
+    await new Promise(r => setTimeout(r, 70));
+    assert.equal(renderCount, 4, 'Internal module flag changes must not trigger a redundant re-render');
+
+    // 6. Updating different actor does NOT trigger render
     Hooks.callAll('updateActor', { id: 'actor-enemy' }, {}, {}, 'user-1');
     await new Promise(r => setTimeout(r, 70));
     assert.equal(renderCount, 4);
 
-    // 6. Updating synthetic token triggers render
+    // 7. Updating synthetic token triggers render
     Hooks.callAll('updateToken', { id: 'token-hero', actor: { id: 'actor-hero' } }, {}, {}, 'user-1');
     await new Promise(r => setTimeout(r, 70));
     assert.equal(renderCount, 5);

@@ -246,8 +246,9 @@ Hooks.on('updateActor', (actor, changes, options, userId) => {
 
     // If the change only affects internal bakana-action-display flags (e.g. autoBanState, favorites, hiddenItems),
     // the UI interaction has already rendered or handled it locally; do not trigger a second HUD render.
-    const keys = Object.keys(changes ?? {});
-    const isOnlyModuleFlags = keys.length > 0 && keys.every(key => {
+    const metadataKeys = new Set(['_id', 'id', '_stats']);
+    const nonMetaKeys = Object.keys(changes ?? {}).filter(k => !metadataKeys.has(k) && !k.startsWith('_stats.'));
+    const isOnlyModuleFlags = nonMetaKeys.length > 0 && nonMetaKeys.every(key => {
         if (key.startsWith(`flags.${MODULE_ID}`)) return true;
         if (key === 'flags') {
             const flagKeys = Object.keys(changes.flags ?? {});
