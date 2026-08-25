@@ -1657,11 +1657,24 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
 
         let html = `<div class="bad-item-summary-tooltip${tableClass}"${widthStyle}>`;
         html += '<div class="bad-summary-header">';
-        if (img) {
-            html += `<img class="bad-summary-icon" src="${img}" alt="${title}" />`;
+        const headerTags = Array.isArray(summary.headerTags) ? summary.headerTags : (summary.headerTag ? [summary.headerTag] : []);
+        let headerTagsHtml = '';
+        for (const tag of headerTags) {
+            const text = typeof tag === 'string'
+                ? tag
+                : (tag?.label ? `${tag.label}: ${tag.value}` : tag?.value);
+            if (text) {
+                headerTagsHtml += `<span class="bad-summary-tag">${text}</span>`;
+            }
         }
+
         html += '<div class="bad-summary-title-group">';
+        html += '<div class="bad-summary-title-row">';
         html += `<span class="bad-summary-title">${title}</span>`;
+        if (headerTagsHtml) {
+            html += headerTagsHtml;
+        }
+        html += '</div>';
         if (subtitle) {
             html += `<span class="bad-summary-subtitle">${subtitle}</span>`;
         }

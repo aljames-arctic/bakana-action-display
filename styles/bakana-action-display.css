@@ -1671,6 +1671,14 @@ body > #tooltip.bad-summary-has-table-wrapper,
     overflow: hidden;
 }
 
+.bad-summary-title-row {
+    display: flex;
+    align-items: center;
+    gap: 0.45em;
+    min-width: 0;
+    flex-wrap: wrap;
+}
+
 .bad-summary-title {
     font-weight: 700;
     font-size: 1.05em;

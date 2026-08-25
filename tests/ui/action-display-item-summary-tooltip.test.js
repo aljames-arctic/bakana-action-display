@@ -152,14 +152,16 @@ test('Dnd5eSystemAdapter.getItemSummary formats weapons, spells, feats, and Page
     });
 
     const abilitySummary = await dnd5eAdapter.getItemSummary(abilityAction, null, mockActor);
-    assert.equal(abilitySummary.title, 'Dexterity (Score: 16)');
+    assert.equal(abilitySummary.title, 'Dexterity');
     assert.equal(abilitySummary.subtitle, 'Ability Check / Saving Throw');
+    assert.deepEqual(abilitySummary.headerTags, [{ label: 'Score', value: '16' }]);
     assert.deepEqual(abilitySummary.properties[0], ['Check:', { label: 'Modifier', value: '+3' }]);
     assert.deepEqual(abilitySummary.properties[1], ['Save:', { label: 'Modifier', value: '+5' }, { value: 'Proficient' }]);
 
     const checkSummary = await dnd5eAdapter.getItemSummary(checkAction, null, mockActor);
-    assert.equal(checkSummary.title, 'Dexterity Check (Score: 16)');
+    assert.equal(checkSummary.title, 'Dexterity Check');
     assert.equal(checkSummary.subtitle, 'Ability Check');
+    assert.deepEqual(checkSummary.headerTags, [{ label: 'Score', value: '16' }]);
     assert.ok(checkSummary.properties.some(p => p.label === 'Modifier' && p.value === '+3'));
 
     const saveSummary = await dnd5eAdapter.getItemSummary(saveAction, null, mockActor);
@@ -785,23 +787,24 @@ test('ActionDisplayApp forwards wheel scrolling to focused/locked tooltip descri
     await app.close();
 });
 
-test('ActionDisplayApp _formatItemSummaryHtml renders structured property tag rows with row labels', () => {
+test('ActionDisplayApp _formatItemSummaryHtml renders structured property tag rows with row labels and headerTags', () => {
     const app = new ActionDisplayApp({ actor: {} });
     const summary = {
         title: 'Charisma',
         subtitle: 'Ability Check / Saving Throw',
+        headerTags: [{ label: 'Score', value: '13' }],
         properties: [
-            [{ label: 'Score', value: '13' }],
             ['Check:', { label: 'Modifier', value: '+1' }, { value: 'Proficient' }],
             ['Save:', { label: 'Modifier', value: '-1' }]
         ]
     };
 
     const html = app._formatItemSummaryHtml(summary);
+    assert.ok(html.includes('<div class="bad-summary-title-row">'));
+    assert.ok(html.includes('<span class="bad-summary-tag">Score: 13</span>'));
     assert.ok(html.includes('<div class="bad-summary-tag-row">'));
     assert.ok(html.includes('<span class="bad-summary-row-label">Check:</span>'));
     assert.ok(html.includes('<span class="bad-summary-row-label">Save:</span>'));
-    assert.ok(html.includes('<span class="bad-summary-tag">Score: 13</span>'));
     assert.ok(html.includes('<span class="bad-summary-tag">Modifier: +1</span>'));
     assert.ok(html.includes('<span class="bad-summary-tag">Modifier: -1</span>'));
     assert.ok(html.includes('<span class="bad-summary-tag">Proficient</span>'));

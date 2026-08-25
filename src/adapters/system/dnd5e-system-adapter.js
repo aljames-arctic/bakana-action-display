@@ -1980,16 +1980,17 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
      * @returns {Object}
      */
     #getCheckSummary(action, actor) {
-        let title = action.name ?? '';
+        const title = action.name ?? '';
         const img = action.img ?? '';
         const properties = [];
+        const headerTags = [];
         let subtitle = '';
 
         if (action.type === 'ability') {
             const ability = action.extra?.ability ?? action.id.replace(/^ability-/, '');
             const ablData = actor?.system?.abilities?.[ability];
             if (ablData?.value !== undefined) {
-                title = `${action.name ?? ''} (Score: ${ablData.value})`;
+                headerTags.push({ label: 'Score', value: String(ablData.value) });
             }
             subtitle = 'Ability Check / Saving Throw';
             if (ablData) {
@@ -2064,7 +2065,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
             const ability = action.extra?.ability ?? action.id.replace(/^(check|abilityCheck|ability)-/, '');
             const ablData = actor?.system?.abilities?.[ability];
             if (ablData?.value !== undefined) {
-                title = `${action.name ?? ''} (Score: ${ablData.value})`;
+                headerTags.push({ label: 'Score', value: String(ablData.value) });
             }
             subtitle = 'Ability Check';
             if (ablData) {
@@ -2077,6 +2078,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
             title,
             subtitle,
             img,
+            headerTags,
             properties,
             description: ''
         };
