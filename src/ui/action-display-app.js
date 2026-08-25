@@ -114,6 +114,24 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
     }
 
     /**
+     * Configure active tabs for a specific page (or the current active page).
+     * @param {Object} [tabConfig={}] Tab configuration for left and right columns
+     * @param {string|string[]|Object} [tabConfig.left] Left column tab selection
+     * @param {string|string[]|Object} [tabConfig.right] Right column tab selection
+     * @param {number} [page=this.activePage] Target page number
+     */
+    setTabs(tabConfig = {}, page = this.activePage) {
+        const parsedPage = Number(page ?? 1);
+        const pageNum = (!isNaN(parsedPage) && parsedPage > 0) ? parsedPage : 1;
+        if (tabConfig.left !== undefined) {
+            this.getTabColumn('left', pageNum).setState(tabConfig.left);
+        }
+        if (tabConfig.right !== undefined) {
+            this.getTabColumn('right', pageNum).setState(tabConfig.right);
+        }
+    }
+
+    /**
      * Navigate to the previous HUD page and re-render.
      */
     previousPage() {

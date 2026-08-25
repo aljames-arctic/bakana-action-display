@@ -45,7 +45,7 @@ Hooks.once('init', async () => {
     actionDisplay.init();
 
     // Expose the official API for other modules and macros
-    game.modules.get(MODULE_ID).api = actionDisplay;
+    game.modules.get(MODULE_ID).api = actionDisplay.api;
 });
 
 /**

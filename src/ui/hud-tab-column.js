@@ -366,6 +366,55 @@ export class HUDTabColumn {
     }
 
     /**
+     * Explicitly set tab state on this column (parents, focusedParent, subTypes).
+     * @param {Object|string|string[]} config Tab configuration
+     */
+    setState(config) {
+        if (!config) return;
+        if (typeof config === 'string') {
+            if (config === 'all') {
+                this.resetToDefault();
+            } else {
+                this.activeParents = new Set([config]);
+                this.focusedParent = config;
+                this.activeSubTypes = new Set();
+            }
+            return;
+        }
+        if (Array.isArray(config)) {
+            if (config.length === 0 || config.includes('all')) {
+                this.resetToDefault();
+            } else {
+                this.activeParents = new Set(config);
+                this.focusedParent = config[0];
+                this.activeSubTypes = new Set();
+            }
+            return;
+        }
+        if (typeof config === 'object') {
+            const rawParents = config.parents ?? (config.parent ? [config.parent] : (config.id ? [config.id] : null));
+            if (rawParents !== null) {
+                const arr = Array.isArray(rawParents) ? rawParents : (rawParents instanceof Set ? Array.from(rawParents) : [rawParents]);
+                if (arr.length === 0 || arr.includes('all')) {
+                    this.resetToDefault();
+                } else {
+                    this.activeParents = new Set(arr);
+                    this.focusedParent = config.focusedParent ?? config.parent ?? arr[0] ?? this.defaultParent;
+                }
+            } else if (config.focusedParent) {
+                this.focusedParent = config.focusedParent;
+                this.activeParents.add(config.focusedParent);
+            }
+
+            const rawSubs = config.subTypes ?? config.subType ?? config.subs;
+            if (rawSubs !== undefined) {
+                const subArr = Array.isArray(rawSubs) ? rawSubs : (rawSubs instanceof Set ? Array.from(rawSubs) : [rawSubs]);
+                this.activeSubTypes = new Set(subArr);
+            }
+        }
+    }
+
+    /**
      * Serialize tab state for caching per actor.
      * @returns {Object}
      */

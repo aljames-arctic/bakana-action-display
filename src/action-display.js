@@ -2,12 +2,13 @@ import { adapter } from './adapters/index.js';
 import { BaseSystemAdapter } from './adapters/system/base-system-adapter.js';
 import { BaseModuleAdapter } from './adapters/module/base-module-adapter.js';
 import { log } from './lib/logger.js';
+import { createAPI } from './api/index.js';
 
 /**
  * Core coordinator class for Bakana's Action Display.
  * Integrates directly with the unified Adapter singleton for Foundry, System, and Module layers.
  */
-class ActionDisplay {
+export class ActionDisplay {
     /**
      * Unified adapter instance.
      * @type {Adapter}
@@ -85,6 +86,27 @@ class ActionDisplay {
     toggleHandler = null;
 
     /**
+     * API instance delegate.
+     * @type {ActionDisplayAPI|null}
+     */
+    #api = null;
+
+    /**
+     * Official API instance.
+     * @type {ActionDisplayAPI}
+     */
+    get api() {
+        if (!this.#api) {
+            this.#api = createAPI(this);
+        }
+        return this.#api;
+    }
+
+    set api(instance) {
+        this.#api = instance;
+    }
+
+    /**
      * Run the pipeline to get actions for a given actor via the unified adapter.
      * @param {Actor} actor The actor to extract actions for
      * @returns {Promise<Action[]>} The processed actions
@@ -92,6 +114,16 @@ class ActionDisplay {
     async getActions(actor) {
         if (!actor) return [];
         return adapter.getActions(actor);
+    }
+
+    /**
+     * Open the HUD for a specific token with optional page and tab configurations.
+     * @param {*} tokenOrOptions Target token or configuration options
+     * @param {Object} [options] Options passed to the API
+     * @returns {Promise<ActionDisplayApp|null>}
+     */
+    async open(tokenOrOptions, options = {}) {
+        return this.api.open(tokenOrOptions, options);
     }
 
     /**
