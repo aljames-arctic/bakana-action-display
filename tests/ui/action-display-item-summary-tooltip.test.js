@@ -155,6 +155,25 @@ test('Dnd5eSystemAdapter.getItemSummary formats weapons, spells, feats, and Page
     assert.ok(saveSummary.properties.some(p => p.label === 'Modifier' && p.value === '+5'));
     assert.ok(saveSummary.properties.some(p => p.value === 'Proficient'));
 
+    // Test modern D&D 5e v4+ schema where ability.save is an object with { value, dc }
+    const v4Actor = {
+        system: {
+            abilities: {
+                cha: { mod: -1, value: 8, save: { value: -1, dc: 9, proficient: 0 } }
+            }
+        }
+    };
+    const chaSaveAction = new Action({
+        id: 'save-cha',
+        name: 'Charisma Save',
+        type: 'save',
+        page: 2,
+        extra: { ability: 'cha' }
+    });
+    const chaSaveSummary = await dnd5eAdapter.getItemSummary(chaSaveAction, null, v4Actor);
+    assert.equal(chaSaveSummary.subtitle, 'Saving Throw');
+    assert.ok(chaSaveSummary.properties.some(p => p.label === 'Modifier' && p.value === '-1'));
+
     const skillSummary = await dnd5eAdapter.getItemSummary(skillAction, null, mockActor);
     assert.ok(skillSummary.subtitle.includes('Skill Check'));
     assert.ok(skillSummary.properties.some(p => p.label === 'Modifier' && p.value === '+5'));

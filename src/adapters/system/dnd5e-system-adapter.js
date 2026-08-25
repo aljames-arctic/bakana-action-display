@@ -1990,9 +1990,20 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
             const ablData = actor?.system?.abilities?.[ability];
             subtitle = 'Saving Throw';
             if (ablData) {
-                const saveMod = ablData.save ?? ablData.mod ?? 0;
+                const rawSave = ablData.save;
+                let saveMod = 0;
+                if (typeof rawSave === 'number') {
+                    saveMod = rawSave;
+                } else if (typeof rawSave?.value === 'number') {
+                    saveMod = rawSave.value;
+                } else if (typeof rawSave?.total === 'number') {
+                    saveMod = rawSave.total;
+                } else if (typeof ablData.mod === 'number') {
+                    saveMod = ablData.mod;
+                }
                 properties.push({ label: 'Modifier', value: saveMod >= 0 ? `+${saveMod}` : `${saveMod}` });
-                if (ablData.saveProf?.hasProficiency) properties.push({ value: 'Proficient' });
+                const isProficient = Boolean(ablData.saveProf?.hasProficiency || rawSave?.proficient || ablData.proficient);
+                if (isProficient) properties.push({ value: 'Proficient' });
             }
         } else if (action.type === 'skill') {
             const skillId = action.id.replace(/^skill-/, '');
