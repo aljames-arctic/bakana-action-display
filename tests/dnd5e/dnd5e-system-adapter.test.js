@@ -1623,10 +1623,12 @@ test('Dnd5eSystemAdapter and Dnd5eSystemTabFilterManager do not match spell comp
     assert.equal(filterManager.matchesEconomyTabs(fearAction, filterContextUnbanned), true, 'Fear visible when unbanned');
 });
 
+test('Dnd5eSystemContextModifier sorts components sub-tabs strictly in order: vocal -> somatic -> material', () => {
+    const adapter = new Dnd5eSystemAdapter();
+    const orderVocal = adapter.getActionSubTabSortOrder('components', 'vocal');
+    const orderSomatic = adapter.getActionSubTabSortOrder('components', 'somatic');
+    const orderMaterial = adapter.getActionSubTabSortOrder('components', 'material');
 
-
-
-
-
-
-
+    assert.ok(orderVocal < orderSomatic, 'vocal should come before somatic');
+    assert.ok(orderSomatic < orderMaterial, 'somatic should come before material');
+});

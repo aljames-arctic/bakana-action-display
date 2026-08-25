@@ -534,16 +534,19 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         for (const parent of actionTypes) {
             const skipAll = adapter.isExclusionTab(parent.id);
 
-            if (parent.subTabs.length > 0 && !skipAll) {
-                const isActive = parent.id === this.rightTabs.focusedParent;
-                const validSubIds = parent.getAllSubTabIds();
-                const activeSubsForParent = Array.from(this.rightTabs.activeSubTypes).filter(id => validSubIds.has(id));
+            if (parent.subTabs.length > 0) {
+                if (!skipAll) {
+                    const isActive = parent.id === this.rightTabs.focusedParent;
+                    const validSubIds = parent.getAllSubTabIds();
+                    const activeSubsForParent = Array.from(this.rightTabs.activeSubTypes).filter(id => validSubIds.has(id));
 
-                parent.addSubTab({
-                    id: 'all',
-                    label: adapter.getActionSubTabLabel('all'),
-                    active: isActive && activeSubsForParent.length === 0
-                });
+                    parent.addSubTab({
+                        id: 'all',
+                        label: adapter.getActionSubTabLabel('all'),
+                        active: isActive && activeSubsForParent.length === 0
+                    });
+                }
+
                 parent.subTabs.sort((a, b) => adapter.getActionSubTabSortOrder(parent.id, a.id) - adapter.getActionSubTabSortOrder(parent.id, b.id));
 
                 for (const sub of parent.subTabs) {
