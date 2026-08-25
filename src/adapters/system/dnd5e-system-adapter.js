@@ -443,8 +443,8 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         if (tool.label) return localize(tool.label, tool.label);
 
         // 1. Try D&D 5e Trait.keyLabel API
-        const traitLabel = globalThis.dnd5e?.documents?.Trait?.keyLabel?.(toolId, { trait: 'tool' })
-            ?? globalThis.dnd5e?.documents?.Trait?.keyLabel?.(toolId);
+        const traitLabel = dnd5e?.documents?.Trait?.keyLabel?.(toolId, { trait: 'tool' })
+            ?? dnd5e?.documents?.Trait?.keyLabel?.(toolId);
         if (traitLabel) return localize(traitLabel, traitLabel);
 
         // 2. Try resolving via fromUuidSync if toolId or config ID is a Compendium UUID
@@ -453,7 +453,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
             : (cfg?.tools?.[toolId]?.id ?? cfg?.toolIds?.[toolId]);
         if (compendiumId && typeof compendiumId === 'string' && compendiumId.startsWith('Compendium.')) {
             try {
-                const doc = globalThis.fromUuidSync?.(compendiumId);
+                const doc = this.fromUuidSync(compendiumId);
                 if (doc?.name) return doc.name;
             } catch (err) {
                 log.debug(`Dnd5eSystemAdapter.#getToolLabel | fromUuidSync failed for "${compendiumId}":`, err);

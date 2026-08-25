@@ -355,6 +355,9 @@ globalThis.foundry = {
             if (options.relative?.items) {
                 return options.relative.items.find(i => i.uuid === uuid || i.id === uuid) ?? null;
             }
+            if (typeof globalThis.fromUuidSync === 'function') {
+                return globalThis.fromUuidSync(uuid, options);
+            }
             return null;
         },
         duplicate(obj) {

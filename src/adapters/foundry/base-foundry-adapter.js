@@ -230,9 +230,9 @@ export class BaseFoundryAdapter {
         if (!user) return null;
         const isGM = Boolean(user.isGM);
         const userRole = user.role ?? null;
-        const assistantRole = globalThis.CONST?.USER_ROLES?.ASSISTANT ?? 3;
-        const trustedRole = globalThis.CONST?.USER_ROLES?.TRUSTED ?? 2;
-        const playerRole = globalThis.CONST?.USER_ROLES?.PLAYER ?? 1;
+        const assistantRole = CONST?.USER_ROLES?.ASSISTANT ?? 3;
+        const trustedRole = CONST?.USER_ROLES?.TRUSTED ?? 2;
+        const playerRole = CONST?.USER_ROLES?.PLAYER ?? 1;
 
         if (isGM || (userRole !== null && userRole >= assistantRole)) {
             return USER_PERMISSION_TIERS.GM;
@@ -261,7 +261,7 @@ export class BaseFoundryAdapter {
             return true;
         }
 
-        const ownerLevel = globalThis.CONST?.DOCUMENT_OWNERSHIP_LEVELS?.OWNER ?? 3;
+        const ownerLevel = CONST?.DOCUMENT_OWNERSHIP_LEVELS?.OWNER ?? 3;
 
         // Test actor document permissions
         if (actor) {

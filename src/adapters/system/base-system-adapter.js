@@ -21,7 +21,7 @@ export class BaseSystemAdapter {
     constructor(systemId, isSupported = false, foundry = null) {
         this.systemId = systemId;
         this.isSupported = Boolean(isSupported);
-        this.foundry = foundry ?? new BaseFoundryAdapter();
+        this.foundry = (foundry && typeof foundry !== 'string') ? foundry : new BaseFoundryAdapter();
         this.contextMenuManager = new BaseSystemContextMenuManager(this);
         this.filterManager = new BaseSystemTabFilterManager(this);
         this.contextModifier = new BaseSystemContextModifier(this);

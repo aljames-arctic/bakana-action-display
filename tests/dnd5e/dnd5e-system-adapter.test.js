@@ -276,7 +276,8 @@ test('Dnd5eSystemAdapter resolves clean names for vehicle, jeweler, leatherworke
     };
 
     // Setup fromUuidSync mock
-    globalThis.fromUuidSync = (uuid) => {
+    const origFromUuidSync = foundry.utils.fromUuidSync;
+    foundry.utils.fromUuidSync = (uuid) => {
         if (uuid === 'Compendium.dnd5e.equipment24.Item.phbtulJewelersTo') {
             return { name: "Jeweler's Tools" };
         }
@@ -316,7 +317,7 @@ test('Dnd5eSystemAdapter resolves clean names for vehicle, jeweler, leatherworke
 
     // Clean up globals
     delete globalThis.dnd5e;
-    delete globalThis.fromUuidSync;
+    foundry.utils.fromUuidSync = origFromUuidSync;
 });
 
 test('Dnd5eSystemAdapter modifyContext triggers split layout exclusively on Page 2 for ability/skill checks', () => {

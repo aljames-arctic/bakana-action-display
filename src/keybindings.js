@@ -144,6 +144,6 @@ export function registerKeybindings() {
             return toggleHUD();
         },
         restricted: false,
-        precedence: globalThis.CONST?.KEYBINDING_PRECEDENCE?.NORMAL ?? 0
+        precedence: CONST?.KEYBINDING_PRECEDENCE?.NORMAL ?? 0
     });
 }
