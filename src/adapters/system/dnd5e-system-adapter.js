@@ -1985,7 +1985,30 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         const properties = [];
         let subtitle = '';
 
-        if (action.type === 'save') {
+        if (action.type === 'ability') {
+            const ability = action.extra?.ability ?? action.id.replace(/^ability-/, '');
+            const ablData = actor?.system?.abilities?.[ability];
+            subtitle = 'Ability Check / Saving Throw';
+            if (ablData) {
+                const mod = ablData.mod ?? 0;
+                const rawSave = ablData.save;
+                let saveMod = 0;
+                if (typeof rawSave === 'number') {
+                    saveMod = rawSave;
+                } else if (typeof rawSave?.value === 'number') {
+                    saveMod = rawSave.value;
+                } else if (typeof rawSave?.total === 'number') {
+                    saveMod = rawSave.total;
+                } else if (typeof ablData.mod === 'number') {
+                    saveMod = ablData.mod;
+                }
+                if (ablData.value !== undefined) properties.push({ label: 'Score', value: String(ablData.value) });
+                properties.push({ label: 'Check', value: mod >= 0 ? `+${mod}` : `${mod}` });
+                properties.push({ label: 'Save', value: saveMod >= 0 ? `+${saveMod}` : `${saveMod}` });
+                const isProficient = Boolean(ablData.saveProf?.hasProficiency || rawSave?.proficient || ablData.proficient);
+                if (isProficient) properties.push({ value: 'Save Proficient' });
+            }
+        } else if (action.type === 'save') {
             const ability = action.extra?.ability ?? action.id.replace(/^save-/, '');
             const ablData = actor?.system?.abilities?.[ability];
             subtitle = 'Saving Throw';
@@ -2030,13 +2053,13 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                 }
             }
         } else {
-            const ability = action.extra?.ability ?? action.id.replace(/^(check|ability)-/, '');
+            const ability = action.extra?.ability ?? action.id.replace(/^(check|abilityCheck|ability)-/, '');
             const ablData = actor?.system?.abilities?.[ability];
             subtitle = 'Ability Check';
             if (ablData) {
                 const mod = ablData.mod ?? 0;
-                properties.push({ label: 'Modifier', value: mod >= 0 ? `+${mod}` : `${mod}` });
                 if (ablData.value !== undefined) properties.push({ label: 'Score', value: String(ablData.value) });
+                properties.push({ label: 'Modifier', value: mod >= 0 ? `+${mod}` : `${mod}` });
             }
         }
 

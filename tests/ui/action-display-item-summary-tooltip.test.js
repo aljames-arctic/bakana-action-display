@@ -123,10 +123,17 @@ test('Dnd5eSystemAdapter.getItemSummary formats weapons, spells, feats, and Page
             }
         }
     };
-    const checkAction = new Action({
+    const abilityAction = new Action({
         id: 'ability-dex',
         name: 'Dexterity',
         type: 'ability',
+        page: 2,
+        extra: { ability: 'dex' }
+    });
+    const checkAction = new Action({
+        id: 'check-dex',
+        name: 'Dexterity Check',
+        type: 'abilityCheck',
         page: 2,
         extra: { ability: 'dex' }
     });
@@ -144,8 +151,16 @@ test('Dnd5eSystemAdapter.getItemSummary formats weapons, spells, feats, and Page
         page: 2
     });
 
+    const abilitySummary = await dnd5eAdapter.getItemSummary(abilityAction, null, mockActor);
+    assert.equal(abilitySummary.title, 'Dexterity');
+    assert.equal(abilitySummary.subtitle, 'Ability Check / Saving Throw');
+    assert.ok(abilitySummary.properties.some(p => p.label === 'Score' && p.value === '16'));
+    assert.ok(abilitySummary.properties.some(p => p.label === 'Check' && p.value === '+3'));
+    assert.ok(abilitySummary.properties.some(p => p.label === 'Save' && p.value === '+5'));
+    assert.ok(abilitySummary.properties.some(p => p.value === 'Save Proficient'));
+
     const checkSummary = await dnd5eAdapter.getItemSummary(checkAction, null, mockActor);
-    assert.equal(checkSummary.title, 'Dexterity');
+    assert.equal(checkSummary.title, 'Dexterity Check');
     assert.equal(checkSummary.subtitle, 'Ability Check');
     assert.ok(checkSummary.properties.some(p => p.label === 'Modifier' && p.value === '+3'));
     assert.ok(checkSummary.properties.some(p => p.label === 'Score' && p.value === '16'));
