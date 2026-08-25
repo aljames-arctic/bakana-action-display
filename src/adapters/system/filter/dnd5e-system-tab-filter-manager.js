@@ -2,9 +2,9 @@ import { BaseSystemTabFilterManager } from './base-system-tab-filter-manager.js'
 import { TabRef } from '../../../ui/tab-ref.js';
 
 const COMPONENT_NAMES = {
-    'vocal': ['vocal', 'verbal', 'ver', 'v'],
-    'somatic': ['somatic', 'som', 's'],
-    'material': ['material', 'mat', 'm']
+    'vocal': ['vocal', 'verbal'],
+    'somatic': ['somatic'],
+    'material': ['material']
 };
 
 const COMPONENT_SHORT_KEYS = {
@@ -24,7 +24,7 @@ function docHasComponent(doc, component) {
     const names = COMPONENT_NAMES[component] ?? [component];
     const shortKey = COMPONENT_SHORT_KEYS[component];
 
-    // 1. Check system.properties (Set of full spell property names: 'vocal', 'somatic', 'material', etc.)
+    // 1. Check system.properties (Set of full spell property names: 'vocal', 'somatic', 'material')
     const props = doc.system?.properties ?? doc.properties ?? doc.spell?.system?.properties ?? doc.spell?.properties;
     if (props) {
         if (names.some(name => props.has ? props.has(name) : props.includes?.(name))) return true;
@@ -35,13 +35,6 @@ function docHasComponent(doc, component) {
     if (comps) {
         if (names.some(name => comps[name] === true)) return true;
         if (shortKey && comps[shortKey] === true) return true;
-    }
-
-    // 3. Check system.materials (description string, consumed flag, or cost)
-    if (component === 'material') {
-        const materials = doc.system?.materials ?? doc.materials ?? doc.spell?.system?.materials ?? doc.spell?.materials;
-        if (materials?.value && String(materials.value).trim().length > 0) return true;
-        if (materials?.consumed || (typeof materials?.cost === 'number' && materials.cost > 0)) return true;
     }
 
     return false;
