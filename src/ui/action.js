@@ -18,7 +18,7 @@ export class Action {
      * @param {boolean} [options.available=true] Action availability state
      * @param {Object} [options.uses] Resource tracking object { available, max, isUpcast, ... }
      * @param {Function|null} [options.roll=null] Async roll callback
-     * @param {Item|null} [options.originalItem=null] Foundry Item instance
+     * @param {number} [options.page=1] Target pagination page (1-indexed)
      * @param {Action[]} [options.subactions=[]] Array of child Action instances
      * @param {Object|null} [options.originalActivity=null] Underlying system Activity instance
      * @param {Object|null} [options.linkedAction=null] Linked document/item data (e.g. compendium spell)
@@ -30,6 +30,7 @@ export class Action {
         name,
         type = '',
         img = '',
+        page = 1,
         right = [TabRef.from('all')],
         left = [],
         itemCategories = null,
@@ -49,6 +50,7 @@ export class Action {
         this.name = name;
         this.type = type;
         this.img = img;
+        this.page = Number(page) || 1;
         this.left = left;
         this.right = right;
         this.itemCategories = itemCategories;

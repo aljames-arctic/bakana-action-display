@@ -307,6 +307,7 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
                 name,
                 type: 'ability',
                 img,
+                page: 2,
                 right: [TabRef.from('ability', abl)],
                 left: subactions.some(s => s.type === 'save') ? ['savingThrow'] : ['abilityCheck'],
                 itemCategories: subactions.some(s => s.type === 'save') ? [['savingThrow'], ['abilityCheck']] : [['abilityCheck']],
@@ -314,9 +315,8 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
                 uses: { available: null, max: null },
                 subactions,
                 collapseDropdownIfSingle: true,
-                extra: { page: 2, ability: abl }
+                extra: { ability: abl }
             });
-            coreAction.page = 2;
             checkActions.push(coreAction);
         }
 
@@ -331,6 +331,7 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
                 name: label,
                 type: 'skill',
                 img: skillImg,
+                page: 2,
                 right: [TabRef.from('ability', abl)],
                 left: ['abilityCheck'],
                 available: true,
@@ -339,9 +340,8 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
                     const rollEvent = this._createRollEvent(event);
                     return actor.rollSkill?.(skillId, { event: rollEvent });
                 },
-                extra: { page: 2, ability: abl }
+                extra: { ability: abl }
             });
-            skillAction.page = 2;
             checkActions.push(skillAction);
 
             if (skill.subSkills) {
@@ -353,6 +353,7 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
                         name: subLabel,
                         type: 'skill',
                         img: abilityIcons[subAbl] ?? skillImg,
+                        page: 2,
                         right: [TabRef.from('ability', subAbl)],
                         left: ['abilityCheck'],
                         available: true,
@@ -361,9 +362,8 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
                             const rollEvent = this._createRollEvent(event);
                             return actor.rollSkill?.(`${skillId}.subSkills.${subId}`, { event: rollEvent });
                         },
-                        extra: { page: 2, ability: subAbl }
+                        extra: { ability: subAbl }
                     });
-                    subAction.page = 2;
                     checkActions.push(subAction);
                 }
             }

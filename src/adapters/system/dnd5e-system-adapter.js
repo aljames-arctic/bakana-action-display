@@ -337,6 +337,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                 name,
                 type: 'ability',
                 img,
+                page: 2,
                 right: [TabRef.from('ability', abl)],
                 left: ['savingThrow'],
                 itemCategories: [['savingThrow'], ['abilityCheck']],
@@ -344,9 +345,8 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                 uses: { available: null, max: null },
                 subactions: [saveSub, checkSub],
                 collapseDropdownIfSingle: true,
-                extra: { page: 2, ability: abl }
+                extra: { ability: abl }
             });
-            coreAction.page = 2;
             checkActions.push(coreAction);
         }
 
@@ -362,6 +362,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                 name: label,
                 type: 'skill',
                 img: skillImg,
+                page: 2,
                 right: [TabRef.from('ability', abl)],
                 left: ['abilityCheck'],
                 available: true,
@@ -371,9 +372,8 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                     return actor.rollSkill?.({ skill: skillId, event: rollEvent })
                         ?? actor.rollSkill?.(skillId, { event: rollEvent });
                 },
-                extra: { page: 2, ability: abl }
+                extra: { ability: abl }
             });
-            skillAction.page = 2;
             checkActions.push(skillAction);
         }
 
@@ -389,6 +389,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                 name: label,
                 type: 'tool',
                 img: toolImg,
+                page: 2,
                 right: [TabRef.from('ability', abl)],
                 left: ['tool'],
                 available: true,
@@ -400,9 +401,8 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                         ?? actor.rollTool?.({ tool: toolId, event: rollEvent })
                         ?? actor.rollTool?.(toolId, { event: rollEvent });
                 },
-                extra: { page: 2, ability: abl, toolId }
+                extra: { ability: abl, toolId }
             });
-            toolAction.page = 2;
             checkActions.push(toolAction);
         }
 
@@ -1849,7 +1849,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
     async getItemSummary(action, item = action?.originalItem, actor = null) {
         if (!action && !item) return null;
 
-        const isPage2Check = action?.page === 2 || action?.extra?.page === 2;
+        const isPage2Check = action?.page === 2;
         const isCoreCheck = (isPage2Check && ['ability', 'abilityCheck', 'save', 'skill', 'tool'].includes(action?.type))
             || (!action?.originalItem && ['ability', 'abilityCheck', 'save', 'skill', 'tool'].includes(action?.type));
         if (isCoreCheck) {

@@ -175,6 +175,7 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
             name: localize('PF2E.SavesFortitude', 'Fortitude'),
             type: 'save',
             img: 'icons/svg/shield.svg',
+            page: 2,
             right: [TabRef.from('ability', 'con')],
             left: ['savingThrow'],
             available: true,
@@ -187,9 +188,8 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
                     return actor.system.saves.fortitude.roll({ event: rollEvent });
                 }
             },
-            extra: { page: 2, ability: 'con' }
+            extra: { ability: 'con' }
         });
-        fortitude.page = 2;
         checkActions.push(fortitude);
 
         const reflex = new Action({
@@ -197,6 +197,7 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
             name: localize('PF2E.SavesReflex', 'Reflex'),
             type: 'save',
             img: 'icons/svg/wing.svg',
+            page: 2,
             right: [TabRef.from('ability', 'dex')],
             left: ['savingThrow'],
             available: true,
@@ -209,9 +210,8 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
                     return actor.system.saves.reflex.roll({ event: rollEvent });
                 }
             },
-            extra: { page: 2, ability: 'dex' }
+            extra: { ability: 'dex' }
         });
-        reflex.page = 2;
         checkActions.push(reflex);
 
         const will = new Action({
@@ -219,6 +219,7 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
             name: localize('PF2E.SavesWill', 'Will'),
             type: 'save',
             img: 'icons/svg/eye.svg',
+            page: 2,
             right: [TabRef.from('ability', 'wis')],
             left: ['savingThrow'],
             available: true,
@@ -231,9 +232,8 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
                     return actor.system.saves.will.roll({ event: rollEvent });
                 }
             },
-            extra: { page: 2, ability: 'wis' }
+            extra: { ability: 'wis' }
         });
-        will.page = 2;
         checkActions.push(will);
 
         const perception = new Action({
@@ -241,6 +241,7 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
             name: localize('PF2E.PerceptionLabel', 'Perception'),
             type: 'skill',
             img: 'icons/svg/eye.svg',
+            page: 2,
             right: [TabRef.from('ability', 'wis')],
             left: ['abilityCheck'],
             available: true,
@@ -250,9 +251,8 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
                 return actor.perception?.roll?.({ event: rollEvent }) ??
                     actor.system?.attributes?.perception?.roll?.({ event: rollEvent });
             },
-            extra: { page: 2, ability: 'wis' }
+            extra: { ability: 'wis' }
         });
-        perception.page = 2;
         checkActions.push(perception);
 
         // 2. Skills
@@ -284,18 +284,20 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
             cha: 'icons/svg/paralysis.svg'
         };
 
-        const skills = actor.skills ?? actor.system?.skills ?? {};
-        for (const [skillKey, skill] of Object.entries(skills)) {
-            const slug = skill.slug ?? skillKey;
-            const abl = skill.attribute ?? skill.ability ?? PF2E_SKILL_ABILITY_MAP[slug] ?? 'int';
-            const label = skill.label ?? skill.name ?? slug;
-            const skillImg = abilityIcons[abl] ?? 'icons/svg/d20.svg';
+        const actorSkills = actor.skills ?? actor.system?.skills ?? {};
+        const skillEntries = actorSkills instanceof Map ? Array.from(actorSkills.entries()) : Object.entries(actorSkills);
 
+        for (const [key, skill] of skillEntries) {
+            const slug = skill.slug ?? key;
+            const abl = PF2E_SKILL_ABILITY_MAP[slug] ?? skill.ability ?? 'dex';
+            const label = skill.label ?? skill.name ?? CONFIG?.PF2E?.skills?.[slug] ?? slug;
+            const skillImg = abilityIcons[abl] ?? 'icons/svg/d20.svg';
             const skillAction = new Action({
                 id: `skill-${slug}`,
                 name: label,
                 type: 'skill',
                 img: skillImg,
+                page: 2,
                 right: [TabRef.from('ability', abl)],
                 left: ['abilityCheck'],
                 available: true,
@@ -313,9 +315,8 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
                         }
                     }
                 },
-                extra: { page: 2, ability: abl }
+                extra: { ability: abl }
             });
-            skillAction.page = 2;
             checkActions.push(skillAction);
         }
 
