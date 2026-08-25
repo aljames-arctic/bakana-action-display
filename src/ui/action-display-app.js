@@ -114,19 +114,17 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
     }
 
     /**
-     * Configure active tabs for a specific page (or the current active page).
-     * @param {Object} [tabConfig={}] Tab configuration for left and right columns
-     * @param {string|string[]|Object} [tabConfig.left] Left column tab selection
-     * @param {string|string[]|Object} [tabConfig.right] Right column tab selection
-     * @param {number} [page=this.activePage] Target page number
+     * Configure active tabs for a specific page using normalized tab state.
+     * @param {ConcreteTabSelectionConfig} tabConfig Normalized tab configuration
+     * @param {number} [page=this.activePage] Concrete target page number
      */
-    setTabs(tabConfig = {}, page = this.activePage) {
-        const parsedPage = Number(page ?? 1);
-        const pageNum = (!isNaN(parsedPage) && parsedPage > 0) ? parsedPage : 1;
-        if (tabConfig.left !== undefined) {
+    setTabs(tabConfig, page = this.activePage) {
+        if (!tabConfig) return;
+        const pageNum = Number(page) || 1;
+        if (tabConfig.left) {
             this.getTabColumn('left', pageNum).setState(tabConfig.left);
         }
-        if (tabConfig.right !== undefined) {
+        if (tabConfig.right) {
             this.getTabColumn('right', pageNum).setState(tabConfig.right);
         }
     }

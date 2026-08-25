@@ -1,5 +1,11 @@
 import { ActionDisplayApp } from '../ui/action-display-app.js';
 import { log } from '../lib/logger.js';
+import {
+    normalizeToken,
+    normalizeActor,
+    normalizePage,
+    normalizeTabConfig
+} from './api-normalizer.js';
 
 /**
  * Official Public API for Bakana's Action Display.
@@ -30,47 +36,21 @@ export class ActionDisplayAPI {
     }
 
     /**
-     * Resolve a token from various polymorphic input types.
-     * Normalizes Token, TokenDocument, Actor, token ID string, or token UUID string into a concrete Token object.
+     * Resolve a token from external polymorphic input.
      * @param {*} target The target token, document, actor, ID, or UUID
-     * @returns {Token|null}
+     * @returns {Token|null} Concrete Token instance or null
      */
     resolveToken(target) {
-        if (!target) return null;
+        return normalizeToken(target);
+    }
 
-        // Concrete Token placeable object
-        if (target.actor && target.document) {
-            return target;
-        }
-
-        // TokenDocument
-        if (target.object && target.actor) {
-            return target.object;
-        }
-
-        // Actor
-        if (typeof target.getActiveTokens === 'function') {
-            const active = target.getActiveTokens();
-            if (active && active.length > 0) return active[0];
-            return canvas?.tokens?.placeables?.find(t => t.actor === target) ?? null;
-        }
-
-        // String ID or UUID
-        if (typeof target === 'string') {
-            const byId = canvas?.tokens?.get?.(target);
-            if (byId) return byId;
-
-            if (typeof fromUuidSync === 'function') {
-                const doc = fromUuidSync(target);
-                if (doc?.object) return doc.object;
-                if (typeof doc?.getActiveTokens === 'function') {
-                    const active = doc.getActiveTokens();
-                    if (active && active.length > 0) return active[0];
-                }
-            }
-        }
-
-        return null;
+    /**
+     * Resolve an actor from external polymorphic input.
+     * @param {*} target The target actor, token, document, ID, or UUID
+     * @returns {Actor|null} Concrete Actor instance or null
+     */
+    resolveActor(target) {
+        return normalizeActor(target);
     }
 
     /**
@@ -81,29 +61,20 @@ export class ActionDisplayAPI {
      * - `api.open({ token, page: 2, tabs: { left: 'spells' } })`
      * - `api.open(token, { page: 2, leftTabs: 'spells', rightTabs: 'bonus' })`
      *
-     * @param {Token|TokenDocument|Actor|string|Object} tokenOrOptions Token instance/identifier or full options object
+     * @param {*} tokenOrOptions Token instance/identifier or options object
      * @param {Object} [options={}] Additional configuration options
-     * @param {Token|TokenDocument|Actor|string} [options.token] Target token if not passed as first argument
-     * @param {number} [options.page] Page number to open to (e.g. 1, 2, 3)
-     * @param {Object} [options.tabs] Tab selections for left and/or right columns
-     * @param {string|string[]|Object} [options.tabs.left] Left column tab selection
-     * @param {string|string[]|Object} [options.tabs.right] Right column tab selection
-     * @param {string|string[]|Object} [options.leftTabs] Shortcut for options.tabs.left
-     * @param {string|string[]|Object} [options.rightTabs] Shortcut for options.tabs.right
-     * @param {boolean} [options.render=true] Whether to render the application
-     * @param {boolean} [options.force=false] Force creating a new HUD application instance
      * @returns {Promise<ActionDisplayApp|null>} The opened ActionDisplayApp instance
      */
     async open(tokenOrOptions, options = {}) {
         let rawToken = tokenOrOptions;
-        let config = options;
+        let rawConfig = options;
 
         if (tokenOrOptions && typeof tokenOrOptions === 'object' && !tokenOrOptions.actor && !tokenOrOptions.document && typeof tokenOrOptions.getActiveTokens !== 'function' && !(tokenOrOptions instanceof Set) && (tokenOrOptions.token !== undefined || tokenOrOptions.page !== undefined || tokenOrOptions.tabs !== undefined || tokenOrOptions.leftTabs !== undefined || tokenOrOptions.rightTabs !== undefined)) {
-            config = tokenOrOptions;
-            rawToken = config.token;
+            rawConfig = tokenOrOptions;
+            rawToken = rawConfig.token;
         }
 
-        const resolvedToken = this.resolveToken(rawToken);
+        const resolvedToken = normalizeToken(rawToken);
         const token = resolvedToken
             ?? canvas?.tokens?.controlled?.[0]
             ?? (typeof game.user?.character?.getActiveTokens === 'function' ? game.user.character.getActiveTokens()[0] : null)
@@ -115,15 +86,13 @@ export class ActionDisplayAPI {
             return null;
         }
 
-        const targetPage = config.page !== undefined ? Number(config.page) : null;
-        const tabConfig = { ...(config.tabs ?? {}) };
-        if (config.leftTabs !== undefined) tabConfig.left = config.leftTabs;
-        if (config.rightTabs !== undefined) tabConfig.right = config.rightTabs;
+        const targetPage = normalizePage(rawConfig.page);
+        const tabConfig = normalizeTabConfig(rawConfig);
 
         let app = this._actionDisplay.activeApp;
         const isSameToken = Boolean(app && (app.token === token || app.token?.id === token.id));
 
-        if (!app || !isSameToken || config.force) {
+        if (!app || !isSameToken || Boolean(rawConfig.force)) {
             if (app) {
                 if (app.element) app.element.style.display = 'none';
                 await app.close();
@@ -133,15 +102,15 @@ export class ActionDisplayAPI {
             this._actionDisplay.activeApp = app;
         }
 
-        if (targetPage !== null && !isNaN(targetPage) && targetPage > 0) {
+        if (targetPage !== null) {
             app.activePage = targetPage;
         }
 
-        if (tabConfig.left !== undefined || tabConfig.right !== undefined) {
+        if (tabConfig.left || tabConfig.right) {
             app.setTabs(tabConfig, app.activePage);
         }
 
-        if (config.render !== false) {
+        if (rawConfig.render !== false) {
             await app.render(true);
             app.bringToFront?.();
         }
@@ -164,14 +133,14 @@ export class ActionDisplayAPI {
 
     /**
      * Toggle the HUD for a specific token or the active/controlled token.
-     * @param {Token|TokenDocument|Actor|string|Object} [tokenOrOptions] Target token or options
+     * @param {*} [tokenOrOptions] Target token or options
      * @param {Object} [options] Options passed to open() if toggling open
      * @returns {Promise<boolean>} True if opened, false if closed
      */
     async toggle(tokenOrOptions, options = {}) {
         if (this.isOpen()) {
             const currentToken = this._actionDisplay.activeApp?.token;
-            const targetToken = tokenOrOptions ? this.resolveToken(tokenOrOptions?.token ?? tokenOrOptions) : null;
+            const targetToken = tokenOrOptions ? normalizeToken(tokenOrOptions?.token ?? tokenOrOptions) : null;
             if (!targetToken || targetToken === currentToken || targetToken.id === currentToken?.id) {
                 await this.close();
                 return false;
@@ -183,14 +152,14 @@ export class ActionDisplayAPI {
 
     /**
      * Set the active page on the currently open HUD.
-     * @param {number} page Page number
+     * @param {*} page Page number
      * @returns {Promise<ActionDisplayApp|null>}
      */
     async setPage(page) {
         const app = this._actionDisplay?.activeApp;
         if (!app) return null;
-        const pageNum = Number(page);
-        if (!isNaN(pageNum) && pageNum > 0) {
+        const pageNum = normalizePage(page);
+        if (pageNum !== null) {
             app.activePage = pageNum;
             await app.render(false);
         }
@@ -199,32 +168,28 @@ export class ActionDisplayAPI {
 
     /**
      * Set tab selections on the currently open HUD.
-     * @param {Object} tabConfig Tab configuration for left and/or right columns
-     * @param {number} [page] Optional page to configure (defaults to activePage)
+     * @param {Object} rawTabs Tab configuration for left and/or right columns
+     * @param {*} [page] Optional page to configure (defaults to activePage)
      * @returns {Promise<ActionDisplayApp|null>}
      */
-    async setTabs(tabConfig, page) {
+    async setTabs(rawTabs, page) {
         const app = this._actionDisplay?.activeApp;
         if (!app) return null;
-        app.setTabs(tabConfig, page ?? app.activePage);
+        const tabConfig = normalizeTabConfig({ tabs: rawTabs });
+        const targetPage = normalizePage(page) ?? app.activePage;
+        app.setTabs(tabConfig, targetPage);
         await app.render(false);
         return app;
     }
 
     /**
      * Get processed actions for a given actor or token via the unified adapter pipeline.
-     * @param {Actor|Token|TokenDocument|string} actorOrToken
+     * @param {*} actorOrToken
      * @returns {Promise<Action[]>}
      */
     async getActions(actorOrToken) {
-        if (!actorOrToken) return [];
-        let actor = actorOrToken;
-        if (actorOrToken.actor) {
-            actor = actorOrToken.actor;
-        } else {
-            const token = this.resolveToken(actorOrToken);
-            if (token?.actor) actor = token.actor;
-        }
+        const actor = normalizeActor(actorOrToken);
+        if (!actor) return [];
         return this._actionDisplay?.getActions(actor) ?? [];
     }
 }

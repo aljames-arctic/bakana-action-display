@@ -2,7 +2,13 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import '../setup.js';
 import { ActionDisplay } from '../../src/action-display.js';
-import { ActionDisplayAPI, createAPI } from '../../src/api/index.js';
+import {
+    ActionDisplayAPI,
+    createAPI,
+    normalizePage,
+    normalizeTabColumnState,
+    normalizeTabConfig
+} from '../../src/api/index.js';
 import { ActionDisplayApp } from '../../src/ui/action-display-app.js';
 import { adapter } from '../../src/adapters/index.js';
 
@@ -140,3 +146,52 @@ test('ActionDisplayAPI close, toggle, setPage, setTabs, and getActions methods',
     const actions = await api.getActions(mockToken);
     assert.ok(Array.isArray(actions));
 });
+
+test('API normalizers strictly convert loose external parameters into concrete contracts', () => {
+    // Page normalizer
+    assert.equal(normalizePage(undefined), null);
+    assert.equal(normalizePage('2'), 2);
+    assert.equal(normalizePage(3.7), 3);
+    assert.equal(normalizePage(-1), null);
+    assert.equal(normalizePage('abc'), null);
+
+    // Tab column state normalizer
+    assert.equal(normalizeTabColumnState(undefined), null);
+    assert.deepEqual(normalizeTabColumnState('spells'), {
+        parents: ['spells'],
+        focusedParent: 'spells',
+        subTypes: []
+    });
+    assert.deepEqual(normalizeTabColumnState('all'), {
+        parents: ['all'],
+        focusedParent: 'all',
+        subTypes: []
+    });
+    assert.deepEqual(normalizeTabColumnState(['actions', 'bonus']), {
+        parents: ['actions', 'bonus'],
+        focusedParent: 'actions',
+        subTypes: []
+    });
+    assert.deepEqual(normalizeTabColumnState({ parent: 'spells', subTypes: ['level-1', 'level-2'] }), {
+        parents: ['spells'],
+        focusedParent: 'spells',
+        subTypes: ['level-1', 'level-2']
+    });
+
+    // Tab config normalizer
+    const config = normalizeTabConfig({
+        leftTabs: 'spells',
+        rightTabs: { parent: 'bonus', subTypes: ['level-1'] }
+    });
+    assert.deepEqual(config.left, {
+        parents: ['spells'],
+        focusedParent: 'spells',
+        subTypes: []
+    });
+    assert.deepEqual(config.right, {
+        parents: ['bonus'],
+        focusedParent: 'bonus',
+        subTypes: ['level-1']
+    });
+});
+
