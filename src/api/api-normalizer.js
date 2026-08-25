@@ -1,7 +1,6 @@
 /**
  * Entry-boundary normalizers for external API inputs.
- * Normalizes polymorphic or loose external arguments into strict, concrete data contracts
- * before passing them to internal module classes.
+ * Validates and converts unverified inputs into strict concrete data contracts.
  */
 
 /**
@@ -35,11 +34,11 @@
 
 /**
  * @typedef {Object} UnverifiedTabSelectionConfig
- * @property {Object} [tabs]
+ * @property {Object} [tabs] Tab selections for left and right columns
  * @property {UnverifiedTabColumnInput} [tabs.left]
  * @property {UnverifiedTabColumnInput} [tabs.right]
- * @property {UnverifiedTabColumnInput} [leftTabs]
- * @property {UnverifiedTabColumnInput} [rightTabs]
+ * @property {UnverifiedTabColumnInput} [leftTabs] Shortcut for tabs.left
+ * @property {UnverifiedTabColumnInput} [rightTabs] Shortcut for tabs.right
  */
 
 /**
@@ -56,9 +55,9 @@
  */
 
 /**
- * Normalize external polymorphic token input into a concrete Token placeable object.
- * @param {UnverifiedTokenInput} [target] External token input
- * @returns {Token|null} Concrete Token instance or null
+ * Normalize unverified token input into a concrete Token placeable object.
+ * @param {UnverifiedTokenInput} [target] Token input
+ * @returns {Token|null}
  */
 export function normalizeToken(target) {
     if (!target) return null;
@@ -99,9 +98,9 @@ export function normalizeToken(target) {
 }
 
 /**
- * Normalize external polymorphic actor input into a concrete Actor document.
- * @param {UnverifiedActorInput} [target] External actor input
- * @returns {Actor|null} Concrete Actor instance or null
+ * Normalize unverified actor input into a concrete Actor document.
+ * @param {UnverifiedActorInput} [target] Actor input
+ * @returns {Actor|null}
  */
 export function normalizeActor(target) {
     if (!target) return null;
@@ -123,9 +122,9 @@ export function normalizeActor(target) {
 }
 
 /**
- * Normalize external page input into a concrete positive integer.
- * @param {UnverifiedPageInput} [page] Unverified page input
- * @returns {number|null} Concrete page number or null
+ * Normalize unverified page input into a concrete positive integer.
+ * @param {UnverifiedPageInput} [page] Page input
+ * @returns {number|null}
  */
 export function normalizePage(page) {
     if (page === undefined || page === null) return null;
@@ -137,8 +136,8 @@ export function normalizePage(page) {
 }
 
 /**
- * Normalize external tab column input into a concrete TabColumnState contract.
- * @param {UnverifiedTabColumnInput} [input] Unverified tab column specification
+ * Normalize unverified tab column input into a concrete TabColumnState contract.
+ * @param {UnverifiedTabColumnInput} [input] Tab column specification
  * @param {string} [defaultParent='all'] Default parent tab identifier
  * @returns {TabColumnState|null}
  */
@@ -211,8 +210,8 @@ export function normalizeTabColumnState(input, defaultParent = 'all') {
 }
 
 /**
- * Normalize external options into a concrete TabSelectionConfig.
- * @param {UnverifiedTabSelectionConfig} [options={}] Unverified options containing tabs, leftTabs, and/or rightTabs
+ * Normalize unverified options into a concrete TabSelectionConfig.
+ * @param {UnverifiedTabSelectionConfig} [options={}] Options containing tab column specifications
  * @returns {TabSelectionConfig}
  */
 export function normalizeTabConfig(options = {}) {
