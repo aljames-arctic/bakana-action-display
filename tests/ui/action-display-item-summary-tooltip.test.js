@@ -154,10 +154,11 @@ test('Dnd5eSystemAdapter.getItemSummary formats weapons, spells, feats, and Page
     const abilitySummary = await dnd5eAdapter.getItemSummary(abilityAction, null, mockActor);
     assert.equal(abilitySummary.title, 'Dexterity');
     assert.equal(abilitySummary.subtitle, 'Ability Check / Saving Throw');
-    assert.ok(abilitySummary.properties.some(p => p.label === 'Score' && p.value === '16'));
-    assert.ok(abilitySummary.properties.some(p => p.label === 'Check' && p.value === '+3'));
-    assert.ok(abilitySummary.properties.some(p => p.label === 'Save' && p.value === '+5'));
-    assert.ok(abilitySummary.properties.some(p => p.value === 'Save Proficient'));
+    const flatProps = abilitySummary.properties.flat();
+    assert.ok(flatProps.some(p => p.label === 'Score' && p.value === '16'));
+    assert.ok(flatProps.some(p => p.label === 'Check' && p.value === '+3'));
+    assert.ok(flatProps.some(p => p.label === 'Save' && p.value === '+5'));
+    assert.ok(flatProps.some(p => p.value === 'Proficient'));
 
     const checkSummary = await dnd5eAdapter.getItemSummary(checkAction, null, mockActor);
     assert.equal(checkSummary.title, 'Dexterity Check');

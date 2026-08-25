@@ -1695,6 +1695,14 @@ body > #tooltip.bad-summary-has-table-wrapper,
     gap: 0.35em;
 }
 
+.bad-summary-tag-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35em;
+    width: 100%;
+}
+
 .bad-summary-tag {
     display: inline-flex;
     align-items: center;

@@ -2002,11 +2002,20 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                 } else if (typeof ablData.mod === 'number') {
                     saveMod = ablData.mod;
                 }
-                if (ablData.value !== undefined) properties.push({ label: 'Score', value: String(ablData.value) });
-                properties.push({ label: 'Check', value: mod >= 0 ? `+${mod}` : `${mod}` });
-                properties.push({ label: 'Save', value: saveMod >= 0 ? `+${saveMod}` : `${saveMod}` });
-                const isProficient = Boolean(ablData.saveProf?.hasProficiency || rawSave?.proficient || ablData.proficient);
-                if (isProficient) properties.push({ value: 'Save Proficient' });
+
+                if (ablData.value !== undefined) {
+                    properties.push([{ label: 'Score', value: String(ablData.value) }]);
+                }
+
+                const checkRow = [{ label: 'Check', value: mod >= 0 ? `+${mod}` : `${mod}` }];
+                const isCheckProficient = Boolean(ablData.checkProf?.hasProficiency || ablData.check?.proficient);
+                if (isCheckProficient) checkRow.push({ value: 'Proficient' });
+                properties.push(checkRow);
+
+                const saveRow = [{ label: 'Save', value: saveMod >= 0 ? `+${saveMod}` : `${saveMod}` }];
+                const isSaveProficient = Boolean(ablData.saveProf?.hasProficiency || rawSave?.proficient || ablData.proficient);
+                if (isSaveProficient) saveRow.push({ value: 'Proficient' });
+                properties.push(saveRow);
             }
         } else if (action.type === 'save') {
             const ability = action.extra?.ability ?? action.id.replace(/^save-/, '');
