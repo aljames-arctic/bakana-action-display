@@ -31,7 +31,7 @@ const DEFAULT_CATEGORIES = [
     {
         id: 'cat_favorites',
         name: 'Favorites',
-        expression: `actor.getFlag('bakana-action-display', 'favorites')?.[item.id]`,
+        expression: `actor?.getFlag?.('bakana-action-display', 'favorites')?.[item.id]`,
         subcategories: []
     },
     {
@@ -95,6 +95,44 @@ export class FantasySystemAdapter extends BaseSystemAdapter {
         return parentId === 'spell'
             ? (SORT_ORDERS.spell_subtab[subId] ?? 999)
             : super.getItemSubTabSortOrder(parentId, subId);
+    }
+
+    /**
+     * Get the page definition configuration for a given page number in fantasy-based systems.
+     * Page 1 is flat, Page 2 is categorized (abilities / saves / skills / tools), and Page 3 is tokenInfo.
+     *
+     * @param {number} [page=1] Page number (1-indexed)
+     * @param {Actor} [actor=null] Target actor document
+     * @returns {{ page: number, defaultLayout: string, categories: Object[]|null }}
+     */
+    getPageConfig(page = 1, actor = null) {
+        const pageNum = Number(page) || 1;
+        switch (pageNum) {
+            case 1:
+                return {
+                    page: 1,
+                    defaultLayout: 'flat',
+                    categories: null
+                };
+            case 2:
+                return {
+                    page: 2,
+                    defaultLayout: 'categorized',
+                    categories: null
+                };
+            case 3:
+                return {
+                    page: 3,
+                    defaultLayout: 'tokenInfo',
+                    categories: null
+                };
+            default:
+                return {
+                    page: pageNum,
+                    defaultLayout: 'flat',
+                    categories: null
+                };
+        }
     }
 
     /**

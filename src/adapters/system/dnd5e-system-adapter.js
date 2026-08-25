@@ -601,20 +601,13 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
     }
 
     /**
-     * Modify the Handlebars rendering context for D&D 5e (splits into ability/skill check layout on Page 2, token info showcase on Page 3).
+     * Modify the Handlebars rendering context for D&D 5e (categorized checks layout on Page 2, token info showcase on Page 3).
      * @param {Object} context Handlebars template context
      * @param {ApplicationV2} app Active HUD application
-     * @returns {Promise<Object>}
+     * @returns {Promise<Object>|Object}
      */
-    async modifyContext(context, app) {
-        super.modifyContext(context, app);
-        const activePage = Number(app?.activePage);
-        if (activePage === 2) {
-            this.formatSplitLayout(context);
-        } else if (activePage === 3) {
-            await this.formatTokenInfoLayout(context, app?.actor, app?.token);
-        }
-        return context;
+    modifyContext(context, app) {
+        return super.modifyContext(context, app);
     }
 
     /**

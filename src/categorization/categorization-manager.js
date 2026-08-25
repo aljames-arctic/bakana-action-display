@@ -1,5 +1,4 @@
 import { log } from '../lib/logger.js';
-import { adapter } from '../adapters/index.js';
 
 /**
  * @typedef {Object} SubCategory
@@ -244,20 +243,19 @@ export function categorizeActions(actions, config, catchAllLabel, context = {}) 
 }
 
 /**
- * Returns default preset categories, delegating to the active system adapter.
+ * Returns default preset categories, delegating to a custom system adapter if provided.
  *
- * @param {Object} [customAdapter=null] Optional adapter override (defaults to global adapter.system)
+ * @param {Object} [customAdapter=null] Optional adapter override
  * @returns {Category[]} Default category list
  */
 export function getDefaultCategories(customAdapter = null) {
-    const sys = customAdapter ?? adapter.system;
-    const defaults = sys?.getDefaultCategories?.();
+    const defaults = customAdapter?.getDefaultCategories?.();
     if (defaults) return defaults;
     return [
         {
             id: 'cat_favorites',
             name: 'Favorites',
-            expression: `actor.getFlag('bakana-action-display', 'favorites')?.[item.id]`,
+            expression: `actor?.getFlag?.('bakana-action-display', 'favorites')?.[item.id]`,
             subcategories: []
         },
         {

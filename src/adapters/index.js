@@ -360,6 +360,25 @@ class Adapter {
     }
 
     /**
+     * Get system-specific page definition configuration.
+     * @param {number} [page=1]
+     * @param {Actor} [actor=null]
+     * @returns {{ page: number, defaultLayout: string, categories: Object[]|null }}
+     */
+    getPageConfig(page = 1, actor = null) {
+        return this.system?.getPageConfig?.(page, actor) ?? { page: Number(page) || 1, defaultLayout: 'flat', categories: null };
+    }
+
+    /**
+     * Apply a categorized section layout to the HUD context.
+     * @param {Object} context
+     * @param {Object} [options]
+     */
+    formatCategorizedLayout(context, options) {
+        this.system?.formatCategorizedLayout?.(context, options);
+    }
+
+    /**
      * Get system-specific default preset categories.
      * @returns {Object[]|null}
      */

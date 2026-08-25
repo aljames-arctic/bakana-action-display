@@ -6,6 +6,7 @@ import { BaseFoundryAdapter } from '../foundry/base-foundry-adapter.js';
 import { BaseSystemContextMenuManager } from './context-menu/base-system-context-menu-manager.js';
 import { BaseSystemTabFilterManager } from './filter/base-system-tab-filter-manager.js';
 import { BaseSystemContextModifier } from './context-modifier/base-system-context-modifier.js';
+import { categorizeActions } from '../../categorization/categorization-manager.js';
 
 const MODIFIER_KEY_MAP = {
     altKey: 'Alt',
@@ -225,11 +226,52 @@ export class BaseSystemAdapter {
     }
 
     /**
+     * Get the page definition configuration for a given page number.
+     * Overridable by system adapters to specify whether a page defaults to flat, categorized, or info showcase.
+     * By default, returns a flat layout for all pages.
+     *
+     * @param {number} [page=1] Page number (1-indexed)
+     * @param {Actor} [actor=null] Target actor document
+     * @returns {{ page: number, defaultLayout: string, categories: Object[]|null }}
+     */
+    getPageConfig(page = 1, actor = null) {
+        const pageNum = Number(page) || 1;
+        return {
+            page: pageNum,
+            defaultLayout: 'flat',
+            categories: null
+        };
+    }
+
+    /**
      * Apply a flat layout template to the HUD context.
      * @param {Object} context The Handlebars render context
      */
     formatFlatLayout(context) {
         context.layout = 'flat';
+    }
+
+    /**
+     * Apply a categorized section layout template to the HUD context.
+     * @param {Object} context The Handlebars render context
+     * @param {Object} [options]
+     * @param {Object[]} [options.categories] Category definitions to apply (defaults to getDefaultCategories())
+     * @param {string} [options.catchAllLabel] Localized catch-all label
+     * @param {Actor} [options.actor] Actor document
+     * @param {Token} [options.token] Token document
+     * @param {User} [options.user] User document
+     */
+    formatCategorizedLayout(context, { categories = null, catchAllLabel = null, actor = null, token = null, user = null } = {}) {
+        context.layout = 'categorized';
+        const cats = categories ?? this.getDefaultCategories();
+        const others = catchAllLabel ?? (game.i18n?.localize?.('BAD.categorization.others') ?? 'Other Actions');
+        const categorized = categorizeActions(context.items ?? [], { enabled: true, categories: cats }, others, {
+            actor: actor ?? context.actor,
+            token: token ?? context.token,
+            user: user ?? game.user
+        });
+        context.isCategorized = true;
+        context.categorizedSections = categorized ?? [];
     }
 
     /**
@@ -317,13 +359,27 @@ export class BaseSystemAdapter {
 
     /**
      * Modify the UI context object before template rendering.
-     * Overridable by system adapters to choose layout templates (flat, split, etc.).
+     * Overridable by system adapters to augment context or apply custom page layouts.
      * @param {Object} context The Handlebars render context
      * @param {ActionDisplayApp} app The UI application instance
-     * @returns {Object} The modified context
+     * @returns {Promise<Object>|Object} The modified context
      */
     modifyContext(context, app) {
-        this.formatFlatLayout(context);
+        const activePage = Number(app?.activePage ?? 1);
+        const pageConfig = this.getPageConfig(activePage, app?.actor);
+
+        if (pageConfig.defaultLayout === 'tokenInfo') {
+            return this.formatTokenInfoLayout(context, app?.actor, app?.token).then(() => context);
+        } else if (pageConfig.defaultLayout === 'categorized' && !context.isCategorized) {
+            this.formatCategorizedLayout(context, {
+                categories: pageConfig.categories,
+                actor: app?.actor,
+                token: app?.token
+            });
+        } else if (!context.layout) {
+            this.formatFlatLayout(context);
+        }
+
         return this.contextModifier.modifyContext(context, app) ?? context;
     }
 
@@ -514,7 +570,7 @@ export class BaseSystemAdapter {
             {
                 id: 'cat_favorites',
                 name: 'Favorites',
-                expression: `actor.getFlag('bakana-action-display', 'favorites')?.[item.id]`,
+                expression: `actor?.getFlag?.('bakana-action-display', 'favorites')?.[item.id]`,
                 subcategories: []
             },
             {

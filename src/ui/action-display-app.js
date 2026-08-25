@@ -658,11 +658,13 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
             syncActorFavorites(this.actor);
         }
 
-        // Apply categorization if enabled
+        // Apply categorization if enabled or if page defaults to categorized
+        const pageConfig = adapter.getPageConfig(this.activePage, this.actor);
         const rawCatConfig = game.settings.get(MODULE_ID, 'categorizationConfig');
         const isCategorizationEnabled = Boolean(rawCatConfig?.enabled);
+
         if (isCategorizationEnabled) {
-            const othersLabel = game.i18n.localize('BAD.categorization.others') ?? 'Other Actions';
+            const othersLabel = game.i18n?.localize?.('BAD.categorization.others') ?? 'Other Actions';
             const categorized = categorizeActions(visibleActions, rawCatConfig, othersLabel, {
                 actor: this.actor,
                 token: this.token,
@@ -670,9 +672,26 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
             });
             context.isCategorized = true;
             context.categorizedSections = categorized ?? [];
+            context.layout = 'categorized';
+        } else if (pageConfig?.defaultLayout === 'categorized') {
+            const categories = pageConfig.categories ?? adapter.getDefaultCategories() ?? [];
+            const othersLabel = game.i18n?.localize?.('BAD.categorization.others') ?? 'Other Actions';
+            const categorized = categorizeActions(visibleActions, { enabled: true, categories }, othersLabel, {
+                actor: this.actor,
+                token: this.token,
+                user: game.user
+            });
+            context.isCategorized = true;
+            context.categorizedSections = categorized ?? [];
+            context.layout = 'categorized';
+        } else if (pageConfig?.defaultLayout === 'tokenInfo' || pageConfig?.defaultLayout === 'info') {
+            context.isCategorized = false;
+            context.categorizedSections = null;
+            context.layout = 'tokenInfo';
         } else {
             context.isCategorized = false;
             context.categorizedSections = null;
+            context.layout = pageConfig?.defaultLayout ?? 'flat';
         }
 
         const parsedActivePage = Number(this.activePage);

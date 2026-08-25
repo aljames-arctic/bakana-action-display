@@ -174,20 +174,48 @@ test('BaseSystemAdapter formatFlatLayout and formatSplitLayout templates', () =>
     assert.equal(splitContext.showSeparator, true);
 });
 
-test('BaseSystemAdapter modifyContext defaults to flat layout regardless of activePage (split layout is Dnd5e exclusive)', () => {
+test('BaseSystemAdapter getPageConfig defaults to flat layout for all pages', async () => {
     const adapter = new BaseSystemAdapter('test-system');
+    
+    // Default is flat for all pages in BaseSystemAdapter
+    assert.deepEqual(adapter.getPageConfig(1), { page: 1, defaultLayout: 'flat', categories: null });
+    assert.deepEqual(adapter.getPageConfig(2), { page: 2, defaultLayout: 'flat', categories: null });
+    assert.deepEqual(adapter.getPageConfig(3), { page: 3, defaultLayout: 'flat', categories: null });
+
     const items = [
-        { id: 'b', name: 'B-Skill', section: 'other' },
-        { id: 'a', name: 'A-Core', section: 'core' }
+        { id: 'b', name: 'B-Skill', type: 'skill' },
+        { id: 'a', name: 'A-Core', type: 'ability' }
     ];
 
     const ctxStr = { items };
     adapter.modifyContext(ctxStr, { activePage: '2' });
     assert.equal(ctxStr.layout, 'flat');
+    assert.equal(ctxStr.isCategorized, undefined);
 
     const ctxNum = { items };
     adapter.modifyContext(ctxNum, { activePage: 1 });
     assert.equal(ctxNum.layout, 'flat');
+    assert.equal(ctxNum.isCategorized, undefined);
+});
+
+test('FantasySystemAdapter getPageConfig defines Page 1 flat, Page 2 categorized, and Page 3 tokenInfo', async () => {
+    const { FantasySystemAdapter } = await import('../../src/adapters/system/genre/fantasy-system-adapter.js');
+    const adapter = new FantasySystemAdapter('dnd5e');
+
+    assert.deepEqual(adapter.getPageConfig(1), { page: 1, defaultLayout: 'flat', categories: null });
+    assert.deepEqual(adapter.getPageConfig(2), { page: 2, defaultLayout: 'categorized', categories: null });
+    assert.deepEqual(adapter.getPageConfig(3), { page: 3, defaultLayout: 'tokenInfo', categories: null });
+
+    const items = [
+        { id: 'b', name: 'B-Skill', type: 'skill' },
+        { id: 'a', name: 'A-Core', type: 'ability' }
+    ];
+
+    const ctx = { items };
+    adapter.modifyContext(ctx, { activePage: 2 });
+    assert.equal(ctx.layout, 'categorized');
+    assert.equal(ctx.isCategorized, true);
+    assert.ok(Array.isArray(ctx.categorizedSections));
 });
 
 test('HUDTabColumn resets to default "all" when sole parent is deselected, but not when all main parent tabs are multi-selected', async () => {

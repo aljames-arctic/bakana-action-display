@@ -313,12 +313,13 @@ test('Pf1SystemAdapter extractCheckActions generates abilities, saves, and skill
     await crfSkill.roll({});
     assert.equal(rolledSkill, 'crf.subSkills.arm');
 
-    // Split layout on page 2
+    // Categorized layout on page 2
     const context = { items: checkActions };
     await adapter.modifyContext(context, { activePage: 2, actor });
-    assert.equal(context.layout, 'split');
-    assert.equal(context.coreItems.length, 6);
-    assert.equal(context.otherItems.length, 3);
+    assert.equal(context.layout, 'categorized');
+    assert.equal(context.isCategorized, true);
+    assert.ok(context.categorizedSections.find(s => s.name === 'Abilities'));
+    assert.ok(context.categorizedSections.find(s => s.name === 'Skills'));
 });
 
 test('Pf1SystemAdapter getTokenInfo extracts complete token statistics and details for Page 3 showcase', async () => {

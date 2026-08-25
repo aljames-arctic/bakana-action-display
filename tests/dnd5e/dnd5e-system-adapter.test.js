@@ -320,21 +320,23 @@ test('Dnd5eSystemAdapter resolves clean names for vehicle, jeweler, leatherworke
     foundry.utils.fromUuidSync = origFromUuidSync;
 });
 
-test('Dnd5eSystemAdapter modifyContext triggers split layout exclusively on Page 2 for ability/skill checks', () => {
+test('Dnd5eSystemAdapter modifyContext triggers categorized checks layout on Page 2', async () => {
     const adapter = new Dnd5eSystemAdapter();
     const items = [
-        { id: 'b', name: 'B-Skill', section: 'other' },
-        { id: 'a', name: 'A-Core', section: 'core' }
+        { id: 'b', name: 'B-Skill', type: 'skill', right: [{ path: 'all', label: 'dex' }] },
+        { id: 'a', name: 'A-Core', type: 'ability', right: [{ path: 'all', label: 'str' }] }
     ];
 
     const ctxStr = { items, itemTypes: [] };
-    adapter.modifyContext(ctxStr, { activePage: '2' });
-    assert.equal(ctxStr.layout, 'split');
-    assert.equal(ctxStr.coreItems.length, 1);
-    assert.equal(ctxStr.otherItems.length, 1);
+    await adapter.modifyContext(ctxStr, { activePage: '2' });
+    assert.equal(ctxStr.layout, 'categorized');
+    assert.equal(ctxStr.isCategorized, true);
+    assert.ok(Array.isArray(ctxStr.categorizedSections));
+    assert.ok(ctxStr.categorizedSections.find(s => s.name === 'Abilities'));
+    assert.ok(ctxStr.categorizedSections.find(s => s.name === 'Skills'));
 
     const ctxNum = { items, itemTypes: [] };
-    adapter.modifyContext(ctxNum, { activePage: 1 });
+    await adapter.modifyContext(ctxNum, { activePage: 1 });
     assert.equal(ctxNum.layout, 'flat');
 });
 

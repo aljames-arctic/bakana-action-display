@@ -101,3 +101,99 @@ test('ActionDisplayApp _prepareContext uses standard layout when categorization 
     assert.equal(context.categorizedSections, null);
     assert.equal(context.items.length, 1);
 });
+
+test('ActionDisplayApp _prepareContext uses default categorized layout on Page 2 when categorization setting is disabled', async () => {
+    const app = new ActionDisplayApp({ actor: { id: 'test-actor' } });
+    app.activePage = 2;
+    app._saveTabState = () => {};
+
+    // Categorization is disabled globally
+    game.settings.set(MODULE_ID, 'categorizationConfig', {
+        enabled: false,
+        categories: []
+    });
+
+    actionDisplay.getActions = async () => [
+        { id: 'act-1', name: 'Strength Save', page: 2, type: 'save', left: ['savingThrow'], right: [{ path: 'all' }] },
+        { id: 'act-2', name: 'Athletics', page: 2, type: 'skill', left: ['abilityCheck'], right: [{ path: 'all' }] }
+    ];
+
+    actionDisplay.activeSystemAdapter = {
+        getPageConfig: (page) => ({ page: Number(page), defaultLayout: page === 2 ? 'categorized' : 'flat', categories: null }),
+        getDefaultCategories: () => [
+            { id: 'c_save', name: 'Saving Throws', expression: 'action.type === "save"', subcategories: [] },
+            { id: 'c_skill', name: 'Skills', expression: 'action.type === "skill"', subcategories: [] }
+        ],
+        getItemTypeLabel: (id) => id,
+        getItemTypeIcon: () => '',
+        getItemSubTabLabel: (parent, sub) => sub,
+        getItemTypeSortOrder: () => 1,
+        getItemSubTabSortOrder: () => 1,
+        getActionTypeLabel: (id) => id,
+        getActionTypeIcon: () => '',
+        getActionSubTabLabel: (id) => id,
+        getActionTypeSortOrder: () => 1,
+        getActionSubTabSortOrder: () => 1,
+        isExclusionTab: () => false,
+        matchesEconomyTabs: () => true,
+        modifyContext: () => {}
+    };
+
+    const context = await app._prepareContext({});
+    assert.equal(context.isCategorized, true);
+    assert.equal(context.layout, 'categorized');
+    assert.ok(Array.isArray(context.categorizedSections));
+    assert.equal(context.categorizedSections.length, 2);
+    assert.equal(context.categorizedSections[0].name, 'Saving Throws');
+    assert.equal(context.categorizedSections[0].items[0].name, 'Strength Save');
+    assert.equal(context.categorizedSections[1].name, 'Skills');
+    assert.equal(context.categorizedSections[1].items[0].name, 'Athletics');
+});
+
+test('ActionDisplayApp _prepareContext respects page-specific category overrides', async () => {
+    const app = new ActionDisplayApp({ actor: { id: 'test-actor' } });
+    app.activePage = 2;
+    app._saveTabState = () => {};
+
+    // Categorization is disabled globally
+    game.settings.set(MODULE_ID, 'categorizationConfig', {
+        enabled: false,
+        categories: []
+    });
+
+    actionDisplay.getActions = async () => [
+        { id: 'act-1', name: 'Strength Save', page: 2, type: 'save', left: ['savingThrow'], right: [{ path: 'all' }] },
+        { id: 'act-2', name: 'Athletics', page: 2, type: 'skill', left: ['abilityCheck'], right: [{ path: 'all' }] }
+    ];
+
+    actionDisplay.activeSystemAdapter = {
+        getPageConfig: (page) => ({
+            page: Number(page),
+            defaultLayout: 'categorized',
+            categories: [
+                { id: 'c_custom', name: 'Custom Checks', expression: 'true', subcategories: [] }
+            ]
+        }),
+        getDefaultCategories: () => [],
+        getItemTypeLabel: (id) => id,
+        getItemTypeIcon: () => '',
+        getItemSubTabLabel: (parent, sub) => sub,
+        getItemTypeSortOrder: () => 1,
+        getItemSubTabSortOrder: () => 1,
+        getActionTypeLabel: (id) => id,
+        getActionTypeIcon: () => '',
+        getActionSubTabLabel: (id) => id,
+        getActionTypeSortOrder: () => 1,
+        getActionSubTabSortOrder: () => 1,
+        isExclusionTab: () => false,
+        matchesEconomyTabs: () => true,
+        modifyContext: () => {}
+    };
+
+    const context = await app._prepareContext({});
+    assert.equal(context.isCategorized, true);
+    assert.equal(context.layout, 'categorized');
+    assert.equal(context.categorizedSections.length, 1);
+    assert.equal(context.categorizedSections[0].name, 'Custom Checks');
+    assert.equal(context.categorizedSections[0].items.length, 2);
+});

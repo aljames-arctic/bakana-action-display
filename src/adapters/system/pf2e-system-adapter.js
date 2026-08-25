@@ -422,16 +422,10 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
 
     /**
      * Modify the rendering context before it is sent to the template.
-     * Used here to sort the spell sub-tabs (Cantrips, Ranks 1-10, Focus, Innate, Rituals), format Page 2 split checks, Page 3 token info, and display showUnprepared tab indicators.
+     * Used here to sort the spell sub-tabs (Cantrips, Ranks 1-10, Focus, Innate, Rituals), format Page 2 categorized checks, Page 3 token info, and display showUnprepared tab indicators.
      */
-    async modifyContext(context, app) {
-        super.modifyContext?.(context, app);
-        const activePage = Number(app?.activePage);
-        if (activePage === 2) {
-            this.formatSplitLayout(context);
-        } else if (activePage === 3) {
-            await this.formatTokenInfoLayout(context, app?.actor, app?.token);
-        }
+    modifyContext(context, app) {
+        const result = super.modifyContext?.(context, app);
 
         const showAll = Boolean(app?.actor?.getFlag?.(MODULE_ID, 'showAll'));
 
@@ -464,6 +458,8 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
                 (PF2E_SPELL_SUB_TAB_ORDER.get(a.id) ?? 999) - (PF2E_SPELL_SUB_TAB_ORDER.get(b.id) ?? 999)
             );
         }
+
+        return result instanceof Promise ? result.then(() => context) : (result ?? context);
     }
 
     /**

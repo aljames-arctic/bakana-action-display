@@ -377,20 +377,12 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
 
     // #endregion
 
-    // #region Localizations & UI Formatting
-
     /**
      * Modify the rendering context before it is sent to the template.
-     * Used here to sort the spell sub-tabs (Cantrips, Orisons, Levels, SLAs), format Page 2 split checks, Page 3 token info, and display showUnprepared indicators.
+     * Used here to sort the spell sub-tabs (Cantrips, Orisons, Levels, SLAs), format Page 2 categorized checks, Page 3 token info, and display showUnprepared indicators.
      */
-    async modifyContext(context, app) {
-        super.modifyContext?.(context, app);
-        const activePage = Number(app?.activePage);
-        if (activePage === 2) {
-            this.formatSplitLayout(context);
-        } else if (activePage === 3) {
-            await this.formatTokenInfoLayout(context, app?.actor, app?.token);
-        }
+    modifyContext(context, app) {
+        const result = super.modifyContext?.(context, app);
 
         const showAll = Boolean(app?.actor?.getFlag?.(MODULE_ID, 'showAll'));
 
@@ -401,8 +393,14 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
 
         const weaponParent = context.itemTypes?.find(g => g.id === 'weapon');
         if (weaponParent) {
-            const showUnequippedWeapon = Boolean(app.actor?.getFlag?.(MODULE_ID, 'showUnequipped_weapon'));
+            const showUnequippedWeapon = Boolean(app?.actor?.getFlag?.(MODULE_ID, 'showUnequipped_weapon'));
             weaponParent.showUnprepared = Boolean(showUnequippedWeapon || showAll);
+        }
+
+        const buffParent = context.itemTypes?.find(g => g.id === 'buff');
+        if (buffParent) {
+            const showInactiveBuff = Boolean(app?.actor?.getFlag?.(MODULE_ID, 'showInactive_buff'));
+            buffParent.showUnprepared = Boolean(showInactiveBuff || showAll);
         }
 
         const equipmentParent = context.itemTypes?.find(g => g.id === 'equipment');
@@ -417,6 +415,8 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
                 (SPELL_SUB_TAB_ORDER.get(a.id) ?? 999) - (SPELL_SUB_TAB_ORDER.get(b.id) ?? 999)
             );
         }
+
+        return result instanceof Promise ? result.then(() => context) : (result ?? context);
     }
 
     /**

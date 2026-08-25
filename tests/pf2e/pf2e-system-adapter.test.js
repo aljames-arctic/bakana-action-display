@@ -412,12 +412,13 @@ test('Pf2eSystemAdapter extractCheckActions generates abilities, saves, and skil
     await athSkill.roll({});
     assert.equal(rolledSkill, 'athletics');
 
-    // Split layout on page 2
+    // Categorized layout on page 2
     const context = { items: checkActions };
     await adapter.modifyContext(context, { activePage: 2, actor });
-    assert.equal(context.layout, 'split');
-    assert.equal(context.coreItems.length, 4);
-    assert.equal(context.otherItems.length, 2);
+    assert.equal(context.layout, 'categorized');
+    assert.equal(context.isCategorized, true);
+    assert.ok(context.categorizedSections.find(s => s.name === 'Saving Throws'));
+    assert.ok(context.categorizedSections.find(s => s.name === 'Skills & Perception'));
 });
 
 test('Pf2eSystemAdapter getTokenInfo extracts complete token statistics and details for Page 3 showcase', async () => {
