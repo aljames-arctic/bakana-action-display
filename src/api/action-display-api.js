@@ -37,7 +37,7 @@ export class ActionDisplayAPI {
 
     /**
      * Resolve a token from external polymorphic input.
-     * @param {*} target The target token, document, actor, ID, or UUID
+     * @param {UnverifiedTokenInput} target The target token, document, actor, ID, or UUID
      * @returns {Token|null} Concrete Token instance or null
      */
     resolveToken(target) {
@@ -46,7 +46,7 @@ export class ActionDisplayAPI {
 
     /**
      * Resolve an actor from external polymorphic input.
-     * @param {*} target The target actor, token, document, ID, or UUID
+     * @param {UnverifiedActorInput} target The target actor, token, document, ID, or UUID
      * @returns {Actor|null} Concrete Actor instance or null
      */
     resolveActor(target) {
@@ -61,8 +61,8 @@ export class ActionDisplayAPI {
      * - `api.open({ token, page: 2, tabs: { left: 'spells' } })`
      * - `api.open(token, { page: 2, leftTabs: 'spells', rightTabs: 'bonus' })`
      *
-     * @param {*} tokenOrOptions Token instance/identifier or options object
-     * @param {Object} [options={}] Additional configuration options
+     * @param {UnverifiedTokenInput|UnverifiedOpenOptions} tokenOrOptions Token instance/identifier or options object
+     * @param {UnverifiedOpenOptions} [options={}] Additional configuration options
      * @returns {Promise<ActionDisplayApp|null>} The opened ActionDisplayApp instance
      */
     async open(tokenOrOptions, options = {}) {
@@ -133,8 +133,8 @@ export class ActionDisplayAPI {
 
     /**
      * Toggle the HUD for a specific token or the active/controlled token.
-     * @param {*} [tokenOrOptions] Target token or options
-     * @param {Object} [options] Options passed to open() if toggling open
+     * @param {UnverifiedTokenInput|UnverifiedOpenOptions} [tokenOrOptions] Target token or options
+     * @param {UnverifiedOpenOptions} [options] Options passed to open() if toggling open
      * @returns {Promise<boolean>} True if opened, false if closed
      */
     async toggle(tokenOrOptions, options = {}) {
@@ -152,7 +152,7 @@ export class ActionDisplayAPI {
 
     /**
      * Set the active page on the currently open HUD.
-     * @param {*} page Page number
+     * @param {UnverifiedPageInput} page Page number
      * @returns {Promise<ActionDisplayApp|null>}
      */
     async setPage(page) {
@@ -168,8 +168,8 @@ export class ActionDisplayAPI {
 
     /**
      * Set tab selections on the currently open HUD.
-     * @param {Object} rawTabs Tab configuration for left and/or right columns
-     * @param {*} [page] Optional page to configure (defaults to activePage)
+     * @param {UnverifiedTabSelectionConfig|Object} rawTabs Tab configuration for left and/or right columns
+     * @param {UnverifiedPageInput} [page] Optional page to configure (defaults to activePage)
      * @returns {Promise<ActionDisplayApp|null>}
      */
     async setTabs(rawTabs, page) {
@@ -184,7 +184,7 @@ export class ActionDisplayAPI {
 
     /**
      * Get processed actions for a given actor or token via the unified adapter pipeline.
-     * @param {*} actorOrToken
+     * @param {UnverifiedActorInput} actorOrToken
      * @returns {Promise<Action[]>}
      */
     async getActions(actorOrToken) {

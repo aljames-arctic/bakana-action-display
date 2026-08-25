@@ -5,21 +5,59 @@
  */
 
 /**
- * @typedef {Object} ConcreteTabColumnState
+ * @typedef {Object} TabColumnState
  * @property {string[]} parents Active parent tab IDs
  * @property {string} focusedParent Focused parent tab ID
  * @property {string[]} subTypes Active sub-type IDs
  */
 
 /**
- * @typedef {Object} ConcreteTabSelectionConfig
- * @property {ConcreteTabColumnState|null} left Left column state contract
- * @property {ConcreteTabColumnState|null} right Right column state contract
+ * @typedef {Object} TabSelectionConfig
+ * @property {TabColumnState|null} left Left column state contract
+ * @property {TabColumnState|null} right Right column state contract
+ */
+
+/**
+ * @typedef {Token|TokenDocument|Actor|string} UnverifiedTokenInput
+ */
+
+/**
+ * @typedef {Actor|Token|TokenDocument|string} UnverifiedActorInput
+ */
+
+/**
+ * @typedef {number|string} UnverifiedPageInput
+ */
+
+/**
+ * @typedef {string|string[]|Object} UnverifiedTabColumnInput
+ */
+
+/**
+ * @typedef {Object} UnverifiedTabSelectionConfig
+ * @property {Object} [tabs]
+ * @property {UnverifiedTabColumnInput} [tabs.left]
+ * @property {UnverifiedTabColumnInput} [tabs.right]
+ * @property {UnverifiedTabColumnInput} [leftTabs]
+ * @property {UnverifiedTabColumnInput} [rightTabs]
+ */
+
+/**
+ * @typedef {Object} UnverifiedOpenOptions
+ * @property {UnverifiedTokenInput} [token] Target token if not passed as first argument
+ * @property {UnverifiedPageInput} [page] Target page number
+ * @property {Object} [tabs] Tab selections
+ * @property {UnverifiedTabColumnInput} [tabs.left] Left column tab selection
+ * @property {UnverifiedTabColumnInput} [tabs.right] Right column tab selection
+ * @property {UnverifiedTabColumnInput} [leftTabs] Shortcut for tabs.left
+ * @property {UnverifiedTabColumnInput} [rightTabs] Shortcut for tabs.right
+ * @property {boolean} [render] Whether to render the application
+ * @property {boolean} [force] Force creating a new application instance
  */
 
 /**
  * Normalize external polymorphic token input into a concrete Token placeable object.
- * @param {*} target External input (Token, TokenDocument, Actor, ID string, UUID string)
+ * @param {UnverifiedTokenInput} [target] External token input
  * @returns {Token|null} Concrete Token instance or null
  */
 export function normalizeToken(target) {
@@ -62,7 +100,7 @@ export function normalizeToken(target) {
 
 /**
  * Normalize external polymorphic actor input into a concrete Actor document.
- * @param {*} target External input (Actor, Token, TokenDocument, ID string, UUID string)
+ * @param {UnverifiedActorInput} [target] External actor input
  * @returns {Actor|null} Concrete Actor instance or null
  */
 export function normalizeActor(target) {
@@ -86,7 +124,7 @@ export function normalizeActor(target) {
 
 /**
  * Normalize external page input into a concrete positive integer.
- * @param {*} page Page input
+ * @param {UnverifiedPageInput} [page] Unverified page input
  * @returns {number|null} Concrete page number or null
  */
 export function normalizePage(page) {
@@ -100,9 +138,9 @@ export function normalizePage(page) {
 
 /**
  * Normalize external tab column input into a concrete TabColumnState contract.
- * @param {*} input Tab column specification (string, string[], or object)
+ * @param {UnverifiedTabColumnInput} [input] Unverified tab column specification
  * @param {string} [defaultParent='all'] Default parent tab identifier
- * @returns {ConcreteTabColumnState|null}
+ * @returns {TabColumnState|null}
  */
 export function normalizeTabColumnState(input, defaultParent = 'all') {
     if (input === undefined || input === null) return null;
@@ -174,8 +212,8 @@ export function normalizeTabColumnState(input, defaultParent = 'all') {
 
 /**
  * Normalize external options into a concrete TabSelectionConfig.
- * @param {Object} options Options containing tabs, leftTabs, and/or rightTabs
- * @returns {ConcreteTabSelectionConfig}
+ * @param {UnverifiedTabSelectionConfig} [options={}] Unverified options containing tabs, leftTabs, and/or rightTabs
+ * @returns {TabSelectionConfig}
  */
 export function normalizeTabConfig(options = {}) {
     const rawTabs = options.tabs ?? {};

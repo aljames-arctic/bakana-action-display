@@ -115,7 +115,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
 
     /**
      * Configure active tabs for a specific page using normalized tab state.
-     * @param {ConcreteTabSelectionConfig} tabConfig Normalized tab configuration
+     * @param {TabSelectionConfig} tabConfig Normalized tab configuration
      * @param {number} [page=this.activePage] Concrete target page number
      */
     setTabs(tabConfig, page = this.activePage) {

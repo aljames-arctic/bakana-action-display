@@ -368,7 +368,7 @@ export class HUDTabColumn {
     /**
      * Explicitly set tab state on this column.
      * Expects pre-normalized concrete data contract.
-     * @param {ConcreteTabColumnState} state Concrete tab state contract
+     * @param {TabColumnState} state Concrete tab state contract
      */
     setState(state) {
         if (!state) return;
