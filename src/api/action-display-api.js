@@ -54,19 +54,6 @@ export class ActionDisplayAPI {
     }
 
     /**
-     * @typedef {Object} UnverifiedOpenOptions
-     * @property {UnverifiedTokenInput} [token] Target token if not passed as first argument
-     * @property {UnverifiedPageInput} [page] Target page number
-     * @property {Object} [tabs] Tab selections
-     * @property {UnverifiedTabColumnInput} [tabs.left] Left column tab selection
-     * @property {UnverifiedTabColumnInput} [tabs.right] Right column tab selection
-     * @property {UnverifiedTabColumnInput} [leftTabs] Shortcut for tabs.left
-     * @property {UnverifiedTabColumnInput} [rightTabs] Shortcut for tabs.right
-     * @property {boolean} [render] Whether to render the application
-     * @property {boolean} [force] Force creating a new application instance
-     */
-
-    /**
      * Open Bakana's Action Display for a specific token, optionally navigating to a specific page and selecting tabs.
      *
      * Supported calling signatures:
