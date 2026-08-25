@@ -193,7 +193,7 @@ export class Dnd5eSystemContextModifier extends BaseSystemContextModifier {
      * @param {boolean} [forceShow=false] Force orange indicator if showAll is true
      */
     #ensureAllSubTab(parent, app, label, flagKey, requireSubTabs = false, forceShow = false) {
-        if (!parent || typeof parent.addSubTab !== 'function' || (requireSubTabs && parent.subTabs?.length === 0)) return;
+        if (!parent || !parent.addSubTab || (requireSubTabs && parent.subTabs?.length === 0)) return;
         const flagValue = app?.actor?.getFlag?.(MODULE_ID, flagKey) ?? false;
         const showUnprepared = Boolean(forceShow || flagValue);
         parent.addSubTab({

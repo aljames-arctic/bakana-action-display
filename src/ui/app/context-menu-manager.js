@@ -143,12 +143,8 @@ export class ContextMenuManager {
                 };
 
                 scheduleReposition();
-                if (typeof queueMicrotask === 'function') queueMicrotask(scheduleReposition);
-                if (typeof requestAnimationFrame === 'function') {
-                    requestAnimationFrame(scheduleReposition);
-                } else if (typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function') {
-                    window.requestAnimationFrame(scheduleReposition);
-                }
+                queueMicrotask(scheduleReposition);
+                requestAnimationFrame(scheduleReposition);
             },
             onClose: () => {
                 this.closeSubmenu();

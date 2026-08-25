@@ -86,14 +86,10 @@ export class BaseFoundryAdapter {
     fromUuidSync(uuid, options = {}) {
         if (!uuid) return null;
         try {
-            if (typeof foundry?.utils?.fromUuidSync === 'function') {
-                return foundry.utils.fromUuidSync(uuid, options) ?? null;
-            }
-            if (typeof globalThis.fromUuidSync === 'function') {
-                return globalThis.fromUuidSync(uuid, options) ?? null;
-            }
-        } catch (_) {}
-        return null;
+            return foundry.utils.fromUuidSync(uuid, options) ?? null;
+        } catch (_) {
+            return null;
+        }
     }
 
     /**
@@ -105,14 +101,10 @@ export class BaseFoundryAdapter {
     async fromUuid(uuid, options = {}) {
         if (!uuid) return null;
         try {
-            if (typeof foundry?.utils?.fromUuid === 'function') {
-                return (await foundry.utils.fromUuid(uuid, options)) ?? null;
-            }
-            if (typeof globalThis.fromUuid === 'function') {
-                return (await globalThis.fromUuid(uuid, options)) ?? null;
-            }
-        } catch (_) {}
-        return null;
+            return (await foundry.utils.fromUuid(uuid, options)) ?? null;
+        } catch (_) {
+            return null;
+        }
     }
 
     /**
@@ -162,7 +154,7 @@ export class BaseFoundryAdapter {
      * @returns {string}
      */
     randomID(length = 16) {
-        return foundry.utils.randomID?.(length) ?? Math.random().toString(36).substring(2, 2 + length);
+        return foundry.utils.randomID(length);
     }
 
     /**
@@ -171,7 +163,7 @@ export class BaseFoundryAdapter {
      * @returns {boolean}
      */
     isEmpty(obj) {
-        return foundry.utils.isEmpty?.(obj) ?? (obj ? Object.keys(obj).length === 0 : true);
+        return foundry.utils.isEmpty(obj);
     }
 
     /**
@@ -189,10 +181,7 @@ export class BaseFoundryAdapter {
      */
     async enrichHTML(content, options = {}) {
         if (!content) return '';
-        if (typeof this.TextEditor?.enrichHTML === 'function') {
-            return this.TextEditor.enrichHTML(content, { secrets: false, async: true, ...options });
-        }
-        return content;
+        return this.TextEditor.enrichHTML(content, { secrets: false, async: true, ...options });
     }
 
     /**
@@ -206,15 +195,8 @@ export class BaseFoundryAdapter {
         const tokenId = typeof token === 'string' ? token : (token?.id ?? token?.document?.id);
         if (!tokenId) return [];
 
-        if (typeof combat.getCombatantsByToken === 'function') {
-            return combat.getCombatantsByToken(tokenId);
-        }
-        if (typeof combat.getCombatantByToken === 'function') {
-            const single = combat.getCombatantByToken(tokenId);
-            return single ? [single] : [];
-        }
-        const match = combat.combatants?.filter?.(c => c.tokenId === tokenId || c.token?.id === tokenId) ?? [];
-        return Array.isArray(match) ? match : Array.from(match);
+        const single = combat.getCombatantByToken?.(tokenId);
+        return single ? [single] : [];
     }
 
     /**
@@ -228,10 +210,7 @@ export class BaseFoundryAdapter {
         const tokenId = typeof token === 'string' ? token : (token?.id ?? token?.document?.id);
         if (!tokenId) return null;
 
-        if (typeof combat.getCombatantByToken === 'function') {
-            return combat.getCombatantByToken(tokenId) ?? null;
-        }
-        return combat.combatants?.find?.(c => c.tokenId === tokenId || c.token?.id === tokenId) ?? null;
+        return combat.getCombatantByToken?.(tokenId) ?? null;
     }
 
     /**
@@ -286,12 +265,8 @@ export class BaseFoundryAdapter {
 
         // Test actor document permissions
         if (actor) {
-            if (typeof actor.testUserPermission === 'function') {
-                if (Boolean(actor.testUserPermission(user, 'OWNER'))) return true;
-            }
-            if (typeof actor.getUserLevel === 'function') {
-                if (actor.getUserLevel(user) >= ownerLevel) return true;
-            }
+            if (actor.testUserPermission?.(user, 'OWNER')) return true;
+            if (actor.getUserLevel?.(user) >= ownerLevel) return true;
             if (actor.ownership) {
                 const level = actor.ownership[user.id] ?? actor.ownership.default ?? 0;
                 if (level >= ownerLevel) return true;
@@ -303,12 +278,8 @@ export class BaseFoundryAdapter {
 
         // Test token document permissions
         if (tokenDoc) {
-            if (typeof tokenDoc.testUserPermission === 'function') {
-                if (Boolean(tokenDoc.testUserPermission(user, 'OWNER'))) return true;
-            }
-            if (typeof tokenDoc.getUserLevel === 'function') {
-                if (tokenDoc.getUserLevel(user) >= ownerLevel) return true;
-            }
+            if (tokenDoc.testUserPermission?.(user, 'OWNER')) return true;
+            if (tokenDoc.getUserLevel?.(user) >= ownerLevel) return true;
             if (tokenDoc.ownership) {
                 const level = tokenDoc.ownership[user.id] ?? tokenDoc.ownership.default ?? 0;
                 if (level >= ownerLevel) return true;

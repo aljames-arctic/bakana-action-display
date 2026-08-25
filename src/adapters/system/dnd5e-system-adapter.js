@@ -2112,7 +2112,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
 
         manualUnbans[subId] = !isActive;
 
-        if (actor.isOwner && typeof actor.setFlag === 'function') {
+        if (actor.isOwner && actor.setFlag) {
             actor.setFlag(MODULE_ID, 'autoBanState', {
                 conditions,
                 manualUnbans
@@ -2195,7 +2195,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
             tabColumn._autoBanInitialized = true;
         }
 
-        if (changed && actor.isOwner && typeof actor.setFlag === 'function') {
+        if (changed && actor.isOwner && actor.setFlag) {
             actor.setFlag(MODULE_ID, 'autoBanState', {
                 conditions: updatedConditions,
                 manualUnbans: updatedManualUnbans

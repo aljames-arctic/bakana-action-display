@@ -1215,13 +1215,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         if (!combatant) return;
         log.info(`Rolling initiative for "${this.actor?.name ?? 'Token'}" (Combatant ID: ${combatant.id})`);
         try {
-            if (typeof combat.rollInitiative === 'function') {
-                await combat.rollInitiative([combatant.id]);
-            } else if (typeof combatant.rollInitiative === 'function') {
-                await combatant.rollInitiative();
-            } else if (typeof this.actor?.rollInitiative === 'function') {
-                await this.actor.rollInitiative();
-            }
+            await combat.rollInitiative([combatant.id]);
         } catch (err) {
             log.error("Failed to roll initiative:", err);
         }
@@ -1767,12 +1761,8 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         };
 
         apply();
-        if (typeof requestAnimationFrame !== 'undefined') {
-            requestAnimationFrame(apply);
-        }
-        if (typeof setTimeout !== 'undefined') {
-            setTimeout(apply, 20);
-        }
+        requestAnimationFrame(apply);
+        setTimeout(apply, 20);
     }
 
     /**

@@ -424,7 +424,7 @@ class Adapter {
      * @returns {Document|null}
      */
     fromUuidSync(uuid, options = {}) {
-        return this.foundry?.fromUuidSync?.(uuid, options) ?? null;
+        return this.foundry.fromUuidSync(uuid, options);
     }
 
     /**
@@ -434,7 +434,7 @@ class Adapter {
      * @returns {Promise<Document|null>}
      */
     async fromUuid(uuid, options = {}) {
-        return (await this.foundry?.fromUuid?.(uuid, options)) ?? null;
+        return this.foundry.fromUuid(uuid, options);
     }
 
     /**
@@ -445,7 +445,7 @@ class Adapter {
      * @returns {Object}
      */
     mergeObject(original, other = {}, options = {}) {
-        return this.foundry?.mergeObject?.(original, other, options) ?? Object.assign(original, other);
+        return this.foundry.mergeObject(original, other, options);
     }
 
     /**
@@ -454,7 +454,7 @@ class Adapter {
      * @returns {Object}
      */
     duplicate(obj) {
-        return this.foundry?.duplicate?.(obj) ?? JSON.parse(JSON.stringify(obj));
+        return this.foundry.duplicate(obj);
     }
 
     /**
@@ -464,7 +464,7 @@ class Adapter {
      * @returns {*}
      */
     getProperty(obj, path) {
-        return this.foundry?.getProperty?.(obj, path);
+        return this.foundry.getProperty(obj, path);
     }
 
     /**
@@ -475,7 +475,7 @@ class Adapter {
      * @returns {boolean}
      */
     setProperty(obj, path, value) {
-        return this.foundry?.setProperty?.(obj, path, value);
+        return this.foundry.setProperty(obj, path, value);
     }
 
     /**
@@ -484,7 +484,7 @@ class Adapter {
      * @returns {string}
      */
     randomID(length = 16) {
-        return this.foundry?.randomID?.(length) ?? Math.random().toString(36).substring(2, 2 + length);
+        return this.foundry.randomID(length);
     }
 
     /**
@@ -493,7 +493,7 @@ class Adapter {
      * @returns {boolean}
      */
     isEmpty(obj) {
-        return this.foundry?.isEmpty?.(obj) ?? (obj ? Object.keys(obj).length === 0 : true);
+        return this.foundry.isEmpty(obj);
     }
 }
 
