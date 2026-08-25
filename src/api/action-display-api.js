@@ -55,11 +55,14 @@ export class ActionDisplayAPI {
 
     /**
      * Open Bakana's Action Display for a specific token, optionally navigating to a specific page and selecting tabs.
+     * Supports single tab, multi-tab selection (arrays), and sub-type filtering.
      *
-     * Supported calling signatures:
-     * - `api.open(token, { page: 2, tabs: { left: 'spells', right: 'bonus' } })`
-     * - `api.open({ token, page: 2, tabs: { left: 'spells' } })`
-     * - `api.open(token, { page: 2, leftTabs: 'spells', rightTabs: 'bonus' })`
+     * Supported calling signatures & examples:
+     * - Single tab: `api.open(token, { page: 2, tabs: { left: 'spells', right: 'bonus' } })`
+     * - Multi-tab selection: `api.open(token, { page: 1, tabs: { left: ['weapons', 'spells'], right: ['actions', 'bonus'] } })`
+     * - Multi-tab via shortcuts: `api.open(token, { leftTabs: ['actions', 'bonus'], rightTabs: ['reactions', 'free'] })`
+     * - Multi-tab with sub-types: `api.open(token, { tabs: { left: { parents: ['spells', 'features'], focusedParent: 'spells', subTypes: ['level-1', 'level-2'] } } })`
+     * - Options object only: `api.open({ token, page: 2, tabs: { left: ['spells', 'features'] } })`
      *
      * @param {UnverifiedTokenInput|UnverifiedOpenOptions} tokenOrOptions Token instance/identifier or options object
      * @param {UnverifiedOpenOptions} [options={}] Additional configuration options

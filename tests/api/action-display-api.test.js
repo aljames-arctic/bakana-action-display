@@ -93,13 +93,13 @@ test('ActionDisplayAPI open opens HUD for specific token with target page and se
     assert.ok(app1.leftTabs.activeParents.has('actions'));
     assert.ok(app1.rightTabs.activeParents.has('reactions'));
 
-    // 3. Open with options object signature: { token, page, leftTabs, rightTabs }
+    // 3. Open with options object signature: { token, page, leftTabs, rightTabs } with multi-tab selection
     const mockToken2 = { id: 'tok2', actor: { id: 'act2', uuid: 'Actor.2', system: {} }, document: { id: 'tok2' } };
     const app2 = await api.open({
         token: mockToken2,
         page: 3,
-        leftTabs: ['features'],
-        rightTabs: 'special'
+        leftTabs: ['features', 'spells'],
+        rightTabs: ['special', 'bonus']
     });
 
     assert.ok(app2 instanceof ActionDisplayApp);
@@ -107,7 +107,9 @@ test('ActionDisplayAPI open opens HUD for specific token with target page and se
     assert.equal(api.activeApp, app2);
     assert.equal(app2.activePage, 3);
     assert.ok(app2.leftTabs.activeParents.has('features'));
+    assert.ok(app2.leftTabs.activeParents.has('spells'));
     assert.ok(app2.rightTabs.activeParents.has('special'));
+    assert.ok(app2.rightTabs.activeParents.has('bonus'));
 
     // Clean up
     await api.close();
