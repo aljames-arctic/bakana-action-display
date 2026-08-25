@@ -1703,6 +1703,14 @@ body > #tooltip.bad-summary-has-table-wrapper,
     width: 100%;
 }
 
+.bad-summary-row-label {
+    font-size: 0.82em;
+    font-weight: 600;
+    color: #a78bfa;
+    margin-right: 0.1em;
+    white-space: nowrap;
+}
+
 .bad-summary-tag {
     display: inline-flex;
     align-items: center;

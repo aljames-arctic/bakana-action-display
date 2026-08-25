@@ -2007,12 +2007,12 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
                     properties.push([{ label: 'Score', value: String(ablData.value) }]);
                 }
 
-                const checkRow = [{ label: 'Check', value: mod >= 0 ? `+${mod}` : `${mod}` }];
+                const checkRow = ['Check:', { label: 'Modifier', value: mod >= 0 ? `+${mod}` : `${mod}` }];
                 const isCheckProficient = Boolean(ablData.checkProf?.hasProficiency || ablData.check?.proficient);
                 if (isCheckProficient) checkRow.push({ value: 'Proficient' });
                 properties.push(checkRow);
 
-                const saveRow = [{ label: 'Save', value: saveMod >= 0 ? `+${saveMod}` : `${saveMod}` }];
+                const saveRow = ['Save:', { label: 'Modifier', value: saveMod >= 0 ? `+${saveMod}` : `${saveMod}` }];
                 const isSaveProficient = Boolean(ablData.saveProf?.hasProficiency || rawSave?.proficient || ablData.proficient);
                 if (isSaveProficient) saveRow.push({ value: 'Proficient' });
                 properties.push(saveRow);

@@ -154,11 +154,9 @@ test('Dnd5eSystemAdapter.getItemSummary formats weapons, spells, feats, and Page
     const abilitySummary = await dnd5eAdapter.getItemSummary(abilityAction, null, mockActor);
     assert.equal(abilitySummary.title, 'Dexterity');
     assert.equal(abilitySummary.subtitle, 'Ability Check / Saving Throw');
-    const flatProps = abilitySummary.properties.flat();
-    assert.ok(flatProps.some(p => p.label === 'Score' && p.value === '16'));
-    assert.ok(flatProps.some(p => p.label === 'Check' && p.value === '+3'));
-    assert.ok(flatProps.some(p => p.label === 'Save' && p.value === '+5'));
-    assert.ok(flatProps.some(p => p.value === 'Proficient'));
+    assert.deepEqual(abilitySummary.properties[0], [{ label: 'Score', value: '16' }]);
+    assert.deepEqual(abilitySummary.properties[1], ['Check:', { label: 'Modifier', value: '+3' }]);
+    assert.deepEqual(abilitySummary.properties[2], ['Save:', { label: 'Modifier', value: '+5' }, { value: 'Proficient' }]);
 
     const checkSummary = await dnd5eAdapter.getItemSummary(checkAction, null, mockActor);
     assert.equal(checkSummary.title, 'Dexterity Check');
@@ -787,6 +785,28 @@ test('ActionDisplayApp forwards wheel scrolling to focused/locked tooltip descri
 
     await game.settings.set('bakana-action-display', 'showItemSummaries', false);
     await app.close();
+});
+
+test('ActionDisplayApp _formatItemSummaryHtml renders structured property tag rows with row labels', () => {
+    const app = new ActionDisplayApp({ actor: {} });
+    const summary = {
+        title: 'Charisma',
+        subtitle: 'Ability Check / Saving Throw',
+        properties: [
+            [{ label: 'Score', value: '13' }],
+            ['Check:', { label: 'Modifier', value: '+1' }, { value: 'Proficient' }],
+            ['Save:', { label: 'Modifier', value: '-1' }]
+        ]
+    };
+
+    const html = app._formatItemSummaryHtml(summary);
+    assert.ok(html.includes('<div class="bad-summary-tag-row">'));
+    assert.ok(html.includes('<span class="bad-summary-row-label">Check:</span>'));
+    assert.ok(html.includes('<span class="bad-summary-row-label">Save:</span>'));
+    assert.ok(html.includes('<span class="bad-summary-tag">Score: 13</span>'));
+    assert.ok(html.includes('<span class="bad-summary-tag">Modifier: +1</span>'));
+    assert.ok(html.includes('<span class="bad-summary-tag">Modifier: -1</span>'));
+    assert.ok(html.includes('<span class="bad-summary-tag">Proficient</span>'));
 });
 
 

@@ -1673,11 +1673,15 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
                 if (Array.isArray(prop)) {
                     html += '<div class="bad-summary-tag-row">';
                     for (const item of prop) {
-                        const text = typeof item === 'string'
-                            ? item
-                            : (item?.label ? `${item.label}: ${item.value}` : item?.value);
-                        if (text) {
-                            html += `<span class="bad-summary-tag">${text}</span>`;
+                        if (typeof item === 'string' && item.endsWith(':')) {
+                            html += `<span class="bad-summary-row-label">${item}</span>`;
+                        } else {
+                            const text = typeof item === 'string'
+                                ? item
+                                : (item?.label ? `${item.label}: ${item.value}` : item?.value);
+                            if (text) {
+                                html += `<span class="bad-summary-tag">${text}</span>`;
+                            }
                         }
                     }
                     html += '</div>';
