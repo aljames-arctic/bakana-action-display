@@ -4,54 +4,7 @@
  */
 
 /**
- * @typedef {Object} TabColumnState
- * @property {string[]} parents Active parent tab IDs
- * @property {string} focusedParent Focused parent tab ID
- * @property {string[]} subTypes Active sub-type IDs
- */
-
-/**
- * @typedef {Object} TabSelectionConfig
- * @property {TabColumnState|null} left Left column state contract
- * @property {TabColumnState|null} right Right column state contract
- */
-
-/**
  * @typedef {Token|TokenDocument|Actor|string} UnverifiedTokenInput
- */
-
-/**
- * @typedef {Actor|Token|TokenDocument|string} UnverifiedActorInput
- */
-
-/**
- * @typedef {number|string} UnverifiedPageInput
- */
-
-/**
- * @typedef {string|string[]|Object} UnverifiedTabColumnInput
- */
-
-/**
- * @typedef {Object} UnverifiedTabSelectionConfig
- * @property {Object} [tabs] Tab selections for left and right columns
- * @property {UnverifiedTabColumnInput} [tabs.left]
- * @property {UnverifiedTabColumnInput} [tabs.right]
- * @property {UnverifiedTabColumnInput} [leftTabs] Shortcut for tabs.left
- * @property {UnverifiedTabColumnInput} [rightTabs] Shortcut for tabs.right
- */
-
-/**
- * @typedef {Object} UnverifiedOpenOptions
- * @property {UnverifiedTokenInput} [token] Target token if not passed as first argument
- * @property {UnverifiedPageInput} [page] Target page number
- * @property {Object} [tabs] Tab selections
- * @property {UnverifiedTabColumnInput} [tabs.left] Left column tab selection
- * @property {UnverifiedTabColumnInput} [tabs.right] Right column tab selection
- * @property {UnverifiedTabColumnInput} [leftTabs] Shortcut for tabs.left
- * @property {UnverifiedTabColumnInput} [rightTabs] Shortcut for tabs.right
- * @property {boolean} [render] Whether to render the application
- * @property {boolean} [force] Force creating a new application instance
  */
 
 /**
@@ -98,6 +51,10 @@ export function normalizeToken(target) {
 }
 
 /**
+ * @typedef {Actor|Token|TokenDocument|string} UnverifiedActorInput
+ */
+
+/**
  * Normalize unverified actor input into a concrete Actor document.
  * @param {UnverifiedActorInput} [target] Actor input
  * @returns {Actor|null}
@@ -122,6 +79,10 @@ export function normalizeActor(target) {
 }
 
 /**
+ * @typedef {number|string} UnverifiedPageInput
+ */
+
+/**
  * Normalize unverified page input into a concrete positive integer.
  * @param {UnverifiedPageInput} [page] Page input
  * @returns {number|null}
@@ -134,6 +95,17 @@ export function normalizePage(page) {
     }
     return null;
 }
+
+/**
+ * @typedef {string|string[]|Object} UnverifiedTabColumnInput
+ */
+
+/**
+ * @typedef {Object} TabColumnState
+ * @property {string[]} parents Active parent tab IDs
+ * @property {string} focusedParent Focused parent tab ID
+ * @property {string[]} subTypes Active sub-type IDs
+ */
 
 /**
  * Normalize unverified tab column input into a concrete TabColumnState contract.
@@ -208,6 +180,21 @@ export function normalizeTabColumnState(input, defaultParent = 'all') {
 
     return null;
 }
+
+/**
+ * @typedef {Object} UnverifiedTabSelectionConfig
+ * @property {Object} [tabs] Tab selections for left and right columns
+ * @property {UnverifiedTabColumnInput} [tabs.left]
+ * @property {UnverifiedTabColumnInput} [tabs.right]
+ * @property {UnverifiedTabColumnInput} [leftTabs] Shortcut for tabs.left
+ * @property {UnverifiedTabColumnInput} [rightTabs] Shortcut for tabs.right
+ */
+
+/**
+ * @typedef {Object} TabSelectionConfig
+ * @property {TabColumnState|null} left Left column state contract
+ * @property {TabColumnState|null} right Right column state contract
+ */
 
 /**
  * Normalize unverified options into a concrete TabSelectionConfig.
