@@ -553,11 +553,13 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
         const traits = system.traits ?? {};
 
         // Size
-        const sizeKey = traits.size?.value ?? traits.size ?? 'med';
+        const rawSize = traits.size;
+        const sizeKey = typeof rawSize === 'string' ? rawSize : (rawSize?.value ?? rawSize?.label ?? rawSize?.id ?? 'med');
+        const sizeStr = typeof sizeKey === 'string' ? sizeKey : 'med';
         const sizeMap = {
             tiny: 'Tiny', sm: 'Small', med: 'Medium', lg: 'Large', huge: 'Huge', grg: 'Gargantuan'
         };
-        const sizeLabel = cfg?.actorSizes?.[sizeKey] ? localize(cfg.actorSizes[sizeKey], sizeKey) : (sizeMap[sizeKey] ?? (sizeKey.charAt(0).toUpperCase() + sizeKey.slice(1)));
+        const sizeLabel = cfg?.actorSizes?.[sizeStr] ? localize(cfg.actorSizes[sizeStr], sizeStr) : (sizeMap[sizeStr.toLowerCase()] ?? (sizeStr ? sizeStr.charAt(0).toUpperCase() + sizeStr.slice(1) : 'Medium'));
 
         // Level / CR
         const level = actor.level ?? details.level?.value ?? 1;

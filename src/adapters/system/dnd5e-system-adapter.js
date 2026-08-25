@@ -740,7 +740,8 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         const traits = system.traits ?? {};
 
         // Size
-        const sizeKey = traits.size ?? 'med';
+        const rawSize = traits.size;
+        const sizeKey = typeof rawSize === 'string' ? rawSize : (rawSize?.value ?? rawSize?.label ?? rawSize?.id ?? 'med');
         const sizeLabel = this.#formatLabel(sizeKey, cfg?.actorSizes) || 'Medium';
 
         // Alignment

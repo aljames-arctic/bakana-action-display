@@ -406,6 +406,15 @@ test('Pf1SystemAdapter getTokenInfo extracts complete token statistics and detai
     assert.equal(context.layout, 'tokenInfo');
     assert.ok(context.tokenInfo);
     assert.equal(context.tokenInfo.name, 'Seelah (Token)');
+
+    // Object size structure should not throw
+    const pf1ActorObjSize = {
+        name: 'Goblin',
+        system: { traits: { size: { value: 'sm' } } }
+    };
+    const infoObj = await adapter.getTokenInfo(pf1ActorObjSize);
+    assert.equal(infoObj.size, 'Small');
 });
+
 
 

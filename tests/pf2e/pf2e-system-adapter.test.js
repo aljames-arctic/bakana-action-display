@@ -515,5 +515,14 @@ test('Pf2eSystemAdapter getTokenInfo extracts complete token statistics and deta
     assert.equal(context.layout, 'tokenInfo');
     assert.ok(context.tokenInfo);
     assert.equal(context.tokenInfo.name, 'Young Red Dragon (Token)');
+
+    // Object size structure should not throw
+    const pf2eActorObjSize = {
+        name: 'Kobold',
+        system: { traits: { size: { value: 'sm' } } }
+    };
+    const infoObj = await adapter.getTokenInfo(pf2eActorObjSize);
+    assert.equal(infoObj.size, 'Small');
 });
+
 
