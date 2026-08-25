@@ -121,7 +121,12 @@ test('ActionDisplayApp _prepareContext uses default categorized layout on Page 2
     actionDisplay.activeSystemAdapter = {
         getPageConfig: (page) => ({ page: Number(page), defaultLayout: page === 2 ? 'categorized' : 'flat', categories: null }),
         getDefaultCategories: () => [
-            { id: 'c_save', name: 'Saving Throws', expression: 'action.type === "save"', subcategories: [] },
+            {
+                id: 'c_save',
+                name: 'Saving Throws',
+                expression: 'action.type === "save"',
+                subcategories: [{ id: 'sub_str', name: 'Strength Save Sub', expression: 'true' }]
+            },
             { id: 'c_skill', name: 'Skills', expression: 'action.type === "skill"', subcategories: [] }
         ],
         getItemTypeLabel: (id) => id,
@@ -146,6 +151,7 @@ test('ActionDisplayApp _prepareContext uses default categorized layout on Page 2
     assert.equal(context.categorizedSections.length, 2);
     assert.equal(context.categorizedSections[0].name, 'Saving Throws');
     assert.equal(context.categorizedSections[0].items[0].name, 'Strength Save');
+    assert.deepEqual(context.categorizedSections[0].subsections, []);
     assert.equal(context.categorizedSections[1].name, 'Skills');
     assert.equal(context.categorizedSections[1].items[0].name, 'Athletics');
 });

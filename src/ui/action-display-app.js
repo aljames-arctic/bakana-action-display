@@ -674,7 +674,8 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
             context.categorizedSections = categorized ?? [];
             context.layout = 'categorized';
         } else if (pageConfig?.defaultLayout === 'categorized') {
-            const categories = pageConfig.categories ?? adapter.getDefaultCategories() ?? [];
+            const rawCategories = pageConfig.categories ?? adapter.getDefaultCategories() ?? [];
+            const categories = pageConfig.categories ? rawCategories : rawCategories.map(cat => ({ ...cat, subcategories: [] }));
             const othersLabel = game.i18n?.localize?.('BAD.categorization.others') ?? 'Other Actions';
             const categorized = categorizeActions(visibleActions, { enabled: true, categories }, othersLabel, {
                 actor: this.actor,

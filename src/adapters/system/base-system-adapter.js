@@ -252,18 +252,21 @@ export class BaseSystemAdapter {
     }
 
     /**
-     * Apply a categorized section layout template to the HUD context.
+     * Apply a categorized section layout template to the HUD context using default or provided categories.
+     * Removes subcategories from default categories so it only displays the main categorization sections.
+     *
      * @param {Object} context The Handlebars render context
      * @param {Object} [options]
-     * @param {Object[]} [options.categories] Category definitions to apply (defaults to getDefaultCategories())
-     * @param {string} [options.catchAllLabel] Localized catch-all label
+     * @param {Object[]} [options.categories] Category definitions to apply (defaults to getDefaultCategories() without subcategories)
+     * @param {string} [options.catchAllLabel] Localized label for uncategorized items
      * @param {Actor} [options.actor] Actor document
      * @param {Token} [options.token] Token document
      * @param {User} [options.user] User document
      */
     formatCategorizedLayout(context, { categories = null, catchAllLabel = null, actor = null, token = null, user = null } = {}) {
         context.layout = 'categorized';
-        const cats = categories ?? this.getDefaultCategories();
+        const rawCats = categories ?? this.getDefaultCategories();
+        const cats = (rawCats ?? []).map(cat => (categories ? cat : { ...cat, subcategories: [] }));
         const others = catchAllLabel ?? (game.i18n?.localize?.('BAD.categorization.others') ?? 'Other Actions');
         const categorized = categorizeActions(context.items ?? [], { enabled: true, categories: cats }, others, {
             actor: actor ?? context.actor,
