@@ -1704,6 +1704,8 @@ body > #tooltip.bad-summary-has-table-wrapper,
 }
 
 .bad-summary-row-label {
+    display: inline-block;
+    min-width: 3.4em;
     font-size: 0.82em;
     font-weight: 600;
     color: #a78bfa;
