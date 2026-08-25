@@ -197,13 +197,15 @@ Hooks.on('controlToken', (token, controlled) => {
     }
 });
 
-// Hook into Token HUD rendering to re-render attached overlay if open
+// Hook into Token HUD rendering to update attached overlay position if open
 Hooks.on('renderTokenHUD', (tokenHUD, html, data) => {
     const token = tokenHUD?.object;
     if (!token) return;
     const currentApp = actionDisplay.activeApp;
     if (currentApp?.rendered && (currentApp.token === token || currentApp.token?.id === token.id)) {
-        requestHUDRender();
+        if (currentApp.isTracked) {
+            currentApp.setPosition();
+        }
     }
 });
 
@@ -299,23 +301,24 @@ Hooks.on('deleteActiveEffect', (effect, options, userId) => {
  */
 export function handleCombatTurnChange(combat) {
     const isFeatureEnabled = Boolean(game.settings.get(MODULE_ID, 'enableCombatAutoTrackButton'));
-    const isAutoTrackActive = Boolean(game.settings.get(MODULE_ID, 'autoTrackCombat'));
+    const isAutoTrackCombat = Boolean(game.settings.get(MODULE_ID, 'autoTrackCombat'));
     const isAutoToggleActive = Boolean(game.settings.get(MODULE_ID, 'autoToggleCombat'));
+    const isAutoTrackActive = isFeatureEnabled && isAutoTrackCombat;
 
-    if (isFeatureEnabled && (isAutoToggleActive || isAutoTrackActive) && combat?.started && combat.combatant) {
-        const currentCombatant = combat.combatant;
-        const token = currentCombatant.token?.object
-            ?? canvas?.tokens?.get?.(currentCombatant.tokenId)
-            ?? (currentCombatant.token && canvas?.tokens?.placeables?.includes(currentCombatant.token) ? currentCombatant.token : null)
-            ?? currentCombatant.actor?.getActiveTokens?.()?.[0]
-            ?? null;
+    const currentApp = actionDisplay.activeApp;
+    const combatant = combat?.combatant;
+    const token = combatant?.token?.object
+        ?? canvas?.tokens?.get?.(combatant?.tokenId)
+        ?? (combatant?.token && canvas?.tokens?.placeables?.includes(combatant?.token) ? combatant?.token : null)
+        ?? combatant?.actor?.getActiveTokens?.()?.[0]
+        ?? null;
 
+    if (token) {
         const isMyTurn = Boolean(token && adapter.foundry.isUserInCharge(token));
 
         if (isAutoToggleActive) {
-            const currentApp = actionDisplay.activeApp;
+            // Auto-toggle mode: open HUD on my turn, close on other turns
             if (isMyTurn) {
-                // Transition to "my turn": open HUD (or switch if already open on another token)
                 if (currentApp?.rendered) {
                     if (currentApp.token === token || currentApp.token?.id === token.id) {
                         requestHUDRender();
@@ -350,7 +353,6 @@ export function handleCombatTurnChange(combat) {
             }
         } else if (isAutoTrackActive && isMyTurn) {
             // Standard auto-track: switch HUD if HUD is already open
-            const currentApp = actionDisplay.activeApp;
             if (currentApp?.rendered) {
                 if (currentApp.token === token || currentApp.token?.id === token.id) {
                     requestHUDRender();
@@ -423,6 +425,20 @@ Hooks.on('updateCombatant', (combatant, changes, options, userId) => {
 
 // Hook into synthetic Token document updates (actor delta mutations)
 Hooks.on('updateToken', (tokenDoc, changes, options, userId) => {
+    if (options?.badInternal) return;
+    const metadataKeys = new Set(['_id', 'id', '_stats']);
+    const nonMetaKeys = Object.keys(changes ?? {}).filter(k => !metadataKeys.has(k) && !k.startsWith('_stats.'));
+    const isOnlyModuleFlags = nonMetaKeys.length > 0 && nonMetaKeys.every(key => {
+        if (key.startsWith(`flags.${MODULE_ID}`) || key.startsWith(`actorData.flags.${MODULE_ID}`) || key.startsWith(`delta.flags.${MODULE_ID}`)) return true;
+        if (key === 'flags') {
+            const flagKeys = Object.keys(changes.flags ?? {});
+            return flagKeys.length === 1 && flagKeys[0] === MODULE_ID;
+        }
+        return false;
+    });
+
+    if (isOnlyModuleFlags) return;
+
     const currentApp = actionDisplay.activeApp;
     if (currentApp?.rendered && (tokenDoc?.id === currentApp.token?.id || tokenDoc?.actor?.id === currentApp.actor?.id)) {
         requestHUDRender();
