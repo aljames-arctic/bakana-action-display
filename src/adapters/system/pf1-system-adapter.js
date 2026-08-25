@@ -226,6 +226,7 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
         }
 
         modified.push(...this.extractCheckActions(actor));
+        modified.push(...this.extractInfoActions(actor));
 
         // Apply default resource filtering (e.g. hiding depleted actions)
         return super.modifyActions(modified, actor);
@@ -380,12 +381,15 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
 
     /**
      * Modify the rendering context before it is sent to the template.
-     * Used here to sort the spell sub-tabs (Cantrips, Orisons, Levels, SLAs) and display showUnprepared indicators.
+     * Used here to sort the spell sub-tabs (Cantrips, Orisons, Levels, SLAs), format Page 2 split checks, Page 3 token info, and display showUnprepared indicators.
      */
-    modifyContext(context, app) {
+    async modifyContext(context, app) {
         super.modifyContext?.(context, app);
-        if (Number(app?.activePage) === 2) {
+        const activePage = Number(app?.activePage);
+        if (activePage === 2) {
             this.formatSplitLayout(context);
+        } else if (activePage === 3) {
+            await this.formatTokenInfoLayout(context, app?.actor, app?.token);
         }
 
         const showAll = Boolean(app?.actor?.getFlag?.(MODULE_ID, 'showAll'));
@@ -413,6 +417,292 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
                 (SPELL_SUB_TAB_ORDER.get(a.id) ?? 999) - (SPELL_SUB_TAB_ORDER.get(b.id) ?? 999)
             );
         }
+    }
+
+    /**
+     * Extract structured token information for Page 3 showcase in PF1e.
+     * @param {Actor} actor
+     * @param {Token} [token]
+     * @returns {Promise<Object|null>}
+     */
+    async getTokenInfo(actor, token = null) {
+        if (!actor) return null;
+
+        const system = actor.system ?? {};
+        const cfg = CONFIG?.PF1;
+
+        // 1. Name and Image
+        const name = token?.name ?? actor.name ?? '';
+        const img = token?.texture?.src ?? actor.img ?? 'icons/svg/mystery-man.svg';
+
+        // 2. Creature Type, Race, Size, Alignment, CR / Level
+        const typeInfo = this.#extractCreatureType(actor, cfg);
+
+        // 3. Armor Class (Normal, Touch, Flat-Footed)
+        const acInfo = this.#extractArmorClass(actor);
+
+        // 4. Movement Speeds (Land, Fly with Maneuverability, Swim, Climb, Burrow)
+        const movementInfo = this.#extractMovement(actor, cfg);
+
+        // 5. Damage Resistances (DR + Energy Resistances)
+        const resistances = this.#extractResistances(actor);
+
+        // 6. Damage Immunities
+        const damageImmunities = this.#extractDamageImmunities(actor);
+
+        // 7. Condition Immunities
+        const conditionImmunities = this.#extractConditionImmunities(actor);
+
+        // 8. Damage Vulnerabilities
+        const vulnerabilities = this.#extractVulnerabilities(actor);
+
+        // 9. Languages
+        const languages = this.#extractLanguages(actor, cfg);
+
+        // 10. Senses
+        const senses = this.#extractSenses(actor, cfg);
+
+        // 11. Biography / Notes
+        const rawBio = system.details?.biography?.value ?? system.details?.notes?.value ?? system.details?.biography?.public ?? '';
+        let biographyHTML = '';
+        if (rawBio && typeof rawBio === 'string' && rawBio.trim().length > 0) {
+            biographyHTML = await this.enrichHTML(rawBio, {
+                relativeTo: actor,
+                rollData: actor.getRollData?.() ?? {},
+                secrets: false,
+                async: true
+            });
+        }
+
+        return {
+            name,
+            img,
+            typeLabel: typeInfo.fullLabel,
+            type: typeInfo.type,
+            subtype: typeInfo.subtype,
+            size: typeInfo.size,
+            crLabel: typeInfo.crLabel,
+            alignment: typeInfo.alignment,
+            ac: acInfo,
+            movement: movementInfo,
+            resistances,
+            hasResistances: resistances.length > 0,
+            damageImmunities,
+            conditionImmunities,
+            hasImmunities: damageImmunities.length > 0 || conditionImmunities.length > 0,
+            vulnerabilities,
+            hasVulnerabilities: vulnerabilities.length > 0,
+            languages,
+            hasLanguages: languages.length > 0,
+            senses,
+            hasSenses: senses.length > 0,
+            biography: rawBio,
+            biographyHTML,
+            hasBiography: Boolean(biographyHTML || rawBio)
+        };
+    }
+
+    #extractCreatureType(actor, cfg = CONFIG?.PF1) {
+        const system = actor?.system ?? {};
+        const details = system.details ?? {};
+        const traits = system.traits ?? {};
+
+        // Size
+        const sizeKey = traits.size ?? 'med';
+        const sizeMap = {
+            fine: 'Fine', dim: 'Diminutive', tiny: 'Tiny', sm: 'Small',
+            med: 'Medium', lg: 'Large', huge: 'Huge', grg: 'Gargantuan', col: 'Colossal'
+        };
+        const sizeLabel = cfg?.actorSizes?.[sizeKey] ? localize(cfg.actorSizes[sizeKey], cfg.actorSizes[sizeKey]) : (sizeMap[sizeKey] ?? (sizeKey.charAt(0).toUpperCase() + sizeKey.slice(1)));
+
+        // Alignment
+        const alignKey = details.alignment;
+        const alignment = alignKey ? (cfg?.alignments?.[alignKey] ? localize(cfg.alignments[alignKey], alignKey) : alignKey) : '';
+
+        // Race / Type
+        const race = details.race ?? '';
+        const type = details.type ?? '';
+        const subtype = details.subtype ?? '';
+        const raceOrType = race || [type, subtype ? `(${subtype})` : null].filter(Boolean).join(' ');
+
+        // CR or Level
+        let crLabel = '';
+        if (details.cr?.total !== undefined && details.cr?.total !== null && String(details.cr.total).length > 0) {
+            crLabel = `CR ${details.cr.total}`;
+        } else if (details.cr?.base !== undefined && details.cr?.base !== null) {
+            crLabel = `CR ${details.cr.base}`;
+        } else if (details.level?.value !== undefined && details.level?.value !== null) {
+            crLabel = `Level ${details.level.value}`;
+        } else if (actor.type === 'character' && system.attributes?.hd?.total) {
+            crLabel = `Level ${system.attributes.hd.total}`;
+        }
+
+        const parts = [sizeLabel, raceOrType].filter(Boolean);
+        const fullLabel = parts.join(' ');
+
+        return {
+            size: sizeLabel,
+            alignment,
+            type,
+            subtype,
+            crLabel,
+            fullLabel
+        };
+    }
+
+    #extractArmorClass(actor) {
+        const ac = actor?.system?.attributes?.ac;
+        const normal = ac?.normal?.total ?? ac?.value ?? ac?.total ?? 10;
+        const touch = ac?.touch?.total;
+        const flatFooted = ac?.flatFooted?.total;
+
+        const subParts = [];
+        if (touch !== undefined && touch !== null) subParts.push(`Touch: ${touch}`);
+        if (flatFooted !== undefined && flatFooted !== null) subParts.push(`Flat-Footed: ${flatFooted}`);
+
+        return {
+            value: normal,
+            label: subParts.join(', ')
+        };
+    }
+
+    #extractMovement(actor, cfg = CONFIG?.PF1) {
+        const speed = actor?.system?.attributes?.speed ?? {};
+        const land = speed.land?.total ?? speed.land?.value ?? 30;
+        const primary = `${land} ft`;
+        const secondaries = [];
+
+        if (speed.fly?.total > 0) {
+            const manKey = speed.fly.maneuverability;
+            const manLabel = manKey ? (cfg?.flyManeuverabilities?.[manKey] ? localize(cfg.flyManeuverabilities[manKey], manKey) : manKey) : '';
+            secondaries.push(`Fly ${speed.fly.total} ft${manLabel ? ` (${manLabel})` : ''}`);
+        }
+        if (speed.swim?.total > 0) secondaries.push(`Swim ${speed.swim.total} ft`);
+        if (speed.climb?.total > 0) secondaries.push(`Climb ${speed.climb.total} ft`);
+        if (speed.burrow?.total > 0) secondaries.push(`Burrow ${speed.burrow.total} ft`);
+
+        return {
+            primary,
+            secondaries
+        };
+    }
+
+    #extractResistances(actor) {
+        const traits = actor?.system?.traits ?? {};
+        const results = [];
+
+        // Damage Reduction (DR)
+        if (traits.dr?.value && typeof traits.dr.value === 'string' && traits.dr.value.trim().length > 0) {
+            results.push(`DR ${traits.dr.value.trim()}`);
+        }
+        if (traits.dr?.custom && typeof traits.dr.custom === 'string' && traits.dr.custom.trim().length > 0) {
+            results.push(`DR ${traits.dr.custom.trim()}`);
+        }
+
+        // Energy Resistance (ER)
+        if (traits.eres?.value && typeof traits.eres.value === 'string' && traits.eres.value.trim().length > 0) {
+            results.push(traits.eres.value.trim());
+        }
+        if (traits.eres?.custom && typeof traits.eres.custom === 'string' && traits.eres.custom.trim().length > 0) {
+            results.push(traits.eres.custom.trim());
+        }
+
+        return results;
+    }
+
+    #extractDamageImmunities(actor) {
+        const traits = actor?.system?.traits ?? {};
+        const results = [];
+        if (traits.di?.value && typeof traits.di.value === 'string' && traits.di.value.trim().length > 0) {
+            results.push(traits.di.value.trim());
+        }
+        if (traits.di?.custom && typeof traits.di.custom === 'string' && traits.di.custom.trim().length > 0) {
+            results.push(traits.di.custom.trim());
+        }
+        return results;
+    }
+
+    #extractConditionImmunities(actor) {
+        const traits = actor?.system?.traits ?? {};
+        const results = [];
+        if (traits.ci?.value && typeof traits.ci.value === 'string' && traits.ci.value.trim().length > 0) {
+            results.push(traits.ci.value.trim());
+        }
+        if (traits.ci?.custom && typeof traits.ci.custom === 'string' && traits.ci.custom.trim().length > 0) {
+            results.push(traits.ci.custom.trim());
+        }
+        return results;
+    }
+
+    #extractVulnerabilities(actor) {
+        const traits = actor?.system?.traits ?? {};
+        const results = [];
+        if (traits.dv?.value && typeof traits.dv.value === 'string' && traits.dv.value.trim().length > 0) {
+            results.push(traits.dv.value.trim());
+        }
+        if (traits.dv?.custom && typeof traits.dv.custom === 'string' && traits.dv.custom.trim().length > 0) {
+            results.push(traits.dv.custom.trim());
+        }
+        return results;
+    }
+
+    #extractLanguages(actor, cfg = CONFIG?.PF1) {
+        const langData = actor?.system?.traits?.languages;
+        if (!langData) return [];
+
+        const results = [];
+        const langMap = cfg?.languages ?? {};
+
+        const values = Array.isArray(langData.value) ? langData.value : (langData.value instanceof Set ? Array.from(langData.value) : []);
+        for (const key of values) {
+            const label = langMap[key] ? localize(langMap[key], key) : (key.charAt(0).toUpperCase() + key.slice(1));
+            if (label) results.push(label);
+        }
+
+        if (langData.custom && typeof langData.custom === 'string') {
+            const customItems = langData.custom.split(/[;,]/).map(s => s.trim()).filter(Boolean);
+            results.push(...customItems);
+        }
+
+        return Array.from(new Set(results));
+    }
+
+    #extractSenses(actor, cfg = CONFIG?.PF1) {
+        const sensesData = actor?.system?.traits?.senses;
+        if (!sensesData) return [];
+
+        const results = [];
+        if (typeof sensesData === 'string') {
+            return sensesData.split(/[;,]/).map(s => s.trim()).filter(Boolean);
+        }
+
+        if (sensesData.custom && typeof sensesData.custom === 'string') {
+            results.push(...sensesData.custom.split(/[;,]/).map(s => s.trim()).filter(Boolean));
+        }
+
+        if (sensesData.darkvision) {
+            results.push(`Darkvision ${sensesData.darkvision} ft`);
+        }
+        if (sensesData.lowLight || sensesData.lowlight) {
+            results.push('Low-Light Vision');
+        }
+        if (sensesData.blindsight) {
+            results.push(`Blindsight ${sensesData.blindsight} ft`);
+        }
+        if (sensesData.blindSense || sensesData.blindsense) {
+            results.push(`Blindsense ${sensesData.blindSense ?? sensesData.blindsense} ft`);
+        }
+        if (sensesData.tremorsense) {
+            results.push(`Tremorsense ${sensesData.tremorsense} ft`);
+        }
+        if (sensesData.scent) {
+            results.push('Scent');
+        }
+        if (sensesData.seeInDarkness) {
+            results.push('See in Darkness');
+        }
+
+        return Array.from(new Set(results));
     }
 
     /**

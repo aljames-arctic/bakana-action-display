@@ -1,5 +1,7 @@
 import { MODULE_ID } from '../../constants.js';
 import { log } from '../../lib/logger.js';
+import { localize } from '../../lib/utils.js';
+import { Action } from '../../ui/action.js';
 import { BaseFoundryAdapter } from '../foundry/base-foundry-adapter.js';
 import { BaseSystemContextMenuManager } from './context-menu/base-system-context-menu-manager.js';
 import { BaseSystemTabFilterManager } from './filter/base-system-tab-filter-manager.js';
@@ -183,7 +185,18 @@ export class BaseSystemAdapter {
      * @returns {Action[]}
      */
     extractInfoActions(actor) {
-        return [];
+        if (!actor) return [];
+        const infoAction = new Action({
+            id: `token-info-${actor.id ?? 'actor'}`,
+            name: actor.name ?? localize('BAD.page3.tokenInfo', 'Token Info'),
+            type: 'info',
+            img: actor.img ?? 'icons/svg/mystery-man.svg',
+            available: true,
+            page: 3,
+            uses: { available: null, max: null }
+        });
+        infoAction.page = 3;
+        return [infoAction];
     }
 
     /**

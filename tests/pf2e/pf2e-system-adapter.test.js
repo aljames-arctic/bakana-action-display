@@ -131,7 +131,7 @@ test('Pf2eSystemAdapter modifyActions full transformation pipeline', async () =>
 
     const modified = await adapter.modifyActions(rawActions, actor);
 
-    assert.equal(modified.length, 8, 'Should format feat, spell, consumable, injected Strike, and 4 core actions');
+    assert.equal(modified.length, 9, 'Should format feat, spell, consumable, injected Strike, 4 core actions, and Page 3 info action');
 
     // Feat verification
     const featAction = modified.find(a => a.id === 'act-1');
@@ -414,8 +414,106 @@ test('Pf2eSystemAdapter extractCheckActions generates abilities, saves, and skil
 
     // Split layout on page 2
     const context = { items: checkActions };
-    adapter.modifyContext(context, { activePage: 2, actor });
+    await adapter.modifyContext(context, { activePage: 2, actor });
     assert.equal(context.layout, 'split');
     assert.equal(context.coreItems.length, 4);
     assert.equal(context.otherItems.length, 2);
 });
+
+test('Pf2eSystemAdapter getTokenInfo extracts complete token statistics and details for Page 3 showcase', async () => {
+    const adapter = new Pf2eSystemAdapter();
+
+    const pf2eActor = {
+        id: 'actor-pf2e-dragon',
+        name: 'Young Red Dragon',
+        type: 'npc',
+        level: 10,
+        img: 'icons/svg/dragon.svg',
+        system: {
+            details: {
+                level: { value: 10 },
+                creatureType: 'Dragon',
+                alignment: { value: 'CE' },
+                languages: {
+                    value: ['common', 'draconic'],
+                    custom: 'Ignan'
+                },
+                biography: { value: '<p>A fearsome young red dragon dwelling in volcanic caverns.</p>' }
+            },
+            traits: {
+                size: { value: 'lg' },
+                value: ['dragon', 'fire'],
+                senses: [
+                    { type: 'darkvision', value: '' },
+                    { type: 'scent', value: '60' }
+                ]
+            },
+            attributes: {
+                ac: { value: 30 },
+                shield: {
+                    raised: true,
+                    ac: 2,
+                    hardness: 10,
+                    hp: { value: 40 }
+                },
+                speed: {
+                    value: 40,
+                    otherSpeeds: [
+                        { type: 'fly', value: 120 },
+                        { type: 'burrow', value: 20 }
+                    ]
+                },
+                resistances: [
+                    { type: 'fire', value: 10, exceptions: [] },
+                    { type: 'physical', value: 5, exceptions: ['cold iron'] }
+                ],
+                immunities: [
+                    { type: 'paralyzed', exceptions: [] },
+                    { type: 'sleep', exceptions: [] }
+                ],
+                weaknesses: [
+                    { type: 'cold', value: 10, exceptions: [] }
+                ]
+            }
+        },
+        getRollData: () => ({})
+    };
+
+    const token = {
+        name: 'Young Red Dragon (Token)',
+        texture: { src: 'tokens/red-dragon.png' }
+    };
+
+    const info = await adapter.getTokenInfo(pf2eActor, token);
+    assert.ok(info);
+    assert.equal(info.name, 'Young Red Dragon (Token)');
+    assert.equal(info.img, 'tokens/red-dragon.png');
+    assert.equal(info.size, 'Large');
+    assert.equal(info.crLabel, 'Creature 10');
+    assert.equal(info.ac.value, 30);
+    assert.ok(info.ac.label.includes('+2 Shield AC'));
+    assert.ok(info.ac.label.includes('Hardness 10'));
+    assert.equal(info.movement.primary, '40 ft');
+    assert.ok(info.movement.secondaries.some(s => s.includes('Fly 120 ft')));
+    assert.ok(info.movement.secondaries.some(s => s.includes('Burrow 20 ft')));
+    assert.ok(info.resistances.includes('Fire 10'));
+    assert.ok(info.resistances.some(r => r.includes('Physical 5') && r.includes('cold iron')));
+    assert.ok(info.damageImmunities.includes('Paralyzed'));
+    assert.ok(info.damageImmunities.includes('Sleep'));
+    assert.ok(info.vulnerabilities.includes('Cold 10'));
+    assert.ok(info.languages.includes('Common'));
+    assert.ok(info.languages.includes('Draconic'));
+    assert.ok(info.languages.includes('Ignan'));
+    assert.ok(info.senses.some(s => s.includes('Darkvision')));
+    assert.ok(info.senses.some(s => s.includes('Scent 60 ft')));
+    assert.equal(info.biography, '<p>A fearsome young red dragon dwelling in volcanic caverns.</p>');
+    assert.equal(info.biographyHTML, '<p>A fearsome young red dragon dwelling in volcanic caverns.</p>');
+
+    // Modify context on page 3
+    const context = {};
+    await adapter.modifyContext(context, { activePage: 3, actor: pf2eActor, token });
+    assert.equal(context.layout, 'tokenInfo');
+    assert.ok(context.tokenInfo);
+    assert.equal(context.tokenInfo.name, 'Young Red Dragon (Token)');
+});
+

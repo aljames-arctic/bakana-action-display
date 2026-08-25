@@ -107,7 +107,7 @@ test('Pf1SystemAdapter modifyActions full transformation pipeline', async () => 
 
     const modified = await adapter.modifyActions(rawActions, actor);
 
-    assert.equal(modified.length, 8, 'Should format both spell and buff actions plus 6 ability actions');
+    assert.equal(modified.length, 9, 'Should format both spell and buff actions plus 6 ability actions plus Page 3 info action');
 
     const spellAction = modified.find(a => a.id === 'act-spell');
     assert.equal(spellAction.activationType, 'action');
@@ -160,15 +160,15 @@ test('Pf1SystemAdapter filters unequipped items unless showUnequipped or showAll
         { id: 'act-w2', originalItem: unequippedWeapon }
     ];
 
-    // 1. By default, unequipped weapon is filtered out (1 equipped + 6 abilities = 7)
+    // 1. By default, unequipped weapon is filtered out (1 equipped + 6 abilities + 1 Page 3 info = 8)
     const modified1 = await adapter.modifyActions(rawActions, actor);
-    assert.equal(modified1.length, 7);
+    assert.equal(modified1.length, 8);
     assert.equal(modified1[0].id, 'act-w1');
 
-    // 2. When showUnequipped_weapon is true, unequipped weapon is included with available: false (2 weapons + 6 abilities = 8)
+    // 2. When showUnequipped_weapon is true, unequipped weapon is included with available: false (2 weapons + 6 abilities + 1 Page 3 info = 9)
     actor.flags['bakana-action-display'].showUnequipped_weapon = true;
     const modified2 = await adapter.modifyActions(rawActions, actor);
-    assert.equal(modified2.length, 8);
+    assert.equal(modified2.length, 9);
     const unequippedAction = modified2.find(a => a.id === 'act-w2');
     assert.ok(unequippedAction);
     assert.equal(unequippedAction.available, false);
@@ -315,9 +315,97 @@ test('Pf1SystemAdapter extractCheckActions generates abilities, saves, and skill
 
     // Split layout on page 2
     const context = { items: checkActions };
-    adapter.modifyContext(context, { activePage: 2, actor });
+    await adapter.modifyContext(context, { activePage: 2, actor });
     assert.equal(context.layout, 'split');
     assert.equal(context.coreItems.length, 6);
     assert.equal(context.otherItems.length, 3);
 });
+
+test('Pf1SystemAdapter getTokenInfo extracts complete token statistics and details for Page 3 showcase', async () => {
+    const adapter = new Pf1SystemAdapter();
+
+    const pf1Actor = {
+        id: 'actor-pf1-paladin',
+        name: 'Seelah',
+        type: 'character',
+        img: 'icons/svg/paladin.svg',
+        system: {
+            details: {
+                race: 'Human',
+                alignment: 'lg',
+                level: { value: 5 },
+                biography: { value: '<p>A valiant paladin of Iomedae.</p>' }
+            },
+            traits: {
+                size: 'med',
+                languages: {
+                    value: ['common', 'celestial'],
+                    custom: 'Osiriani'
+                },
+                senses: {
+                    darkvision: 60,
+                    lowLight: true,
+                    custom: 'Scent'
+                },
+                dr: { value: '5/evil' },
+                eres: { value: 'fire 10, cold 5' },
+                di: { value: 'poison, disease' },
+                ci: { value: 'fear' },
+                dv: { value: 'unholy' }
+            },
+            attributes: {
+                ac: {
+                    normal: { total: 21 },
+                    touch: { total: 11 },
+                    flatFooted: { total: 20 }
+                },
+                speed: {
+                    land: { total: 30 },
+                    fly: { total: 60, maneuverability: 'good' },
+                    swim: { total: 20 }
+                }
+            }
+        },
+        getRollData: () => ({})
+    };
+
+    const token = {
+        name: 'Seelah (Token)',
+        texture: { src: 'tokens/seelah.png' }
+    };
+
+    const info = await adapter.getTokenInfo(pf1Actor, token);
+    assert.ok(info);
+    assert.equal(info.name, 'Seelah (Token)');
+    assert.equal(info.img, 'tokens/seelah.png');
+    assert.equal(info.size, 'Medium');
+    assert.equal(info.crLabel, 'Level 5');
+    assert.equal(info.ac.value, 21);
+    assert.ok(info.ac.label.includes('Touch: 11'));
+    assert.ok(info.ac.label.includes('Flat-Footed: 20'));
+    assert.equal(info.movement.primary, '30 ft');
+    assert.ok(info.movement.secondaries.some(s => s.includes('Fly 60 ft')));
+    assert.ok(info.movement.secondaries.some(s => s.includes('Swim 20 ft')));
+    assert.ok(info.resistances.includes('DR 5/evil'));
+    assert.ok(info.resistances.includes('fire 10, cold 5'));
+    assert.ok(info.damageImmunities.includes('poison, disease'));
+    assert.ok(info.conditionImmunities.includes('fear'));
+    assert.ok(info.vulnerabilities.includes('unholy'));
+    assert.ok(info.languages.includes('Common'));
+    assert.ok(info.languages.includes('Celestial'));
+    assert.ok(info.languages.includes('Osiriani'));
+    assert.ok(info.senses.some(s => s.includes('Darkvision 60 ft')));
+    assert.ok(info.senses.some(s => s.includes('Low-Light Vision')));
+    assert.ok(info.senses.some(s => s.includes('Scent')));
+    assert.equal(info.biography, '<p>A valiant paladin of Iomedae.</p>');
+    assert.equal(info.biographyHTML, '<p>A valiant paladin of Iomedae.</p>');
+
+    // Modify context on page 3
+    const context = {};
+    await adapter.modifyContext(context, { activePage: 3, actor: pf1Actor, token });
+    assert.equal(context.layout, 'tokenInfo');
+    assert.ok(context.tokenInfo);
+    assert.equal(context.tokenInfo.name, 'Seelah (Token)');
+});
+
 

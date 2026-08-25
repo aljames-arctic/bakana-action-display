@@ -152,6 +152,7 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
         }
 
         finalActions.push(...this.extractCheckActions(actor));
+        finalActions.push(...this.extractInfoActions(actor));
 
         // 4. Apply default resource filtering (e.g. hiding depleted actions)
         return super.modifyActions(finalActions, actor);
@@ -421,12 +422,15 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
 
     /**
      * Modify the rendering context before it is sent to the template.
-     * Used here to sort the spell sub-tabs (Cantrips, Ranks 1-10, Focus, Innate, Rituals) and display showUnprepared tab indicators.
+     * Used here to sort the spell sub-tabs (Cantrips, Ranks 1-10, Focus, Innate, Rituals), format Page 2 split checks, Page 3 token info, and display showUnprepared tab indicators.
      */
-    modifyContext(context, app) {
+    async modifyContext(context, app) {
         super.modifyContext?.(context, app);
-        if (Number(app?.activePage) === 2) {
+        const activePage = Number(app?.activePage);
+        if (activePage === 2) {
             this.formatSplitLayout(context);
+        } else if (activePage === 3) {
+            await this.formatTokenInfoLayout(context, app?.actor, app?.token);
         }
 
         const showAll = Boolean(app?.actor?.getFlag?.(MODULE_ID, 'showAll'));
@@ -460,6 +464,270 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
                 (PF2E_SPELL_SUB_TAB_ORDER.get(a.id) ?? 999) - (PF2E_SPELL_SUB_TAB_ORDER.get(b.id) ?? 999)
             );
         }
+    }
+
+    /**
+     * Extract structured token information for Page 3 showcase in PF2e.
+     * @param {Actor} actor
+     * @param {Token} [token]
+     * @returns {Promise<Object|null>}
+     */
+    async getTokenInfo(actor, token = null) {
+        if (!actor) return null;
+
+        const system = actor.system ?? {};
+        const cfg = CONFIG?.PF2E;
+
+        // 1. Name and Image
+        const name = token?.name ?? actor.name ?? '';
+        const img = token?.texture?.src ?? actor.img ?? 'icons/svg/mystery-man.svg';
+
+        // 2. Creature Type, Traits, Size, Alignment, Level / Creature
+        const typeInfo = this.#extractCreatureType(actor, cfg);
+
+        // 3. Armor Class & Shield stats
+        const acInfo = this.#extractArmorClass(actor);
+
+        // 4. Movement Speeds (Land, other speeds)
+        const movementInfo = this.#extractMovement(actor);
+
+        // 5. Resistances
+        const resistances = this.#extractResistances(actor, cfg);
+
+        // 6. Immunities
+        const damageImmunities = this.#extractImmunities(actor, cfg);
+        const conditionImmunities = [];
+
+        // 7. Weaknesses (PF2e vulnerabilities)
+        const vulnerabilities = this.#extractWeaknesses(actor, cfg);
+
+        // 8. Languages
+        const languages = this.#extractLanguages(actor, cfg);
+
+        // 9. Senses
+        const senses = this.#extractSenses(actor, cfg);
+
+        // 10. Biography / Description
+        const rawBio = system.details?.biography?.value ?? system.details?.biography?.public ?? system.details?.publicNotes ?? system.details?.description?.value ?? '';
+        let biographyHTML = '';
+        if (rawBio && typeof rawBio === 'string' && rawBio.trim().length > 0) {
+            biographyHTML = await this.enrichHTML(rawBio, {
+                relativeTo: actor,
+                rollData: actor.getRollData?.() ?? {},
+                secrets: false,
+                async: true
+            });
+        }
+
+        return {
+            name,
+            img,
+            typeLabel: typeInfo.fullLabel,
+            type: typeInfo.type,
+            subtype: typeInfo.subtype,
+            size: typeInfo.size,
+            crLabel: typeInfo.crLabel,
+            alignment: typeInfo.alignment,
+            ac: acInfo,
+            movement: movementInfo,
+            resistances,
+            hasResistances: resistances.length > 0,
+            damageImmunities,
+            conditionImmunities,
+            hasImmunities: damageImmunities.length > 0,
+            vulnerabilities,
+            hasVulnerabilities: vulnerabilities.length > 0,
+            languages,
+            hasLanguages: languages.length > 0,
+            senses,
+            hasSenses: senses.length > 0,
+            biography: rawBio,
+            biographyHTML,
+            hasBiography: Boolean(biographyHTML || rawBio)
+        };
+    }
+
+    #extractCreatureType(actor, cfg = CONFIG?.PF2E) {
+        const system = actor?.system ?? {};
+        const details = system.details ?? {};
+        const traits = system.traits ?? {};
+
+        // Size
+        const sizeKey = traits.size?.value ?? traits.size ?? 'med';
+        const sizeMap = {
+            tiny: 'Tiny', sm: 'Small', med: 'Medium', lg: 'Large', huge: 'Huge', grg: 'Gargantuan'
+        };
+        const sizeLabel = cfg?.actorSizes?.[sizeKey] ? localize(cfg.actorSizes[sizeKey], sizeKey) : (sizeMap[sizeKey] ?? (sizeKey.charAt(0).toUpperCase() + sizeKey.slice(1)));
+
+        // Level / CR
+        const level = actor.level ?? details.level?.value ?? 1;
+        const crLabel = actor.type === 'npc' ? `Creature ${level}` : `Level ${level}`;
+
+        // Alignment
+        const alignment = details.alignment?.value ? localize(`PF2E.Alignment${details.alignment.value}`, details.alignment.value) : '';
+
+        // Traits / Creature Type / Ancestry
+        const traitList = Array.isArray(traits.value) ? traits.value : [];
+        const ancestry = details.ancestry?.name ?? details.heritage?.name ?? '';
+        const creatureType = details.creatureType ? localize(details.creatureType, details.creatureType) : '';
+
+        let typeStr = creatureType || ancestry || '';
+        if (!typeStr && traitList.length > 0) {
+            typeStr = traitList.map(t => cfg?.creatureTraits?.[t] ? localize(cfg.creatureTraits[t], t) : (t.charAt(0).toUpperCase() + t.slice(1))).join(', ');
+        }
+
+        const fullLabel = [sizeLabel, typeStr].filter(Boolean).join(' ');
+
+        return {
+            size: sizeLabel,
+            alignment,
+            type: creatureType || (traitList[0] ?? ''),
+            subtype: ancestry,
+            crLabel,
+            fullLabel
+        };
+    }
+
+    #extractArmorClass(actor) {
+        const ac = actor?.armorClass?.value ?? actor?.system?.attributes?.ac?.value ?? 10;
+        const shield = actor?.system?.attributes?.shield;
+
+        let shieldLabel = '';
+        if (shield?.raised || (shield?.hp?.value ?? 0) > 0) {
+            const parts = [];
+            if (shield.ac) parts.push(`+${shield.ac} Shield AC`);
+            if (shield.hardness) parts.push(`Hardness ${shield.hardness}`);
+            if (parts.length > 0) shieldLabel = `Shield: ${parts.join(', ')}`;
+        }
+
+        return {
+            value: ac,
+            label: shieldLabel
+        };
+    }
+
+    #extractMovement(actor) {
+        const speed = actor?.system?.attributes?.speed ?? {};
+        const primaryVal = speed.value ?? speed.total ?? 25;
+        const primary = `${primaryVal} ft`;
+        const secondaries = [];
+
+        const otherSpeeds = Array.isArray(speed.otherSpeeds) ? speed.otherSpeeds : [];
+        for (const s of otherSpeeds) {
+            const typeLabel = s.type ? (s.type.charAt(0).toUpperCase() + s.type.slice(1)) : 'Special';
+            const val = s.value ?? s.total;
+            if (val) {
+                secondaries.push(`${typeLabel} ${val} ft`);
+            }
+        }
+
+        return {
+            primary,
+            secondaries
+        };
+    }
+
+    #extractResistances(actor, cfg = CONFIG?.PF2E) {
+        const resistances = actor?.system?.attributes?.resistances ?? [];
+        const results = [];
+
+        for (const res of resistances) {
+            if (typeof res === 'string') {
+                results.push(res);
+                continue;
+            }
+            const typeKey = res.type ?? '';
+            const typeLabel = cfg?.damageTypes?.[typeKey] ? localize(cfg.damageTypes[typeKey], typeKey) : (typeKey.charAt(0).toUpperCase() + typeKey.slice(1));
+            const value = res.value ?? '';
+            const exceptions = Array.isArray(res.exceptions) && res.exceptions.length > 0 ? ` (except ${res.exceptions.join(', ')})` : '';
+            results.push(`${typeLabel} ${value}${exceptions}`.trim());
+        }
+
+        return results;
+    }
+
+    #extractImmunities(actor, cfg = CONFIG?.PF2E) {
+        const immunities = actor?.system?.attributes?.immunities ?? [];
+        const results = [];
+
+        for (const imm of immunities) {
+            if (typeof imm === 'string') {
+                results.push(imm);
+                continue;
+            }
+            const typeKey = imm.type ?? '';
+            const typeLabel = cfg?.immunityTypes?.[typeKey] ? localize(cfg.immunityTypes[typeKey], typeKey) : (typeKey.charAt(0).toUpperCase() + typeKey.slice(1));
+            const exceptions = Array.isArray(imm.exceptions) && imm.exceptions.length > 0 ? ` (except ${imm.exceptions.join(', ')})` : '';
+            results.push(`${typeLabel}${exceptions}`.trim());
+        }
+
+        return results;
+    }
+
+    #extractWeaknesses(actor, cfg = CONFIG?.PF2E) {
+        const weaknesses = actor?.system?.attributes?.weaknesses ?? [];
+        const results = [];
+
+        for (const weak of weaknesses) {
+            if (typeof weak === 'string') {
+                results.push(weak);
+                continue;
+            }
+            const typeKey = weak.type ?? '';
+            const typeLabel = cfg?.weaknessTypes?.[typeKey] ? localize(cfg.weaknessTypes[typeKey], typeKey) : (typeKey.charAt(0).toUpperCase() + typeKey.slice(1));
+            const value = weak.value ?? '';
+            const exceptions = Array.isArray(weak.exceptions) && weak.exceptions.length > 0 ? ` (except ${weak.exceptions.join(', ')})` : '';
+            results.push(`${typeLabel} ${value}${exceptions}`.trim());
+        }
+
+        return results;
+    }
+
+    #extractLanguages(actor, cfg = CONFIG?.PF2E) {
+        const langData = actor?.system?.details?.languages;
+        if (!langData) return [];
+
+        const results = [];
+        const langMap = cfg?.languages ?? {};
+
+        const values = Array.isArray(langData.value) ? langData.value : (langData.value instanceof Set ? Array.from(langData.value) : []);
+        for (const key of values) {
+            const label = langMap[key] ? localize(langMap[key], key) : (key.charAt(0).toUpperCase() + key.slice(1));
+            if (label) results.push(label);
+        }
+
+        if (langData.custom && typeof langData.custom === 'string') {
+            const customItems = langData.custom.split(/[;,]/).map(s => s.trim()).filter(Boolean);
+            results.push(...customItems);
+        }
+
+        if (langData.details && typeof langData.details === 'string') {
+            const detailsItems = langData.details.split(/[;,]/).map(s => s.trim()).filter(Boolean);
+            results.push(...detailsItems);
+        }
+
+        return Array.from(new Set(results));
+    }
+
+    #extractSenses(actor, cfg = CONFIG?.PF2E) {
+        const sensesData = actor?.system?.traits?.senses ?? actor?.perception?.senses;
+        if (!sensesData) return [];
+
+        const results = [];
+        if (Array.isArray(sensesData)) {
+            for (const sense of sensesData) {
+                if (typeof sense === 'string') {
+                    results.push(sense);
+                    continue;
+                }
+                const typeKey = sense.type ?? '';
+                const typeLabel = cfg?.senses?.[typeKey] ? localize(cfg.senses[typeKey], typeKey) : (typeKey.charAt(0).toUpperCase() + typeKey.slice(1));
+                const range = sense.value ? ` ${sense.value} ft` : '';
+                results.push(`${typeLabel}${range}`.trim());
+            }
+        }
+
+        return Array.from(new Set(results));
     }
 
     // #endregion
