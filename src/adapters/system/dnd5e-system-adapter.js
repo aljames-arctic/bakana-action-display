@@ -1989,7 +1989,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
             const ability = action.extra?.ability ?? action.id.replace(/^ability-/, '');
             const ablData = actor?.system?.abilities?.[ability];
             if (ablData?.value !== undefined) {
-                title = `${action.name ?? ''} [Score: ${ablData.value}]`;
+                title = `${action.name ?? ''} (Score: ${ablData.value})`;
             }
             subtitle = 'Ability Check / Saving Throw';
             if (ablData) {
@@ -2064,7 +2064,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
             const ability = action.extra?.ability ?? action.id.replace(/^(check|abilityCheck|ability)-/, '');
             const ablData = actor?.system?.abilities?.[ability];
             if (ablData?.value !== undefined) {
-                title = `${action.name ?? ''} [Score: ${ablData.value}]`;
+                title = `${action.name ?? ''} (Score: ${ablData.value})`;
             }
             subtitle = 'Ability Check';
             if (ablData) {
