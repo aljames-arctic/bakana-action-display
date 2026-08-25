@@ -1633,3 +1633,70 @@ test('Dnd5eSystemContextModifier sorts components sub-tabs strictly in order: vo
     assert.ok(orderVocal < orderSomatic, 'vocal should come before somatic');
     assert.ok(orderSomatic < orderMaterial, 'somatic should come before material');
 });
+
+test('Dnd5eSystemTabFilterManager recognizes material components across properties, components, and materials metadata', () => {
+    const adapter = new Dnd5eSystemAdapter();
+    const filterManager = adapter.filterManager;
+
+    // 1. properties Set with 'mat' or 'm' or 'material'
+    const spellWithMatProp = {
+        type: 'spell',
+        system: { properties: new Set(['vocal', 'mat']) }
+    };
+    assert.equal(filterManager.requiresComponent(spellWithMatProp, 'material'), true);
+
+    // 2. materials object with value text (e.g. cleric holy symbol)
+    const spellWithMaterialsText = {
+        type: 'spell',
+        system: {
+            properties: new Set(['vocal', 'somatic']),
+            materials: { value: 'a holy symbol', consumed: false }
+        }
+    };
+    assert.equal(filterManager.requiresComponent(spellWithMaterialsText, 'material'), true);
+
+    // 3. materials object with cost or consumed
+    const spellWithCost = {
+        type: 'spell',
+        system: {
+            properties: new Set(['vocal', 'somatic']),
+            materials: { value: '', cost: 100, consumed: true }
+        }
+    };
+    assert.equal(filterManager.requiresComponent(spellWithCost, 'material'), true);
+
+    // 4. components boolean map { m: true }
+    const spellWithCompMap = {
+        type: 'spell',
+        system: {
+            components: { v: true, m: true }
+        }
+    };
+    assert.equal(filterManager.requiresComponent(spellWithCompMap, 'material'), true);
+});
+
+test('Dnd5eSystemAdapter recordManualTabToggle handles vocal, somatic, and material toggles', () => {
+    const adapter = new Dnd5eSystemAdapter();
+    let flagWritten = null;
+    const actor = {
+        isOwner: true,
+        getFlag: (scope, key) => {
+            if (key === 'autoBanState') {
+                return {
+                    conditions: { vocal: ['silenced'], material: ['disarmed'] },
+                    manualUnbans: {}
+                };
+            }
+            return null;
+        },
+        setFlag: async (scope, key, val) => {
+            flagWritten = { scope, key, val };
+            return actor;
+        }
+    };
+
+    adapter.recordManualTabToggle(actor, 'components', 'material', false);
+    assert.ok(flagWritten !== null);
+    assert.equal(flagWritten.val.manualUnbans.material, true);
+});
+

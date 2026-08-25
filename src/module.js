@@ -244,16 +244,20 @@ Hooks.on('updateActor', (actor, changes, options, userId) => {
     if (!actor) return;
     if (options?.badInternal) return;
 
-    // If the only change is internal autoBanState flag, do not trigger a second HUD render
+    // If the change only affects internal bakana-action-display flags (e.g. autoBanState, favorites, hiddenItems),
+    // the UI interaction has already rendered or handled it locally; do not trigger a second HUD render.
     const keys = Object.keys(changes ?? {});
-    if (keys.length === 1 && keys[0] === 'flags') {
-        const flagKeys = Object.keys(changes.flags ?? {});
-        if (flagKeys.length === 1 && flagKeys[0] === MODULE_ID) {
-            const badFlagKeys = Object.keys(changes.flags[MODULE_ID] ?? {});
-            if (badFlagKeys.every(k => k === 'autoBanState')) {
-                return;
-            }
+    const isOnlyModuleFlags = keys.length > 0 && keys.every(key => {
+        if (key.startsWith(`flags.${MODULE_ID}`)) return true;
+        if (key === 'flags') {
+            const flagKeys = Object.keys(changes.flags ?? {});
+            return flagKeys.length === 1 && flagKeys[0] === MODULE_ID;
         }
+        return false;
+    });
+
+    if (isOnlyModuleFlags) {
+        return;
     }
 
     const currentApp = actionDisplay.activeApp;

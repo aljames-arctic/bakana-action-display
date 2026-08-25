@@ -2095,7 +2095,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
      * @param {boolean} isActive
      */
     recordManualTabToggle(actor, parentId, subId, isActive) {
-        if (!actor || parentId !== 'components' || !['vocal', 'somatic'].includes(subId)) return;
+        if (!actor || parentId !== 'components' || !['vocal', 'somatic', 'material'].includes(subId)) return;
         const autoBanState = actor.getFlag?.(MODULE_ID, 'autoBanState') ?? {};
         const conditions = autoBanState.conditions ?? {};
         const manualUnbans = { ...(autoBanState.manualUnbans ?? {}) };
