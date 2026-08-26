@@ -428,7 +428,8 @@ export class CategorizationConfigApp extends adapter.foundry.HandlebarsApplicati
      */
     _onLoadPresets(event, target) {
         event.preventDefault();
-        this.config.categories = getDefaultCategories();
+        const rawDefaults = getDefaultCategories(adapter);
+        this.config.categories = normalizeCategorizationConfig({ categories: rawDefaults }).categories;
         this.render();
     }
 

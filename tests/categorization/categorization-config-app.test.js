@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import '../setup.js';
 import { CategorizationConfigApp } from '../../src/categorization/categorization-config-app.js';
 import { MODULE_ID } from '../../src/constants.js';
+import { adapter } from '../../src/adapters/index.js';
+import { Dnd5eSystemAdapter } from '../../src/adapters/system/dnd5e-system-adapter.js';
 
 test('CategorizationConfigApp initializes with stored settings', async () => {
     game.settings.set(MODULE_ID, 'categorizationConfig', {
@@ -196,6 +198,31 @@ test('CategorizationConfigApp _getExpressionHelpTooltip replaces stand-in variab
         assert.ok(html.includes('Doc Objet (<code>item.type === \'weapon\'</code>, <code>item.name</code>, <code>item.system</code>)'));
     } finally {
         game.i18n.localize = origLocalize;
+    }
+});
+
+test('CategorizationConfigApp _onLoadPresets loads specialized D&D5e presets when D&D5e system adapter is active', () => {
+    const origSystem = adapter.system;
+    try {
+        adapter.system = new Dnd5eSystemAdapter('dnd5e', true, adapter.foundry);
+        const app = new CategorizationConfigApp();
+        app.render = () => {};
+
+        app._onLoadPresets({ preventDefault: () => {} }, {});
+
+        assert.equal(app.config.categories.length, 7);
+        assert.equal(app.config.categories[0].name, 'Favorites');
+        assert.equal(app.config.categories[1].name, 'Weapons');
+        assert.equal(app.config.categories[2].name, 'Spells');
+        assert.equal(app.config.categories[2].subcategories.length, 3);
+        assert.equal(app.config.categories[3].name, 'Features');
+        assert.equal(app.config.categories[4].name, 'Abilities');
+        assert.equal(app.config.categories[5].name, 'Skills');
+        assert.equal(app.config.categories[5].subcategories.length, 6);
+        assert.equal(app.config.categories[6].name, 'Tools');
+        assert.equal(app.config.categories[6].subcategories.length, 6);
+    } finally {
+        adapter.system = origSystem;
     }
 });
 
