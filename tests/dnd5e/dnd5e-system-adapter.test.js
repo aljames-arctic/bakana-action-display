@@ -1368,6 +1368,76 @@ test('Dnd5eSystemAdapter getTokenInfo collapses languages to All when all is sel
     assert.deepEqual(info2.languages, ['All']);
 });
 
+test('Dnd5eSystemAdapter getTokenInfo extracts senses from modern D&D5e 5.3+ senses.ranges and legacy senses schema', async () => {
+    const adapter = new Dnd5eSystemAdapter();
+
+    // 1. Modern D&D5e 5.3+ schema with senses.ranges (with throwing legacy getters to ensure zero access)
+    const modernActor = {
+        id: 'actor-modern-senses',
+        name: 'Modern Beast',
+        system: {
+            attributes: {
+                ac: { value: 15 },
+                movement: { walk: 30, units: 'ft' },
+                senses: {
+                    ranges: {
+                        darkvision: 60,
+                        blindsight: 30,
+                        tremorsense: 15,
+                        truesight: 120
+                    },
+                    units: 'ft',
+                    special: 'Echolocation',
+                    get darkvision() { throw new Error('Deprecated since DnD5e 5.3: use ranges.darkvision'); },
+                    get blindsight() { throw new Error('Deprecated since DnD5e 5.3: use ranges.blindsight'); },
+                    get tremorsense() { throw new Error('Deprecated since DnD5e 5.3: use ranges.tremorsense'); },
+                    get truesight() { throw new Error('Deprecated since DnD5e 5.3: use ranges.truesight'); }
+                }
+            },
+            traits: {},
+            details: {}
+        }
+    };
+
+    const modernInfo = await adapter.getTokenInfo(modernActor);
+    assert.equal(modernInfo.hasSenses, true);
+    assert.ok(modernInfo.senses.includes('Darkvision 60 ft'));
+    assert.ok(modernInfo.senses.includes('Blindsight 30 ft'));
+    assert.ok(modernInfo.senses.includes('Tremorsense 15 ft'));
+    assert.ok(modernInfo.senses.includes('Truesight 120 ft'));
+    assert.ok(modernInfo.senses.includes('Echolocation'));
+
+    // 2. Legacy pre-5.3 schema with direct top-level senses
+    const legacyActor = {
+        id: 'actor-legacy-senses',
+        name: 'Legacy Beast',
+        system: {
+            attributes: {
+                ac: { value: 12 },
+                movement: { walk: 30, units: 'ft' },
+                senses: {
+                    darkvision: 60,
+                    blindsight: 10,
+                    tremorsense: 0,
+                    truesight: 0,
+                    units: 'ft',
+                    special: 'Tremorsense awareness'
+                }
+            },
+            traits: {},
+            details: {}
+        }
+    };
+
+    const legacyInfo = await adapter.getTokenInfo(legacyActor);
+    assert.equal(legacyInfo.hasSenses, true);
+    assert.ok(legacyInfo.senses.includes('Darkvision 60 ft'));
+    assert.ok(legacyInfo.senses.includes('Blindsight 10 ft'));
+    assert.ok(!legacyInfo.senses.some(s => s.startsWith('Tremorsense 0')));
+    assert.ok(!legacyInfo.senses.some(s => s.startsWith('Truesight')));
+    assert.ok(legacyInfo.senses.includes('Tremorsense awareness'));
+});
+
 test('Dnd5eSystemAdapter getTokenInfo extracts Special (; separated) and Ranged Communication correctly', async () => {
     const adapter = new Dnd5eSystemAdapter();
 

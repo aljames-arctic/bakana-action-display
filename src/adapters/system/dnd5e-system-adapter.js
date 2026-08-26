@@ -667,7 +667,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         const languages = this.#extractLanguages(system.traits?.languages, cfg, system.traits?.communication);
 
         // 10. Senses
-        const senses = this.#extractSenses(system.attributes?.senses);
+        const senses = this.#extractSenses(system.attributes?.senses, cfg);
 
         // 11. Biography
         const rawBio = system.details?.biography?.value ?? system.details?.biography?.public ?? '';
@@ -1045,20 +1045,25 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         return result;
     }
 
-    #extractSenses(sensesData) {
+    #extractSenses(sensesData, cfg = CONFIG?.DND5E) {
         if (!sensesData) return [];
         const result = [];
-        const units = sensesData.units ?? 'ft';
-        const senses = ['darkvision', 'blindsight', 'tremorsense', 'truesight'];
-        for (const s of senses) {
-            const val = sensesData[s];
+        const units = sensesData.units ?? sensesData.ranges?.units ?? 'ft';
+        const ranges = (sensesData.ranges && typeof sensesData.ranges === 'object') ? sensesData.ranges : sensesData;
+        const defaultSenseKeys = ['darkvision', 'blindsight', 'tremorsense', 'truesight'];
+        const configuredKeys = cfg?.senses && typeof cfg.senses === 'object' ? Object.keys(cfg.senses) : [];
+        const senseKeys = [...new Set([...defaultSenseKeys, ...configuredKeys])];
+
+        for (const s of senseKeys) {
+            const val = ranges?.[s];
             if (val && Number(val) > 0) {
-                const label = s.charAt(0).toUpperCase() + s.slice(1);
+                const label = this.#formatLabel(s, cfg?.senses) || (s.charAt(0).toUpperCase() + s.slice(1));
                 result.push(`${label} ${val} ${units}`);
             }
         }
-        if (sensesData.special && typeof sensesData.special === 'string' && sensesData.special.trim().length > 0) {
-            result.push(sensesData.special.trim());
+        const special = sensesData.special ?? sensesData.ranges?.special;
+        if (special && typeof special === 'string' && special.trim().length > 0) {
+            result.push(special.trim());
         }
         return result;
     }
