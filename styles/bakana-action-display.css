@@ -1864,16 +1864,12 @@ body > #tooltip.bad-summary-has-table-wrapper,
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* Foundry & D&D 5e Enrichers (Badges/Pills) */
-.bad-summary-desc .content-link,
+/* Foundry & D&D 5e Roll & Action Enrichers */
 .bad-summary-desc .inline-roll,
 .bad-summary-desc .inline-check,
 .bad-summary-desc .inline-damage,
 .bad-summary-desc .inline-area,
-.bad-summary-desc .inline-reference,
-.bad-summary-desc a[data-uuid],
-.bad-summary-desc a[data-id],
-.bad-summary-desc a.entity-link {
+.bad-summary-desc .inline-reference {
     display: inline-flex;
     align-items: center;
     gap: 0.25em;
@@ -1893,27 +1889,21 @@ body > #tooltip.bad-summary-has-table-wrapper,
     transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 
-.bad-summary-desc .content-link:hover,
 .bad-summary-desc .inline-roll:hover,
 .bad-summary-desc .inline-check:hover,
 .bad-summary-desc .inline-damage:hover,
 .bad-summary-desc .inline-area:hover,
-.bad-summary-desc .inline-reference:hover,
-.bad-summary-desc a[data-uuid]:hover,
-.bad-summary-desc a.entity-link:hover {
+.bad-summary-desc .inline-reference:hover {
     background: rgba(167, 139, 250, 0.25);
     border-color: rgba(167, 139, 250, 0.55);
     color: #ffffff !important;
 }
 
-.bad-summary-desc .content-link i,
 .bad-summary-desc .inline-roll i,
 .bad-summary-desc .inline-check i,
 .bad-summary-desc .inline-damage i,
 .bad-summary-desc .inline-area i,
-.bad-summary-desc .inline-reference i,
-.bad-summary-desc a[data-uuid] i,
-.bad-summary-desc a.entity-link i {
+.bad-summary-desc .inline-reference i {
     color: #a78bfa;
     font-size: 0.85em;
 }
