@@ -1,3 +1,12 @@
+/* Default Root CSS Custom Properties */
+:root {
+    --bad-enricher-damage-color: #f87171;
+    --bad-enricher-check-color: #38bdf8;
+    --bad-enricher-area-color: #34d399;
+    --bad-enricher-roll-color: #a78bfa;
+    --bad-enricher-reference-color: #c5a059;
+}
+
 /* Custom Styling for Bakana's Action Display App Window */
 .bakana-action-display-window {
     position: fixed;
@@ -1864,108 +1873,350 @@ body > #tooltip.bad-summary-has-table-wrapper,
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* Foundry & D&D 5e Roll & Action Enrichers */
+/* ==========================================================================
+   ENRICHER STYLING & CUSTOM COLOR ACCENTS
+   ========================================================================== */
+
+/* Base Enricher Pill Styles */
+#tooltip .bad-summary-desc .inline-roll,
+#tooltip .bad-summary-desc .inline-check,
+#tooltip .bad-summary-desc .inline-save,
+#tooltip .bad-summary-desc .inline-dc,
+#tooltip .bad-summary-desc .inline-damage,
+#tooltip .bad-summary-desc .inline-area,
+#tooltip .bad-summary-desc .inline-template,
+#tooltip .bad-summary-desc .inline-reference,
+aside#tooltip .bad-summary-desc .inline-roll,
+aside#tooltip .bad-summary-desc .inline-check,
+aside#tooltip .bad-summary-desc .inline-save,
+aside#tooltip .bad-summary-desc .inline-dc,
+aside#tooltip .bad-summary-desc .inline-damage,
+aside#tooltip .bad-summary-desc .inline-area,
+aside#tooltip .bad-summary-desc .inline-template,
+aside#tooltip .bad-summary-desc .inline-reference,
+.bad-item-summary-tooltip .bad-summary-desc .inline-roll,
+.bad-item-summary-tooltip .bad-summary-desc .inline-check,
+.bad-item-summary-tooltip .bad-summary-desc .inline-save,
+.bad-item-summary-tooltip .bad-summary-desc .inline-dc,
+.bad-item-summary-tooltip .bad-summary-desc .inline-damage,
+.bad-item-summary-tooltip .bad-summary-desc .inline-area,
+.bad-item-summary-tooltip .bad-summary-desc .inline-template,
+.bad-item-summary-tooltip .bad-summary-desc .inline-reference,
 .bad-summary-desc .inline-roll,
 .bad-summary-desc .inline-check,
+.bad-summary-desc .inline-save,
+.bad-summary-desc .inline-dc,
 .bad-summary-desc .inline-damage,
 .bad-summary-desc .inline-area,
+.bad-summary-desc .inline-template,
 .bad-summary-desc .inline-reference {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25em;
-    background: color-mix(in srgb, var(--bad-enricher-roll-color, #a78bfa) 14%, transparent);
-    border: 1px solid color-mix(in srgb, var(--bad-enricher-roll-color, #a78bfa) 30%, transparent);
-    border-radius: 4px;
-    padding: 0.08em 0.42em;
-    margin: 0.08em 0.12em;
-    font-size: 0.9em;
-    font-weight: 600;
-    line-height: 1.25;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.25em !important;
+    background: color-mix(in srgb, var(--bad-enricher-roll-color, #a78bfa) 14%, transparent) !important;
+    border: 1px solid color-mix(in srgb, var(--bad-enricher-roll-color, #a78bfa) 30%, transparent) !important;
+    border-radius: 4px !important;
+    padding: 0.08em 0.42em !important;
+    margin: 0.08em 0.12em !important;
+    font-size: 0.9em !important;
+    font-weight: 600 !important;
+    line-height: 1.25 !important;
     color: color-mix(in srgb, var(--bad-enricher-roll-color, #a78bfa) 80%, #ffffff) !important;
     text-decoration: none !important;
-    white-space: nowrap;
-    vertical-align: baseline;
-    cursor: pointer;
-    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    white-space: nowrap !important;
+    vertical-align: baseline !important;
+    cursor: pointer !important;
+    box-shadow: none !important;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease !important;
 }
 
+#tooltip .bad-summary-desc .inline-roll:hover,
+#tooltip .bad-summary-desc .inline-check:hover,
+#tooltip .bad-summary-desc .inline-save:hover,
+#tooltip .bad-summary-desc .inline-dc:hover,
+#tooltip .bad-summary-desc .inline-damage:hover,
+#tooltip .bad-summary-desc .inline-area:hover,
+#tooltip .bad-summary-desc .inline-template:hover,
+#tooltip .bad-summary-desc .inline-reference:hover,
+aside#tooltip .bad-summary-desc .inline-roll:hover,
+aside#tooltip .bad-summary-desc .inline-check:hover,
+aside#tooltip .bad-summary-desc .inline-save:hover,
+aside#tooltip .bad-summary-desc .inline-dc:hover,
+aside#tooltip .bad-summary-desc .inline-damage:hover,
+aside#tooltip .bad-summary-desc .inline-area:hover,
+aside#tooltip .bad-summary-desc .inline-template:hover,
+aside#tooltip .bad-summary-desc .inline-reference:hover,
+.bad-item-summary-tooltip .bad-summary-desc .inline-roll:hover,
+.bad-item-summary-tooltip .bad-summary-desc .inline-check:hover,
+.bad-item-summary-tooltip .bad-summary-desc .inline-save:hover,
+.bad-item-summary-tooltip .bad-summary-desc .inline-dc:hover,
+.bad-item-summary-tooltip .bad-summary-desc .inline-damage:hover,
+.bad-item-summary-tooltip .bad-summary-desc .inline-area:hover,
+.bad-item-summary-tooltip .bad-summary-desc .inline-template:hover,
+.bad-item-summary-tooltip .bad-summary-desc .inline-reference:hover,
 .bad-summary-desc .inline-roll:hover,
 .bad-summary-desc .inline-check:hover,
+.bad-summary-desc .inline-save:hover,
+.bad-summary-desc .inline-dc:hover,
 .bad-summary-desc .inline-damage:hover,
 .bad-summary-desc .inline-area:hover,
+.bad-summary-desc .inline-template:hover,
 .bad-summary-desc .inline-reference:hover {
-    background: color-mix(in srgb, var(--bad-enricher-roll-color, #a78bfa) 25%, transparent);
-    border-color: color-mix(in srgb, var(--bad-enricher-roll-color, #a78bfa) 55%, transparent);
+    background: color-mix(in srgb, var(--bad-enricher-roll-color, #a78bfa) 25%, transparent) !important;
+    border-color: color-mix(in srgb, var(--bad-enricher-roll-color, #a78bfa) 55%, transparent) !important;
     color: #ffffff !important;
 }
 
+#tooltip .bad-summary-desc .inline-roll i,
+#tooltip .bad-summary-desc .inline-check i,
+#tooltip .bad-summary-desc .inline-save i,
+#tooltip .bad-summary-desc .inline-dc i,
+#tooltip .bad-summary-desc .inline-damage i,
+#tooltip .bad-summary-desc .inline-area i,
+#tooltip .bad-summary-desc .inline-template i,
+#tooltip .bad-summary-desc .inline-reference i,
+aside#tooltip .bad-summary-desc .inline-roll i,
+aside#tooltip .bad-summary-desc .inline-check i,
+aside#tooltip .bad-summary-desc .inline-save i,
+aside#tooltip .bad-summary-desc .inline-dc i,
+aside#tooltip .bad-summary-desc .inline-damage i,
+aside#tooltip .bad-summary-desc .inline-area i,
+aside#tooltip .bad-summary-desc .inline-template i,
+aside#tooltip .bad-summary-desc .inline-reference i,
+.bad-item-summary-tooltip .bad-summary-desc .inline-roll i,
+.bad-item-summary-tooltip .bad-summary-desc .inline-check i,
+.bad-item-summary-tooltip .bad-summary-desc .inline-save i,
+.bad-item-summary-tooltip .bad-summary-desc .inline-dc i,
+.bad-item-summary-tooltip .bad-summary-desc .inline-damage i,
+.bad-item-summary-tooltip .bad-summary-desc .inline-area i,
+.bad-item-summary-tooltip .bad-summary-desc .inline-template i,
+.bad-item-summary-tooltip .bad-summary-desc .inline-reference i,
 .bad-summary-desc .inline-roll i,
 .bad-summary-desc .inline-check i,
+.bad-summary-desc .inline-save i,
+.bad-summary-desc .inline-dc i,
 .bad-summary-desc .inline-damage i,
 .bad-summary-desc .inline-area i,
+.bad-summary-desc .inline-template i,
 .bad-summary-desc .inline-reference i {
-    color: var(--bad-enricher-roll-color, #a78bfa);
-    font-size: 0.85em;
+    color: var(--bad-enricher-roll-color, #a78bfa) !important;
+    font-size: 0.85em !important;
 }
 
-/* System-Specific Enricher Accents */
-.bad-summary-desc .inline-damage {
-    background: color-mix(in srgb, var(--bad-enricher-damage-color, #f87171) 15%, transparent);
-    border-color: color-mix(in srgb, var(--bad-enricher-damage-color, #f87171) 35%, transparent);
+/* System-Specific Enricher Accents: Damage Formulas */
+#tooltip .bad-summary-desc .inline-damage,
+#tooltip .bad-summary-desc .inline-roll.inline-damage,
+#tooltip .bad-summary-desc a[data-roll-type="damage"],
+#tooltip .bad-summary-desc a[data-action="damage"],
+#tooltip .bad-summary-desc [data-damage-roll],
+#tooltip .bad-summary-desc .damage-roll,
+aside#tooltip .bad-summary-desc .inline-damage,
+aside#tooltip .bad-summary-desc .inline-roll.inline-damage,
+.bad-item-summary-tooltip .bad-summary-desc .inline-damage,
+.bad-item-summary-tooltip .bad-summary-desc .inline-roll.inline-damage,
+.bad-summary-desc .inline-damage,
+.bad-summary-desc .inline-roll.inline-damage,
+.bad-summary-desc a[data-roll-type="damage"],
+.bad-summary-desc a[data-action="damage"],
+.bad-summary-desc [data-damage-roll],
+.bad-summary-desc .damage-roll {
+    background: color-mix(in srgb, var(--bad-enricher-damage-color, #f87171) 15%, transparent) !important;
+    border: 1px solid color-mix(in srgb, var(--bad-enricher-damage-color, #f87171) 35%, transparent) !important;
+    border-color: color-mix(in srgb, var(--bad-enricher-damage-color, #f87171) 35%, transparent) !important;
     color: color-mix(in srgb, var(--bad-enricher-damage-color, #f87171) 85%, #ffffff) !important;
 }
-.bad-summary-desc .inline-damage:hover {
-    background: color-mix(in srgb, var(--bad-enricher-damage-color, #f87171) 25%, transparent);
-    border-color: color-mix(in srgb, var(--bad-enricher-damage-color, #f87171) 55%, transparent);
+#tooltip .bad-summary-desc .inline-damage:hover,
+#tooltip .bad-summary-desc .inline-roll.inline-damage:hover,
+#tooltip .bad-summary-desc a[data-roll-type="damage"]:hover,
+#tooltip .bad-summary-desc a[data-action="damage"]:hover,
+aside#tooltip .bad-summary-desc .inline-damage:hover,
+aside#tooltip .bad-summary-desc .inline-roll.inline-damage:hover,
+.bad-item-summary-tooltip .bad-summary-desc .inline-damage:hover,
+.bad-item-summary-tooltip .bad-summary-desc .inline-roll.inline-damage:hover,
+.bad-summary-desc .inline-damage:hover,
+.bad-summary-desc .inline-roll.inline-damage:hover,
+.bad-summary-desc a[data-roll-type="damage"]:hover,
+.bad-summary-desc a[data-action="damage"]:hover {
+    background: color-mix(in srgb, var(--bad-enricher-damage-color, #f87171) 25%, transparent) !important;
+    border-color: color-mix(in srgb, var(--bad-enricher-damage-color, #f87171) 55%, transparent) !important;
     color: #ffffff !important;
 }
-.bad-summary-desc .inline-damage i {
-    color: var(--bad-enricher-damage-color, #f87171);
+#tooltip .bad-summary-desc .inline-damage i,
+#tooltip .bad-summary-desc .inline-roll.inline-damage i,
+aside#tooltip .bad-summary-desc .inline-damage i,
+aside#tooltip .bad-summary-desc .inline-roll.inline-damage i,
+.bad-item-summary-tooltip .bad-summary-desc .inline-damage i,
+.bad-item-summary-tooltip .bad-summary-desc .inline-roll.inline-damage i,
+.bad-summary-desc .inline-damage i,
+.bad-summary-desc .inline-roll.inline-damage i {
+    color: var(--bad-enricher-damage-color, #f87171) !important;
 }
 
+/* System-Specific Enricher Accents: Ability Checks, Saving Throws & DCs */
+#tooltip .bad-summary-desc .inline-check,
+#tooltip .bad-summary-desc .inline-save,
+#tooltip .bad-summary-desc .inline-dc,
+#tooltip .bad-summary-desc .inline-saving-throw,
+#tooltip .bad-summary-desc .inline-roll.inline-check,
+#tooltip .bad-summary-desc .inline-roll.inline-save,
+#tooltip .bad-summary-desc .inline-roll.inline-dc,
+#tooltip .bad-summary-desc a[data-action="rollCheck"],
+#tooltip .bad-summary-desc a[data-action="rollSave"],
+#tooltip .bad-summary-desc a[data-action="save"],
+#tooltip .bad-summary-desc a[data-action="check"],
+aside#tooltip .bad-summary-desc .inline-check,
+aside#tooltip .bad-summary-desc .inline-save,
+aside#tooltip .bad-summary-desc .inline-dc,
+.bad-item-summary-tooltip .bad-summary-desc .inline-check,
+.bad-item-summary-tooltip .bad-summary-desc .inline-save,
+.bad-item-summary-tooltip .bad-summary-desc .inline-dc,
 .bad-summary-desc .inline-check,
-.bad-summary-desc .inline-save {
-    background: color-mix(in srgb, var(--bad-enricher-check-color, #38bdf8) 15%, transparent);
-    border-color: color-mix(in srgb, var(--bad-enricher-check-color, #38bdf8) 35%, transparent);
+.bad-summary-desc .inline-save,
+.bad-summary-desc .inline-dc,
+.bad-summary-desc .inline-saving-throw,
+.bad-summary-desc .inline-roll.inline-check,
+.bad-summary-desc .inline-roll.inline-save,
+.bad-summary-desc .inline-roll.inline-dc,
+.bad-summary-desc a[data-action="rollCheck"],
+.bad-summary-desc a[data-action="rollSave"],
+.bad-summary-desc a[data-action="save"],
+.bad-summary-desc a[data-action="check"] {
+    background: color-mix(in srgb, var(--bad-enricher-check-color, #38bdf8) 15%, transparent) !important;
+    border: 1px solid color-mix(in srgb, var(--bad-enricher-check-color, #38bdf8) 35%, transparent) !important;
+    border-color: color-mix(in srgb, var(--bad-enricher-check-color, #38bdf8) 35%, transparent) !important;
     color: color-mix(in srgb, var(--bad-enricher-check-color, #38bdf8) 85%, #ffffff) !important;
 }
+#tooltip .bad-summary-desc .inline-check:hover,
+#tooltip .bad-summary-desc .inline-save:hover,
+#tooltip .bad-summary-desc .inline-dc:hover,
+#tooltip .bad-summary-desc .inline-roll.inline-check:hover,
+#tooltip .bad-summary-desc .inline-roll.inline-save:hover,
+aside#tooltip .bad-summary-desc .inline-check:hover,
+aside#tooltip .bad-summary-desc .inline-save:hover,
+.bad-item-summary-tooltip .bad-summary-desc .inline-check:hover,
+.bad-item-summary-tooltip .bad-summary-desc .inline-save:hover,
 .bad-summary-desc .inline-check:hover,
-.bad-summary-desc .inline-save:hover {
-    background: color-mix(in srgb, var(--bad-enricher-check-color, #38bdf8) 25%, transparent);
-    border-color: color-mix(in srgb, var(--bad-enricher-check-color, #38bdf8) 55%, transparent);
+.bad-summary-desc .inline-save:hover,
+.bad-summary-desc .inline-dc:hover,
+.bad-summary-desc .inline-roll.inline-check:hover,
+.bad-summary-desc .inline-roll.inline-save:hover {
+    background: color-mix(in srgb, var(--bad-enricher-check-color, #38bdf8) 25%, transparent) !important;
+    border-color: color-mix(in srgb, var(--bad-enricher-check-color, #38bdf8) 55%, transparent) !important;
     color: #ffffff !important;
 }
+#tooltip .bad-summary-desc .inline-check i,
+#tooltip .bad-summary-desc .inline-save i,
+#tooltip .bad-summary-desc .inline-dc i,
+#tooltip .bad-summary-desc .inline-roll.inline-check i,
+#tooltip .bad-summary-desc .inline-roll.inline-save i,
+aside#tooltip .bad-summary-desc .inline-check i,
+aside#tooltip .bad-summary-desc .inline-save i,
+.bad-item-summary-tooltip .bad-summary-desc .inline-check i,
+.bad-item-summary-tooltip .bad-summary-desc .inline-save i,
 .bad-summary-desc .inline-check i,
-.bad-summary-desc .inline-save i {
-    color: var(--bad-enricher-check-color, #38bdf8);
+.bad-summary-desc .inline-save i,
+.bad-summary-desc .inline-dc i,
+.bad-summary-desc .inline-roll.inline-check i,
+.bad-summary-desc .inline-roll.inline-save i {
+    color: var(--bad-enricher-check-color, #38bdf8) !important;
 }
 
-.bad-summary-desc .inline-area {
-    background: color-mix(in srgb, var(--bad-enricher-area-color, #34d399) 15%, transparent);
-    border-color: color-mix(in srgb, var(--bad-enricher-area-color, #34d399) 35%, transparent);
+/* System-Specific Enricher Accents: Area Templates */
+#tooltip .bad-summary-desc .inline-area,
+#tooltip .bad-summary-desc .inline-template,
+#tooltip .bad-summary-desc .inline-roll.inline-template,
+#tooltip .bad-summary-desc .inline-roll.inline-area,
+#tooltip .bad-summary-desc a[data-action="template"],
+#tooltip .bad-summary-desc a[data-action="placeTemplate"],
+aside#tooltip .bad-summary-desc .inline-area,
+aside#tooltip .bad-summary-desc .inline-template,
+.bad-item-summary-tooltip .bad-summary-desc .inline-area,
+.bad-item-summary-tooltip .bad-summary-desc .inline-template,
+.bad-summary-desc .inline-area,
+.bad-summary-desc .inline-template,
+.bad-summary-desc .inline-roll.inline-template,
+.bad-summary-desc .inline-roll.inline-area,
+.bad-summary-desc a[data-action="template"],
+.bad-summary-desc a[data-action="placeTemplate"] {
+    background: color-mix(in srgb, var(--bad-enricher-area-color, #34d399) 15%, transparent) !important;
+    border: 1px solid color-mix(in srgb, var(--bad-enricher-area-color, #34d399) 35%, transparent) !important;
+    border-color: color-mix(in srgb, var(--bad-enricher-area-color, #34d399) 35%, transparent) !important;
     color: color-mix(in srgb, var(--bad-enricher-area-color, #34d399) 85%, #ffffff) !important;
 }
-.bad-summary-desc .inline-area:hover {
-    background: color-mix(in srgb, var(--bad-enricher-area-color, #34d399) 25%, transparent);
-    border-color: color-mix(in srgb, var(--bad-enricher-area-color, #34d399) 55%, transparent);
+#tooltip .bad-summary-desc .inline-area:hover,
+#tooltip .bad-summary-desc .inline-template:hover,
+#tooltip .bad-summary-desc .inline-roll.inline-template:hover,
+#tooltip .bad-summary-desc .inline-roll.inline-area:hover,
+aside#tooltip .bad-summary-desc .inline-area:hover,
+aside#tooltip .bad-summary-desc .inline-template:hover,
+.bad-item-summary-tooltip .bad-summary-desc .inline-area:hover,
+.bad-item-summary-tooltip .bad-summary-desc .inline-template:hover,
+.bad-summary-desc .inline-area:hover,
+.bad-summary-desc .inline-template:hover,
+.bad-summary-desc .inline-roll.inline-template:hover,
+.bad-summary-desc .inline-roll.inline-area:hover {
+    background: color-mix(in srgb, var(--bad-enricher-area-color, #34d399) 25%, transparent) !important;
+    border-color: color-mix(in srgb, var(--bad-enricher-area-color, #34d399) 55%, transparent) !important;
     color: #ffffff !important;
 }
-.bad-summary-desc .inline-area i {
-    color: var(--bad-enricher-area-color, #34d399);
+#tooltip .bad-summary-desc .inline-area i,
+#tooltip .bad-summary-desc .inline-template i,
+#tooltip .bad-summary-desc .inline-roll.inline-template i,
+#tooltip .bad-summary-desc .inline-roll.inline-area i,
+aside#tooltip .bad-summary-desc .inline-area i,
+aside#tooltip .bad-summary-desc .inline-template i,
+.bad-item-summary-tooltip .bad-summary-desc .inline-area i,
+.bad-item-summary-tooltip .bad-summary-desc .inline-template i,
+.bad-summary-desc .inline-area i,
+.bad-summary-desc .inline-template i,
+.bad-summary-desc .inline-roll.inline-template i,
+.bad-summary-desc .inline-roll.inline-area i {
+    color: var(--bad-enricher-area-color, #34d399) !important;
 }
 
-.bad-summary-desc .inline-reference {
-    background: color-mix(in srgb, var(--bad-enricher-reference-color, #c5a059) 15%, transparent);
-    border-color: color-mix(in srgb, var(--bad-enricher-reference-color, #c5a059) 35%, transparent);
+/* System-Specific Enricher Accents: References & Rule Links */
+#tooltip .bad-summary-desc .inline-reference,
+#tooltip .bad-summary-desc .reference-link,
+#tooltip .bad-summary-desc a[data-type="reference"],
+#tooltip .bad-summary-desc a[data-entry-type="reference"],
+#tooltip .bad-summary-desc a[data-reference],
+#tooltip .bad-summary-desc .reference,
+aside#tooltip .bad-summary-desc .inline-reference,
+aside#tooltip .bad-summary-desc .reference-link,
+.bad-item-summary-tooltip .bad-summary-desc .inline-reference,
+.bad-item-summary-tooltip .bad-summary-desc .reference-link,
+.bad-summary-desc .inline-reference,
+.bad-summary-desc .reference-link,
+.bad-summary-desc a[data-type="reference"],
+.bad-summary-desc a[data-entry-type="reference"],
+.bad-summary-desc a[data-reference],
+.bad-summary-desc .reference {
+    background: color-mix(in srgb, var(--bad-enricher-reference-color, #c5a059) 15%, transparent) !important;
+    border: 1px solid color-mix(in srgb, var(--bad-enricher-reference-color, #c5a059) 35%, transparent) !important;
+    border-color: color-mix(in srgb, var(--bad-enricher-reference-color, #c5a059) 35%, transparent) !important;
     color: color-mix(in srgb, var(--bad-enricher-reference-color, #c5a059) 85%, #ffffff) !important;
 }
-.bad-summary-desc .inline-reference:hover {
-    background: color-mix(in srgb, var(--bad-enricher-reference-color, #c5a059) 25%, transparent);
-    border-color: color-mix(in srgb, var(--bad-enricher-reference-color, #c5a059) 55%, transparent);
+#tooltip .bad-summary-desc .inline-reference:hover,
+#tooltip .bad-summary-desc .reference-link:hover,
+aside#tooltip .bad-summary-desc .inline-reference:hover,
+aside#tooltip .bad-summary-desc .reference-link:hover,
+.bad-item-summary-tooltip .bad-summary-desc .inline-reference:hover,
+.bad-item-summary-tooltip .bad-summary-desc .reference-link:hover,
+.bad-summary-desc .inline-reference:hover,
+.bad-summary-desc .reference-link:hover {
+    background: color-mix(in srgb, var(--bad-enricher-reference-color, #c5a059) 25%, transparent) !important;
+    border-color: color-mix(in srgb, var(--bad-enricher-reference-color, #c5a059) 55%, transparent) !important;
     color: #ffffff !important;
 }
-.bad-summary-desc .inline-reference i {
-    color: var(--bad-enricher-reference-color, #c5a059);
+#tooltip .bad-summary-desc .inline-reference i,
+#tooltip .bad-summary-desc .reference-link i,
+aside#tooltip .bad-summary-desc .inline-reference i,
+aside#tooltip .bad-summary-desc .reference-link i,
+.bad-item-summary-tooltip .bad-summary-desc .inline-reference i,
+.bad-item-summary-tooltip .bad-summary-desc .reference-link i,
+.bad-summary-desc .inline-reference i,
+.bad-summary-desc .reference-link i {
+    color: var(--bad-enricher-reference-color, #c5a059) !important;
 }
 
 /* Roll Table and Data Table Formatting in Tooltips */

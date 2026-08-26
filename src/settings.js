@@ -451,6 +451,9 @@ Hooks.once('init', () => {
 
     const initialFontSize = game.settings.get(MODULE_ID, 'fontSize');
     document.documentElement.style.setProperty('--bad-hud-font-size', `${initialFontSize}px`);
+
+    // Apply initial enricher CSS custom properties to document root
+    applyEnricherCssVariables(game.settings.get(MODULE_ID, 'enricherColors'));
 });
 
 /**
