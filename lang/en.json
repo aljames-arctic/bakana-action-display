@@ -155,15 +155,15 @@
             },
             "types": {
                 "damage": "Damage Formulas",
-                "damageDesc": "Inline damage rolls (e.g. @Damage, [[/damage]])",
+                "damageDesc": "Inline damage formulas and rolls (e.g. @Damage, [[/damage]])",
                 "check": "Checks & Saves",
-                "checkDesc": "Saving throw and ability check DCs (e.g. @Check, @Save)",
-                "area": "Area Templates",
-                "areaDesc": "Area of effect measurements (e.g. @Area, cones, cubes)",
-                "roll": "Inline Rolls & Dice",
-                "rollDesc": "General inline dice rolls and formulas (e.g. @Roll, [[/roll]])",
-                "reference": "Inline References",
-                "referenceDesc": "Inline rule references and lookup tags (e.g. @lookup)"
+                "checkDesc": "Saving throw and ability check DCs (e.g. @Check, @Save, [[/check]], [[/save]])",
+                "area": "Area & Range",
+                "areaDesc": "Area of effect and range measurements (e.g. @Area, @Range, [[/area]], [[/range]], cones, cubes)",
+                "roll": "Attack Rolls & Dice",
+                "rollDesc": "Attack rolls and general dice formulas (e.g. @Attack, @Roll, [[/attack]], [[/roll]])",
+                "reference": "Documents & References",
+                "referenceDesc": "Linked documents, items, rules, and lookup tags (e.g. @UUID, @Reference, @lookup)"
             }
         },
         "moduleIntegrations": {

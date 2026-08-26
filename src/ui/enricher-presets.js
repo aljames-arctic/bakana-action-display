@@ -24,7 +24,7 @@ export const ENRICHER_TYPES = [
         desc: 'BAD.enricherColors.types.areaDesc',
         defaultColor: '#34d399',
         icon: 'fas fa-ruler-combined',
-        sampleText: '15 ft Cube'
+        sampleText: '30 ft / 15 ft Cube'
     },
     {
         id: 'roll',
@@ -32,15 +32,15 @@ export const ENRICHER_TYPES = [
         desc: 'BAD.enricherColors.types.rollDesc',
         defaultColor: '#a78bfa',
         icon: 'fas fa-dice-d20',
-        sampleText: '1d20 + 5'
+        sampleText: '+5 / 1d20'
     },
     {
         id: 'reference',
         label: 'BAD.enricherColors.types.reference',
         desc: 'BAD.enricherColors.types.referenceDesc',
         defaultColor: '#c5a059',
-        icon: 'fas fa-bookmark',
-        sampleText: 'Reference'
+        icon: 'fas fa-book',
+        sampleText: '@UUID / Reference'
     }
 ];
 
