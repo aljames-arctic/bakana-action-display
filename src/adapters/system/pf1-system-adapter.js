@@ -588,57 +588,33 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
     }
 
     #extractTraitEntries(traitData, configMap = null) {
-        if (!traitData) return [];
+        if (!traitData || typeof traitData !== 'object') return [];
         const results = [];
 
-        // 1. Direct string
-        if (typeof traitData === 'string') {
-            return traitData.split(/[;,]/).map(s => s.trim()).filter(Boolean);
-        }
-
-        // 2. Direct Array or Set
-        const iterable = Array.isArray(traitData)
-            ? traitData
-            : (traitData instanceof Set ? Array.from(traitData) : null);
-        if (iterable) {
-            for (const item of iterable) {
-                if (typeof item === 'string' && item.trim().length > 0) {
-                    const label = configMap?.[item] ? localize(configMap[item], item) : (item.charAt(0).toUpperCase() + item.slice(1));
-                    if (label) results.push(label);
-                }
-            }
-            return results;
-        }
-
-        // 3. Modern schema: Object with .values (PF1 v11+ schema with Set, Array, or Object mapping)
-        const isModern = traitData.values !== undefined && traitData.values !== null;
-        if (isModern) {
-            const vals = Array.isArray(traitData.values)
-                ? traitData.values
-                : (traitData.values instanceof Set ? Array.from(traitData.values) : Object.keys(traitData.values));
-            for (const key of vals) {
+        // Modern PF1 (v11+): traitData.values is an Array of keys
+        if (Array.isArray(traitData.values)) {
+            for (const key of traitData.values) {
                 if (typeof key === 'string' && key.trim().length > 0) {
                     const label = configMap?.[key] ? localize(configMap[key], key) : (key.charAt(0).toUpperCase() + key.slice(1));
                     if (label) results.push(label);
                 }
             }
-        } else if (traitData.value !== undefined && traitData.value !== null) {
-            // 4. Legacy object fallback (strictly when .values is undefined in older PF1 schemas)
+        } else if (traitData.values === undefined && traitData.value !== undefined && traitData.value !== null) {
+            // Legacy PF1: traitData.value is a delimited string or array of keys
             if (typeof traitData.value === 'string' && traitData.value.trim().length > 0) {
                 results.push(...traitData.value.split(/[;,]/).map(s => s.trim()).filter(Boolean));
-            } else if (Array.isArray(traitData.value) || traitData.value instanceof Set) {
-                const legacyVals = Array.isArray(traitData.value) ? traitData.value : Array.from(traitData.value);
-                for (const k of legacyVals) {
-                    if (typeof k === 'string' && k.trim().length > 0) {
-                        const label = configMap?.[k] ? localize(configMap[k], k) : (k.charAt(0).toUpperCase() + k.slice(1));
+            } else if (Array.isArray(traitData.value)) {
+                for (const key of traitData.value) {
+                    if (typeof key === 'string' && key.trim().length > 0) {
+                        const label = configMap?.[key] ? localize(configMap[key], key) : (key.charAt(0).toUpperCase() + key.slice(1));
                         if (label) results.push(label);
                     }
                 }
             }
         }
 
-        // 5. Object with .custom (string)
-        if (traitData.custom && typeof traitData.custom === 'string' && traitData.custom.trim().length > 0) {
+        // Custom entries (comma or semicolon-separated string)
+        if (typeof traitData.custom === 'string' && traitData.custom.trim().length > 0) {
             results.push(...traitData.custom.split(/[;,]/).map(s => s.trim()).filter(Boolean));
         }
 

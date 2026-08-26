@@ -435,7 +435,7 @@ test('Pf1SystemAdapter getTokenInfo supports modern PF1 v11+ traits.di, ci, dv, 
                 size: 'huge',
                 // PF1 v11 modern schema with throwing legacy value getters
                 di: {
-                    values: new Set(['fire', 'paralysis']),
+                    values: ['fire', 'paralysis'],
                     custom: 'sleep',
                     get value() {
                         throw new Error('actor.system.traits.di.value is deprecated. Deprecated since Version PF1 v11');
@@ -449,7 +449,7 @@ test('Pf1SystemAdapter getTokenInfo supports modern PF1 v11+ traits.di, ci, dv, 
                     }
                 },
                 dv: {
-                    values: new Set(['cold']),
+                    values: ['cold'],
                     custom: 'holy',
                     get value() {
                         throw new Error('actor.system.traits.dv.value is deprecated. Deprecated since Version PF1 v11');
@@ -470,7 +470,7 @@ test('Pf1SystemAdapter getTokenInfo supports modern PF1 v11+ traits.di, ci, dv, 
                     }
                 },
                 languages: {
-                    values: new Set(['common', 'draconic']),
+                    values: ['common', 'draconic'],
                     custom: 'Ignan',
                     get value() {
                         throw new Error('actor.system.traits.languages.value is deprecated. Deprecated since Version PF1 v11');
