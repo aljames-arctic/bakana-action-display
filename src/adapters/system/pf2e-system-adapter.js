@@ -1,4 +1,5 @@
 import { FantasySystemAdapter } from './genre/fantasy-system-adapter.js';
+import { BaseFoundryAdapter } from '../foundry/base-foundry-adapter.js';
 import { localize } from '../../lib/utils.js';
 import { log } from '../../lib/logger.js';
 import { TabRef } from '../../ui/tab-ref.js';
@@ -50,10 +51,10 @@ const PF2E_ACTION_TYPE_MAP = {
 };
 
 /**
- * System adapter for Pathfinder 2nd Edition (PF2e).
+ * Base system adapter for Pathfinder 2nd Edition (PF2e) (baseline).
  * Modifies the base actions list by mapping feats and spells, and injecting Strikes (attacks).
  */
-export class Pf2eSystemAdapter extends FantasySystemAdapter {
+export class BasePf2eSystemAdapter extends FantasySystemAdapter {
     constructor(foundry = null) {
         super('pf2e', true, foundry);
         this.contextMenuManager = new Pf2eSystemContextMenuManager(this);
@@ -1134,4 +1135,18 @@ export class Pf2eSystemAdapter extends FantasySystemAdapter {
     }
 
     // #endregion
+}
+
+/**
+ * Dynamic factory entry-point for Pathfinder 2nd Edition.
+ * Dynamically instantiates the appropriate version subclass based on game.system.version.
+ */
+export class Pf2eSystemAdapter extends BasePf2eSystemAdapter {
+    constructor(foundry = null) {
+        const foundryAdapter = foundry ?? new BaseFoundryAdapter();
+        if (new.target === Pf2eSystemAdapter) {
+            return new BasePf2eSystemAdapter(foundryAdapter);
+        }
+        super(foundryAdapter);
+    }
 }

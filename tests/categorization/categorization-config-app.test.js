@@ -204,7 +204,7 @@ test('CategorizationConfigApp _getExpressionHelpTooltip replaces stand-in variab
 test('CategorizationConfigApp _onLoadPresets loads specialized D&D5e presets when D&D5e system adapter is active', () => {
     const origSystem = adapter.system;
     try {
-        adapter.system = new Dnd5eSystemAdapter('dnd5e', true, adapter.foundry);
+        adapter.system = new Dnd5eSystemAdapter(adapter.foundry);
         const app = new CategorizationConfigApp();
         app.render = () => {};
 

@@ -8,7 +8,7 @@ import { initializeModuleAdapters } from '../../src/adapters/module/index.js';
 import { MODULE_ID } from '../../src/constants.js';
 import { log } from '../../src/lib/logger.js';
 
-test('initializeFoundryAdapter returns BaseFoundryAdapter on v12/v13 baseline and FoundryCurrentAdapter on v14+', () => {
+test('initializeFoundryAdapter returns BaseFoundryAdapter on v12 baseline and FoundryCurrentAdapter on v13+', () => {
     // V12 baseline
     game.release = { generation: 12 };
     game.version = '12.331';
@@ -16,10 +16,11 @@ test('initializeFoundryAdapter returns BaseFoundryAdapter on v12/v13 baseline an
     assert.ok(v12 instanceof BaseFoundryAdapter);
     assert.equal(v12.generation, 12);
 
-    // V13 baseline
+    // V13 modern
     game.release = { generation: 13 };
     game.version = '13.300';
     const v13 = initializeFoundryAdapter();
+    assert.ok(v13 instanceof FoundryCurrentAdapter);
     assert.ok(v13 instanceof BaseFoundryAdapter);
     assert.equal(v13.generation, 13);
 
@@ -238,8 +239,9 @@ test('Unified Adapter getActions executes base extraction -> system -> module ->
     assert.deepEqual(shieldAction.left, ['hidden']);
 });
 
-test('Unified Adapter delegates facade methods to layers', () => {
+test('Unified Adapter delegates facade methods to layers', async () => {
     const testAdapter = new Adapter();
+    await testAdapter.init();
     assert.ok(Array.isArray(testAdapter.getDefaultActiveLeftSubTypes()));
     assert.ok(Array.isArray(testAdapter.getDefaultActiveSubTypes()));
     assert.equal(testAdapter.isExclusionTab('unknown'), false);

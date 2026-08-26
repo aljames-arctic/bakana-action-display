@@ -1,7 +1,7 @@
 import '../setup.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { Pf1SystemAdapter } from '../../src/adapters/system/pf1-system-adapter.js';
+import { BasePf1SystemAdapter, Pf1SystemAdapter_11_0, Pf1SystemAdapter } from '../../src/adapters/system/pf1-system-adapter.js';
 
 test('Pf1SystemAdapter initialization and extractable item types', () => {
     const adapter = new Pf1SystemAdapter();
@@ -323,6 +323,7 @@ test('Pf1SystemAdapter extractCheckActions generates abilities, saves, and skill
 test('Pf1SystemAdapter getTokenInfo extracts complete token statistics and details for Page 3 showcase', async () => {
     game.system = { id: 'pf1', version: '10.5.0' };
     const adapter = new Pf1SystemAdapter();
+    assert.ok(adapter instanceof BasePf1SystemAdapter);
 
     const pf1Actor = {
         id: 'actor-pf1-paladin',
@@ -422,6 +423,7 @@ test('Pf1SystemAdapter getTokenInfo extracts complete token statistics and detai
 test('Pf1SystemAdapter getTokenInfo supports modern PF1 v11+ traits.di, ci, dv, dr, eres with throwing legacy value getters', async () => {
     game.system = { id: 'pf1', version: '11.0.0' };
     const adapter = new Pf1SystemAdapter();
+    assert.ok(adapter instanceof Pf1SystemAdapter_11_0);
 
     const pf1ModernActor = {
         name: 'Ancient Red Dragon',

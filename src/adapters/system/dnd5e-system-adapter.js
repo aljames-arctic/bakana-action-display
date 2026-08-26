@@ -1,4 +1,5 @@
 import { FantasySystemAdapter } from './genre/fantasy-system-adapter.js';
+import { BaseFoundryAdapter } from '../foundry/base-foundry-adapter.js';
 import { localize } from '../../lib/utils.js';
 import { log } from '../../lib/logger.js';
 import { MODULE_ID } from '../../constants.js';
@@ -12,11 +13,11 @@ import { Dnd5eSystemContextModifier } from './context-modifier/dnd5e-system-cont
 const ALLOWED_TYPES = new Set(['weapon', 'equipment', 'consumable', 'tool', 'backpack', 'loot', 'feat', 'spell']);
 
 /**
- * System adapter for D&D 5th Edition.
+ * Base system adapter for D&D 5th Edition (v4.0+ baseline).
  * Handles D&D 5e's specific item types, action categories, spell slot calculations,
  * and spell preparation toggles.
  */
-export class Dnd5eSystemAdapter extends FantasySystemAdapter {
+export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
     #actor = null;
     #highestAvailableSlot = 0;
     #ammoQuantities = new Map();
@@ -667,7 +668,7 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         const languages = this.#extractLanguages(system.traits?.languages, cfg, system.traits?.communication);
 
         // 10. Senses
-        const senses = this.#extractSenses(system.attributes?.senses, cfg);
+        const senses = this.extractSenses(system.attributes?.senses, cfg);
 
         // 11. Biography
         const rawBio = system.details?.biography?.value ?? system.details?.biography?.public ?? '';
@@ -1045,27 +1046,42 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
         return result;
     }
 
-    #extractSenses(sensesData, cfg = CONFIG?.DND5E) {
+    /**
+     * Extract senses according to D&D 5e v4.x baseline schema.
+     * @param {Object} sensesData
+     * @param {Object} [cfg]
+     * @returns {string[]}
+     */
+    extractSenses(sensesData, cfg = CONFIG?.DND5E) {
         if (!sensesData) return [];
         const result = [];
-        const units = sensesData.units ?? sensesData.ranges?.units ?? 'ft';
-        const ranges = (sensesData.ranges && typeof sensesData.ranges === 'object') ? sensesData.ranges : sensesData;
+        const units = sensesData.units ?? 'ft';
         const defaultSenseKeys = ['darkvision', 'blindsight', 'tremorsense', 'truesight'];
-        const configuredKeys = cfg?.senses && typeof cfg.senses === 'object' ? Object.keys(cfg.senses) : [];
+        const configuredKeys = (cfg?.senses && typeof cfg.senses === 'object') ? Object.keys(cfg.senses) : [];
         const senseKeys = [...new Set([...defaultSenseKeys, ...configuredKeys])];
 
         for (const s of senseKeys) {
-            const val = ranges?.[s];
+            const val = sensesData[s];
             if (val && Number(val) > 0) {
-                const label = this.#formatLabel(s, cfg?.senses) || (s.charAt(0).toUpperCase() + s.slice(1));
+                const label = this.formatSenseLabel(s, cfg?.senses);
                 result.push(`${label} ${val} ${units}`);
             }
         }
-        const special = sensesData.special ?? sensesData.ranges?.special;
+        const special = sensesData.special;
         if (special && typeof special === 'string' && special.trim().length > 0) {
             result.push(special.trim());
         }
         return result;
+    }
+
+    /**
+     * Format a sense key label using the D&D 5e senses configuration map.
+     * @param {string} key
+     * @param {Object} [sensesMap]
+     * @returns {string}
+     */
+    formatSenseLabel(key, sensesMap = CONFIG?.DND5E?.senses) {
+        return this.#formatLabel(key, sensesMap) || (key.charAt(0).toUpperCase() + key.slice(1));
     }
 
     // #endregion
@@ -2244,4 +2260,54 @@ export class Dnd5eSystemAdapter extends FantasySystemAdapter {
     }
 
     // #endregion
+}
+
+/**
+ * System adapter for D&D 5th Edition v5.3+.
+ * Overrides senses extraction to target modern senses.ranges schema with zero fallback coalescing.
+ */
+export class Dnd5eSystemAdapter_5_3 extends BaseDnd5eSystemAdapter {
+    /**
+     * Extract senses according to D&D 5e v5.3+ schema (senses.ranges.*).
+     * @param {Object} sensesData
+     * @param {Object} [cfg]
+     * @returns {string[]}
+     */
+    extractSenses(sensesData, cfg = CONFIG?.DND5E) {
+        if (!sensesData) return [];
+        const result = [];
+        const units = sensesData.units ?? 'ft';
+        const ranges = sensesData.ranges ?? {};
+        const defaultSenseKeys = ['darkvision', 'blindsight', 'tremorsense', 'truesight'];
+        const configuredKeys = (cfg?.senses && typeof cfg.senses === 'object') ? Object.keys(cfg.senses) : [];
+        const senseKeys = [...new Set([...defaultSenseKeys, ...configuredKeys])];
+
+        for (const s of senseKeys) {
+            const val = ranges[s];
+            if (val && Number(val) > 0) {
+                const label = this.formatSenseLabel(s, cfg?.senses);
+                result.push(`${label} ${val} ${units}`);
+            }
+        }
+        const special = sensesData.special;
+        if (special && typeof special === 'string' && special.trim().length > 0) {
+            result.push(special.trim());
+        }
+        return result;
+    }
+}
+
+/**
+ * Dynamic factory entry-point for D&D 5th Edition.
+ * Automatically delegates to Dnd5eSystemAdapter_5_3 on v5.3+ and BaseDnd5eSystemAdapter on earlier baseline.
+ */
+export class Dnd5eSystemAdapter extends BaseDnd5eSystemAdapter {
+    constructor(foundry = null) {
+        const foundryAdapter = foundry ?? new BaseFoundryAdapter();
+        const version = game.system?.version ?? '4.0.0';
+        if (!foundryAdapter.isNewerVersion('5.3.0', version) && new.target === Dnd5eSystemAdapter) {
+            return new Dnd5eSystemAdapter_5_3(foundryAdapter);
+        }
+        super(foundryAdapter);
+    }
 }

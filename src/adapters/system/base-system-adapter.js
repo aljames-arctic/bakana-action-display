@@ -21,10 +21,15 @@ const MODIFIER_KEY_MAP = {
  * They also define the localization labels and icons for the HUD tabs.
  */
 export class BaseSystemAdapter {
+    /**
+     * @param {string} systemId
+     * @param {boolean} [isSupported=false]
+     * @param {BaseFoundryAdapter} [foundry]
+     */
     constructor(systemId, isSupported = false, foundry = null) {
         this.systemId = systemId;
         this.isSupported = Boolean(isSupported);
-        this.foundry = (foundry && typeof foundry !== 'string') ? foundry : new BaseFoundryAdapter();
+        this.foundry = foundry ?? new BaseFoundryAdapter();
         this.contextMenuManager = new BaseSystemContextMenuManager(this);
         this.filterManager = new BaseSystemTabFilterManager(this);
         this.contextModifier = new BaseSystemContextModifier(this);

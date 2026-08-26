@@ -1,4 +1,5 @@
 import { FantasySystemAdapter } from './genre/fantasy-system-adapter.js';
+import { BaseFoundryAdapter } from '../foundry/base-foundry-adapter.js';
 import { localize } from '../../lib/utils.js';
 import { log } from '../../lib/logger.js';
 import { TabRef } from '../../ui/tab-ref.js';
@@ -44,10 +45,10 @@ const ICONS = {
 };
 
 /**
- * System adapter for Pathfinder 1st Edition (PF1e).
+ * Base system adapter for Pathfinder 1st Edition (PF1e) (legacy baseline).
  * Handles PF1e's multi-action items, prepared/spontaneous spellcasting, and toggleable buffs.
  */
-export class Pf1SystemAdapter extends FantasySystemAdapter {
+export class BasePf1SystemAdapter extends FantasySystemAdapter {
     constructor(foundry = null) {
         super('pf1', true, foundry);
         this.contextMenuManager = new Pf1SystemContextMenuManager(this);
@@ -587,30 +588,24 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
         };
     }
 
-    #extractTraitEntries(traitData, configMap = null) {
+    /**
+     * Extract trait entries according to legacy PF1 (< v11) schema.
+     * @param {Object} [traitData]
+     * @param {Record<string, string>} [configMap]
+     * @returns {string[]}
+     */
+    extractTraitEntries(traitData, configMap = null) {
         if (!traitData) return [];
         const results = [];
 
-        const version = game.system?.version ?? '11.0.0';
-        const isV11Plus = !this.foundry.isNewerVersion('11.0.0', version);
-
-        if (isV11Plus) {
-            // Modern PF1 (v11+): traitData.values is an Array of key strings (never access deprecated .value)
-            for (const key of traitData.values ?? []) {
+        const rawValue = traitData.value;
+        if (Array.isArray(rawValue)) {
+            for (const key of rawValue) {
                 const label = configMap?.[key] ? localize(configMap[key], key) : (key ? key.charAt(0).toUpperCase() + key.slice(1) : '');
                 if (label) results.push(label);
             }
-        } else {
-            // Legacy PF1 (< v11): traitData.value is a delimited string or array of keys
-            const rawValue = traitData.value;
-            if (Array.isArray(rawValue)) {
-                for (const key of rawValue) {
-                    const label = configMap?.[key] ? localize(configMap[key], key) : (key ? key.charAt(0).toUpperCase() + key.slice(1) : '');
-                    if (label) results.push(label);
-                }
-            } else if (rawValue) {
-                results.push(...rawValue.split(/[;,]/).map(s => s.trim()).filter(Boolean));
-            }
+        } else if (rawValue) {
+            results.push(...rawValue.split(/[;,]/).map(s => s.trim()).filter(Boolean));
         }
 
         // Custom entries (comma or semicolon-separated string)
@@ -626,13 +621,13 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
         const results = [];
 
         // Damage Reduction (DR)
-        const drEntries = this.#extractTraitEntries(traits.dr, cfg?.damageReductionTypes);
+        const drEntries = this.extractTraitEntries(traits.dr, cfg?.damageReductionTypes);
         for (const dr of drEntries) {
             results.push(dr.startsWith('DR ') ? dr : `DR ${dr}`);
         }
 
         // Energy Resistance (ER)
-        const eresEntries = this.#extractTraitEntries(traits.eres, cfg?.damageTypes);
+        const eresEntries = this.extractTraitEntries(traits.eres, cfg?.damageTypes);
         for (const eres of eresEntries) {
             results.push(eres);
         }
@@ -641,19 +636,19 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
     }
 
     #extractDamageImmunities(actor, cfg = CONFIG?.PF1) {
-        return this.#extractTraitEntries(actor?.system?.traits?.di, cfg?.damageTypes);
+        return this.extractTraitEntries(actor?.system?.traits?.di, cfg?.damageTypes);
     }
 
     #extractConditionImmunities(actor, cfg = CONFIG?.PF1) {
-        return this.#extractTraitEntries(actor?.system?.traits?.ci, cfg?.conditionTypes ?? cfg?.conditions);
+        return this.extractTraitEntries(actor?.system?.traits?.ci, cfg?.conditionTypes ?? cfg?.conditions);
     }
 
     #extractVulnerabilities(actor, cfg = CONFIG?.PF1) {
-        return this.#extractTraitEntries(actor?.system?.traits?.dv, cfg?.damageTypes);
+        return this.extractTraitEntries(actor?.system?.traits?.dv, cfg?.damageTypes);
     }
 
     #extractLanguages(actor, cfg = CONFIG?.PF1) {
-        return this.#extractTraitEntries(actor?.system?.traits?.languages, cfg?.languages);
+        return this.extractTraitEntries(actor?.system?.traits?.languages, cfg?.languages);
     }
 
     #extractSenses(actor, cfg = CONFIG?.PF1) {
@@ -1160,4 +1155,47 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
     }
 
     // #endregion
+}
+
+/**
+ * System adapter for Pathfinder 1st Edition v11.0+.
+ * Overrides trait extraction to target modern .values schema with zero access to deprecated .value.
+ */
+export class Pf1SystemAdapter_11_0 extends BasePf1SystemAdapter {
+    /**
+     * Extract trait entries according to modern PF1 (v11+) schema.
+     * @param {Object} [traitData]
+     * @param {Record<string, string>} [configMap]
+     * @returns {string[]}
+     */
+    extractTraitEntries(traitData, configMap = null) {
+        if (!traitData) return [];
+        const results = [];
+
+        for (const key of traitData.values ?? []) {
+            const label = configMap?.[key] ? localize(configMap[key], key) : (key ? key.charAt(0).toUpperCase() + key.slice(1) : '');
+            if (label) results.push(label);
+        }
+
+        if (traitData.custom) {
+            results.push(...traitData.custom.split(/[;,]/).map(s => s.trim()).filter(Boolean));
+        }
+
+        return Array.from(new Set(results));
+    }
+}
+
+/**
+ * Dynamic factory entry-point for Pathfinder 1st Edition.
+ * Automatically delegates to Pf1SystemAdapter_11_0 on v11+ and BasePf1SystemAdapter on legacy versions.
+ */
+export class Pf1SystemAdapter extends BasePf1SystemAdapter {
+    constructor(foundry = null) {
+        const foundryAdapter = foundry ?? new BaseFoundryAdapter();
+        const version = game.system?.version ?? '11.0.0';
+        if (!foundryAdapter.isNewerVersion('11.0.0', version) && new.target === Pf1SystemAdapter) {
+            return new Pf1SystemAdapter_11_0(foundryAdapter);
+        }
+        super(foundryAdapter);
+    }
 }

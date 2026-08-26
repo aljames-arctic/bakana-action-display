@@ -12,7 +12,7 @@ import { Action } from '../ui/action.js';
 class Adapter {
     constructor() {
         this.foundry = new BaseFoundryAdapter();
-        this.system = new BaseSystemAdapter('default');
+        this.system = new BaseSystemAdapter('default', false, this.foundry);
         this.modules = new Map();
         this._initialized = false;
     }

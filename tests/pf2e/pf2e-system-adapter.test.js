@@ -1,10 +1,11 @@
 import '../setup.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { Pf2eSystemAdapter } from '../../src/adapters/system/pf2e-system-adapter.js';
+import { BasePf2eSystemAdapter, Pf2eSystemAdapter } from '../../src/adapters/system/pf2e-system-adapter.js';
 
 test('Pf2eSystemAdapter initialization and extractable item types', () => {
     const adapter = new Pf2eSystemAdapter();
+    assert.ok(adapter instanceof BasePf2eSystemAdapter);
     assert.equal(adapter.systemId, 'pf2e');
     assert.equal(adapter.shouldExtractItem({ type: 'action' }), true);
     assert.equal(adapter.shouldExtractItem({ type: 'feat' }), true);

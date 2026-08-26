@@ -39,5 +39,10 @@ export async function initializeSystemAdapter(systemId = game.system?.id, foundr
     return new BaseSystemAdapter(systemId, false, foundryAdapter);
 }
 
-export { BaseSystemAdapter };
+export {
+    BaseSystemAdapter,
+    Dnd5eSystemAdapter,
+    Pf1SystemAdapter,
+    Pf2eSystemAdapter
+};
 

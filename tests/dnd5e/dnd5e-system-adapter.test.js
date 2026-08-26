@@ -1,7 +1,7 @@
 import '../setup.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { Dnd5eSystemAdapter } from '../../src/adapters/system/dnd5e-system-adapter.js';
+import { BaseDnd5eSystemAdapter, Dnd5eSystemAdapter_5_3, Dnd5eSystemAdapter } from '../../src/adapters/system/dnd5e-system-adapter.js';
 import { categorizeActions } from '../../src/categorization/categorization-manager.js';
 
 test('Dnd5eSystemAdapter initialization and labels', () => {
@@ -199,7 +199,7 @@ test('Dnd5eSystemAdapter modifyActions full transformation pipeline', async () =
 });
 
 test('Dnd5eSystemAdapter extractCheckActions generates core saves, core checks, skills, and tool proficiency checks', async () => {
-    const adapter = new Dnd5eSystemAdapter('dnd5e');
+    const adapter = new Dnd5eSystemAdapter();
     let rolledTool = null;
     const mockActor = {
         system: {
@@ -256,7 +256,7 @@ test('Dnd5eSystemAdapter extractCheckActions generates core saves, core checks, 
 });
 
 test('Dnd5eSystemAdapter resolves clean names for vehicle, jeweler, leatherworker, and Compendium UUIDs', () => {
-    const adapter = new Dnd5eSystemAdapter('dnd5e');
+    const adapter = new Dnd5eSystemAdapter();
 
     // Setup globalThis.dnd5e with Trait.keyLabel mock
     globalThis.dnd5e = {
@@ -704,7 +704,7 @@ test('Dnd5eSystemAdapter modifyContext orange indicators for All Items and Spell
 });
 
 test('Dnd5eSystemAdapter extracts spell component tabs for NPC Spellcasting feats with linked cast activities', async () => {
-    const adapter = new Dnd5eSystemAdapter('dnd5e');
+    const adapter = new Dnd5eSystemAdapter();
 
     const fireballSpell = {
         id: 'spell-fireball',
@@ -762,7 +762,7 @@ test('Dnd5eSystemAdapter extracts spell component tabs for NPC Spellcasting feat
 });
 
 test('Dnd5eSystemAdapter resolves cached helper spells for NPC Spellcasting feats and extracts components', async () => {
-    const adapter = new Dnd5eSystemAdapter('dnd5e');
+    const adapter = new Dnd5eSystemAdapter();
 
     const cachedDetectMagic = {
         id: 'spell-detect-magic',
@@ -1369,9 +1369,11 @@ test('Dnd5eSystemAdapter getTokenInfo collapses languages to All when all is sel
 });
 
 test('Dnd5eSystemAdapter getTokenInfo extracts senses from modern D&D5e 5.3+ senses.ranges and legacy senses schema', async () => {
-    const adapter = new Dnd5eSystemAdapter();
-
     // 1. Modern D&D5e 5.3+ schema with senses.ranges (with throwing legacy getters to ensure zero access)
+    game.system = { id: 'dnd5e', version: '5.3.0' };
+    const modernAdapter = new Dnd5eSystemAdapter();
+    assert.ok(modernAdapter instanceof Dnd5eSystemAdapter_5_3);
+
     const modernActor = {
         id: 'actor-modern-senses',
         name: 'Modern Beast',
@@ -1399,7 +1401,7 @@ test('Dnd5eSystemAdapter getTokenInfo extracts senses from modern D&D5e 5.3+ sen
         }
     };
 
-    const modernInfo = await adapter.getTokenInfo(modernActor);
+    const modernInfo = await modernAdapter.getTokenInfo(modernActor);
     assert.equal(modernInfo.hasSenses, true);
     assert.ok(modernInfo.senses.includes('Darkvision 60 ft'));
     assert.ok(modernInfo.senses.includes('Blindsight 30 ft'));
@@ -1408,6 +1410,10 @@ test('Dnd5eSystemAdapter getTokenInfo extracts senses from modern D&D5e 5.3+ sen
     assert.ok(modernInfo.senses.includes('Echolocation'));
 
     // 2. Legacy pre-5.3 schema with direct top-level senses
+    game.system = { id: 'dnd5e', version: '4.3.0' };
+    const legacyAdapter = new Dnd5eSystemAdapter();
+    assert.ok(legacyAdapter instanceof BaseDnd5eSystemAdapter);
+
     const legacyActor = {
         id: 'actor-legacy-senses',
         name: 'Legacy Beast',
@@ -1429,7 +1435,7 @@ test('Dnd5eSystemAdapter getTokenInfo extracts senses from modern D&D5e 5.3+ sen
         }
     };
 
-    const legacyInfo = await adapter.getTokenInfo(legacyActor);
+    const legacyInfo = await legacyAdapter.getTokenInfo(legacyActor);
     assert.equal(legacyInfo.hasSenses, true);
     assert.ok(legacyInfo.senses.includes('Darkvision 60 ft'));
     assert.ok(legacyInfo.senses.includes('Blindsight 10 ft'));
