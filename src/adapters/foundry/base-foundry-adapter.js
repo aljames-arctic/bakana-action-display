@@ -28,21 +28,21 @@ export class BaseFoundryAdapter {
      * The active ContextMenu constructor (global in v12/v13 baseline).
      */
     get ContextMenu() {
-        return globalThis.ContextMenu;
+        return ContextMenu;
     }
 
     /**
      * The active KeyboardManager constructor (global in v12/v13 baseline).
      */
     get KeyboardManager() {
-        return globalThis.KeyboardManager;
+        return KeyboardManager;
     }
 
     /**
      * The active Token placeable constructor (global in v12/v13 baseline).
      */
     get Token() {
-        return globalThis.Token;
+        return Token;
     }
 
     /**
@@ -63,7 +63,7 @@ export class BaseFoundryAdapter {
      * The active FilePicker constructor / implementation (global in v12/v13 baseline).
      */
     get FilePicker() {
-        return globalThis.FilePicker?.implementation ?? globalThis.FilePicker;
+        return FilePicker.implementation ?? FilePicker;
     }
 
     /**
@@ -170,7 +170,7 @@ export class BaseFoundryAdapter {
      * The active TextEditor constructor / implementation (global in v12/v13 baseline).
      */
     get TextEditor() {
-        return globalThis.TextEditor?.implementation ?? globalThis.TextEditor;
+        return TextEditor.implementation ?? TextEditor;
     }
 
     /**
