@@ -387,8 +387,10 @@ test('Pf1SystemAdapter getTokenInfo extracts complete token statistics and detai
     assert.ok(info.movement.secondaries.some(s => s.includes('Fly 60 ft')));
     assert.ok(info.movement.secondaries.some(s => s.includes('Swim 20 ft')));
     assert.ok(info.resistances.includes('DR 5/evil'));
-    assert.ok(info.resistances.includes('fire 10, cold 5'));
-    assert.ok(info.damageImmunities.includes('poison, disease'));
+    assert.ok(info.resistances.includes('fire 10'));
+    assert.ok(info.resistances.includes('cold 5'));
+    assert.ok(info.damageImmunities.includes('poison'));
+    assert.ok(info.damageImmunities.includes('disease'));
     assert.ok(info.conditionImmunities.includes('fear'));
     assert.ok(info.vulnerabilities.includes('unholy'));
     assert.ok(info.languages.includes('Common'));
@@ -414,6 +416,123 @@ test('Pf1SystemAdapter getTokenInfo extracts complete token statistics and detai
     };
     const infoObj = await adapter.getTokenInfo(pf1ActorObjSize);
     assert.equal(infoObj.size, 'Small');
+});
+
+test('Pf1SystemAdapter getTokenInfo supports modern PF1 v11+ traits.di, ci, dv, dr, eres with throwing legacy value getters', async () => {
+    const adapter = new Pf1SystemAdapter();
+
+    const pf1ModernActor = {
+        name: 'Ancient Red Dragon',
+        type: 'npc',
+        system: {
+            details: {
+                race: 'Dragon',
+                alignment: 'ce',
+                cr: { total: 19 },
+                biography: { value: '<p>A mighty red dragon.</p>' }
+            },
+            traits: {
+                size: 'huge',
+                // PF1 v11 modern schema with throwing legacy value getters
+                di: {
+                    values: new Set(['fire', 'paralysis']),
+                    custom: 'sleep',
+                    get value() {
+                        throw new Error('actor.system.traits.di.value is deprecated. Deprecated since Version PF1 v11');
+                    }
+                },
+                ci: {
+                    values: ['sleep', 'paralysis'],
+                    custom: 'petrified',
+                    get value() {
+                        throw new Error('actor.system.traits.ci.value is deprecated. Deprecated since Version PF1 v11');
+                    }
+                },
+                dv: {
+                    values: new Set(['cold']),
+                    custom: 'holy',
+                    get value() {
+                        throw new Error('actor.system.traits.dv.value is deprecated. Deprecated since Version PF1 v11');
+                    }
+                },
+                dr: {
+                    values: [],
+                    custom: '15/magic',
+                    get value() {
+                        throw new Error('actor.system.traits.dr.value is deprecated. Deprecated since Version PF1 v11');
+                    }
+                },
+                eres: {
+                    values: ['fire 30'],
+                    custom: 'acid 10',
+                    get value() {
+                        throw new Error('actor.system.traits.eres.value is deprecated. Deprecated since Version PF1 v11');
+                    }
+                },
+                languages: {
+                    values: new Set(['common', 'draconic']),
+                    custom: 'Ignan',
+                    get value() {
+                        throw new Error('actor.system.traits.languages.value is deprecated. Deprecated since Version PF1 v11');
+                    }
+                },
+                senses: {
+                    blindsight: 60,
+                    darkvision: 120,
+                    lowLight: true,
+                    custom: 'Smoke Vision'
+                }
+            },
+            attributes: {
+                ac: {
+                    normal: { total: 38 },
+                    touch: { total: 8 },
+                    flatFooted: { total: 38 }
+                },
+                speed: {
+                    land: { total: 40 },
+                    fly: { total: 200, maneuverability: 'poor' }
+                }
+            }
+        },
+        getRollData: () => ({})
+    };
+
+    const info = await adapter.getTokenInfo(pf1ModernActor);
+    assert.ok(info);
+    assert.equal(info.name, 'Ancient Red Dragon');
+    assert.equal(info.size, 'Huge');
+    assert.equal(info.crLabel, 'CR 19');
+
+    // Immunities
+    assert.ok(info.damageImmunities.includes('Fire'));
+    assert.ok(info.damageImmunities.includes('Paralysis'));
+    assert.ok(info.damageImmunities.includes('sleep'));
+
+    // Condition Immunities
+    assert.ok(info.conditionImmunities.includes('Sleep'));
+    assert.ok(info.conditionImmunities.includes('Paralysis'));
+    assert.ok(info.conditionImmunities.includes('petrified'));
+
+    // Vulnerabilities
+    assert.ok(info.vulnerabilities.includes('Cold'));
+    assert.ok(info.vulnerabilities.includes('holy'));
+
+    // Resistances
+    assert.ok(info.resistances.includes('DR 15/magic'));
+    assert.ok(info.resistances.includes('Fire 30'));
+    assert.ok(info.resistances.includes('acid 10'));
+
+    // Languages
+    assert.ok(info.languages.includes('Common'));
+    assert.ok(info.languages.includes('Draconic'));
+    assert.ok(info.languages.includes('Ignan'));
+
+    // Senses
+    assert.ok(info.senses.some(s => s.includes('Blindsight 60 ft')));
+    assert.ok(info.senses.some(s => s.includes('Darkvision 120 ft')));
+    assert.ok(info.senses.some(s => s.includes('Low-Light Vision')));
+    assert.ok(info.senses.some(s => s.includes('Smoke Vision')));
 });
 
 

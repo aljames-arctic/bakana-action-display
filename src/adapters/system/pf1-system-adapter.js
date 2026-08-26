@@ -587,84 +587,97 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
         };
     }
 
-    #extractResistances(actor) {
+    #extractTraitEntries(traitData, configMap = null) {
+        if (!traitData) return [];
+        const results = [];
+
+        // 1. Direct string
+        if (typeof traitData === 'string') {
+            return traitData.split(/[;,]/).map(s => s.trim()).filter(Boolean);
+        }
+
+        // 2. Direct Array or Set
+        const iterable = Array.isArray(traitData)
+            ? traitData
+            : (traitData instanceof Set ? Array.from(traitData) : null);
+        if (iterable) {
+            for (const item of iterable) {
+                if (typeof item === 'string' && item.trim().length > 0) {
+                    const label = configMap?.[item] ? localize(configMap[item], item) : (item.charAt(0).toUpperCase() + item.slice(1));
+                    if (label) results.push(label);
+                }
+            }
+            return results;
+        }
+
+        // 3. Modern schema: Object with .values (PF1 v11+ schema with Set, Array, or Object mapping)
+        const isModern = traitData.values !== undefined && traitData.values !== null;
+        if (isModern) {
+            const vals = Array.isArray(traitData.values)
+                ? traitData.values
+                : (traitData.values instanceof Set ? Array.from(traitData.values) : Object.keys(traitData.values));
+            for (const key of vals) {
+                if (typeof key === 'string' && key.trim().length > 0) {
+                    const label = configMap?.[key] ? localize(configMap[key], key) : (key.charAt(0).toUpperCase() + key.slice(1));
+                    if (label) results.push(label);
+                }
+            }
+        } else if (traitData.value !== undefined && traitData.value !== null) {
+            // 4. Legacy object fallback (strictly when .values is undefined in older PF1 schemas)
+            if (typeof traitData.value === 'string' && traitData.value.trim().length > 0) {
+                results.push(...traitData.value.split(/[;,]/).map(s => s.trim()).filter(Boolean));
+            } else if (Array.isArray(traitData.value) || traitData.value instanceof Set) {
+                const legacyVals = Array.isArray(traitData.value) ? traitData.value : Array.from(traitData.value);
+                for (const k of legacyVals) {
+                    if (typeof k === 'string' && k.trim().length > 0) {
+                        const label = configMap?.[k] ? localize(configMap[k], k) : (k.charAt(0).toUpperCase() + k.slice(1));
+                        if (label) results.push(label);
+                    }
+                }
+            }
+        }
+
+        // 5. Object with .custom (string)
+        if (traitData.custom && typeof traitData.custom === 'string' && traitData.custom.trim().length > 0) {
+            results.push(...traitData.custom.split(/[;,]/).map(s => s.trim()).filter(Boolean));
+        }
+
+        return Array.from(new Set(results));
+    }
+
+    #extractResistances(actor, cfg = CONFIG?.PF1) {
         const traits = actor?.system?.traits ?? {};
         const results = [];
 
         // Damage Reduction (DR)
-        if (traits.dr?.value && typeof traits.dr.value === 'string' && traits.dr.value.trim().length > 0) {
-            results.push(`DR ${traits.dr.value.trim()}`);
-        }
-        if (traits.dr?.custom && typeof traits.dr.custom === 'string' && traits.dr.custom.trim().length > 0) {
-            results.push(`DR ${traits.dr.custom.trim()}`);
+        const drEntries = this.#extractTraitEntries(traits.dr, cfg?.damageReductionTypes);
+        for (const dr of drEntries) {
+            results.push(dr.startsWith('DR ') ? dr : `DR ${dr}`);
         }
 
         // Energy Resistance (ER)
-        if (traits.eres?.value && typeof traits.eres.value === 'string' && traits.eres.value.trim().length > 0) {
-            results.push(traits.eres.value.trim());
-        }
-        if (traits.eres?.custom && typeof traits.eres.custom === 'string' && traits.eres.custom.trim().length > 0) {
-            results.push(traits.eres.custom.trim());
-        }
-
-        return results;
-    }
-
-    #extractDamageImmunities(actor) {
-        const traits = actor?.system?.traits ?? {};
-        const results = [];
-        if (traits.di?.value && typeof traits.di.value === 'string' && traits.di.value.trim().length > 0) {
-            results.push(traits.di.value.trim());
-        }
-        if (traits.di?.custom && typeof traits.di.custom === 'string' && traits.di.custom.trim().length > 0) {
-            results.push(traits.di.custom.trim());
-        }
-        return results;
-    }
-
-    #extractConditionImmunities(actor) {
-        const traits = actor?.system?.traits ?? {};
-        const results = [];
-        if (traits.ci?.value && typeof traits.ci.value === 'string' && traits.ci.value.trim().length > 0) {
-            results.push(traits.ci.value.trim());
-        }
-        if (traits.ci?.custom && typeof traits.ci.custom === 'string' && traits.ci.custom.trim().length > 0) {
-            results.push(traits.ci.custom.trim());
-        }
-        return results;
-    }
-
-    #extractVulnerabilities(actor) {
-        const traits = actor?.system?.traits ?? {};
-        const results = [];
-        if (traits.dv?.value && typeof traits.dv.value === 'string' && traits.dv.value.trim().length > 0) {
-            results.push(traits.dv.value.trim());
-        }
-        if (traits.dv?.custom && typeof traits.dv.custom === 'string' && traits.dv.custom.trim().length > 0) {
-            results.push(traits.dv.custom.trim());
-        }
-        return results;
-    }
-
-    #extractLanguages(actor, cfg = CONFIG?.PF1) {
-        const langData = actor?.system?.traits?.languages;
-        if (!langData) return [];
-
-        const results = [];
-        const langMap = cfg?.languages ?? {};
-
-        const values = Array.isArray(langData.value) ? langData.value : (langData.value instanceof Set ? Array.from(langData.value) : []);
-        for (const key of values) {
-            const label = langMap[key] ? localize(langMap[key], key) : (key.charAt(0).toUpperCase() + key.slice(1));
-            if (label) results.push(label);
-        }
-
-        if (langData.custom && typeof langData.custom === 'string') {
-            const customItems = langData.custom.split(/[;,]/).map(s => s.trim()).filter(Boolean);
-            results.push(...customItems);
+        const eresEntries = this.#extractTraitEntries(traits.eres, cfg?.damageTypes);
+        for (const eres of eresEntries) {
+            results.push(eres);
         }
 
         return Array.from(new Set(results));
+    }
+
+    #extractDamageImmunities(actor, cfg = CONFIG?.PF1) {
+        return this.#extractTraitEntries(actor?.system?.traits?.di, cfg?.damageTypes);
+    }
+
+    #extractConditionImmunities(actor, cfg = CONFIG?.PF1) {
+        return this.#extractTraitEntries(actor?.system?.traits?.ci, cfg?.conditionTypes ?? cfg?.conditions);
+    }
+
+    #extractVulnerabilities(actor, cfg = CONFIG?.PF1) {
+        return this.#extractTraitEntries(actor?.system?.traits?.dv, cfg?.damageTypes);
+    }
+
+    #extractLanguages(actor, cfg = CONFIG?.PF1) {
+        return this.#extractTraitEntries(actor?.system?.traits?.languages, cfg?.languages);
     }
 
     #extractSenses(actor, cfg = CONFIG?.PF1) {
