@@ -139,7 +139,7 @@ test('injectSettingsHeaders inserts world, user, and client headers into Setting
     }
 });
 
-test('injectSettingsHeaders moves economyColorsMenu into the User Settings section', () => {
+test('injectSettingsHeaders moves economyColorsMenu and enricherColorsMenu into the User Settings section', () => {
     const origCreateElement = document.createElement;
     document.createElement = (tagName) => new MockElement(tagName);
 
@@ -156,6 +156,11 @@ test('injectSettingsHeaders moves economyColorsMenu into the User Settings secti
         const btnEcon = new MockElement('button', { dataset: { key: 'bakana-action-display.economyColorsMenu' } });
         fgEconMenu.appendChild(btnEcon);
         root.appendChild(fgEconMenu);
+
+        const fgEnricherMenu = new MockElement('div', { className: 'form-group' });
+        const btnEnricher = new MockElement('button', { dataset: { key: 'bakana-action-display.enricherColorsMenu' } });
+        fgEnricherMenu.appendChild(btnEnricher);
+        root.appendChild(fgEnricherMenu);
 
         // Regular world settings follow
         const fgCenter = new MockElement('div', { className: 'form-group' });
@@ -183,10 +188,11 @@ test('injectSettingsHeaders moves economyColorsMenu into the User Settings secti
         // [2]: fgCenter (World Setting)
         // [3]: User Header
         // [4]: fgEconMenu (User Menu relocated here!)
-        // [5]: fgOpacity (User Setting)
-        // [6]: Client Header
-        // [7]: fgLog (Client Setting)
-        assert.equal(root.children.length, 8);
+        // [5]: fgEnricherMenu (User Menu relocated here!)
+        // [6]: fgOpacity (User Setting)
+        // [7]: Client Header
+        // [8]: fgLog (Client Setting)
+        assert.equal(root.children.length, 9);
         assert.equal(root.children[0].className, 'bad-settings-section-header');
         assert.equal(root.children[0].dataset.scope, 'world');
         assert.equal(root.children[1], fgCatMenu);
@@ -195,11 +201,12 @@ test('injectSettingsHeaders moves economyColorsMenu into the User Settings secti
         assert.equal(root.children[3].className, 'bad-settings-section-header');
         assert.equal(root.children[3].dataset.scope, 'user');
         assert.equal(root.children[4], fgEconMenu, 'economyColorsMenu should be located under User Settings header');
-        assert.equal(root.children[5], fgOpacity);
+        assert.equal(root.children[5], fgEnricherMenu, 'enricherColorsMenu should be located under User Settings header');
+        assert.equal(root.children[6], fgOpacity);
 
-        assert.equal(root.children[6].className, 'bad-settings-section-header');
-        assert.equal(root.children[6].dataset.scope, 'client');
-        assert.equal(root.children[7], fgLog);
+        assert.equal(root.children[7].className, 'bad-settings-section-header');
+        assert.equal(root.children[7].dataset.scope, 'client');
+        assert.equal(root.children[8], fgLog);
     } finally {
         document.createElement = origCreateElement;
     }

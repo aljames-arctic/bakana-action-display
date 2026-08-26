@@ -473,7 +473,7 @@ export function injectSettingsHeaders(html, app) {
     if (!root?.querySelector) return;
 
     // 1. Move economyColorsMenu & enricherColorsMenu (User Menus) into User Settings section before hudOpacity if present
-    const userMenus = ['enricherColorsMenu', 'economyColorsMenu'];
+    const userMenus = ['economyColorsMenu', 'enricherColorsMenu'];
     const hudOpacitySelector = [
         `[name="${MODULE_ID}.hudOpacity"]`,
         `[data-setting-id="${MODULE_ID}.hudOpacity"]`,
