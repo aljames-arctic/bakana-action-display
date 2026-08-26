@@ -6,6 +6,54 @@
 globalThis.Item = class Item {};
 globalThis.Actor = class Actor {};
 globalThis.HTMLElement = class HTMLElement {};
+globalThis.ContextMenu = class ContextMenu {
+    constructor(element, selector, menuItems, options = {}) {
+        this.element = element;
+        this.selector = selector;
+        this.menuItems = menuItems;
+        this.options = options;
+    }
+    async render(target) {
+        this.options?.onOpen?.(target);
+        this._setPosition?.(null, target);
+    }
+    async close() {}
+};
+globalThis.TextEditor = {
+    enrichHTML: async (content, options = {}) => {
+        if (!content) return '';
+        let enriched = String(content);
+        const name = options.rollData?.name ?? options.relativeTo?.name ?? '';
+        if (name) {
+            enriched = enriched.replace(/\[\[lookup\s+@name\s+lowercase\]\]\{([^}]*)\}/gi, name.toLowerCase());
+            enriched = enriched.replace(/\[\[lookup\s+@name\]\]\{([^}]*)\}/gi, name);
+        } else {
+            enriched = enriched.replace(/\[\[lookup\s+@[^\]]+\]\]\{([^}]*)\}/gi, '$1');
+        }
+        return enriched;
+    }
+};
+globalThis.KeyboardManager = class KeyboardManager {
+    static MODIFIER_KEYS = {
+        SHIFT: 'Shift',
+        CONTROL: 'Control',
+        ALT: 'Alt'
+    };
+};
+globalThis.Token = class Token {
+    _onClickRight(event) {
+        if (globalThis.canvas?.hud?.token?.rendered && (globalThis.canvas.hud.token.object === this || globalThis.canvas.hud.token.object?.id === this.id)) {
+            globalThis.canvas.hud.token.clear();
+        } else {
+            globalThis.canvas.hud.token.bind(this);
+        }
+    }
+};
+globalThis.FilePicker = class FilePicker {
+    static async browse(source, target, options = {}) {
+        return { target, files: [], dirs: [] };
+    }
+};
 Math.clamp = Math.clamp ?? ((num, min, max) => Math.min(Math.max(num, min), max));
 globalThis.CONFIG = globalThis.CONFIG ?? {};
 globalThis.CONFIG.DND5E = globalThis.CONFIG.DND5E ?? {
@@ -291,48 +339,25 @@ globalThis.foundry = {
             }
         },
         ux: {
-            ContextMenu: class ContextMenu {
-                constructor(element, selector, menuItems, options = {}) {
-                    this.element = element;
-                    this.selector = selector;
-                    this.menuItems = menuItems;
-                    this.options = options;
-                }
-                async render(target) {
-                    this.options?.onOpen?.(target);
-                    this._setPosition?.(null, target);
-                }
-                async close() {}
-            },
+            ContextMenu: globalThis.ContextMenu,
             TextEditor: {
-                implementation: {
-                    async enrichHTML(content, options = {}) {
-                        if (!content) return '';
-                        let enriched = String(content);
-                        const name = options.rollData?.name ?? options.relativeTo?.name ?? '';
-                        if (name) {
-                            enriched = enriched.replace(/\[\[lookup\s+@name\s+lowercase\]\]\{([^}]*)\}/gi, name.toLowerCase());
-                            enriched = enriched.replace(/\[\[lookup\s+@name\]\]\{([^}]*)\}/gi, name);
-                        } else {
-                            enriched = enriched.replace(/\[\[lookup\s+@[^\]]+\]\]\{([^}]*)\}/gi, '$1');
-                        }
-                        return enriched;
-                    }
-                }
+                implementation: globalThis.TextEditor
+            }
+        },
+        helpers: {
+            interaction: {
+                KeyboardManager: globalThis.KeyboardManager
+            }
+        },
+        apps: {
+            FilePicker: {
+                implementation: globalThis.FilePicker
             }
         }
     },
     canvas: {
         placeables: {
-            Token: class Token {
-                _onClickRight(event) {
-                    if (globalThis.canvas?.hud?.token?.rendered && (globalThis.canvas.hud.token.object === this || globalThis.canvas.hud.token.object?.id === this.id)) {
-                        globalThis.canvas.hud.token.clear();
-                    } else {
-                        globalThis.canvas.hud.token.bind(this);
-                    }
-                }
-            }
+            Token: globalThis.Token
         }
     },
     utils: {

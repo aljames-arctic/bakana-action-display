@@ -54,6 +54,28 @@ test('BaseFoundryAdapter and FoundryCurrentAdapter getCombatantByToken and getCo
     assert.equal(v14.getCombatantByToken(mockCombatV14, { id: 't1' }), mockCombatant);
 });
 
+test('BaseFoundryAdapter (v12) and FoundryCurrentAdapter (v14+) constructor getters contract', () => {
+    // 1. BaseFoundryAdapter (v12 baseline) resolves globals even when foundry.applications.ux is undefined
+    const v12 = new BaseFoundryAdapter();
+    assert.equal(v12.ContextMenu, globalThis.ContextMenu);
+    assert.equal(v12.KeyboardManager, globalThis.KeyboardManager);
+    assert.equal(v12.Token, globalThis.Token);
+    assert.equal(v12.ApplicationV2, globalThis.foundry.applications.api.ApplicationV2);
+    assert.equal(v12.HandlebarsApplicationMixin, globalThis.foundry.applications.api.HandlebarsApplicationMixin);
+    assert.equal(v12.FilePicker, globalThis.FilePicker);
+    assert.equal(v12.TextEditor, globalThis.TextEditor);
+
+    // 2. FoundryCurrentAdapter (v14 modern) resolves modern namespaced constructors
+    const v14 = new FoundryCurrentAdapter();
+    assert.equal(v14.ContextMenu, globalThis.foundry.applications.ux.ContextMenu);
+    assert.equal(v14.KeyboardManager, globalThis.foundry.helpers.interaction.KeyboardManager);
+    assert.equal(v14.Token, globalThis.foundry.canvas.placeables.Token);
+    assert.equal(v14.ApplicationV2, globalThis.foundry.applications.api.ApplicationV2);
+    assert.equal(v14.HandlebarsApplicationMixin, globalThis.foundry.applications.api.HandlebarsApplicationMixin);
+    assert.equal(v14.FilePicker, globalThis.foundry.applications.apps.FilePicker.implementation);
+    assert.equal(v14.TextEditor, globalThis.foundry.applications.ux.TextEditor.implementation);
+});
+
 test('fromUuid and fromUuidSync resolve cleanly across FoundryAdapter, SystemAdapter, and UnifiedAdapter', async () => {
     const mockDoc = { id: 'doc1', uuid: 'Item.123' };
     const origFromUuidSync = globalThis.foundry.utils.fromUuidSync;

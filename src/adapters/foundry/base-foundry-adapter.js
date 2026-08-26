@@ -25,45 +25,45 @@ export class BaseFoundryAdapter {
     }
 
     /**
-     * The active ContextMenu constructor.
+     * The active ContextMenu constructor (global in v12/v13 baseline).
      */
     get ContextMenu() {
-        return foundry.applications.ux.ContextMenu;
+        return globalThis.ContextMenu;
     }
 
     /**
-     * The active KeyboardManager constructor.
+     * The active KeyboardManager constructor (global in v12/v13 baseline).
      */
     get KeyboardManager() {
-        return foundry.helpers.interaction.KeyboardManager;
+        return globalThis.KeyboardManager;
     }
 
     /**
-     * The active Token placeable constructor.
+     * The active Token placeable constructor (global in v12/v13 baseline).
      */
     get Token() {
-        return foundry.canvas.placeables.Token;
+        return globalThis.Token;
     }
 
     /**
-     * The active ApplicationV2 constructor.
+     * The active ApplicationV2 constructor (introduced in v12 under foundry.applications.api).
      */
     get ApplicationV2() {
         return foundry.applications.api.ApplicationV2;
     }
 
     /**
-     * The active HandlebarsApplicationMixin wrapper.
+     * The active HandlebarsApplicationMixin wrapper (introduced in v12 under foundry.applications.api).
      */
     get HandlebarsApplicationMixin() {
         return foundry.applications.api.HandlebarsApplicationMixin;
     }
 
     /**
-     * The active FilePicker constructor / implementation.
+     * The active FilePicker constructor / implementation (global in v12/v13 baseline).
      */
     get FilePicker() {
-        return foundry.applications.apps.FilePicker.implementation;
+        return globalThis.FilePicker?.implementation ?? globalThis.FilePicker;
     }
 
     /**
@@ -167,10 +167,10 @@ export class BaseFoundryAdapter {
     }
 
     /**
-     * The active TextEditor constructor / implementation.
+     * The active TextEditor constructor / implementation (global in v12/v13 baseline).
      */
     get TextEditor() {
-        return foundry.applications.ux.TextEditor.implementation;
+        return globalThis.TextEditor?.implementation ?? globalThis.TextEditor;
     }
 
     /**

@@ -6,6 +6,41 @@ import { BaseFoundryAdapter } from './base-foundry-adapter.js';
  */
 export class FoundryCurrentAdapter extends BaseFoundryAdapter {
     /**
+     * The active ContextMenu constructor in v14+.
+     */
+    get ContextMenu() {
+        return foundry.applications.ux.ContextMenu;
+    }
+
+    /**
+     * The active KeyboardManager constructor in v14+.
+     */
+    get KeyboardManager() {
+        return foundry.helpers.interaction.KeyboardManager;
+    }
+
+    /**
+     * The active Token placeable constructor in v14+.
+     */
+    get Token() {
+        return foundry.canvas.placeables.Token;
+    }
+
+    /**
+     * The active FilePicker constructor / implementation in v14+.
+     */
+    get FilePicker() {
+        return foundry.applications.apps.FilePicker.implementation;
+    }
+
+    /**
+     * The active TextEditor constructor / implementation in v14+.
+     */
+    get TextEditor() {
+        return foundry.applications.ux.TextEditor.implementation;
+    }
+
+    /**
      * Retrieve all combatants associated with a token in combat using v14+ Combat#getCombatantsByToken.
      * @param {Combat} combat Target combat encounter
      * @param {string|TokenDocument|Token} token Token ID or Document or Placeable
