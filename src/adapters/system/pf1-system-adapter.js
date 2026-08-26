@@ -588,38 +588,33 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
     }
 
     #extractTraitEntries(traitData, configMap = null) {
-        if (!traitData || typeof traitData !== 'object') return [];
+        if (!traitData) return [];
         const results = [];
 
         const version = game.system?.version ?? '11.0.0';
         const isV11Plus = !this.foundry.isNewerVersion('11.0.0', version);
 
         if (isV11Plus) {
-            // Modern PF1 (v11+): traitData.values is an Array of keys (never access deprecated .value)
-            if (Array.isArray(traitData.values)) {
-                for (const key of traitData.values) {
-                    if (typeof key === 'string' && key.trim().length > 0) {
-                        const label = configMap?.[key] ? localize(configMap[key], key) : (key.charAt(0).toUpperCase() + key.slice(1));
-                        if (label) results.push(label);
-                    }
-                }
+            // Modern PF1 (v11+): traitData.values is an Array of key strings (never access deprecated .value)
+            for (const key of traitData.values ?? []) {
+                const label = configMap?.[key] ? localize(configMap[key], key) : (key ? key.charAt(0).toUpperCase() + key.slice(1) : '');
+                if (label) results.push(label);
             }
         } else {
             // Legacy PF1 (< v11): traitData.value is a delimited string or array of keys
-            if (typeof traitData.value === 'string' && traitData.value.trim().length > 0) {
-                results.push(...traitData.value.split(/[;,]/).map(s => s.trim()).filter(Boolean));
-            } else if (Array.isArray(traitData.value)) {
-                for (const key of traitData.value) {
-                    if (typeof key === 'string' && key.trim().length > 0) {
-                        const label = configMap?.[key] ? localize(configMap[key], key) : (key.charAt(0).toUpperCase() + key.slice(1));
-                        if (label) results.push(label);
-                    }
+            const rawValue = traitData.value;
+            if (Array.isArray(rawValue)) {
+                for (const key of rawValue) {
+                    const label = configMap?.[key] ? localize(configMap[key], key) : (key ? key.charAt(0).toUpperCase() + key.slice(1) : '');
+                    if (label) results.push(label);
                 }
+            } else if (rawValue) {
+                results.push(...rawValue.split(/[;,]/).map(s => s.trim()).filter(Boolean));
             }
         }
 
         // Custom entries (comma or semicolon-separated string)
-        if (typeof traitData.custom === 'string' && traitData.custom.trim().length > 0) {
+        if (traitData.custom) {
             results.push(...traitData.custom.split(/[;,]/).map(s => s.trim()).filter(Boolean));
         }
 
