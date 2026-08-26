@@ -76,6 +76,18 @@ test('BaseFoundryAdapter (v12) and FoundryCurrentAdapter (v14+) constructor gett
     assert.equal(v14.TextEditor, globalThis.foundry.applications.ux.TextEditor.implementation);
 });
 
+test('isNewerVersion contract across BaseFoundryAdapter and BaseSystemAdapter', () => {
+    const foundry = new BaseFoundryAdapter();
+    const system = new BaseSystemAdapter('pf1', true, foundry);
+
+    assert.equal(foundry.isNewerVersion('12.0.0', '11.0.0'), true);
+    assert.equal(foundry.isNewerVersion('11.0.0', '12.0.0'), false);
+    assert.equal(foundry.isNewerVersion('11.0.0', '11.0.0'), false);
+
+    assert.equal(system.isNewerVersion('12.0.0', '11.0.0'), true);
+    assert.equal(system.isNewerVersion('11.0.0', '12.0.0'), false);
+});
+
 test('fromUuid and fromUuidSync resolve cleanly across FoundryAdapter, SystemAdapter, and UnifiedAdapter', async () => {
     const mockDoc = { id: 'doc1', uuid: 'Item.123' };
     const origFromUuidSync = globalThis.foundry.utils.fromUuidSync;

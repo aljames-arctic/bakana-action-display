@@ -31,6 +31,16 @@ export class BaseSystemAdapter {
     }
 
     /**
+     * Test whether version a is strictly newer than version b using the Foundry platform adapter.
+     * @param {string} a Primary version string
+     * @param {string} b Target version string to compare against
+     * @returns {boolean}
+     */
+    isNewerVersion(a, b) {
+        return this.foundry.isNewerVersion(a, b);
+    }
+
+    /**
      * Enrich an HTML string using the Foundry platform adapter.
      * @param {string} content HTML string to enrich
      * @param {Object} [options={}] Enrichment options

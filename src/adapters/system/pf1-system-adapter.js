@@ -592,9 +592,7 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
         const results = [];
 
         const version = game.system?.version ?? '11.0.0';
-        const isV11Plus = foundry.utils?.isNewerVersion
-            ? !foundry.utils.isNewerVersion('11.0.0', version)
-            : (parseFloat(version) >= 11);
+        const isV11Plus = !this.foundry.isNewerVersion('11.0.0', version);
 
         if (isV11Plus) {
             // Modern PF1 (v11+): traitData.values is an Array of keys (never access deprecated .value)

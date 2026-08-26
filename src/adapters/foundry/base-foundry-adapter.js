@@ -167,6 +167,16 @@ export class BaseFoundryAdapter {
     }
 
     /**
+     * Test whether version a is strictly newer than version b.
+     * @param {string} a Primary version string
+     * @param {string} b Target version string to compare against
+     * @returns {boolean}
+     */
+    isNewerVersion(a, b) {
+        return foundry.utils.isNewerVersion(a, b);
+    }
+
+    /**
      * The active TextEditor constructor / implementation (global in v12/v13 baseline).
      */
     get TextEditor() {
