@@ -810,5 +810,33 @@ test('ActionDisplayApp _formatItemSummaryHtml renders structured property tag ro
     assert.ok(html.includes('<span class="bad-summary-tag">Proficient</span>'));
 });
 
+test('ActionDisplayApp _formatItemSummaryHtml preserves rich description typography and enricher tags', () => {
+    const app = new ActionDisplayApp({ actor: {} });
+    const richDescription = '<p><strong>Hit:</strong> <em>1d8+3</em> piercing damage.</p>' +
+        '<h4>At Higher Levels</h4>' +
+        '<ul><li>Option A</li><li>Option B</li></ul>' +
+        '<blockquote>Flavor note</blockquote>' +
+        '<p><a class="content-link" data-uuid="Compendium.dnd5e.rules.123"><i class="fas fa-book"></i> Rule</a> ' +
+        '<a class="inline-roll inline-damage"><i class="fas fa-dice-d20"></i> 2d6 Fire</a> ' +
+        '<a class="inline-roll inline-check"><i class="fas fa-dice-d20"></i> DC 14 Dex</a></p>';
+
+    const summary = {
+        title: 'Flame Blade',
+        subtitle: '2nd Level Evocation',
+        description: richDescription
+    };
+
+    const html = app._formatItemSummaryHtml(summary);
+    assert.ok(html.includes('bad-summary-desc'));
+    assert.ok(html.includes('<strong>Hit:</strong>'));
+    assert.ok(html.includes('<em>1d8+3</em>'));
+    assert.ok(html.includes('<h4>At Higher Levels</h4>'));
+    assert.ok(html.includes('<ul><li>Option A</li><li>Option B</li></ul>'));
+    assert.ok(html.includes('<blockquote>Flavor note</blockquote>'));
+    assert.ok(html.includes('class="content-link"'));
+    assert.ok(html.includes('class="inline-roll inline-damage"'));
+    assert.ok(html.includes('class="inline-roll inline-check"'));
+});
+
 
 
