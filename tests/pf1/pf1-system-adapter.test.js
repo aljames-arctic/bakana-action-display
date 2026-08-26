@@ -321,6 +321,7 @@ test('Pf1SystemAdapter extractCheckActions generates abilities, saves, and skill
 });
 
 test('Pf1SystemAdapter getTokenInfo extracts complete token statistics and details for Page 3 showcase', async () => {
+    game.system = { id: 'pf1', version: '10.5.0' };
     const adapter = new Pf1SystemAdapter();
 
     const pf1Actor = {
@@ -419,6 +420,7 @@ test('Pf1SystemAdapter getTokenInfo extracts complete token statistics and detai
 });
 
 test('Pf1SystemAdapter getTokenInfo supports modern PF1 v11+ traits.di, ci, dv, dr, eres with throwing legacy value getters', async () => {
+    game.system = { id: 'pf1', version: '11.0.0' };
     const adapter = new Pf1SystemAdapter();
 
     const pf1ModernActor = {

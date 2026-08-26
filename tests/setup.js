@@ -387,6 +387,18 @@ globalThis.foundry = {
         },
         duplicate(obj) {
             return structuredClone(obj);
+        },
+        isNewerVersion(v1, v0) {
+            const parts1 = String(v1).split('.').map(n => parseInt(n, 10) || 0);
+            const parts0 = String(v0).split('.').map(n => parseInt(n, 10) || 0);
+            const len = Math.max(parts1.length, parts0.length);
+            for (let i = 0; i < len; i++) {
+                const p1 = parts1[i] ?? 0;
+                const p0 = parts0[i] ?? 0;
+                if (p1 > p0) return true;
+                if (p1 < p0) return false;
+            }
+            return false;
         }
     }
 };

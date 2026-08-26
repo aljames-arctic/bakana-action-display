@@ -591,16 +591,23 @@ export class Pf1SystemAdapter extends FantasySystemAdapter {
         if (!traitData || typeof traitData !== 'object') return [];
         const results = [];
 
-        // Modern PF1 (v11+): traitData.values is an Array of keys
-        if (Array.isArray(traitData.values)) {
-            for (const key of traitData.values) {
-                if (typeof key === 'string' && key.trim().length > 0) {
-                    const label = configMap?.[key] ? localize(configMap[key], key) : (key.charAt(0).toUpperCase() + key.slice(1));
-                    if (label) results.push(label);
+        const version = game.system?.version ?? '11.0.0';
+        const isV11Plus = foundry.utils?.isNewerVersion
+            ? !foundry.utils.isNewerVersion('11.0.0', version)
+            : (parseFloat(version) >= 11);
+
+        if (isV11Plus) {
+            // Modern PF1 (v11+): traitData.values is an Array of keys (never access deprecated .value)
+            if (Array.isArray(traitData.values)) {
+                for (const key of traitData.values) {
+                    if (typeof key === 'string' && key.trim().length > 0) {
+                        const label = configMap?.[key] ? localize(configMap[key], key) : (key.charAt(0).toUpperCase() + key.slice(1));
+                        if (label) results.push(label);
+                    }
                 }
             }
-        } else if (traitData.values === undefined && traitData.value !== undefined && traitData.value !== null) {
-            // Legacy PF1: traitData.value is a delimited string or array of keys
+        } else {
+            // Legacy PF1 (< v11): traitData.value is a delimited string or array of keys
             if (typeof traitData.value === 'string' && traitData.value.trim().length > 0) {
                 results.push(...traitData.value.split(/[;,]/).map(s => s.trim()).filter(Boolean));
             } else if (Array.isArray(traitData.value)) {
