@@ -36,8 +36,12 @@
                 "hint": "Display a combat turn tracking button (sword icon) in the HUD control bar to automatically follow the active character's turn during combat."
             },
             "economyColorsMenu": {
-                "label": "Configure Colors",
+                "label": "Configure Economy Colors",
                 "hint": "Customize the indicator bar color for each action economy type for this system."
+            },
+            "enricherColorsMenu": {
+                "label": "Configure Enricher Colors",
+                "hint": "Customize the badge and icon colors of inline roll, damage, check, area, and reference enrichers in tooltips."
             },
             "hudOpacity": {
                 "name": "HUD Opacity",
@@ -133,6 +137,33 @@
                 "tritanopia": "Tritanopia (Blue-Yellow Accessible)",
                 "highContrast": "High Contrast (Accessible)",
                 "pastel": "Pastel / Soft"
+            }
+        },
+        "enricherColors": {
+            "title": "Enricher Colors",
+            "description": "Customize the badge and icon colors used for inline roll and action enrichers inside item summary tooltips.",
+            "resetDefaults": "Reset to Defaults",
+            "saved": "Enricher colors saved successfully.",
+            "presetLabel": "Color Palette Preset",
+            "presets": {
+                "select": "Custom / Choose Preset...",
+                "default": "Default (HUD Theme)",
+                "vibrant": "Vibrant / Neon",
+                "pastel": "Pastel / Soft",
+                "highContrast": "High Contrast",
+                "monochrome": "Monochrome / Silver"
+            },
+            "types": {
+                "damage": "Damage Formulas",
+                "damageDesc": "Inline damage rolls (e.g. @Damage, [[/damage]])",
+                "check": "Checks & Saves",
+                "checkDesc": "Saving throw and ability check DCs (e.g. @Check, @Save)",
+                "area": "Area Templates",
+                "areaDesc": "Area of effect measurements (e.g. @Area, cones, cubes)",
+                "roll": "Inline Rolls & Dice",
+                "rollDesc": "General inline dice rolls and formulas (e.g. @Roll, [[/roll]])",
+                "reference": "Inline References",
+                "referenceDesc": "Inline rule references and lookup tags (e.g. @lookup)"
             }
         },
         "moduleIntegrations": {

@@ -7,6 +7,7 @@ import { ActionDisplayApp } from './ui/action-display-app.js';
 import { log } from './lib/logger.js';
 import { MODULE_ID } from './constants.js';
 import { syncActorFavorites } from './favorites/favorites-manager.js';
+import { applyEnricherCssVariables } from './ui/enricher-presets.js';
 
 let closeDetachedHUD = false;
 let renderDebounceTimer = null;
@@ -149,6 +150,9 @@ function requestHUDRender() {
 // Ready hook
 Hooks.once('ready', async () => {
     log.info("Ready");
+
+    // Initialize custom enricher CSS variables
+    applyEnricherCssVariables(game.settings?.get?.(MODULE_ID, 'enricherColors'));
 
     // Wrap TokenHUD prototype methods on ready if not already wrapped
     wrapTokenHUD();

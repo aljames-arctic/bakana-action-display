@@ -1,0 +1,54 @@
+<div class="bad-enricher-config">
+    <div class="bad-config-header-row">
+        <p class="bad-config-description">{{localize "BAD.enricherColors.description"}}</p>
+    </div>
+
+    <!-- Presets Dropdown -->
+    <div class="bad-enricher-preset-row">
+        <label for="bad-enricher-preset-selector" class="bad-enricher-preset-label">
+            <i class="fas fa-swatchbook"></i> {{localize "BAD.enricherColors.presetLabel"}}
+        </label>
+        <select id="bad-enricher-preset-selector" class="bad-enricher-preset-select">
+            <option value="">{{localize "BAD.enricherColors.presets.select"}}</option>
+            {{#each presets}}
+            <option value="{{this.id}}" {{#if this.selected}}selected{{/if}}>{{this.label}}</option>
+            {{/each}}
+        </select>
+    </div>
+
+    <!-- Enricher Categories List -->
+    <div class="bad-enricher-colors-list">
+        {{#each enricherTypes}}
+        <div class="bad-enricher-color-row" data-type-id="{{this.id}}">
+            <div class="bad-enricher-preview-col">
+                <span class="bad-enricher-badge-preview" style="--bad-preview-color: {{this.color}};" data-type-id="{{this.id}}">
+                    <i class="{{this.icon}}"></i> {{this.sampleText}}
+                </span>
+            </div>
+            <div class="bad-enricher-label-group">
+                <span class="bad-enricher-label">{{localize this.label}}</span>
+                <span class="bad-enricher-desc">{{localize this.desc}}</span>
+            </div>
+            <div class="bad-enricher-color-controls">
+                <input type="color" class="bad-enricher-color-picker" data-type-id="{{this.id}}" value="{{this.color}}" title="{{localize this.label}}" />
+                <input type="text" class="bad-enricher-color-input" data-type-id="{{this.id}}" value="{{this.color}}" maxlength="7" spellcheck="false" title="{{localize this.label}}" />
+            </div>
+        </div>
+        {{/each}}
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="bad-config-footer">
+        <button type="button" class="bad-config-btn bad-config-btn-secondary" data-action="resetDefaults">
+            <i class="fas fa-undo"></i> {{localize "BAD.enricherColors.resetDefaults"}}
+        </button>
+        <div class="bad-config-footer-actions">
+            <button type="button" class="bad-config-btn" data-action="closeConfig">
+                {{localize "BAD.common.cancel"}}
+            </button>
+            <button type="button" class="bad-config-btn bad-config-btn-primary" data-action="saveConfig">
+                <i class="fas fa-save"></i> {{localize "BAD.common.save"}}
+            </button>
+        </div>
+    </div>
+</div>

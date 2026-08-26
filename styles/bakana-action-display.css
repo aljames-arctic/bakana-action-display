@@ -1873,15 +1873,15 @@ body > #tooltip.bad-summary-has-table-wrapper,
     display: inline-flex;
     align-items: center;
     gap: 0.25em;
-    background: rgba(167, 139, 250, 0.14);
-    border: 1px solid rgba(167, 139, 250, 0.3);
+    background: color-mix(in srgb, var(--bad-enricher-roll-color, #a78bfa) 14%, transparent);
+    border: 1px solid color-mix(in srgb, var(--bad-enricher-roll-color, #a78bfa) 30%, transparent);
     border-radius: 4px;
     padding: 0.08em 0.42em;
     margin: 0.08em 0.12em;
     font-size: 0.9em;
     font-weight: 600;
     line-height: 1.25;
-    color: #e9d5ff !important;
+    color: color-mix(in srgb, var(--bad-enricher-roll-color, #a78bfa) 80%, #ffffff) !important;
     text-decoration: none !important;
     white-space: nowrap;
     vertical-align: baseline;
@@ -1894,8 +1894,8 @@ body > #tooltip.bad-summary-has-table-wrapper,
 .bad-summary-desc .inline-damage:hover,
 .bad-summary-desc .inline-area:hover,
 .bad-summary-desc .inline-reference:hover {
-    background: rgba(167, 139, 250, 0.25);
-    border-color: rgba(167, 139, 250, 0.55);
+    background: color-mix(in srgb, var(--bad-enricher-roll-color, #a78bfa) 25%, transparent);
+    border-color: color-mix(in srgb, var(--bad-enricher-roll-color, #a78bfa) 55%, transparent);
     color: #ffffff !important;
 }
 
@@ -1904,38 +1904,68 @@ body > #tooltip.bad-summary-has-table-wrapper,
 .bad-summary-desc .inline-damage i,
 .bad-summary-desc .inline-area i,
 .bad-summary-desc .inline-reference i {
-    color: #a78bfa;
+    color: var(--bad-enricher-roll-color, #a78bfa);
     font-size: 0.85em;
 }
 
 /* System-Specific Enricher Accents */
 .bad-summary-desc .inline-damage {
-    background: rgba(248, 113, 113, 0.15);
-    border-color: rgba(248, 113, 113, 0.35);
-    color: #fecaca !important;
+    background: color-mix(in srgb, var(--bad-enricher-damage-color, #f87171) 15%, transparent);
+    border-color: color-mix(in srgb, var(--bad-enricher-damage-color, #f87171) 35%, transparent);
+    color: color-mix(in srgb, var(--bad-enricher-damage-color, #f87171) 85%, #ffffff) !important;
+}
+.bad-summary-desc .inline-damage:hover {
+    background: color-mix(in srgb, var(--bad-enricher-damage-color, #f87171) 25%, transparent);
+    border-color: color-mix(in srgb, var(--bad-enricher-damage-color, #f87171) 55%, transparent);
+    color: #ffffff !important;
 }
 .bad-summary-desc .inline-damage i {
-    color: #f87171;
+    color: var(--bad-enricher-damage-color, #f87171);
 }
 
 .bad-summary-desc .inline-check,
 .bad-summary-desc .inline-save {
-    background: rgba(56, 189, 248, 0.15);
-    border-color: rgba(56, 189, 248, 0.35);
-    color: #bae6fd !important;
+    background: color-mix(in srgb, var(--bad-enricher-check-color, #38bdf8) 15%, transparent);
+    border-color: color-mix(in srgb, var(--bad-enricher-check-color, #38bdf8) 35%, transparent);
+    color: color-mix(in srgb, var(--bad-enricher-check-color, #38bdf8) 85%, #ffffff) !important;
+}
+.bad-summary-desc .inline-check:hover,
+.bad-summary-desc .inline-save:hover {
+    background: color-mix(in srgb, var(--bad-enricher-check-color, #38bdf8) 25%, transparent);
+    border-color: color-mix(in srgb, var(--bad-enricher-check-color, #38bdf8) 55%, transparent);
+    color: #ffffff !important;
 }
 .bad-summary-desc .inline-check i,
 .bad-summary-desc .inline-save i {
-    color: #38bdf8;
+    color: var(--bad-enricher-check-color, #38bdf8);
 }
 
 .bad-summary-desc .inline-area {
-    background: rgba(52, 211, 153, 0.15);
-    border-color: rgba(52, 211, 153, 0.35);
-    color: #a7f3d0 !important;
+    background: color-mix(in srgb, var(--bad-enricher-area-color, #34d399) 15%, transparent);
+    border-color: color-mix(in srgb, var(--bad-enricher-area-color, #34d399) 35%, transparent);
+    color: color-mix(in srgb, var(--bad-enricher-area-color, #34d399) 85%, #ffffff) !important;
+}
+.bad-summary-desc .inline-area:hover {
+    background: color-mix(in srgb, var(--bad-enricher-area-color, #34d399) 25%, transparent);
+    border-color: color-mix(in srgb, var(--bad-enricher-area-color, #34d399) 55%, transparent);
+    color: #ffffff !important;
 }
 .bad-summary-desc .inline-area i {
-    color: #34d399;
+    color: var(--bad-enricher-area-color, #34d399);
+}
+
+.bad-summary-desc .inline-reference {
+    background: color-mix(in srgb, var(--bad-enricher-reference-color, #c084fc) 15%, transparent);
+    border-color: color-mix(in srgb, var(--bad-enricher-reference-color, #c084fc) 35%, transparent);
+    color: color-mix(in srgb, var(--bad-enricher-reference-color, #c084fc) 85%, #ffffff) !important;
+}
+.bad-summary-desc .inline-reference:hover {
+    background: color-mix(in srgb, var(--bad-enricher-reference-color, #c084fc) 25%, transparent);
+    border-color: color-mix(in srgb, var(--bad-enricher-reference-color, #c084fc) 55%, transparent);
+    color: #ffffff !important;
+}
+.bad-summary-desc .inline-reference i {
+    color: var(--bad-enricher-reference-color, #c084fc);
 }
 
 /* Roll Table and Data Table Formatting in Tooltips */
@@ -3005,6 +3035,160 @@ body > #tooltip.bad-summary-has-table-wrapper,
     font-size: 0.78em;
     color: #64748b;
     font-style: italic;
+}
+
+/* ==========================================================================
+   ENRICHER COLORS CONFIGURATION DIALOG
+   ========================================================================== */
+.bad-enricher-colors-config-window .window-content {
+    background: #0f0d1b !important;
+    color: #f0f0f5 !important;
+    font-family: "Signika", sans-serif !important;
+    padding: 0.85em !important;
+    overflow: visible !important;
+}
+
+.bad-enricher-config {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85em;
+    pointer-events: auto !important;
+}
+
+.bad-enricher-preset-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75em;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(167, 139, 250, 0.2);
+    border-radius: 0.4em;
+    padding: 0.45em 0.75em;
+}
+
+.bad-enricher-preset-label {
+    font-size: 0.9em;
+    font-weight: 600;
+    color: #cbd5e1;
+    display: flex;
+    align-items: center;
+    gap: 0.45em;
+    white-space: nowrap;
+    margin: 0 !important;
+}
+
+.bad-enricher-preset-select {
+    flex-grow: 1;
+    background-color: #1a162b !important;
+    color: #f1f5f9 !important;
+    border: 1px solid rgba(167, 139, 250, 0.35) !important;
+    border-radius: 0.3em !important;
+    padding: 0.3em 0.5em !important;
+    font-size: 0.9em !important;
+    cursor: pointer;
+}
+
+.bad-enricher-preset-select option:hover,
+.bad-enricher-preset-select option:focus,
+.bad-enricher-preset-select option:checked {
+    background-color: #7c3aed !important;
+    color: #ffffff !important;
+}
+
+.bad-enricher-colors-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55em;
+    max-height: 380px;
+    overflow-y: auto;
+    padding-right: 0.25em;
+}
+
+.bad-enricher-color-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75em;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 0.4em;
+    padding: 0.55em 0.75em;
+    pointer-events: auto !important;
+}
+
+.bad-enricher-preview-col {
+    width: 140px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+}
+
+.bad-enricher-badge-preview {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3em;
+    background: color-mix(in srgb, var(--bad-preview-color, #a78bfa) 15%, transparent);
+    border: 1px solid color-mix(in srgb, var(--bad-preview-color, #a78bfa) 35%, transparent);
+    border-radius: 4px;
+    padding: 0.15em 0.5em;
+    font-size: 0.88em;
+    font-weight: 600;
+    color: color-mix(in srgb, var(--bad-preview-color, #a78bfa) 85%, #ffffff);
+    white-space: nowrap;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.bad-enricher-badge-preview i {
+    color: var(--bad-preview-color, #a78bfa);
+    font-size: 0.85em;
+}
+
+.bad-enricher-label-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15em;
+    flex-grow: 1;
+    min-width: 0;
+}
+
+.bad-enricher-label {
+    font-size: 0.9em;
+    font-weight: 600;
+    color: #f1f5f9;
+}
+
+.bad-enricher-desc {
+    font-size: 0.76em;
+    color: #94a3b8;
+}
+
+.bad-enricher-color-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    flex-shrink: 0;
+}
+
+.bad-enricher-color-picker {
+    width: 2.2em !important;
+    height: 2em !important;
+    padding: 0 !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 0.25em !important;
+    cursor: pointer !important;
+    background: transparent !important;
+}
+
+.bad-enricher-color-input {
+    width: 6em !important;
+    height: 2em !important;
+    padding: 0.2em 0.5em !important;
+    background-color: #1a162b !important;
+    color: #f1f5f9 !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 0.25em !important;
+    font-family: monospace !important;
+    font-size: 0.85em !important;
+    text-transform: uppercase !important;
+    text-align: center !important;
 }
 
 

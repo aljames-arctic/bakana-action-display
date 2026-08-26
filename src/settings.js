@@ -5,6 +5,8 @@ import { CategorizationConfigApp } from "./categorization/categorization-config-
 import { EconomyColorsConfigApp } from "./ui/economy-colors-config-app.js";
 import { ModuleIntegrationsConfigApp } from "./ui/module-integrations-config-app.js";
 import { Dnd5eAutoBanConfigApp, DEFAULT_DND5E_AUTOBAN_CONFIG } from "./ui/dnd5e-autoban-config-app.js";
+import { EnricherColorsConfigApp } from "./ui/enricher-colors-config-app.js";
+import { applyEnricherCssVariables, DEFAULT_ENRICHER_COLORS } from "./ui/enricher-presets.js";
 import { hasActiveModuleAdapters } from "./adapters/module/index.js";
 
 Hooks.once('init', () => {
@@ -210,6 +212,27 @@ Hooks.once('init', () => {
             if (actionDisplay.activeApp?.rendered) {
                 actionDisplay.activeApp.render();
             }
+        }
+    });
+
+    // Register Enricher Colors Menu Button (User Scope)
+    game.settings.registerMenu(MODULE_ID, 'enricherColorsMenu', {
+        name: game.i18n.localize('BAD.enricherColors.title'),
+        label: game.i18n.localize('BAD.settings.enricherColorsMenu.label'),
+        hint: game.i18n.localize('BAD.settings.enricherColorsMenu.hint'),
+        icon: 'fas fa-wand-magic-sparkles',
+        type: EnricherColorsConfigApp,
+        restricted: false
+    });
+
+    // Register Enricher Colors Configuration Storage (User Scope)
+    game.settings.register(MODULE_ID, 'enricherColors', {
+        scope: 'user',
+        config: false,
+        type: Object,
+        default: DEFAULT_ENRICHER_COLORS,
+        onChange: value => {
+            applyEnricherCssVariables(value);
         }
     });
 
@@ -449,31 +472,33 @@ export function injectSettingsHeaders(html, app) {
 
     if (!root?.querySelector) return;
 
-    // 1. Move economyColorsMenu (User Menu) into the User Settings section before hudOpacity if both are present
-    const economyMenuSelector = [
-        `[data-key="${MODULE_ID}.economyColorsMenu"]`,
-        `[data-action="${MODULE_ID}.economyColorsMenu"]`,
-        `[data-setting-id="${MODULE_ID}.economyColorsMenu"]`,
-        `[data-entry-id="${MODULE_ID}.economyColorsMenu"]`,
-        `[data-key="economyColorsMenu"]`,
-        `[data-action="economyColorsMenu"]`
-    ].join(', ');
+    // 1. Move economyColorsMenu & enricherColorsMenu (User Menus) into User Settings section before hudOpacity if present
+    const userMenus = ['enricherColorsMenu', 'economyColorsMenu'];
     const hudOpacitySelector = [
         `[name="${MODULE_ID}.hudOpacity"]`,
         `[data-setting-id="${MODULE_ID}.hudOpacity"]`,
         `[data-entry-id="${MODULE_ID}.hudOpacity"]`,
         `[name="hudOpacity"]`
     ].join(', ');
-
-    const economyMenuEl = root.querySelector(economyMenuSelector);
     const hudOpacityEl = root.querySelector(hudOpacitySelector);
 
-    if (economyMenuEl && hudOpacityEl) {
-        const economyFg = economyMenuEl.closest('.form-group') ?? economyMenuEl;
+    if (hudOpacityEl) {
         const hudOpacityFg = hudOpacityEl.closest('.form-group') ?? hudOpacityEl;
-        if (economyFg && hudOpacityFg && economyFg.parentNode && economyFg.parentNode === hudOpacityFg.parentNode) {
-            if (economyFg.nextElementSibling !== hudOpacityFg) {
-                hudOpacityFg.parentNode.insertBefore(economyFg, hudOpacityFg);
+        for (const menuKey of userMenus) {
+            const menuSelector = [
+                `[data-key="${MODULE_ID}.${menuKey}"]`,
+                `[data-action="${MODULE_ID}.${menuKey}"]`,
+                `[data-setting-id="${MODULE_ID}.${menuKey}"]`,
+                `[data-entry-id="${MODULE_ID}.${menuKey}"]`,
+                `[data-key="${menuKey}"]`,
+                `[data-action="${menuKey}"]`
+            ].join(', ');
+            const menuEl = root.querySelector(menuSelector);
+            if (menuEl && hudOpacityFg && hudOpacityFg.parentNode) {
+                const menuFg = menuEl.closest('.form-group') ?? menuEl;
+                if (menuFg && menuFg.parentNode && menuFg !== hudOpacityFg) {
+                    hudOpacityFg.parentNode.insertBefore(menuFg, hudOpacityFg);
+                }
             }
         }
     }
@@ -487,7 +512,7 @@ export function injectSettingsHeaders(html, app) {
             icon: 'fas fa-globe'
         },
         {
-            keys: ['economyColorsMenu', 'hudOpacity', 'hudScale', 'fontSize'],
+            keys: ['economyColorsMenu', 'enricherColorsMenu', 'hudOpacity', 'hudScale', 'fontSize'],
             scope: 'user',
             title: game.i18n.localize('BAD.settingsSections.user') ?? 'User Settings',
             icon: 'fas fa-user'
