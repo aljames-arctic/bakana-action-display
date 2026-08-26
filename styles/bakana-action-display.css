@@ -1955,17 +1955,17 @@ body > #tooltip.bad-summary-has-table-wrapper,
 }
 
 .bad-summary-desc .inline-reference {
-    background: color-mix(in srgb, var(--bad-enricher-reference-color, #c084fc) 15%, transparent);
-    border-color: color-mix(in srgb, var(--bad-enricher-reference-color, #c084fc) 35%, transparent);
-    color: color-mix(in srgb, var(--bad-enricher-reference-color, #c084fc) 85%, #ffffff) !important;
+    background: color-mix(in srgb, var(--bad-enricher-reference-color, #c5a059) 15%, transparent);
+    border-color: color-mix(in srgb, var(--bad-enricher-reference-color, #c5a059) 35%, transparent);
+    color: color-mix(in srgb, var(--bad-enricher-reference-color, #c5a059) 85%, #ffffff) !important;
 }
 .bad-summary-desc .inline-reference:hover {
-    background: color-mix(in srgb, var(--bad-enricher-reference-color, #c084fc) 25%, transparent);
-    border-color: color-mix(in srgb, var(--bad-enricher-reference-color, #c084fc) 55%, transparent);
+    background: color-mix(in srgb, var(--bad-enricher-reference-color, #c5a059) 25%, transparent);
+    border-color: color-mix(in srgb, var(--bad-enricher-reference-color, #c5a059) 55%, transparent);
     color: #ffffff !important;
 }
 .bad-summary-desc .inline-reference i {
-    color: var(--bad-enricher-reference-color, #c084fc);
+    color: var(--bad-enricher-reference-color, #c5a059);
 }
 
 /* Roll Table and Data Table Formatting in Tooltips */

@@ -38,7 +38,7 @@ export const ENRICHER_TYPES = [
         id: 'reference',
         label: 'BAD.enricherColors.types.reference',
         desc: 'BAD.enricherColors.types.referenceDesc',
-        defaultColor: '#c084fc',
+        defaultColor: '#c5a059',
         icon: 'fas fa-bookmark',
         sampleText: 'Reference'
     }
@@ -57,7 +57,7 @@ export const ENRICHER_COLOR_PRESETS = Object.freeze({
             check: '#38bdf8',
             area: '#34d399',
             roll: '#a78bfa',
-            reference: '#c084fc'
+            reference: '#c5a059'
         }
     },
     vibrant: {

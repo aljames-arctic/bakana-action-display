@@ -220,7 +220,7 @@ Hooks.once('init', () => {
         name: game.i18n.localize('BAD.enricherColors.title'),
         label: game.i18n.localize('BAD.settings.enricherColorsMenu.label'),
         hint: game.i18n.localize('BAD.settings.enricherColorsMenu.hint'),
-        icon: 'fas fa-wand-magic-sparkles',
+        icon: 'fas fa-palette',
         type: EnricherColorsConfigApp,
         restricted: false
     });

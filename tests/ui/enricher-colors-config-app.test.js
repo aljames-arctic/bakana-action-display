@@ -128,6 +128,11 @@ test('EnricherColorsConfigApp prepares context with categories, colors, icons, a
     assert.ok(areaType);
     assert.equal(areaType.color, '#34d399');
 
+    const referenceType = context.enricherTypes.find(t => t.id === 'reference');
+    assert.ok(referenceType);
+    assert.equal(referenceType.defaultColor, '#c5a059');
+    assert.equal(referenceType.color, '#c5a059');
+
     assert.ok(Array.isArray(context.presets));
     assert.ok(context.presets.some(p => p.id === 'vibrant'));
     assert.ok(context.presets.some(p => p.id === 'highContrast'));
