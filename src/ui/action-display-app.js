@@ -792,7 +792,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
                     const validSubIds = parentGroup?.getAllSubTabIds?.() ?? new Set();
                     const activeSubsForParent = Array.from(this.leftTabs.activeSubTypes).filter(id => validSubIds.has(id));
 
-                    if (activeSubsForParent.length === 0) {
+                    if (activeSubsForParent.length === 0 || activeSubsForParent.includes('all')) {
                         return true;
                     } else {
                         const actionSubId = leftSub[1];
@@ -808,7 +808,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
                         const parentGroup = this.leftGroups?.[type];
                         const validSubIds = parentGroup?.getAllSubTabIds?.() ?? new Set();
                         const activeSubsForParent = Array.from(this.leftTabs.activeSubTypes).filter(id => validSubIds.has(id));
-                        if (activeSubsForParent.length === 0) {
+                        if (activeSubsForParent.length === 0 || activeSubsForParent.includes('all')) {
                             return true;
                         }
                     }

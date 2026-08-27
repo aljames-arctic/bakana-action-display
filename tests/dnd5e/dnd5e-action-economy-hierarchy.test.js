@@ -619,3 +619,83 @@ test('ActionDisplayApp _onContextMenuCapture triggers immediate render on right-
     assert.equal(renderCount, 1, 'render() must be called immediately upon toggling sub-tab');
 });
 
+test('ActionDisplayApp omits Weapons tab when untoggled and reveals Weapons tab + actions when showAll is toggled', async () => {
+    adapter.system = new Dnd5eSystemAdapter();
+    const flags = {};
+    const unequippedSword = {
+        id: 'item-unequipped-sword',
+        name: 'Longsword',
+        type: 'weapon',
+        img: 'icons/weapons/sword.webp',
+        system: {
+            equipped: false,
+            type: { value: 'martialM' },
+            activities: new foundry.utils.Collection([
+                {
+                    id: 'act-attack',
+                    name: 'Attack',
+                    type: 'attack',
+                    activation: { type: 'action' }
+                }
+            ])
+        }
+    };
+    const mockActor = {
+        isOwner: true,
+        items: new foundry.utils.Collection([
+            unequippedSword
+        ]),
+        getFlag: (mod, key) => flags[key] ?? false,
+        setFlag: async (mod, key, val) => { flags[key] = val; }
+    };
+    const app = new ActionDisplayApp({ actor: mockActor });
+
+    // 1. Initial State: showUnequipped_weapon = false, showAll = false
+    delete actionDisplay.getActions; // Use real adapter pipeline
+    let context = await app._prepareContext();
+
+    // Weapons tab should NOT exist if all weapons are unequipped and unequipped gear is not shown
+    const weaponTabInitial = context.itemTypes.find(t => t.id === 'weapon');
+    assert.equal(weaponTabInitial, undefined, 'Weapons tab should NOT exist when all weapons are unequipped and unequipped gear is off');
+    assert.equal(context.items.length, 0, 'No action cards shown');
+
+    // 2. User right-clicks "All Items" -> toggles showAll and showUnequipped_*
+    const allTabEl = {
+        tagName: 'DIV',
+        dataset: { type: 'all' },
+        classList: { contains: (cls) => cls === 'bad-left-tab' },
+        closest: (selector) => {
+            if (selector.includes('bad-left-tab-group')) {
+                return { classList: { contains: () => false } };
+            }
+            if (selector.includes('bad-left-tab')) return allTabEl;
+            return null;
+        }
+    };
+    const fakeEvent = {
+        target: allTabEl,
+        preventDefault: () => {},
+        stopPropagation: () => {},
+        stopImmediatePropagation: () => {}
+    };
+    await app._onContextMenuCapture(fakeEvent);
+    assert.equal(flags.showAll, true, 'showAll flag should be true');
+
+    // 3. Re-render HUD context with showAll = true
+    context = await app._prepareContext();
+    const weaponTabRevealed = context.itemTypes.find(t => t.id === 'weapon');
+    assert.ok(weaponTabRevealed, 'Weapons tab MUST exist when showAll is toggled on');
+    assert.equal(context.items.length, 1, 'Unequipped weapon action card should now be visible');
+    assert.equal(context.items[0].name, 'Longsword');
+    assert.equal(context.items[0].available, false, 'Unequipped weapon action should have available = false');
+    assert.equal(weaponTabRevealed.showUnprepared, true, 'Weapon tab should have showUnprepared = true (orange)');
+
+    // 4. Clicking the "All Weapons" sub-tab also displays the unequipped weapon
+    app.leftTabs.activeParents.clear();
+    app.leftTabs.activeParents.add('weapon');
+    app.leftTabs.activeSubTypes.clear();
+    app.leftTabs.activeSubTypes.add('all');
+    context = await app._prepareContext();
+    assert.equal(context.items.length, 1, 'Clicking All Weapons sub-tab should display weapon');
+});
+
