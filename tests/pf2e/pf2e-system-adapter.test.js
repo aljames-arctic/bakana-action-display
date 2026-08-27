@@ -323,11 +323,11 @@ test('Pf2eSystemAdapter context menu manager provides carry type options and tab
         dataset: { type: 'weapon' }
     };
 
-    assert.equal(adapter.onTabRightClick(app, tabElAll, {}), true);
+    assert.equal(await adapter.onTabRightClick(app, tabElAll, {}), true);
     assert.equal(flags.showAll, true);
     assert.equal(flags.showUnequipped_weapon, true);
 
-    assert.equal(adapter.onTabRightClick(app, tabElWeapon, {}), true);
+    assert.equal(await adapter.onTabRightClick(app, tabElWeapon, {}), true);
     assert.equal(flags.showUnequipped_weapon, false);
 
     // Context modifier flags

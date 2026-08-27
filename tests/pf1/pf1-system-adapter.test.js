@@ -232,11 +232,11 @@ test('Pf1SystemAdapter context menu manager provides equip/unequip options and t
         dataset: { type: 'weapon' }
     };
 
-    assert.equal(adapter.onTabRightClick(app, tabElAll, {}), true);
+    assert.equal(await adapter.onTabRightClick(app, tabElAll, {}), true);
     assert.equal(flags.showAll, true);
     assert.equal(flags.showUnequipped_weapon, true);
 
-    assert.equal(adapter.onTabRightClick(app, tabElWeapon, {}), true);
+    assert.equal(await adapter.onTabRightClick(app, tabElWeapon, {}), true);
     assert.equal(flags.showUnequipped_weapon, false);
 
     // Context modifier flags

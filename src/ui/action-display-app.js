@@ -2032,7 +2032,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
      * @param {Event} event The triggering contextmenu event
      * @private
      */
-    _onContextMenuCapture(event) {
+    async _onContextMenuCapture(event) {
         if (event.target?.closest?.('#context-menu, .context-menu, .context-item')) return;
 
         // Intercept right-clicks on combat auto-track button (sword icon)
@@ -2074,9 +2074,11 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
 
             if (isExpanded) {
                 // If in focus / expanded: toggle show capabilities via system adapter (e.g. toggling showAll/unprepared/unequipped)
-                const handled = adapter.onTabRightClick(this, leftParentTarget, event);
+                const handled = await adapter.onTabRightClick(this, leftParentTarget, event);
                 if (!handled) {
                     this._onToggleLeftParent(parentId);
+                } else {
+                    this.render();
                 }
             } else {
                 // If not in focus (not expanded): select in addition to current selection
@@ -2103,12 +2105,14 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
             event.stopImmediatePropagation();
 
             // Delegate to system adapter for custom right-click behavior (e.g. toggling unprepared spells in dnd5e)
-            const handled = adapter.onTabRightClick(this, leftSubTarget, event);
+            const handled = await adapter.onTabRightClick(this, leftSubTarget, event);
             if (!handled) {
                 if (leftSubTarget.dataset.type !== 'all') {
                     // Default fallback: multi-select toggle for other sub-tabs
                     this._onToggleLeftSub(leftSubTarget, leftSubTarget.dataset.type);
                 }
+            } else {
+                this.render();
             }
             return;
         }

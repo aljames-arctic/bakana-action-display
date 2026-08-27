@@ -108,15 +108,15 @@ export class Dnd5eSystemContextMenuManager extends BaseSystemContextMenuManager 
      * @param {Event} event Triggering event
      * @returns {boolean} True if handled
      */
-    onTabRightClick(app, el, event) {
+    async onTabRightClick(app, el, event) {
         if (!app.actor?.isOwner) return false;
 
-        const isParentTab = el.classList.contains('bad-left-tab');
-        const isSubTab = el.classList.contains('bad-left-sub-tab');
+        const isParentTab = el.classList?.contains?.('bad-left-tab');
+        const isSubTab = el.classList?.contains?.('bad-left-sub-tab');
         const parentType = isParentTab
-            ? el.dataset.type
-            : (isSubTab && el.dataset.type === 'all'
-                ? el.closest('.bad-left-tab-group')?.querySelector('.bad-left-tab')?.dataset.type
+            ? el.dataset?.type
+            : (isSubTab && el.dataset?.type === 'all'
+                ? el.closest?.('.bad-left-tab-group')?.querySelector?.('.bad-left-tab')?.dataset?.type
                 : null);
 
         if (!parentType) return false;
@@ -129,10 +129,10 @@ export class Dnd5eSystemContextMenuManager extends BaseSystemContextMenuManager 
                 for (const key of ALL_FILTER_FLAGS) {
                     updates[`flags.${MODULE_ID}.${key}`] = nextState;
                 }
-                app.actor.update(updates);
+                await app.actor.update(updates);
             } else {
                 for (const key of ALL_FILTER_FLAGS) {
-                    app.actor.setFlag?.(MODULE_ID, key, nextState);
+                    await app.actor.setFlag?.(MODULE_ID, key, nextState);
                 }
             }
             return true;
@@ -151,7 +151,7 @@ export class Dnd5eSystemContextMenuManager extends BaseSystemContextMenuManager 
         const flagKey = flagMap[parentType];
         if (flagKey) {
             const current = app.actor.getFlag(MODULE_ID, flagKey) ?? false;
-            app.actor.setFlag(MODULE_ID, flagKey, !current);
+            await app.actor.setFlag?.(MODULE_ID, flagKey, !current);
             return true;
         }
 

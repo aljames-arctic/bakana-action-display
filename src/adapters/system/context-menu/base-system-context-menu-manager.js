@@ -23,7 +23,7 @@ export class BaseSystemContextMenuManager {
      * @param {Event} event The trigger event
      * @returns {boolean} True if handled by the system context manager
      */
-    onTabRightClick(app, el, event) {
+    async onTabRightClick(app, el, event) {
         return false;
     }
 

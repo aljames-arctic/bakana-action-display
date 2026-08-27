@@ -431,7 +431,7 @@ test('Dnd5eSystemAdapter default categorization presets categorize ability and s
     assert.equal(intToolSub.items.some(i => i.name === "Jeweler's Tools"), true);
 });
 
-test('Dnd5eSystemAdapter onTabRightClick toggles actor flags', () => {
+test('Dnd5eSystemAdapter onTabRightClick toggles actor flags', async () => {
     const adapter = new Dnd5eSystemAdapter();
     const flags = {};
     const mockActor = {
@@ -446,7 +446,7 @@ test('Dnd5eSystemAdapter onTabRightClick toggles actor flags', () => {
         classList: { contains: (cls) => cls === 'bad-left-tab' },
         dataset: { type: 'all' }
     };
-    assert.equal(adapter.onTabRightClick(mockApp, allParentEl), true);
+    assert.equal(await adapter.onTabRightClick(mockApp, allParentEl), true);
     assert.equal(flags.showAll, true);
     assert.equal(flags.showUnprepared, true);
     assert.equal(flags.showUnequipped_weapon, true);
@@ -457,7 +457,7 @@ test('Dnd5eSystemAdapter onTabRightClick toggles actor flags', () => {
     assert.equal(flags.showUnequipped_loot, true);
 
     // Clearing showAll clears all filter flags
-    assert.equal(adapter.onTabRightClick(mockApp, allParentEl), true);
+    assert.equal(await adapter.onTabRightClick(mockApp, allParentEl), true);
     assert.equal(flags.showAll, false);
     assert.equal(flags.showUnprepared, false);
     assert.equal(flags.showUnequipped_weapon, false);
@@ -472,7 +472,7 @@ test('Dnd5eSystemAdapter onTabRightClick toggles actor flags', () => {
         classList: { contains: (cls) => cls === 'bad-left-tab' },
         dataset: { type: 'spell' }
     };
-    assert.equal(adapter.onTabRightClick(mockApp, spellParentEl), true);
+    assert.equal(await adapter.onTabRightClick(mockApp, spellParentEl), true);
     assert.equal(flags.showUnprepared, true);
 
     // Parent tab 'weapon'
@@ -480,7 +480,7 @@ test('Dnd5eSystemAdapter onTabRightClick toggles actor flags', () => {
         classList: { contains: (cls) => cls === 'bad-left-tab' },
         dataset: { type: 'weapon' }
     };
-    assert.equal(adapter.onTabRightClick(mockApp, weaponParentEl), true);
+    assert.equal(await adapter.onTabRightClick(mockApp, weaponParentEl), true);
     assert.equal(flags.showUnequipped_weapon, true);
 
     // Parent tab 'equipment'
@@ -488,7 +488,7 @@ test('Dnd5eSystemAdapter onTabRightClick toggles actor flags', () => {
         classList: { contains: (cls) => cls === 'bad-left-tab' },
         dataset: { type: 'equipment' }
     };
-    assert.equal(adapter.onTabRightClick(mockApp, equipParentEl), true);
+    assert.equal(await adapter.onTabRightClick(mockApp, equipParentEl), true);
     assert.equal(flags.showUnequipped_equipment, true);
 
     // Unhandled parent tab 'feat'
@@ -496,7 +496,7 @@ test('Dnd5eSystemAdapter onTabRightClick toggles actor flags', () => {
         classList: { contains: (cls) => cls === 'bad-left-tab' },
         dataset: { type: 'feat' }
     };
-    assert.equal(adapter.onTabRightClick(mockApp, featParentEl), false);
+    assert.equal(await adapter.onTabRightClick(mockApp, featParentEl), false);
 
     // Sub-tab 'all' under spell
     const spellSubEl = {
@@ -506,12 +506,12 @@ test('Dnd5eSystemAdapter onTabRightClick toggles actor flags', () => {
             querySelector: () => ({ dataset: { type: 'spell' } })
         })
     };
-    assert.equal(adapter.onTabRightClick(mockApp, spellSubEl), true);
+    assert.equal(await adapter.onTabRightClick(mockApp, spellSubEl), true);
     assert.equal(flags.showUnprepared, false);
 
     // Non-owner actor should return false
     const nonOwnerApp = { actor: { isOwner: false } };
-    assert.equal(adapter.onTabRightClick(nonOwnerApp, allParentEl), false);
+    assert.equal(await adapter.onTabRightClick(nonOwnerApp, allParentEl), false);
 });
 
 test('Dnd5eSystemAdapter modifyActions showAll behavior', async () => {

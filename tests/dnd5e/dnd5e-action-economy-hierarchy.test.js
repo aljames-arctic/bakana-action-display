@@ -7,6 +7,7 @@ import { TabRef } from '../../src/ui/tab-ref.js';
 import { ActionDisplayApp } from '../../src/ui/action-display-app.js';
 import { actionDisplay } from '../../src/action-display.js';
 import { adapter } from '../../src/adapters/index.js';
+import { MODULE_ID } from '../../src/constants.js';
 
 test('Dnd5eSystemAdapter maps activities to nested Action Economy categories', async () => {
     const adapter = new Dnd5eSystemAdapter();
@@ -414,7 +415,7 @@ test('ActionDisplayApp left parent tab right-click multi-selects when not in foc
     };
 
     // 1. Right click on weapon when not in focus -> multi-selects weapon
-    app._onContextMenuCapture(fakeEvent);
+    await app._onContextMenuCapture(fakeEvent);
     assert.ok(app.leftTabs.activeParents.has('weapon'), 'Weapon should now be selected');
     assert.equal(flags.showUnequipped_weapon, undefined, 'Flag should not be toggled when selecting unfocused tab');
 
@@ -424,11 +425,11 @@ test('ActionDisplayApp left parent tab right-click multi-selects when not in foc
     assert.equal(app.leftGroups['weapon'].expanded, true);
 
     // 2. Right click on weapon when in focus -> toggles showUnequipped_weapon flag
-    app._onContextMenuCapture(fakeEvent);
+    await app._onContextMenuCapture(fakeEvent);
     assert.equal(flags.showUnequipped_weapon, true, 'Flag should be toggled to true when right-clicking focused tab');
 
     // 3. Right click on weapon again when in focus -> toggles showUnequipped_weapon back to false
-    app._onContextMenuCapture(fakeEvent);
+    await app._onContextMenuCapture(fakeEvent);
     assert.equal(flags.showUnequipped_weapon, false, 'Flag should be toggled back to false');
 });
 
@@ -553,5 +554,78 @@ test('ActionDisplayApp shift+left click on tabs and subtabs always selects/unsel
     // 7. Shift+Left Click on right sub-tab again -> unselects 'action'
     await app._onChangeSubActionType(shiftClickEvent, mockRightSubTabEl);
     assert.equal(app.rightTabs.activeSubTypes.has('action'), false, 'Action subtab should be unselected');
+});
+
+test('ActionDisplayApp _onContextMenuCapture triggers immediate render on right-clicking parent and sub tabs', async () => {
+    const flags = {};
+    const mockActor = {
+        id: 'act-1',
+        isOwner: true,
+        getFlag: (mod, key) => flags[key] ?? false,
+        setFlag: async (mod, key, val) => { flags[key] = val; },
+        update: async (updates) => {
+            for (const [k, v] of Object.entries(updates)) {
+                if (k.startsWith(`flags.${MODULE_ID}.`)) {
+                    flags[k.replace(`flags.${MODULE_ID}.`, '')] = v;
+                }
+            }
+        }
+    };
+    const app = new ActionDisplayApp({ actor: mockActor });
+    let renderCount = 0;
+    app.render = () => { renderCount++; };
+
+    // 1. Right click on focused parent tab ('all') -> toggles showAll and calls render() immediately
+    await app._prepareContext();
+    assert.equal(app.leftTabs.focusedParent, 'all');
+
+    const allParentEl = {
+        dataset: { type: 'all' },
+        classList: { contains: (cls) => cls === 'bad-left-tab' },
+        closest: (selector) => {
+            if (selector.includes('bad-left-tab-group')) {
+                return { classList: { contains: () => true } };
+            }
+            if (selector.includes('bad-left-tab')) return allParentEl;
+            return null;
+        }
+    };
+    const allEvent = {
+        target: allParentEl,
+        preventDefault: () => {},
+        stopPropagation: () => {},
+        stopImmediatePropagation: () => {}
+    };
+
+    renderCount = 0;
+    await app._onContextMenuCapture(allEvent);
+    assert.equal(flags.showAll, true, 'showAll flag should be true');
+    assert.equal(renderCount, 1, 'render() must be called immediately upon toggling parent tab');
+
+    // 2. Right click on "All Spells" sub-tab under 'spell' -> toggles showUnprepared and calls render() immediately
+    const spellParentGroup = {
+        querySelector: (sel) => sel.includes('.bad-left-tab') ? { dataset: { type: 'spell' } } : null
+    };
+    const spellSubEl = {
+        dataset: { type: 'all' },
+        classList: { contains: (cls) => cls === 'bad-left-sub-tab' },
+        closest: (sel) => {
+            if (sel.includes('.bad-left-tab-group')) return spellParentGroup;
+            if (sel.includes('.bad-left-sub-tab')) return spellSubEl;
+            return null;
+        }
+    };
+    const spellSubEvent = {
+        target: spellSubEl,
+        preventDefault: () => {},
+        stopPropagation: () => {},
+        stopImmediatePropagation: () => {}
+    };
+
+    renderCount = 0;
+    flags.showUnprepared = false;
+    await app._onContextMenuCapture(spellSubEvent);
+    assert.equal(flags.showUnprepared, true, 'showUnprepared flag should be true');
+    assert.equal(renderCount, 1, 'render() must be called immediately upon toggling sub-tab');
 });
 

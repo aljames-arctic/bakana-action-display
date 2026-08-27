@@ -184,8 +184,8 @@ class Adapter {
      * @param {Event} event
      * @returns {boolean}
      */
-    onTabRightClick(app, tab, event) {
-        return this.system?.onTabRightClick?.(app, tab, event) ?? false;
+    async onTabRightClick(app, tab, event) {
+        return (await this.system?.onTabRightClick?.(app, tab, event)) ?? false;
     }
 
     /**
