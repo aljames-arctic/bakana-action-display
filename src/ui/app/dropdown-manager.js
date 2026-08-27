@@ -101,6 +101,7 @@ export function buildSubactionMenuItem(sub, event, app = null) {
 export function showActivityDropdown(app, target, subactions, event) {
     event?.preventDefault?.();
     event?.stopPropagation?.();
+    app?._hideItemSummaryTooltip?.();
     const sortedSubactions = [...(subactions ?? [])].sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''));
     const menuItems = sortedSubactions.map(sub => buildSubactionMenuItem(sub, event, app));
 

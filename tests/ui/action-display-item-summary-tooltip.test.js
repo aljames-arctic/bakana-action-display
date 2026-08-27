@@ -810,5 +810,191 @@ test('ActionDisplayApp _formatItemSummaryHtml renders structured property tag ro
     assert.ok(html.includes('<span class="bad-summary-tag">Proficient</span>'));
 });
 
+test('Dnd5eSystemAdapter.getItemSummary resolves linked spell description and metadata for Archmage Spellcasting activities', async () => {
+    const dnd5eAdapter = new Dnd5eSystemAdapter();
+
+    const spellcastingFeat = {
+        id: 'feat-spellcasting',
+        name: 'Spellcasting',
+        type: 'feat',
+        system: {
+            description: { value: '<p>The archmage is an 18th-level spellcaster. Its spellcasting ability is Intelligence (spell save DC 17, +9 to hit with spell attacks).</p>' }
+        }
+    };
+
+    const teleportSpell = {
+        id: 'spell-teleport',
+        name: 'Teleport',
+        type: 'spell',
+        labels: {
+            activation: '1 Action',
+            range: '10 ft',
+            duration: 'Instantaneous',
+            components: { vsm: 'V' }
+        },
+        system: {
+            level: 7,
+            school: 'con',
+            properties: new Set([]),
+            description: { value: '<p>This spell instantly transports you and up to eight willing creatures to a destination you select.</p>' }
+        }
+    };
+
+    const teleportAction = new Action({
+        id: 'act-teleport',
+        name: 'Teleport',
+        originalItem: spellcastingFeat,
+        originalActivity: {
+            name: 'Teleport',
+            type: 'cast',
+            labels: { activation: '1 Action' }
+        },
+        linkedAction: teleportSpell
+    });
+
+    const summary = await dnd5eAdapter.getItemSummary(teleportAction, spellcastingFeat);
+    assert.ok(summary);
+    assert.equal(summary.title, 'Teleport');
+    assert.ok(summary.description.includes('This spell instantly transports you'), 'Description should come from linked spell');
+    assert.ok(!summary.description.includes('18th-level spellcaster'), 'Description should not come from parent spellcasting feat');
+    assert.ok(summary.subtitle.includes('7th Level'), 'Subtitle should reflect spell level');
+    assert.ok(summary.subtitle.includes('con'), 'Subtitle should reflect spell school');
+    assert.ok(summary.properties.some(p => p.label === 'Components' && p.value === 'V'), 'Properties should include spell components');
+});
+
+test('Dnd5eSystemAdapter.getItemSummary prioritizes activity description over parent item description', async () => {
+    const dnd5eAdapter = new Dnd5eSystemAdapter();
+
+    const parentFeat = {
+        id: 'feat-multi-form',
+        name: 'Starry Form',
+        type: 'feat',
+        system: {
+            description: { value: '<p>As a bonus action, you can expend a use of your Wild Shape feature to take on a starry form.</p>' }
+        }
+    };
+
+    const archerActivity = {
+        name: 'Archer',
+        type: 'utility',
+        labels: { activation: '1 Bonus Action' },
+        description: { value: '<p>A constellation of an archer appears on you. Make a ranged spell attack.</p>' }
+    };
+
+    const archerAction = new Action({
+        id: 'act-archer',
+        name: 'Archer',
+        originalItem: parentFeat,
+        originalActivity: archerActivity
+    });
+
+    const summary = await dnd5eAdapter.getItemSummary(archerAction, parentFeat);
+    assert.ok(summary);
+    assert.equal(summary.title, 'Archer');
+    assert.ok(summary.description.includes('A constellation of an archer appears on you'), 'Description should come from activity description');
+    assert.ok(!summary.description.includes('Wild Shape feature'), 'Description should not fall back to parent item when activity has description');
+});
+
+test('ActionDisplayApp renders linked spell description when hovering over activity in dropdown menu', async () => {
+    adapter.system = new Dnd5eSystemAdapter();
+
+    const spellcastingFeat = {
+        name: 'Spellcasting',
+        type: 'feat',
+        system: {
+            description: { value: '<p>The archmage is an 18th-level spellcaster.</p>' }
+        }
+    };
+
+    const teleportSpell = {
+        name: 'Teleport',
+        type: 'spell',
+        labels: { activation: '1 Action', range: '10 ft', duration: 'Instantaneous' },
+        system: {
+            level: 7,
+            school: 'con',
+            properties: new Set([]),
+            description: { value: '<p>Teleports creatures instantly.</p>' }
+        }
+    };
+
+    const teleportSubAction = new Action({
+        id: 'sub-teleport',
+        name: 'Teleport',
+        originalItem: spellcastingFeat,
+        originalActivity: {
+            name: 'Teleport',
+            type: 'cast',
+            labels: { activation: '1 Action' }
+        },
+        linkedAction: teleportSpell
+    });
+
+    const parentAction = new Action({
+        id: 'parent-spellcasting',
+        name: 'Spellcasting',
+        originalItem: spellcastingFeat,
+        subactions: [teleportSubAction]
+    });
+
+    const app = new ActionDisplayApp({
+        actor: { isOwner: true }
+    });
+    app.actions = [parentAction];
+
+    const targetCard = {
+        tagName: 'DIV',
+        className: 'bad-action-item',
+        dataset: { actionId: 'parent-spellcasting' },
+        classList: { add() {}, remove() {}, contains: () => false },
+        getBoundingClientRect: () => ({ left: 100, top: 100, right: 250, bottom: 140, width: 150, height: 40 })
+    };
+
+    const teleportLi = {
+        tagName: 'LI',
+        className: 'context-item',
+        dataset: {},
+        _listeners: {},
+        addEventListener(evt, fn) { this._listeners[evt] = fn; },
+        querySelector: () => null,
+        insertAdjacentHTML: () => {},
+        getBoundingClientRect: () => ({ left: 100, top: 140, right: 250, bottom: 175, width: 150, height: 35 })
+    };
+
+    const mockMenuEl = {
+        remove: () => {},
+        querySelectorAll: (sel) => (sel === '.context-item' ? [teleportLi] : []),
+        style: { setProperty() {} },
+        children: []
+    };
+
+    const originalQuerySelector = document.querySelector;
+    document.querySelector = (sel) => {
+        if (sel.includes('#context-menu')) return mockMenuEl;
+        return null;
+    };
+
+    try {
+        await showActivityDropdown(app, targetCard, [teleportSubAction], { preventDefault() {}, stopPropagation() {} });
+
+        // Verify subaction attached to LI
+        assert.equal(teleportLi._badSubaction, teleportSubAction);
+
+        // Hover over teleport in dropdown while holding '?'
+        await app._onKeyDown({ key: '?', shiftKey: true, target: { tagName: 'DIV' } });
+        await teleportLi._listeners.pointerover();
+
+        assert.equal(globalThis.game.tooltip.active, true);
+        assert.ok(globalThis.game.tooltip.options.html.includes('Teleport'), 'Tooltip HTML should include Teleport');
+        assert.ok(globalThis.game.tooltip.options.html.includes('Teleports creatures instantly.'), 'Tooltip HTML should include Teleport spell description');
+        assert.ok(!globalThis.game.tooltip.options.html.includes('18th-level spellcaster'), 'Tooltip HTML should NOT include parent Spellcasting description');
+
+        app._onKeyUp({ key: '?', shiftKey: false });
+        await app._activeLeftClickMenu.close();
+    } finally {
+        document.querySelector = originalQuerySelector;
+    }
+});
+
 
 

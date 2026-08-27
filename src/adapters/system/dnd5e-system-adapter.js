@@ -1879,29 +1879,35 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
 
         const targetItem = item ?? action?.originalItem ?? action;
         const activity = action?.originalActivity;
+        const linkedItem = action?.linkedAction
+            ?? this.resolveRootSpellDocument(action, targetItem)
+            ?? activity?.cachedSpell
+            ?? null;
+        const effectiveItem = linkedItem ?? targetItem;
+        const effectiveSystem = effectiveItem?.system ?? {};
         const system = targetItem?.system ?? {};
 
-        const title = action?.name ?? targetItem?.name ?? '';
-        const img = (action?.img && action.img.length > 0) ? action.img : (targetItem?.img ?? '');
+        const title = action?.name ?? effectiveItem?.name ?? targetItem?.name ?? '';
+        const img = (action?.img && action.img.length > 0) ? action.img : (effectiveItem?.img ?? targetItem?.img ?? '');
         const properties = [];
 
         // 1. Subtitle & Classification
         let subtitle = '';
-        const type = targetItem?.type ?? '';
-        const activation = activity?.labels?.activation ?? targetItem?.labels?.activation ?? '';
+        const type = effectiveItem?.type ?? targetItem?.type ?? '';
+        const activation = activity?.labels?.activation ?? effectiveItem?.labels?.activation ?? targetItem?.labels?.activation ?? '';
 
         if (type === 'weapon') {
-            const weaponType = system.type?.label ?? CONFIG?.DND5E?.weaponTypes?.[system.type?.value] ?? 'Weapon';
+            const weaponType = effectiveSystem.type?.label ?? CONFIG?.DND5E?.weaponTypes?.[effectiveSystem.type?.value] ?? 'Weapon';
             subtitle = `${weaponType}${activation ? ' • ' + activation : ''}`;
         } else if (type === 'spell') {
-            const levelLabel = system.level === 0 ? (game.i18n?.localize?.('DND5E.SpellCantrip') ?? 'Cantrip') : (CONFIG?.DND5E?.spellLevels?.[system.level] ?? `${system.level}th Level`);
-            const schoolLabel = CONFIG?.DND5E?.spellSchools?.[system.school]?.label ?? system.school ?? '';
+            const levelLabel = effectiveSystem.level === 0 ? (game.i18n?.localize?.('DND5E.SpellCantrip') ?? 'Cantrip') : (CONFIG?.DND5E?.spellLevels?.[effectiveSystem.level] ?? `${effectiveSystem.level}th Level`);
+            const schoolLabel = CONFIG?.DND5E?.spellSchools?.[effectiveSystem.school]?.label ?? effectiveSystem.school ?? '';
             subtitle = `${levelLabel} ${schoolLabel}${activation ? ' • ' + activation : ''}`.trim();
         } else if (type === 'feat') {
-            const featType = system.type?.label ?? 'Feature';
+            const featType = effectiveSystem.type?.label ?? 'Feature';
             subtitle = `${featType}${activation ? ' • ' + activation : ''}`;
         } else if (type === 'consumable') {
-            const consumableType = system.type?.label ?? 'Consumable';
+            const consumableType = effectiveSystem.type?.label ?? 'Consumable';
             subtitle = `${consumableType}${activation ? ' • ' + activation : ''}`;
         } else if (type) {
             const formattedType = type.charAt(0).toUpperCase() + type.slice(1);
@@ -1909,50 +1915,53 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
         }
 
         // 2. Attack / To-Hit Modifier
-        const toHit = activity?.labels?.toHit ?? targetItem?.labels?.toHit;
+        const toHit = activity?.labels?.toHit ?? effectiveItem?.labels?.toHit ?? targetItem?.labels?.toHit;
         if (toHit) {
             properties.push({ label: 'Attack', value: toHit });
         }
 
         // 3. Damage / Healing Formula
-        const damage = activity?.labels?.damage ?? targetItem?.labels?.damage;
+        const damage = activity?.labels?.damage ?? effectiveItem?.labels?.damage ?? targetItem?.labels?.damage;
         if (damage) {
             properties.push({ label: 'Damage', value: damage });
         }
 
         // 4. Range / Area
-        const range = activity?.labels?.range ?? targetItem?.labels?.range;
+        const range = activity?.labels?.range ?? effectiveItem?.labels?.range ?? targetItem?.labels?.range;
         if (range) {
             properties.push({ label: 'Range', value: range });
         }
 
         // 5. Saving Throw DC
-        const save = activity?.labels?.save ?? targetItem?.labels?.save;
+        const save = activity?.labels?.save ?? effectiveItem?.labels?.save ?? targetItem?.labels?.save;
         if (save) {
             properties.push({ label: 'Save', value: save });
         }
 
         // 6. Duration & Concentration
-        const duration = activity?.labels?.duration ?? targetItem?.labels?.duration;
+        const duration = activity?.labels?.duration ?? effectiveItem?.labels?.duration ?? targetItem?.labels?.duration;
         if (duration) {
             properties.push({ label: 'Duration', value: duration });
         }
-        if (system.properties?.has?.('concentration')) {
+        if (effectiveSystem.properties?.has?.('concentration') || system.properties?.has?.('concentration')) {
             properties.push({ value: 'Concentration' });
         }
 
         // 7. Ritual & Components (Spells)
-        if (system.properties?.has?.('ritual')) {
+        if (effectiveSystem.properties?.has?.('ritual') || system.properties?.has?.('ritual')) {
             properties.push({ value: 'Ritual' });
         }
-        const components = targetItem?.labels?.components?.vsm ?? targetItem?.labels?.components?.all;
+        const components = effectiveItem?.labels?.components?.vsm ?? effectiveItem?.labels?.components?.all ?? targetItem?.labels?.components?.vsm ?? targetItem?.labels?.components?.all;
         if (components) {
             properties.push({ label: 'Components', value: components });
         }
 
         // 8. Physical Item Properties (e.g. Versatile, Finesse, Thrown)
-        if (system.properties instanceof Set) {
-            for (const prop of system.properties) {
+        const itemProps = (effectiveSystem.properties instanceof Set)
+            ? effectiveSystem.properties
+            : (system.properties instanceof Set ? system.properties : null);
+        if (itemProps) {
+            for (const prop of itemProps) {
                 if (['concentration', 'ritual', 'mgc'].includes(prop)) continue;
                 const propLabel = CONFIG?.DND5E?.itemProperties?.[prop]?.label ?? prop;
                 properties.push({ value: propLabel });
@@ -1963,23 +1972,48 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
         if (action?.uses?.available !== null && action?.uses?.available !== undefined) {
             const usesStr = `${action.uses.available}${action.uses.max ? ' / ' + action.uses.max : ''}`;
             properties.push({ label: 'Uses', value: usesStr });
+        } else if (effectiveSystem.quantity && effectiveSystem.quantity > 1) {
+            properties.push({ label: 'Quantity', value: String(effectiveSystem.quantity) });
         } else if (system.quantity && system.quantity > 1) {
             properties.push({ label: 'Quantity', value: String(system.quantity) });
         }
 
         // 10. Recharge
-        const recharge = activity?.labels?.recharge ?? targetItem?.labels?.recharge;
+        const recharge = activity?.labels?.recharge ?? effectiveItem?.labels?.recharge ?? targetItem?.labels?.recharge;
         if (recharge) {
             properties.push({ label: 'Recharge', value: recharge });
         }
 
-        // 11. Description
-        let description = activity?.description?.chat || activity?.description?.value || system.description?.value || system.description?.chat || action?.linkedAction?.system?.description?.value || '';
+        // 11. Description: prioritize activity-specific description, then linked spell/item description, then parent item description fallback
+        let description = '';
+        if (typeof activity?.description === 'string' && activity.description.trim().length > 0) {
+            description = activity.description;
+        } else if (activity?.description?.value) {
+            description = activity.description.value;
+        } else if (activity?.description?.chatFlavor) {
+            description = activity.description.chatFlavor;
+        } else if (activity?.description?.chat) {
+            description = activity.description.chat;
+        } else if (linkedItem?.system?.description?.value) {
+            description = linkedItem.system.description.value;
+        } else if (linkedItem?.system?.description?.chat) {
+            description = linkedItem.system.description.chat;
+        } else if (typeof linkedItem?.system?.description === 'string' && linkedItem.system.description.trim().length > 0) {
+            description = linkedItem.system.description;
+        } else if (system.description?.value) {
+            description = system.description.value;
+        } else if (system.description?.chat) {
+            description = system.description.chat;
+        } else if (typeof system.description === 'string' && system.description.trim().length > 0) {
+            description = system.description;
+        }
+
         if (description) {
-            const rollData = targetItem?.getRollData?.() ?? actor?.getRollData?.() ?? {};
+            const descItem = linkedItem ?? targetItem;
+            const rollData = activity?.getRollData?.() ?? descItem?.getRollData?.() ?? actor?.getRollData?.() ?? {};
             description = await this.enrichHTML(description, {
                 rollData,
-                relativeTo: targetItem ?? actor,
+                relativeTo: descItem ?? actor,
                 secrets: false,
                 async: true
             });
