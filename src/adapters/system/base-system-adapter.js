@@ -120,8 +120,8 @@ export class BaseSystemAdapter {
         return this.contextMenuManager.getContextMenuItems(app);
     }
 
-    async onTabRightClick(app, el, event) {
-        return (await this.contextMenuManager.onTabRightClick(app, el, event));
+    onTabRightClick(app, el, event) {
+        return this.contextMenuManager.onTabRightClick(app, el, event);
     }
 
     // #region User Interaction Events & Helpers

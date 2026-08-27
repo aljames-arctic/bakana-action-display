@@ -2074,7 +2074,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
 
             if (isExpanded) {
                 // If in focus / expanded: toggle show capabilities via system adapter (e.g. toggling showAll/unprepared/unequipped)
-                const handled = await adapter.onTabRightClick(this, leftParentTarget, event);
+                const handled = adapter.onTabRightClick(this, leftParentTarget, event);
                 if (!handled) {
                     this._onToggleLeftParent(parentId);
                 } else {
@@ -2105,7 +2105,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
             event.stopImmediatePropagation();
 
             // Delegate to system adapter for custom right-click behavior (e.g. toggling unprepared spells in dnd5e)
-            const handled = await adapter.onTabRightClick(this, leftSubTarget, event);
+            const handled = adapter.onTabRightClick(this, leftSubTarget, event);
             if (!handled) {
                 if (leftSubTarget.dataset.type !== 'all') {
                     // Default fallback: multi-select toggle for other sub-tabs

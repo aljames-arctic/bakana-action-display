@@ -147,7 +147,7 @@ export class Pf2eSystemContextMenuManager extends BaseSystemContextMenuManager {
      * @param {Event} event Triggering event
      * @returns {boolean} True if handled
      */
-    async onTabRightClick(app, el, event) {
+    onTabRightClick(app, el, event) {
         if (!app.actor?.isOwner) return false;
 
         const isParentTab = el.classList?.contains?.('bad-left-tab');
@@ -163,17 +163,11 @@ export class Pf2eSystemContextMenuManager extends BaseSystemContextMenuManager {
         if (parentType === 'all') {
             const current = app.actor.getFlag(MODULE_ID, 'showAll') ?? false;
             const nextState = !current;
-            if (app.actor.update) {
-                const updates = {};
-                for (const key of ALL_FILTER_FLAGS) {
-                    updates[`flags.${MODULE_ID}.${key}`] = nextState;
-                }
-                await app.actor.update(updates);
-            } else {
-                for (const key of ALL_FILTER_FLAGS) {
-                    await app.actor.setFlag?.(MODULE_ID, key, nextState);
-                }
+            const flagUpdates = {};
+            for (const key of ALL_FILTER_FLAGS) {
+                flagUpdates[key] = nextState;
             }
+            this.updateActorFlagsOptimistic(app.actor, MODULE_ID, flagUpdates);
             return true;
         }
 
@@ -186,7 +180,7 @@ export class Pf2eSystemContextMenuManager extends BaseSystemContextMenuManager {
         const flagKey = flagMap[parentType];
         if (flagKey) {
             const current = app.actor.getFlag(MODULE_ID, flagKey) ?? false;
-            await app.actor.setFlag?.(MODULE_ID, flagKey, !current);
+            this.setActorFlagOptimistic(app.actor, MODULE_ID, flagKey, !current);
             return true;
         }
 
