@@ -637,6 +637,8 @@ test('ActionDisplayApp formats descriptions with roll tables and adds bad-summar
         const htmlNormal = app._formatItemSummaryHtml(summary, metrics.targetWidth, metrics.needsHorizontalScroll);
         assert.ok(htmlNormal.includes('bad-summary-has-table'));
         assert.equal(htmlNormal.includes('bad-summary-overflow-x'), false);
+        assert.ok(htmlNormal.includes(`--bad-tooltip-width: ${metrics.targetWidth}px`), 'Child element should set CSS variable');
+        assert.equal(htmlNormal.includes(`; width: ${metrics.targetWidth}px;`), false, 'Child element must not have fixed inline pixel width override');
 
         // When needsHorizontalScroll is true, bad-summary-overflow-x class is attached
         const htmlOverflow = app._formatItemSummaryHtml(summary, 680, true);
@@ -648,11 +650,13 @@ test('ActionDisplayApp formats descriptions with roll tables and adds bad-summar
         assert.equal(mockTooltipEl.style.properties['min-width'], '340px');
         assert.equal(mockTooltipEl.style.properties['--bad-tooltip-width'], '504px');
         assert.equal(mockTooltipEl.style.properties['--bad-tooltip-max-width'], '504px');
+        assert.equal(mockTooltipEl.style.properties['box-sizing'], 'border-box');
 
         // Hide tooltip cleans up style properties
         app._hideItemSummaryTooltip();
         assert.equal(mockTooltipEl.style.properties['width'], undefined);
         assert.equal(mockTooltipEl.style.properties['--bad-tooltip-width'], undefined);
+        assert.equal(mockTooltipEl.style.properties['box-sizing'], undefined);
     } finally {
         document.querySelector = origQuerySelector;
     }

@@ -1653,7 +1653,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         if (hasTable) {
             tableClass = ' bad-summary-has-table' + (needsHorizontalScroll ? ' bad-summary-overflow-x' : '');
         }
-        const widthStyle = targetWidth ? ` style="--bad-tooltip-width: ${targetWidth}px; --bad-tooltip-max-width: ${targetWidth}px; width: ${targetWidth}px; max-width: ${targetWidth}px;"` : '';
+        const widthStyle = targetWidth ? ` style="--bad-tooltip-width: ${targetWidth}px; --bad-tooltip-max-width: ${targetWidth}px;"` : '';
 
         let html = `<div class="bad-item-summary-tooltip${tableClass}"${widthStyle}>`;
         html += '<div class="bad-summary-header">';
@@ -1838,6 +1838,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
                 tooltipEl.style?.setProperty?.('width', `${targetWidth}px`, 'important');
                 tooltipEl.style?.setProperty?.('max-width', `${targetWidth}px`, 'important');
                 tooltipEl.style?.setProperty?.('min-width', '340px', 'important');
+                tooltipEl.style?.setProperty?.('box-sizing', 'border-box', 'important');
             }
         };
 
@@ -1863,6 +1864,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
             tooltipEl.style?.removeProperty?.('width');
             tooltipEl.style?.removeProperty?.('max-width');
             tooltipEl.style?.removeProperty?.('min-width');
+            tooltipEl.style?.removeProperty?.('box-sizing');
         }
         if (game.tooltip?.deactivate) {
             game.tooltip.deactivate();
