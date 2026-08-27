@@ -7,8 +7,9 @@
 
 A sleek, high-performance, and highly customizable **Action HUD** for **Foundry VTT (V12+)**.
 
-<img width="1331" height="984" alt="bad_anatomy" src="https://github.com/user-attachments/assets/ae34c015-23b9-424b-851d-d711907be40e" />
-
+<img width="1184" height="696" alt="Foundry_Virtual_Tabletop_c7UmobufLn" src="https://github.com/user-attachments/assets/e42c43fe-257c-444e-a3ad-3643d0f55643" />
+<img width="953" height="766" alt="Foundry_Virtual_Tabletop_v9V18OCmYV" src="https://github.com/user-attachments/assets/a90f9cce-dac9-4689-a168-e3833239fb69" />
+<img width="803" height="747" alt="Foundry_Virtual_Tabletop_JPifv4leq2" src="https://github.com/user-attachments/assets/c4ffd2e3-4e91-4735-948d-f6018f1e12a7" />
 
 **Bakana's Action Display** dynamically tracks your selected token on the canvas, instantly extracting and displaying their available attacks, spells, feats, and consumables. Designed with a premium, modern aesthetic, it helps players and GMs speed up combat by placing all their tactical options just one (or two) clicks away.
 
