@@ -373,7 +373,7 @@ test('HUDTabColumn right-click multi-select toggling of nested sub-tabs and cate
     assert.deepEqual(Array.from(app.rightTabs.activeSubTypes), ['standard']);
 });
 
-test('ActionDisplayApp left parent tab right-click multi-selects when not in focus, and toggles show capabilities when in focus', async () => {
+test('ActionDisplayApp left parent tab right-click toggles show capabilities immediately', async () => {
     adapter.system = new Dnd5eSystemAdapter();
     const flags = {};
     const mockActor = {
@@ -414,21 +414,11 @@ test('ActionDisplayApp left parent tab right-click multi-selects when not in foc
         stopImmediatePropagation: () => {}
     };
 
-    // 1. Right click on weapon when not in focus -> multi-selects weapon
+    // 1. Right click on weapon -> toggles showUnequipped_weapon flag directly to true
     await app._onContextMenuCapture(fakeEvent);
-    assert.ok(app.leftTabs.activeParents.has('weapon'), 'Weapon should now be selected');
-    assert.equal(flags.showUnequipped_weapon, undefined, 'Flag should not be toggled when selecting unfocused tab');
+    assert.equal(flags.showUnequipped_weapon, true, 'Flag should be toggled to true when right-clicking parent tab');
 
-    // Re-prepare context to simulate render update (weapon is now focused/expanded)
-    await app._prepareContext();
-    assert.equal(app.leftTabs.focusedParent, 'weapon');
-    assert.equal(app.leftGroups['weapon'].expanded, true);
-
-    // 2. Right click on weapon when in focus -> toggles showUnequipped_weapon flag
-    await app._onContextMenuCapture(fakeEvent);
-    assert.equal(flags.showUnequipped_weapon, true, 'Flag should be toggled to true when right-clicking focused tab');
-
-    // 3. Right click on weapon again when in focus -> toggles showUnequipped_weapon back to false
+    // 2. Right click on weapon again -> toggles showUnequipped_weapon back to false
     await app._onContextMenuCapture(fakeEvent);
     assert.equal(flags.showUnequipped_weapon, false, 'Flag should be toggled back to false');
 });

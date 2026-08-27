@@ -29,7 +29,11 @@ export class BaseSystemContextMenuManager {
         if (!actor.flags) actor.flags = {};
         if (!actor.flags[scope]) actor.flags[scope] = {};
         actor.flags[scope][key] = value;
-        return actor.setFlag?.(scope, key, value);
+        if (actor._source?.flags) {
+            if (!actor._source.flags[scope]) actor._source.flags[scope] = {};
+            actor._source.flags[scope][key] = value;
+        }
+        return actor.setFlag?.(scope, key, value, { badInternal: true });
     }
 
     /**
@@ -46,16 +50,22 @@ export class BaseSystemContextMenuManager {
         for (const [key, value] of Object.entries(flags)) {
             actor.flags[scope][key] = value;
         }
+        if (actor._source?.flags) {
+            if (!actor._source.flags[scope]) actor._source.flags[scope] = {};
+            for (const [key, value] of Object.entries(flags)) {
+                actor._source.flags[scope][key] = value;
+            }
+        }
         if (actor.update) {
             const updates = {};
             for (const [key, value] of Object.entries(flags)) {
                 updates[`flags.${scope}.${key}`] = value;
             }
-            return actor.update(updates);
+            return actor.update(updates, { badInternal: true });
         }
         const promises = [];
         for (const [key, value] of Object.entries(flags)) {
-            promises.push(actor.setFlag?.(scope, key, value));
+            promises.push(actor.setFlag?.(scope, key, value, { badInternal: true }));
         }
         return Promise.all(promises);
     }

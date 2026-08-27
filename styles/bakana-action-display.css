@@ -473,7 +473,7 @@
     border-radius: 0.57em 0 0 0.57em; /* 8px -> 0.57em */
     color: #cbd5e1;
     cursor: pointer;
-    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), background 0.2s ease, color 0.2s ease;
+    transition: width 0.15s ease, background 0.15s ease, color 0.15s ease;
     overflow: hidden;
     white-space: nowrap;
     box-shadow: -3px 3px 10px rgba(0, 0, 0, 0.3);
@@ -497,7 +497,7 @@
     font-size: 0.85em; /* rem -> em */
     font-weight: 600;
     opacity: 0;
-    transition: opacity 0.2s ease;
+    transition: opacity 0.15s ease;
     order: 1; /* Force text to the left of the icon */
 }
 
@@ -510,7 +510,6 @@
 
 .bad-left-tab:hover .bad-left-tab-text {
     opacity: 1;
-    transition-delay: 0.1s; /* Fade in text after expansion starts */
 }
 
 /* Selected/Active Parent Tab State (when no sub-tab is active) */
@@ -549,10 +548,9 @@
     width: 100%;
 }
 
-/* Show sub-tabs with a subtle fade-in animation when expanded */
+/* Show sub-tabs when expanded */
 .bad-left-tab-group.expanded .bad-left-sub-tabs {
     display: flex;
-    animation: bad-fade-in-slide 0.2s ease-out;
 }
 
 /* Sub-tab Button (Depth 2) */
@@ -691,7 +689,7 @@
     border-radius: 0 0.57em 0.57em 0; /* 8px -> 0.57em */
     color: #cbd5e1;
     cursor: pointer;
-    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), background 0.2s ease, color 0.2s ease;
+    transition: width 0.15s ease, background 0.15s ease, color 0.15s ease;
     overflow: hidden;
     white-space: nowrap;
     box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.3);
@@ -714,7 +712,7 @@
     font-size: 0.85em; /* rem -> em */
     font-weight: 600;
     opacity: 0;
-    transition: opacity 0.2s ease;
+    transition: opacity 0.15s ease;
 }
 
 /* Hover State - Slide out to show text */
@@ -726,7 +724,6 @@
 
 .bad-right-tab:hover .bad-right-tab-text {
     opacity: 1;
-    transition-delay: 0.1s; /* Fade in text after expansion starts */
 }
 
 /* Selected/Active Parent Tab State (when no sub-tab is active) */
@@ -765,10 +762,9 @@
     width: 100%;
 }
 
-/* Show sub-tabs with a subtle fade-in animation when expanded */
+/* Show sub-tabs when expanded */
 .bad-right-tab-group.expanded .bad-right-sub-tabs {
     display: flex;
-    animation: bad-fade-in-slide 0.2s ease-out;
 }
 
 /* Sub-tab Button (Depth 2) */
