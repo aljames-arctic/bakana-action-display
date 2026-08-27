@@ -302,7 +302,7 @@ Hooks.on('deleteActiveEffect', (effect, options, userId) => {
 export function handleCombatTurnChange(combat) {
     const isFeatureEnabled = Boolean(game.settings.get(MODULE_ID, 'enableCombatAutoTrackButton'));
     const isAutoTrackCombat = Boolean(game.settings.get(MODULE_ID, 'autoTrackCombat'));
-    const isAutoToggleActive = Boolean(game.settings.get(MODULE_ID, 'autoToggleCombat'));
+    const isAutoToggleActive = isFeatureEnabled && Boolean(game.settings.get(MODULE_ID, 'autoToggleCombat'));
     const isAutoTrackActive = isFeatureEnabled && isAutoTrackCombat;
 
     const currentApp = actionDisplay.activeApp;
@@ -316,56 +316,46 @@ export function handleCombatTurnChange(combat) {
     if (token) {
         const isMyTurn = Boolean(token && adapter.foundry.isUserInCharge(token));
 
-        if (isAutoToggleActive) {
-            // Auto-toggle mode: open HUD on my turn, close on other turns
-            if (isMyTurn) {
-                if (currentApp?.rendered) {
-                    if (currentApp.token === token || currentApp.token?.id === token.id) {
-                        requestHUDRender();
-                        return;
-                    }
-                    if (currentApp.element) {
-                        currentApp.element.style.display = 'none';
-                    }
-                    currentApp.close();
-                    actionDisplay.activeApp = null;
-                }
-
-                setLastSelectedToken(token);
-                if (token.actor) {
-                    syncActorFavorites(token.actor);
-                }
-
-                const newApp = new ActionDisplayApp(token);
-                actionDisplay.activeApp = newApp;
-                newApp.render(true);
-                return;
-            } else {
-                // Transition to "not my turn": close HUD if open
-                if (currentApp?.rendered) {
-                    if (currentApp.element) {
-                        currentApp.element.style.display = 'none';
-                    }
-                    currentApp.close();
-                    actionDisplay.activeApp = null;
-                    return;
-                }
-            }
-        } else if (isAutoTrackActive && isMyTurn) {
-            // Standard auto-track: switch HUD if HUD is already open
-            if (currentApp?.rendered) {
-                if (currentApp.token === token || currentApp.token?.id === token.id) {
-                    requestHUDRender();
-                    return;
-                }
-
-                // Switch HUD to the active combatant token
+        if (!isMyTurn) {
+            // Not my turn: auto-close HUD if right-click auto-toggle is active
+            if (isAutoToggleActive && currentApp?.rendered) {
                 if (currentApp.element) {
                     currentApp.element.style.display = 'none';
                 }
                 currentApp.close();
                 actionDisplay.activeApp = null;
+                return;
+            }
+        } else {
+            // It is my turn:
+            const isSameToken = currentApp?.token === token || currentApp?.token?.id === token.id;
 
+            if (currentApp?.rendered) {
+                // HUD is already open:
+                if (isSameToken) {
+                    requestHUDRender();
+                    return;
+                }
+                // Different token: switch only if left-click auto-track is active
+                if (isAutoTrackActive) {
+                    if (currentApp.element) {
+                        currentApp.element.style.display = 'none';
+                    }
+                    currentApp.close();
+                    actionDisplay.activeApp = null;
+
+                    setLastSelectedToken(token);
+                    if (token.actor) {
+                        syncActorFavorites(token.actor);
+                    }
+
+                    const newApp = new ActionDisplayApp(token);
+                    actionDisplay.activeApp = newApp;
+                    newApp.render(true);
+                    return;
+                }
+            } else if (isAutoToggleActive) {
+                // HUD is closed: auto-open if right-click auto-toggle is active
                 setLastSelectedToken(token);
                 if (token.actor) {
                     syncActorFavorites(token.actor);
@@ -388,7 +378,8 @@ Hooks.on('updateCombat', (combat, changes, options, userId) => {
 });
 
 Hooks.on('deleteCombat', (combat, options, userId) => {
-    const isAutoToggleActive = Boolean(game.settings.get(MODULE_ID, 'autoToggleCombat'));
+    const isFeatureEnabled = Boolean(game.settings.get(MODULE_ID, 'enableCombatAutoTrackButton'));
+    const isAutoToggleActive = isFeatureEnabled && Boolean(game.settings.get(MODULE_ID, 'autoToggleCombat'));
     if (isAutoToggleActive) {
         const currentApp = actionDisplay.activeApp;
         if (currentApp?.rendered) {

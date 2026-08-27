@@ -187,10 +187,28 @@ test('Combat turn advancement hook switches HUD to active combatant when autoTra
     assert.ok(actionDisplay.activeApp);
     assert.equal(actionDisplay.activeApp.token.id, 'token-goblin');
 
+    // 3. User toggles combat auto-track OFF via left-click button handler, while autoToggleCombat is ON
+    await game.settings.set(MODULE_ID, 'autoToggleCombat', true);
+    await actionDisplay.activeApp._onToggleCombatAutoTrack();
+    assert.equal(game.settings.get(MODULE_ID, 'autoTrackCombat'), false);
+    assert.equal(game.settings.get(MODULE_ID, 'autoToggleCombat'), true, 'autoToggleCombat should remain untouched');
+
+    // 4. Combat turn advances back to Hero -> HUD must NOT switch, and remain on Goblin because autoTrackCombat is OFF!
+    const mockCombatHeroTurn = {
+        started: true,
+        combatant: { tokenId: 'token-hero-combat', token: tokenHero, actor: tokenHero.actor }
+    };
+    globalThis.game.combat = mockCombatHeroTurn;
+
+    Hooks.callAll('combatTurn', mockCombatHeroTurn, {}, {});
+    assert.ok(actionDisplay.activeApp);
+    assert.equal(actionDisplay.activeApp.token.id, 'token-goblin', 'HUD must remain on Goblin after autoTrackCombat is toggled off even if autoToggleCombat is active');
+
     // Clean up
     Hooks.callAll('closeTokenHUD', {}, {});
     await game.settings.set(MODULE_ID, 'enableCombatAutoTrackButton', false);
     await game.settings.set(MODULE_ID, 'autoTrackCombat', false);
+    await game.settings.set(MODULE_ID, 'autoToggleCombat', false);
     globalThis.game.combat = null;
 });
 
