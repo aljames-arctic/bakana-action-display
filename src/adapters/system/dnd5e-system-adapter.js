@@ -836,10 +836,6 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
             fullLabel = `${sizeLabel} Creature`;
         }
 
-        if (alignment) {
-            fullLabel = `${fullLabel}, ${alignment}`;
-        }
-
         return {
             fullLabel: fullLabel.trim(),
             size: sizeLabel,
@@ -858,20 +854,28 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
         const shield = acData.shield ?? 0;
 
         let label = '';
+        const secondaries = [];
         if (calc && calc !== 'default') {
-            label = this.#formatLabel(calc, cfg?.armorClasses);
+            const calcLabel = this.#formatLabel(calc, cfg?.armorClasses);
+            label = calcLabel;
+            secondaries.push(calcLabel);
         } else if (formula) {
             label = formula;
+            secondaries.push(formula);
         }
 
         if (shield > 0) {
-            label = label ? `${label} (+${shield} Shield)` : `+${shield} Shield`;
+            const shieldText = `+${shield} Shield`;
+            label = label ? `${label} (${shieldText})` : shieldText;
+            secondaries.push(shieldText);
         }
 
         return {
             value,
+            label,
             calc,
-            label
+            shield,
+            secondaries
         };
     }
 

@@ -105,7 +105,16 @@
                             </div>
                             <div class="bad-token-info-meta">
                                 {{#if tokenInfo.typeLabel}}
-                                <span class="bad-token-info-badge bad-badge-type">{{tokenInfo.typeLabel}}</span>
+                                <span class="bad-token-info-badge bad-badge-type">
+                                    <span class="bad-badge-line bad-badge-type-label">{{tokenInfo.typeLabel}}</span>
+                                    {{#if tokenInfo.alignment}}
+                                    <span class="bad-badge-line bad-badge-alignment">{{tokenInfo.alignment}}</span>
+                                    {{/if}}
+                                </span>
+                                {{else if tokenInfo.alignment}}
+                                <span class="bad-token-info-badge bad-badge-type">
+                                    <span class="bad-badge-line bad-badge-alignment">{{tokenInfo.alignment}}</span>
+                                </span>
                                 {{/if}}
                                 {{#if tokenInfo.crLabel}}
                                 <span class="bad-token-info-badge bad-badge-cr">{{tokenInfo.crLabel}}</span>
@@ -138,13 +147,11 @@
                         <div class="bad-token-stat-card bad-stat-speed">
                             <div class="bad-token-stat-icon"><i class="fas fa-running"></i></div>
                             <div class="bad-token-stat-body">
-                                <div class="bad-token-stat-value">
-                                    {{tokenInfo.movement.primary}}
-                                    {{#if tokenInfo.movement.showMoved}}
-                                    <span class="bad-token-stat-moved" title="{{localize "BAD.page3.movedThisTurn"}}">({{tokenInfo.movement.movedLabel}})</span>
-                                    {{/if}}
-                                </div>
+                                <div class="bad-token-stat-value">{{tokenInfo.movement.primary}}</div>
                                 <div class="bad-token-stat-label">{{localize "BAD.page3.movementSpeed"}}</div>
+                                {{#if tokenInfo.movement.showMoved}}
+                                <div class="bad-token-stat-moved" title="{{localize "BAD.page3.movedThisTurn"}}">{{tokenInfo.movement.movedLabel}}</div>
+                                {{/if}}
                                 {{#if tokenInfo.movement.secondaries.length}}
                                 <div class="bad-token-stat-speeds">
                                     {{#each tokenInfo.movement.secondaries}}

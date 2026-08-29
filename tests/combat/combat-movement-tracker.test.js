@@ -346,3 +346,49 @@ test('Pf2eSystemAdapter.getTokenInfo formats movement with moved distance when i
     }
     CombatMovementTracker.clear();
 });
+
+test('Page 3 template renders alignment on a separate line from race/type and AC/movement on multiple lines', async () => {
+    adapter.system = new Dnd5eSystemAdapter();
+    const tokenDoc = { id: 'tok-layout', name: 'Gimli', x: 0, y: 0 };
+    const actor = {
+        id: 'act-layout',
+        name: 'Gimli',
+        type: 'character',
+        system: {
+            attributes: {
+                ac: { value: 18, calc: 'armored', shield: 2 },
+                movement: { walk: 25, units: 'ft' }
+            },
+            traits: { size: 'med' },
+            details: {
+                race: { name: 'Mountain Dwarf' },
+                alignment: 'Neutral Good'
+            }
+        },
+        getActiveTokens: () => [{ id: 'tok-layout', document: tokenDoc }]
+    };
+
+    game.combat = {
+        id: 'combat-layout',
+        started: true,
+        round: 1,
+        turn: 0,
+        combatants: [{ tokenId: 'tok-layout', actorId: 'act-layout' }]
+    };
+    CombatMovementTracker.setMovedDistance('tok-layout', 15);
+
+    const origLocalize = game.i18n.localize;
+    game.i18n.localize = key => (key === 'BAD.page3.moved' ? 'moved' : origLocalize(key));
+
+    try {
+        const info = await adapter.getTokenInfo(actor, tokenDoc);
+        assert.equal(info.typeLabel, 'Medium Mountain Dwarf');
+        assert.equal(info.alignment, 'Neutral Good');
+        assert.deepEqual(info.ac.secondaries, ['Armored', '+2 Shield']);
+        assert.equal(info.movement.showMoved, true);
+        assert.equal(info.movement.movedLabel, '15 ft moved');
+    } finally {
+        game.i18n.localize = origLocalize;
+    }
+    CombatMovementTracker.clear();
+});

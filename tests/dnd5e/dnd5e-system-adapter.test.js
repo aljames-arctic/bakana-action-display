@@ -1177,12 +1177,13 @@ test('Dnd5eSystemAdapter getTokenInfo extracts complete token statistics and det
     assert.equal(info.subtype, 'red');
     assert.equal(info.crLabel, 'CR 17');
     assert.equal(info.alignment, 'Chaotic Evil');
-    assert.equal(info.typeLabel, 'Huge Dragon (red), Chaotic Evil');
+    assert.equal(info.typeLabel, 'Huge Dragon (red)');
 
     // Armor Class
     assert.equal(info.ac.value, 19);
     assert.equal(info.ac.calc, 'natural');
     assert.equal(info.ac.label, 'Natural Armor');
+    assert.deepEqual(info.ac.secondaries, ['Natural Armor']);
 
     // Movement Speeds
     assert.equal(info.movement.primary, '40 ft');
@@ -1262,9 +1263,11 @@ test('Dnd5eSystemAdapter getTokenInfo handles Player Character actor schema and 
     assert.equal(info.name, 'Valeros');
     assert.equal(info.img, 'icons/characters/fighter.webp');
     assert.equal(info.crLabel, 'Level 5');
-    assert.equal(info.typeLabel, 'Medium Mountain Dwarf, Neutral Good');
+    assert.equal(info.typeLabel, 'Medium Mountain Dwarf');
+    assert.equal(info.alignment, 'Neutral Good');
     assert.equal(info.ac.value, 18);
     assert.equal(info.ac.label, 'Armored (+2 Shield)');
+    assert.deepEqual(info.ac.secondaries, ['Armored', '+2 Shield']);
     assert.equal(info.movement.primary, '30 ft');
     assert.equal(info.movement.secondary, '');
     assert.equal(info.hasResistances, false);

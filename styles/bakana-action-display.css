@@ -2701,6 +2701,21 @@ button.bad-token-inspiration-btn.active:hover,
     background: rgba(167, 139, 250, 0.15);
     border: 1px solid rgba(167, 139, 250, 0.3);
     color: #c4b5fd;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.15em;
+}
+
+.bad-badge-line {
+    display: block;
+    line-height: 1.25;
+}
+
+.bad-badge-alignment {
+    font-size: 0.88em;
+    opacity: 0.85;
+    font-weight: 500;
 }
 
 .bad-badge-cr {
@@ -2776,20 +2791,13 @@ button.bad-token-inspiration-btn.active:hover,
     text-overflow: ellipsis;
 }
 
-.bad-stat-speed .bad-token-stat-value {
-    display: flex;
-    align-items: baseline;
-    flex-wrap: wrap;
-    gap: 0.25em;
-    white-space: normal;
-}
-
 .bad-token-stat-moved {
     font-size: 0.72em;
     font-weight: 600;
     color: #6ee7b7;
-    opacity: 0.95;
-    letter-spacing: 0.01em;
+    margin-top: 0.2em;
+    line-height: 1.25;
+    word-break: break-word;
 }
 
 .bad-token-stat-label {
