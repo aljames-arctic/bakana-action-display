@@ -303,3 +303,9 @@ test('ActionDisplayApp _onRollAction preserves dropdown on regular items when co
 
     assert.equal(dropdownCalled, true);
 });
+
+test('BaseSystemAdapter getInspiration and toggleInspiration return legacy NOP contracts', async () => {
+    const adapter = new BaseSystemAdapter('test-system');
+    assert.deepEqual(adapter.getInspiration({}), { supported: false, value: false });
+    assert.equal(await adapter.toggleInspiration({}, true), false);
+});

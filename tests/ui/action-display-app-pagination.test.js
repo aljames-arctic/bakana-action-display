@@ -225,5 +225,76 @@ test('ActionDisplayApp Page 3 renders token information showcase with 3 pages in
     assert.deepEqual(context.tokenInfo.resistances, ['Poison']);
 });
 
+test('ActionDisplayApp Page 3 renders inspiration indicator and toggles inspiration on click', async () => {
+    adapter.system = new Dnd5eSystemAdapter();
+    let actorInspiration = false;
+    const actor = {
+        id: 'test-actor-insp',
+        name: 'Astarion',
+        type: 'character',
+        isOwner: true,
+        getFlag: () => false,
+        flags: {},
+        system: {
+            attributes: {
+                inspiration: false,
+                ac: { value: 15 },
+                movement: { walk: 30, units: 'ft' }
+            },
+            traits: { size: 'med' },
+            details: { biography: { value: '' } }
+        },
+        update: async (data) => {
+            actorInspiration = data['system.attributes.inspiration'];
+            actor.system.attributes.inspiration = actorInspiration;
+            return data;
+        },
+        getRollData: () => ({ name: 'Astarion' })
+    };
+
+    const app = new ActionDisplayApp({ actor });
+    app.activePage = 3;
+    app._saveTabState = () => {};
+
+    const mockActions = [
+        { id: 'token-info-test-actor-insp', name: 'Astarion', page: 3, type: 'info' }
+    ];
+    actionDisplay.getActions = async () => mockActions;
+
+    // Initially uninspired
+    let context = await app._prepareContext({});
+    assert.equal(context.tokenInfo.showInspiration, true);
+    assert.equal(context.tokenInfo.inspiration, false);
+
+    // Toggle inspiration via _onToggleInspiration
+    let prevented = false;
+    let stopped = false;
+    const fakeEvent = {
+        preventDefault: () => { prevented = true; },
+        stopPropagation: () => { stopped = true; }
+    };
+    await app._onToggleInspiration(fakeEvent, {});
+    assert.equal(prevented, true);
+    assert.equal(stopped, true);
+    assert.equal(actorInspiration, true);
+
+    // Context reflects inspired state
+    context = await app._prepareContext({});
+    assert.equal(context.tokenInfo.inspiration, true);
+
+    // Toggle inspiration off
+    await app._onToggleInspiration(fakeEvent, {});
+    assert.equal(actorInspiration, false);
+
+    // Non-owner without GM rights cannot toggle
+    actor.isOwner = false;
+    actor.canUserModify = () => false;
+    const prevUser = game.user;
+    game.user = { isGM: false, name: 'Other Player' };
+    await app._onToggleInspiration(fakeEvent, {});
+    assert.equal(actorInspiration, false); // Remains unchanged
+    game.user = prevUser;
+});
+
 
 

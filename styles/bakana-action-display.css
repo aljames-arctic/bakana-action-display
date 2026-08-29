@@ -2566,6 +2566,13 @@ body > #tooltip.bad-summary-has-table-wrapper,
     flex: 1;
 }
 
+.bad-token-info-name-row {
+    display: flex;
+    align-items: center;
+    gap: 0.4em;
+    min-width: 0;
+}
+
 .bad-token-info-name {
     font-size: 1.05em;
     font-weight: 700;
@@ -2574,6 +2581,60 @@ body > #tooltip.bad-summary-has-table-wrapper,
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+.bad-token-inspiration-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    border-radius: 4px !important;
+    color: #64748b !important;
+    cursor: pointer !important;
+    font-size: 0.85em !important;
+    width: 1.6em !important;
+    height: 1.6em !important;
+    min-width: 1.6em !important;
+    min-height: 1.6em !important;
+    padding: 0 !important;
+    line-height: 1 !important;
+    transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease !important;
+    box-shadow: none !important;
+    flex-shrink: 0;
+}
+
+.bad-token-inspiration-btn i {
+    font-size: 1em;
+    line-height: 1;
+}
+
+.bad-token-inspiration-btn:hover {
+    color: #cbd5e1 !important;
+    background: rgba(255, 255, 255, 0.12) !important;
+    border-color: rgba(255, 255, 255, 0.25) !important;
+}
+
+.bad-token-inspiration-btn:focus,
+.bad-token-inspiration-btn:focus-visible,
+.bad-token-inspiration-btn:active {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+.bad-token-inspiration-btn.active {
+    color: #fbbf24 !important;
+    background: rgba(245, 158, 11, 0.2) !important;
+    border-color: rgba(245, 158, 11, 0.5) !important;
+    text-shadow: 0 0 6px rgba(251, 191, 36, 0.6);
+    box-shadow: 0 0 8px rgba(245, 158, 11, 0.3) !important;
+}
+
+.bad-token-inspiration-btn.active:hover {
+    color: #fef08a !important;
+    background: rgba(245, 158, 11, 0.3) !important;
+    border-color: rgba(245, 158, 11, 0.7) !important;
+    box-shadow: 0 0 10px rgba(245, 158, 11, 0.5) !important;
 }
 
 .bad-token-info-meta {

@@ -90,7 +90,19 @@
                         <img class="bad-token-info-portrait" src="{{tokenInfo.img}}" alt="{{tokenInfo.name}}" />
                         {{/if}}
                         <div class="bad-token-info-title-group">
-                            <div class="bad-token-info-name">{{tokenInfo.name}}</div>
+                            <div class="bad-token-info-name-row">
+                                <div class="bad-token-info-name">{{tokenInfo.name}}</div>
+                                {{#if tokenInfo.showInspiration}}
+                                <button class="bad-token-inspiration-btn {{#if tokenInfo.inspiration}}active{{/if}}" 
+                                        type="button" 
+                                        data-action="toggleInspiration" 
+                                        title="{{#if tokenInfo.inspiration}}{{localize 'BAD.page3.inspired'}}{{else}}{{localize 'BAD.page3.inspiration'}}{{/if}}"
+                                        aria-label="{{localize 'BAD.page3.inspiration'}}"
+                                        aria-pressed="{{#if tokenInfo.inspiration}}true{{else}}false{{/if}}">
+                                    <i class="fas fa-dice-d20"></i>
+                                </button>
+                                {{/if}}
+                            </div>
                             <div class="bad-token-info-meta">
                                 {{#if tokenInfo.typeLabel}}
                                 <span class="bad-token-info-badge bad-badge-type">{{tokenInfo.typeLabel}}</span>

@@ -525,4 +525,10 @@ test('Pf2eSystemAdapter getTokenInfo extracts complete token statistics and deta
     assert.equal(infoObj.size, 'Small');
 });
 
+test('Pf2eSystemAdapter getInspiration and toggleInspiration return legacy NOP contracts', async () => {
+    const adapter = new Pf2eSystemAdapter();
+    assert.deepEqual(adapter.getInspiration({}), { supported: false, value: false });
+    assert.equal(await adapter.toggleInspiration({}, true), false);
+});
+
 

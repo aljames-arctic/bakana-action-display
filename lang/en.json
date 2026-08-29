@@ -204,6 +204,8 @@
         },
         "page3": {
             "tokenInfo": "Token Information",
+            "inspiration": "Inspiration",
+            "inspired": "Inspired",
             "armorClass": "Armor Class",
             "movementSpeed": "Movement Speed",
             "resistances": "Damage Resistances",

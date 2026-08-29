@@ -231,6 +231,27 @@ export class BaseSystemAdapter {
     }
 
     /**
+     * Determine if an actor supports inspiration and retrieve its current status.
+     * Legacy NOP contract: Non-5e systems return supported: false.
+     * @param {Actor} actor Target actor document
+     * @returns {{ supported: boolean, value: boolean }}
+     */
+    getInspiration(actor) {
+        return { supported: false, value: false };
+    }
+
+    /**
+     * Toggle or set inspiration on an actor.
+     * Legacy NOP contract: Non-5e systems return false.
+     * @param {Actor} actor Target actor document
+     * @param {boolean} [force] Optional explicit state to set
+     * @returns {Promise<boolean>} Resulting inspiration state
+     */
+    async toggleInspiration(actor, force) {
+        return false;
+    }
+
+    /**
      * Open the sheet or edit dialog for an action or its underlying item/activity.
      * @param {Object} action The Action instance to edit
      */

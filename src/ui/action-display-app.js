@@ -316,7 +316,8 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
             endCombatTurn: ActionDisplayApp.prototype._onEndCombatTurn,
             previousPage: ActionDisplayApp.prototype._onPreviousPage,
             nextPage: ActionDisplayApp.prototype._onNextPage,
-            changePage: ActionDisplayApp.prototype._onChangePage
+            changePage: ActionDisplayApp.prototype._onChangePage,
+            toggleInspiration: ActionDisplayApp.prototype._onToggleInspiration
         }
     };
 
@@ -1335,6 +1336,31 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
             await combat.nextTurn();
         } catch (err) {
             log.error("Failed to advance combat turn:", err);
+        }
+    }
+
+    /**
+     * Toggle inspiration on the currently active actor when the inspiration element is clicked.
+     * @param {PointerEvent} event Triggering click event
+     * @param {HTMLElement} target Target button element
+     * @protected
+     */
+    async _onToggleInspiration(event, target) {
+        event?.preventDefault?.();
+        event?.stopPropagation?.();
+        if (!this.actor) return;
+
+        const canModify = this.actor.canUserModify?.(game.user, 'update') ?? this.actor.isOwner ?? game.user?.isGM;
+        if (!canModify) {
+            log.warn(`ActionDisplayApp._onToggleInspiration | User "${game.user?.name}" lacks permission to update actor "${this.actor.name}"`);
+            return;
+        }
+
+        try {
+            const nextState = await adapter.toggleInspiration(this.actor);
+            log.info(`ActionDisplayApp._onToggleInspiration | Toggled inspiration for "${this.actor.name}": ${nextState}`);
+        } catch (err) {
+            log.error(`ActionDisplayApp._onToggleInspiration | Failed to toggle inspiration for "${this.actor.name}":`, err);
         }
     }
 

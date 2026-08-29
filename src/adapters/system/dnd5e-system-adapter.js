@@ -648,6 +648,9 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
         const name = token?.name ?? actor.name ?? '';
         const img = token?.texture?.src ?? actor.img ?? 'icons/svg/mystery-man.svg';
 
+        // 1b. Inspiration
+        const inspirationInfo = this.getInspiration(actor);
+
         // 2. Creature Type & Race details
         const typeInfo = this.#extractCreatureType(actor, cfg);
 
@@ -690,6 +693,8 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
         return {
             name,
             img,
+            inspiration: inspirationInfo.value,
+            showInspiration: inspirationInfo.supported,
             typeLabel: typeInfo.fullLabel,
             type: typeInfo.type,
             subtype: typeInfo.subtype,
@@ -713,6 +718,33 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
             biographyHTML,
             hasBiography: Boolean(biographyHTML || rawBio)
         };
+    }
+
+    /**
+     * Determine if an actor supports inspiration and retrieve its current status in D&D 5e.
+     * @param {Actor} actor Target actor document
+     * @returns {{ supported: boolean, value: boolean }}
+     */
+    getInspiration(actor) {
+        if (!actor) return { supported: false, value: false };
+        const system = actor.system ?? {};
+        const supported = actor.type === 'character' || system.attributes?.inspiration !== undefined;
+        const value = Boolean(system.attributes?.inspiration);
+        return { supported, value };
+    }
+
+    /**
+     * Toggle or set inspiration on an actor in D&D 5e.
+     * @param {Actor} actor Target actor document
+     * @param {boolean} [force] Optional explicit state to set
+     * @returns {Promise<boolean>} Resulting inspiration state
+     */
+    async toggleInspiration(actor, force) {
+        if (!actor) return false;
+        const current = Boolean(actor.system?.attributes?.inspiration);
+        const next = typeof force === 'boolean' ? force : !current;
+        await actor.update({ 'system.attributes.inspiration': next });
+        return next;
     }
 
     #formatLabel(key, configMap = null) {

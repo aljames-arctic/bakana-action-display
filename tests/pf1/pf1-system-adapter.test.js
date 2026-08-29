@@ -539,5 +539,11 @@ test('Pf1SystemAdapter getTokenInfo supports modern PF1 v11+ traits.di, ci, dv, 
     assert.ok(info.senses.some(s => s.includes('Smoke Vision')));
 });
 
+test('Pf1SystemAdapter getInspiration and toggleInspiration return legacy NOP contracts', async () => {
+    const adapter = new Pf1SystemAdapter();
+    assert.deepEqual(adapter.getInspiration({}), { supported: false, value: false });
+    assert.equal(await adapter.toggleInspiration({}, true), false);
+});
+
 
 

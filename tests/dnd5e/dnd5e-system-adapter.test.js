@@ -1845,4 +1845,101 @@ test('Dnd5eSystemAdapter and ActionDisplayApp populate all canonical spell compo
     await app.close();
 });
 
+test('Dnd5eSystemAdapter getInspiration and toggleInspiration contracts', async () => {
+    const adapter = new Dnd5eSystemAdapter();
+
+    // 1. Character actor with inspiration: true
+    const pcInspired = {
+        type: 'character',
+        system: { attributes: { inspiration: true } }
+    };
+    assert.deepEqual(adapter.getInspiration(pcInspired), { supported: true, value: true });
+
+    // 2. Character actor with inspiration: false
+    const pcUninspired = {
+        type: 'character',
+        system: { attributes: { inspiration: false } }
+    };
+    assert.deepEqual(adapter.getInspiration(pcUninspired), { supported: true, value: false });
+
+    // 3. NPC actor without inspiration attribute
+    const npc = {
+        type: 'npc',
+        system: { attributes: {} }
+    };
+    assert.deepEqual(adapter.getInspiration(npc), { supported: false, value: false });
+
+    // 4. Toggle inspiration flips boolean value via actor.update
+    let updatedPayload = null;
+    const actorToToggle = {
+        type: 'character',
+        system: { attributes: { inspiration: false } },
+        update: async (data) => {
+            updatedPayload = data;
+            actorToToggle.system.attributes.inspiration = data['system.attributes.inspiration'];
+            return data;
+        }
+    };
+
+    const nextState1 = await adapter.toggleInspiration(actorToToggle);
+    assert.equal(nextState1, true);
+    assert.deepEqual(updatedPayload, { 'system.attributes.inspiration': true });
+
+    const nextState2 = await adapter.toggleInspiration(actorToToggle);
+    assert.equal(nextState2, false);
+    assert.deepEqual(updatedPayload, { 'system.attributes.inspiration': false });
+
+    // 5. Explicit force parameter
+    await adapter.toggleInspiration(actorToToggle, true);
+    assert.equal(actorToToggle.system.attributes.inspiration, true);
+
+    await adapter.toggleInspiration(actorToToggle, true);
+    assert.equal(actorToToggle.system.attributes.inspiration, true);
+
+    // 6. Null actor safety
+    assert.deepEqual(adapter.getInspiration(null), { supported: false, value: false });
+    assert.equal(await adapter.toggleInspiration(null), false);
+});
+
+test('Dnd5eSystemAdapter getTokenInfo extracts inspiration and showInspiration properties', async () => {
+    const adapter = new Dnd5eSystemAdapter();
+
+    const pcActor = {
+        id: 'hero-insp',
+        type: 'character',
+        name: 'Elminster',
+        system: {
+            attributes: {
+                inspiration: true,
+                ac: { value: 15 },
+                movement: { walk: 30 }
+            },
+            traits: { size: 'med' },
+            details: { biography: { value: '' } }
+        }
+    };
+
+    const info = await adapter.getTokenInfo(pcActor, null);
+    assert.equal(info.inspiration, true);
+    assert.equal(info.showInspiration, true);
+
+    const npcActor = {
+        id: 'npc-no-insp',
+        type: 'npc',
+        name: 'Goblin',
+        system: {
+            attributes: {
+                ac: { value: 12 },
+                movement: { walk: 30 }
+            },
+            traits: { size: 'sm' },
+            details: { biography: { value: '' } }
+        }
+    };
+
+    const npcInfo = await adapter.getTokenInfo(npcActor, null);
+    assert.equal(npcInfo.inspiration, false);
+    assert.equal(npcInfo.showInspiration, false);
+});
+
 

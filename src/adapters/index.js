@@ -370,6 +370,25 @@ class Adapter {
     }
 
     /**
+     * Determine if an actor supports inspiration and retrieve its current status via the active system adapter.
+     * @param {Actor} actor
+     * @returns {{ supported: boolean, value: boolean }}
+     */
+    getInspiration(actor) {
+        return this.system?.getInspiration?.(actor) ?? { supported: false, value: false };
+    }
+
+    /**
+     * Toggle or set inspiration on an actor via the active system adapter.
+     * @param {Actor} actor
+     * @param {boolean} [force]
+     * @returns {Promise<boolean>}
+     */
+    async toggleInspiration(actor, force) {
+        return (await this.system?.toggleInspiration?.(actor, force)) ?? false;
+    }
+
+    /**
      * Get system-specific page definition configuration.
      * @param {number} [page=1]
      * @param {Actor} [actor=null]
