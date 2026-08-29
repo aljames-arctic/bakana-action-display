@@ -7,6 +7,13 @@ const VERBOSITY_LEVELS = {
     'debug': 4
 };
 
+export const GROUP_STYLES = {
+    'error': 'color: #ef4444; font-weight: bold;',
+    'warn': 'color: #f59e0b; font-weight: bold;',
+    'info': 'color: #ffffff; font-weight: bold;',
+    'debug': 'color: #38bdf8; font-weight: bold;'
+};
+
 /**
  * Get the current log verbosity level from the game settings.
  * Defaults to 'warn' if the setting is not yet registered or unavailable.
@@ -30,6 +37,30 @@ function getVerbosityLevel() {
 }
 
 const groupStack = [];
+
+/**
+ * Internal helper to create a styled console group (or collapsed group)
+ * respecting the log verbosity level and highlighting with level-specific colors.
+ * @param {boolean} collapsed Whether to use console.groupCollapsed
+ * @param {string} message Group label/message
+ * @param {...*} args Optional verbosity level as first argument, followed by group payload
+ */
+function _createGroup(collapsed, message, ...args) {
+    let level = 'info';
+    let groupArgs = args;
+    if (args.length > 0 && VERBOSITY_LEVELS[args[0]] !== undefined) {
+        level = args[0];
+        groupArgs = args.slice(1);
+    }
+    if (getVerbosityLevel() >= VERBOSITY_LEVELS[level]) {
+        const style = GROUP_STYLES[level] ?? GROUP_STYLES['info'];
+        const consoleFn = (collapsed && console.groupCollapsed) ? console.groupCollapsed : console.group;
+        consoleFn(`%c${MODULE_TLA} | ${message}`, style, ...groupArgs);
+        groupStack.push(true);
+    } else {
+        groupStack.push(false);
+    }
+}
 
 /**
  * Premium logging utility for Bakana's Action Display.
@@ -58,18 +89,10 @@ export const log = {
         }
     },
     group(message, ...args) {
-        let level = 'info';
-        let groupArgs = args;
-        if (args.length > 0 && VERBOSITY_LEVELS[args[0]] !== undefined) {
-            level = args[0];
-            groupArgs = args.slice(1);
-        }
-        if (getVerbosityLevel() >= VERBOSITY_LEVELS[level]) {
-            console.group(`${MODULE_TLA} | ${message}`, ...groupArgs);
-            groupStack.push(true);
-        } else {
-            groupStack.push(false);
-        }
+        _createGroup(false, message, ...args);
+    },
+    groupCollapsed(message, ...args) {
+        _createGroup(true, message, ...args);
     },
     groupEnd() {
         if (groupStack.pop()) {
