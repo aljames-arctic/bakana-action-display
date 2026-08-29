@@ -102,11 +102,29 @@ export function buildSubactionMenuItem(sub, event, app = null) {
  * @param {HTMLElement} target Action card target element
  * @param {Object[]} subactions Array of qualifying subaction objects
  * @param {Event} event Triggering click event
+ * @param {Object} [parentAction=null] Optional parent action card object
  */
-export function showActivityDropdown(app, target, subactions, event) {
+export function showActivityDropdown(app, target, subactions, event, parentAction = null) {
     event?.preventDefault?.();
     event?.stopPropagation?.();
     app?._hideItemSummaryTooltip?.();
+
+    const action = parentAction ?? (app?.displayedActions ?? app?.actions)?.find?.(a => a.id === target?.dataset?.actionId);
+    if (action?.subactions?.length && action.subactions.length > (subactions?.length ?? 0)) {
+        const qualifyingIds = new Set((subactions ?? []).map(s => s.id));
+        const filteredSubs = action.subactions.filter(sub => !qualifyingIds.has(sub.id));
+        if (filteredSubs.length > 0) {
+            log.group(`showActivityDropdown | Activities filtered from dropdown context menu on "${action.name ?? 'Action'}" (${action.id})`, 'debug');
+            try {
+                for (const sub of filteredSubs) {
+                    log.debug(`showActivityDropdown | Activity "${sub.name}" (${sub.id}) filtered from dropdown context menu on "${action.name}"`);
+                }
+            } finally {
+                log.groupEnd();
+            }
+        }
+    }
+
     const sortedSubactions = [...(subactions ?? [])].sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''));
     const menuItems = sortedSubactions.map(sub => buildSubactionMenuItem(sub, event, app));
 

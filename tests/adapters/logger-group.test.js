@@ -405,4 +405,73 @@ test('ActionDisplayApp._prepareContext and _matchesFilters log debug messages wh
     }
 });
 
+test('showActivityDropdown logs debug messages when activities are filtered from the dropdown context menu', async () => {
+    const groups = [];
+    const debugLogs = [];
+    const origGroup = console.group;
+    const origGroupCollapsed = console.groupCollapsed;
+    const origGroupEnd = console.groupEnd;
+    const origLog = console.log;
+
+    console.group = (...args) => groups.push({ type: 'group', args });
+    console.groupCollapsed = (...args) => groups.push({ type: 'collapsed', args });
+    console.groupEnd = () => groups.push({ type: 'end' });
+    console.log = (...args) => debugLogs.push(args);
+
+    log.setVerbosity('debug');
+
+    try {
+        const { showActivityDropdown } = await import('../../src/ui/app/dropdown-manager.js');
+
+        const fullSubactions = [
+            { id: 'act-1', name: 'Slash', right: [{ path: 'economy/action', root: 'economy', label: 'action' }] },
+            { id: 'act-2', name: 'Pommel Strike', right: [{ path: 'economy/bonus', root: 'economy', label: 'bonus' }] },
+            { id: 'act-3', name: 'Parry', right: [{ path: 'economy/reaction', root: 'economy', label: 'reaction' }] }
+        ];
+
+        const parentAction = {
+            id: 'item-sword',
+            name: 'Longsword',
+            subactions: fullSubactions
+        };
+
+        const mockApp = {
+            element: { ownerDocument: { body: document.body } },
+            _hideItemSummaryTooltip: () => {}
+        };
+        const mockTarget = {
+            dataset: { actionId: 'item-sword' },
+            classList: { add: () => {}, remove: () => {} },
+            getBoundingClientRect: () => ({ left: 0, top: 0, right: 100, bottom: 30, width: 100, height: 30 })
+        };
+
+        // Case 1: All subactions qualify -> no activities filtered group
+        showActivityDropdown(mockApp, mockTarget, fullSubactions, { preventDefault() {}, stopPropagation() {} }, parentAction);
+        assert.equal(groups.filter(g => g.args[0].includes('Activities filtered from dropdown context menu')).length, 0);
+
+        // Case 2: Only 'Pommel Strike' qualifies (Slash and Parry filtered out)
+        const qualifyingSubs = [fullSubactions[1]];
+        showActivityDropdown(mockApp, mockTarget, qualifyingSubs, { preventDefault() {}, stopPropagation() {} }, parentAction);
+
+        const filterGroups = groups.filter(g => g.type === 'collapsed' && g.args[0].includes('Activities filtered from dropdown context menu'));
+        assert.equal(filterGroups.length, 1);
+        assert.ok(filterGroups[0].args[0].includes('Longsword'));
+
+        // Verify that Slash and Parry were logged as filtered from the dropdown
+        assert.ok(debugLogs.some(args =>
+            args.some(arg => typeof arg === 'string' && arg.includes('Activity "Slash"') && arg.includes('filtered from dropdown context menu'))
+        ));
+        assert.ok(debugLogs.some(args =>
+            args.some(arg => typeof arg === 'string' && arg.includes('Activity "Parry"') && arg.includes('filtered from dropdown context menu'))
+        ));
+    } finally {
+        console.group = origGroup;
+        console.groupCollapsed = origGroupCollapsed;
+        console.groupEnd = origGroupEnd;
+        console.log = origLog;
+        log.setVerbosity('warn');
+    }
+});
+
+
 

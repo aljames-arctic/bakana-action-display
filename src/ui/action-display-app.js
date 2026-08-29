@@ -1136,16 +1136,25 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
             if (itemActivities?.length > 0) {
                 // Filter sub-actions to only those that match the currently active right-side tabs
                 const filterContext = this._getFilterContext();
-                const qualifyingSubActions = adapter.system.filterSubactions(itemActivities, filterContext, action.left);
+                log.group(`ActionDisplayApp._onRollAction | Filtering activities for "${action.name}" (${action.id})`, 'debug');
+                let qualifyingSubActions;
+                try {
+                    qualifyingSubActions = adapter.system.filterSubactions(itemActivities, filterContext, action.left);
+                } finally {
+                    log.groupEnd();
+                }
 
                 const subsToShow = qualifyingSubActions.length > 0 ? qualifyingSubActions : itemActivities;
                 const showDropdown = subsToShow.length > 1 || (!action.collapseDropdownIfSingle && itemActivities.length > 1 && subsToShow.length === 1);
 
                 if (showDropdown) {
-                    this._showActivityDropdown(target, subsToShow, event);
+                    this._showActivityDropdown(target, subsToShow, event, action);
                 } else if (subsToShow.length === 1) {
                     const chosenSub = subsToShow[0];
                     const chosenItem = chosenSub.originalItem ?? action.originalItem;
+                    if (itemActivities.length > 1) {
+                        log.debug(`ActionDisplayApp._onRollAction | Auto-rolling single qualifying activity "${chosenSub.name}" (${chosenSub.id}) on "${action.name}" — ${itemActivities.length - 1} other activities filtered out`);
+                    }
                     log.debug(`_onRollAction | Rolling subaction "${chosenSub.name}":`, { action: chosenSub, item: chosenItem, actor, token, user });
                     chosenSub.roll(event);
                 } else {
@@ -1165,10 +1174,11 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
      * @param {HTMLElement} target The target action DOM element
      * @param {Action[]} subactions List of subactions to display
      * @param {Event} event The triggering click event
+     * @param {Object} [parentAction=null] Optional parent action card object
      * @private
      */
-    _showActivityDropdown(target, subactions, event) {
-        showActivityDropdown(this, target, subactions, event);
+    _showActivityDropdown(target, subactions, event, parentAction = null) {
+        showActivityDropdown(this, target, subactions, event, parentAction);
     }
 
     /**
