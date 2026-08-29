@@ -348,3 +348,61 @@ test('log.group lazily starts only when a log message executes, omitting empty g
     }
 });
 
+test('ActionDisplayApp._prepareContext and _matchesFilters log debug messages when filtering actions by right tabs', async () => {
+    const groups = [];
+    const debugLogs = [];
+    const origGroup = console.group;
+    const origGroupCollapsed = console.groupCollapsed;
+    const origGroupEnd = console.groupEnd;
+    const origLog = console.log;
+
+    console.group = (...args) => groups.push({ type: 'group', args });
+    console.groupCollapsed = (...args) => groups.push({ type: 'collapsed', args });
+    console.groupEnd = () => groups.push({ type: 'end' });
+    console.log = (...args) => debugLogs.push(args);
+
+    log.setVerbosity('debug');
+
+    try {
+        const { ActionDisplayApp } = await import('../../src/ui/action-display-app.js');
+        const { actionDisplay } = await import('../../src/action-display.js');
+
+        const mockActions = [
+            { id: '1', name: 'Fireball', left: ['spell', 'level_3'], right: [{ path: 'economy/action', root: 'economy', label: 'action' }], page: 1 },
+            { id: '2', name: 'Healing Word', left: ['spell', 'level_1'], right: [{ path: 'economy/bonus', root: 'economy', label: 'bonus' }], page: 1 }
+        ];
+
+        actionDisplay.getActions = async () => mockActions;
+
+        const app = new ActionDisplayApp({ actor: { id: 'test-actor', name: 'Mage' } });
+        app.activePage = 1;
+        app._saveTabState = () => {};
+
+        // Filter by Bonus Action on the right side:
+        app.rightTabs.activeParents.clear();
+        app.rightTabs.activeParents.add('economy');
+        app.rightTabs.activeSubTypes.clear();
+        app.rightTabs.activeSubTypes.add('bonus');
+
+        const context = await app._prepareContext({});
+        assert.equal(context.items.length, 1);
+        assert.equal(context.items[0].name, 'Healing Word');
+
+        // Check that log.group was started
+        const startGroups = groups.filter(g => g.type === 'collapsed');
+        assert.ok(startGroups.some(g => g.args[0].includes('ActionDisplayApp._prepareContext') && g.args[0].includes('Mage')));
+
+        // Check that Fireball was logged as skipped in debugLogs
+        assert.ok(debugLogs.some(args =>
+            args.some(arg => typeof arg === 'string' && arg.includes('Skipping action "Fireball"') && arg.includes('does not match active right economy tabs'))
+        ), 'Fireball should be logged as skipped due to economy tabs mismatch');
+    } finally {
+        console.group = origGroup;
+        console.groupCollapsed = origGroupCollapsed;
+        console.groupEnd = origGroupEnd;
+        console.log = origLog;
+        log.setVerbosity('warn');
+    }
+});
+
+

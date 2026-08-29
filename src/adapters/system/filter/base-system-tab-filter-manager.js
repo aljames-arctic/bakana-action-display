@@ -1,3 +1,5 @@
+import { log } from "../../../lib/logger.js";
+
 /**
  * Helper to check if a tab or any of its ancestors under a root tab matches a predicate.
  * @param {Object} tab Action tab descriptor { root, label, parent }
@@ -175,12 +177,24 @@ export class BaseSystemTabFilterManager {
                 const activeLeft = left.activeParents;
                 if (activeLeft && !activeLeft.has('all')) {
                     if (!sub.left.some(type => activeLeft.has(type))) {
+                        log.debug(`BaseSystemTabFilterManager.filterSubactions | Skipping subaction "${sub.name}" (${sub.id}) — does not match active left tabs:`, { sub, left: activeLeft });
                         return false;
                     }
                 }
             }
-            return this.matchesEconomyTabs(sub, filterContext) &&
-                (Boolean(showDepleted) || !this.isResourceDepleted(sub));
+            const matchesEconomy = this.matchesEconomyTabs(sub, filterContext);
+            if (!matchesEconomy) {
+                const activeRight = Array.from(filterContext?.right?.activeParents ?? []).join(', ');
+                const activeRightSubs = Array.from(filterContext?.right?.activeSubTypes ?? []).join(', ');
+                log.debug(`BaseSystemTabFilterManager.filterSubactions | Skipping subaction "${sub.name}" (${sub.id}) — does not match active right economy tabs (parents: [${activeRight}], sub-types: [${activeRightSubs}]):`, { sub });
+                return false;
+            }
+            const depleted = this.isResourceDepleted(sub);
+            if (!showDepleted && depleted) {
+                log.debug(`BaseSystemTabFilterManager.filterSubactions | Skipping subaction "${sub.name}" (${sub.id}) — resource is depleted and showDepleted is false:`, { sub });
+                return false;
+            }
+            return true;
         });
     }
 }

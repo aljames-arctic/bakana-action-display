@@ -629,14 +629,25 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
             }
         }
 
-        const query = (this.searchQuery ?? '').trim().toLowerCase();
-        const visibleActions = rawActions.filter(action => {
-            if (!this._matchesFilters(action)) return false;
-            if (!query) return true;
-            return this._matchesSearchQuery(action, query);
-        });
-        visibleActions.sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''));
-        this.displayedActions = visibleActions;
+        let visibleActions = [];
+        log.group(`ActionDisplayApp._prepareContext | Filtering actions for "${this.actor?.name ?? 'Actor'}"`, 'debug');
+        try {
+            const query = (this.searchQuery ?? '').trim().toLowerCase();
+            visibleActions = rawActions.filter(action => {
+                if (!this._matchesFilters(action)) return false;
+                if (!query) return true;
+                const matchesQuery = this._matchesSearchQuery(action, query);
+                if (!matchesQuery) {
+                    log.debug(`ActionDisplayApp._prepareContext | Skipping action "${action.name}" (${action.id}) — does not match search query "${query}"`);
+                    return false;
+                }
+                return true;
+            });
+            visibleActions.sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''));
+            this.displayedActions = visibleActions;
+        } finally {
+            log.groupEnd();
+        }
 
         context.itemTypes = itemTypes;
         context.actionTypes = actionTypes;
@@ -776,14 +787,22 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         // Hidden Filter: If 'hidden' tab is selected, ONLY show actions that have action.isHidden === true
         const isHiddenActive = this.leftTabs.activeParents.has('hidden');
         if (isHiddenActive) {
-            return Boolean(action.isHidden);
+            if (!action.isHidden) {
+                log.debug(`ActionDisplayApp._matchesFilters | Skipping action "${action.name}" (${action.id}) — "hidden" tab is active and action is not hidden`);
+                return false;
+            }
+            return true;
         } else if (action.isHidden) {
-            return false; // Hide hidden actions from all other tabs
+            log.debug(`ActionDisplayApp._matchesFilters | Skipping action "${action.name}" (${action.id}) — action is hidden`);
+            return false;
         }
 
         // Filter by Left Side (Item Type)
         const categories = action.itemCategories ?? (action.left?.length ? [action.left] : []);
-        if (categories.length === 0) return false;
+        if (categories.length === 0) {
+            log.debug(`ActionDisplayApp._matchesFilters | Skipping action "${action.name}" (${action.id}) — action has no categories or left tab properties`);
+            return false;
+        }
 
         const matchesLeft = categories.some(leftSub => {
             return leftSub.some(type => {
@@ -818,13 +837,29 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
             });
         });
 
-        if (!matchesLeft) return false;
+        if (!matchesLeft) {
+            const activeLeft = Array.from(this.leftTabs.activeParents).join(', ');
+            const activeLeftSubs = Array.from(this.leftTabs.activeSubTypes).join(', ');
+            log.debug(`ActionDisplayApp._matchesFilters | Skipping action "${action.name}" (${action.id}) — does not match active left tabs (parents: [${activeLeft}], sub-types: [${activeLeftSubs}])`);
+            return false;
+        }
 
         // Filter by Right Side (Action Type & Economy Tabs)
-        if (!action.right) return false;
+        if (!action.right || action.right.length === 0) {
+            log.debug(`ActionDisplayApp._matchesFilters | Skipping action "${action.name}" (${action.id}) — action has no right tab properties`);
+            return false;
+        }
 
         const filterContext = this._getFilterContext();
-        return adapter.matchesEconomyTabs(action, filterContext);
+        const matchesEconomy = adapter.matchesEconomyTabs(action, filterContext);
+        if (!matchesEconomy) {
+            const activeRight = Array.from(this.rightTabs.activeParents).join(', ');
+            const activeRightSubs = Array.from(this.rightTabs.activeSubTypes).join(', ');
+            log.debug(`ActionDisplayApp._matchesFilters | Skipping action "${action.name}" (${action.id}) — does not match active right economy tabs (parents: [${activeRight}], sub-types: [${activeRightSubs}]):`, { action });
+            return false;
+        }
+
+        return true;
     }
 
     /**
