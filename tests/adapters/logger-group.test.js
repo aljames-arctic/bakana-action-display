@@ -20,18 +20,26 @@ test('log.group and log.groupEnd respect verbosity levels and encapsulate debug 
         // 1. When verbosity is 'warn' (default), 'debug' group is suppressed
         log.setVerbosity('warn');
         log.group('Suppressed debug group', 'debug');
+        log.debug('Debug message while warn verbosity');
         log.groupEnd();
         assert.equal(groups.length, 0, 'Debug groups should not trigger console.group when verbosity is warn');
 
-        // 2. When verbosity is 'debug', 'debug' group is logged
+        // 2. When verbosity is 'debug', 'debug' group is logged IF a debug message is logged
         log.setVerbosity('debug');
         log.group('Active debug group', 'debug');
+        log.debug('Active debug message');
         log.groupEnd();
-        assert.equal(groups.length, 2, 'Debug group should trigger console.group and console.groupEnd');
+        assert.equal(groups.length, 2, 'Debug group should trigger console.group and console.groupEnd when debug message executes');
         assert.equal(groups[0].type, 'start');
         assert.ok(groups[0].args[0].includes('Active debug group'));
         assert.ok(groups[0].args[1].includes('#38bdf8'), 'Debug group should have teal highlight');
         assert.equal(groups[1].type, 'end');
+
+        // 3. When verbosity is 'debug' but NO debug message executes, group is NOT started (no empty groups)
+        groups.length = 0;
+        log.group('Empty debug group', 'debug');
+        log.groupEnd();
+        assert.equal(groups.length, 0, 'Empty debug group with no logs must not trigger console.group');
     } finally {
         console.group = origGroup;
         console.groupCollapsed = origGroupCollapsed;
@@ -55,6 +63,7 @@ test('log.group and log.groupCollapsed apply distinct color highlights per verbo
     try {
         // Error: red (#ef4444), starts out expanded
         log.group('Error group', 'error');
+        log.error('Error occurred');
         log.groupEnd();
         assert.equal(groups[0].type, 'group', 'Error group should start out expanded');
         assert.ok(groups[0].args[0].includes('BAD | Error group'));
@@ -62,6 +71,7 @@ test('log.group and log.groupCollapsed apply distinct color highlights per verbo
 
         // Warn: yellow-orange (#f59e0b), starts out expanded
         log.group('Warn group', 'warn');
+        log.warn('Warning occurred');
         log.groupEnd();
         assert.equal(groups[2].type, 'group', 'Warn group should start out expanded');
         assert.ok(groups[2].args[0].includes('BAD | Warn group'));
@@ -69,6 +79,7 @@ test('log.group and log.groupCollapsed apply distinct color highlights per verbo
 
         // Info: white (#ffffff), starts out collapsed
         log.group('Info group', 'info');
+        log.info('Info occurred');
         log.groupEnd();
         assert.equal(groups[4].type, 'collapsed', 'Info group should start out collapsed');
         assert.ok(groups[4].args[0].includes('BAD | Info group'));
@@ -76,6 +87,7 @@ test('log.group and log.groupCollapsed apply distinct color highlights per verbo
 
         // Default level (no level arg): info (#ffffff), starts out collapsed
         log.group('Default group');
+        log.info('Default message');
         log.groupEnd();
         assert.equal(groups[6].type, 'collapsed', 'Default group should default to collapsed');
         assert.ok(groups[6].args[0].includes('BAD | Default group'));
@@ -83,6 +95,7 @@ test('log.group and log.groupCollapsed apply distinct color highlights per verbo
 
         // Debug: teal (#38bdf8), starts out collapsed
         log.group('Debug group', 'debug');
+        log.debug('Debug occurred');
         log.groupEnd();
         assert.equal(groups[8].type, 'collapsed', 'Debug group should start out collapsed');
         assert.ok(groups[8].args[0].includes('BAD | Debug group'));
@@ -90,6 +103,7 @@ test('log.group and log.groupCollapsed apply distinct color highlights per verbo
 
         // Collapsed group: triggers console.groupCollapsed with styling
         log.groupCollapsed('Explicit collapsed group', 'warn');
+        log.warn('Warn occurred in collapsed');
         log.groupEnd();
         assert.equal(groups[10].type, 'collapsed');
         assert.ok(groups[10].args[0].includes('BAD | Explicit collapsed group'));
@@ -97,6 +111,7 @@ test('log.group and log.groupCollapsed apply distinct color highlights per verbo
 
         // Expanded group: triggers console.group with styling
         log.groupExpanded('Explicit expanded debug group', 'debug');
+        log.debug('Debug occurred in expanded');
         log.groupEnd();
         assert.equal(groups[12].type, 'group', 'groupExpanded should force expanded group');
         assert.ok(groups[12].args[0].includes('BAD | Explicit expanded debug group'));
@@ -129,11 +144,12 @@ test('Adapter._extractBaseActions and Adapter.getActions encapsulate extraction 
             name: 'Valeros',
             items: new foundry.utils.Collection([
                 { id: 'item-1', name: 'Longsword', type: 'weapon', img: 'icons/sword.png' },
-                { id: 'item-2', name: 'Potion', type: 'consumable', img: 'icons/potion.png' }
+                { id: 'item-2', name: 'Potion', type: 'consumable', img: 'icons/potion.png' },
+                { id: 'item-3', name: '', type: 'feat' } // Missing name triggers debug log in _extractBaseActions
             ]),
             getFlag: (mod, key) => {
                 if (mod === MODULE_ID && key === 'hiddenItems') {
-                    return { 'item-2': true };
+                    return { 'item-2': true }; // Hidden item triggers debug log in getActions
                 }
                 return undefined;
             }
@@ -145,9 +161,9 @@ test('Adapter._extractBaseActions and Adapter.getActions encapsulate extraction 
         // Verify that groups were started and ended for base extraction and hidden items processing
         const startLabels = groups.filter(g => g.type === 'start').map(g => g.label);
         assert.ok(startLabels.some(l => l.includes('Adapter._extractBaseActions') && l.includes('Valeros')),
-            'Base action extraction should be wrapped in log.group');
+            'Base action extraction should be wrapped in log.group when items are skipped');
         assert.ok(startLabels.some(l => l.includes('Adapter.getActions') && l.includes('hidden items')),
-            'Hidden items filtering should be wrapped in log.group');
+            'Hidden items filtering should be wrapped in log.group when items are hidden');
 
         const starts = groups.filter(g => g.type === 'start').length;
         const ends = groups.filter(g => g.type === 'end').length;
@@ -220,7 +236,7 @@ test('Dnd5eSystemAdapter.modifyActions encapsulates action processing in log.gro
             system: {
                 level: 1,
                 method: 'prepared',
-                prepared: true,
+                prepared: false, // Unprepared spell triggers filtering log.debug in modifyActions
                 activities: new foundry.utils.Collection([
                     {
                         id: 'act-cast',
@@ -260,3 +276,75 @@ test('Dnd5eSystemAdapter.modifyActions encapsulates action processing in log.gro
         log.setVerbosity('warn');
     }
 });
+
+test('log.group lazily starts only when a log message executes, omitting empty groups', () => {
+    const events = [];
+    const origGroup = console.group;
+    const origGroupCollapsed = console.groupCollapsed;
+    const origGroupEnd = console.groupEnd;
+    const origLog = console.log;
+
+    console.group = (...args) => events.push({ type: 'group', label: args[0] });
+    console.groupCollapsed = (...args) => events.push({ type: 'collapsed', label: args[0] });
+    console.groupEnd = () => events.push({ type: 'groupEnd' });
+    console.log = (...args) => events.push({ type: 'log', args });
+
+    log.setVerbosity('debug');
+
+    try {
+        // Case 1: Empty group with no log statements produces zero console calls
+        log.group('Empty group 1', 'debug');
+        log.groupEnd();
+        assert.equal(events.length, 0, 'No console calls should occur for an empty group');
+
+        // Case 2: Group with log statement starts only when log.debug executes
+        log.group('Active group', 'debug');
+        assert.equal(events.length, 0, 'Group must remain pending before any log statement');
+        log.debug('Message inside active group');
+        assert.equal(events.length, 2, 'Group start and message log should both be recorded');
+        assert.equal(events[0].type, 'collapsed');
+        assert.ok(events[0].label.includes('Active group'));
+        assert.equal(events[1].type, 'log');
+        log.groupEnd();
+        assert.equal(events.length, 3);
+        assert.equal(events[2].type, 'groupEnd');
+
+        // Case 3: Nested groups where inner group logs -> both outer and inner start in order
+        events.length = 0;
+        log.group('Parent group', 'debug');
+        log.group('Child group', 'debug');
+        assert.equal(events.length, 0, 'Neither parent nor child should start yet');
+        log.debug('Message inside child');
+        assert.equal(events.length, 3, 'Parent, child, and message should all be output');
+        assert.ok(events[0].label.includes('Parent group'));
+        assert.ok(events[1].label.includes('Child group'));
+        assert.equal(events[2].type, 'log');
+        log.groupEnd(); // ends Child
+        assert.equal(events.length, 4);
+        assert.equal(events[3].type, 'groupEnd');
+        log.groupEnd(); // ends Parent
+        assert.equal(events.length, 5);
+        assert.equal(events[4].type, 'groupEnd');
+
+        // Case 4: Nested groups where inner group has no logs, but outer group logs afterwards
+        events.length = 0;
+        log.group('Outer group', 'debug');
+        log.group('Empty inner group', 'debug');
+        log.groupEnd(); // Empty inner ends without logging -> should not trigger group or groupEnd
+        assert.equal(events.length, 0, 'Empty inner group must not produce any console calls');
+        log.debug('Message in outer');
+        assert.equal(events.length, 2, 'Only outer group and message should be recorded');
+        assert.ok(events[0].label.includes('Outer group'));
+        assert.equal(events[1].type, 'log');
+        log.groupEnd(); // ends Outer
+        assert.equal(events.length, 3);
+        assert.equal(events[2].type, 'groupEnd');
+    } finally {
+        console.group = origGroup;
+        console.groupCollapsed = origGroupCollapsed;
+        console.groupEnd = origGroupEnd;
+        console.log = origLog;
+        log.setVerbosity('warn');
+    }
+});
+
