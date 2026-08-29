@@ -2587,32 +2587,31 @@ body > #tooltip.bad-summary-has-table-wrapper,
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
-    background: rgba(255, 255, 255, 0.05) !important;
-    border: 1px solid rgba(255, 255, 255, 0.15) !important;
-    border-radius: 4px !important;
+    background: transparent !important;
+    border: none !important;
     color: #64748b !important;
     cursor: pointer !important;
-    font-size: 0.85em !important;
-    width: 1.6em !important;
-    height: 1.6em !important;
-    min-width: 1.6em !important;
-    min-height: 1.6em !important;
-    padding: 0 !important;
+    font-size: 0.95em !important;
+    width: auto !important;
+    height: auto !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    padding: 0 0.15em !important;
     line-height: 1 !important;
-    transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease !important;
+    transition: color 0.15s ease, text-shadow 0.15s ease !important;
     box-shadow: none !important;
     flex-shrink: 0;
 }
 
 .bad-token-inspiration-btn i {
-    font-size: 1em;
+    font-size: 1.1em;
     line-height: 1;
 }
 
 .bad-token-inspiration-btn:hover {
-    color: #cbd5e1 !important;
-    background: rgba(255, 255, 255, 0.12) !important;
-    border-color: rgba(255, 255, 255, 0.25) !important;
+    color: #94a3b8 !important;
+    background: transparent !important;
+    border: none !important;
 }
 
 .bad-token-inspiration-btn:focus,
@@ -2620,21 +2619,23 @@ body > #tooltip.bad-summary-has-table-wrapper,
 .bad-token-inspiration-btn:active {
     outline: none !important;
     box-shadow: none !important;
+    border: none !important;
 }
 
 .bad-token-inspiration-btn.active {
-    color: #fbbf24 !important;
-    background: rgba(245, 158, 11, 0.2) !important;
-    border-color: rgba(245, 158, 11, 0.5) !important;
-    text-shadow: 0 0 6px rgba(251, 191, 36, 0.6);
-    box-shadow: 0 0 8px rgba(245, 158, 11, 0.3) !important;
+    color: #f59e0b !important;
+    background: transparent !important;
+    border: none !important;
+    text-shadow: 0 0 6px rgba(245, 158, 11, 0.6);
+    box-shadow: none !important;
 }
 
 .bad-token-inspiration-btn.active:hover {
-    color: #fef08a !important;
-    background: rgba(245, 158, 11, 0.3) !important;
-    border-color: rgba(245, 158, 11, 0.7) !important;
-    box-shadow: 0 0 10px rgba(245, 158, 11, 0.5) !important;
+    color: #fbbf24 !important;
+    background: transparent !important;
+    border: none !important;
+    text-shadow: 0 0 8px rgba(251, 191, 36, 0.8);
+    box-shadow: none !important;
 }
 
 .bad-token-info-meta {
