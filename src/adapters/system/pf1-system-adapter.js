@@ -6,6 +6,7 @@ import { TabRef } from '../../ui/tab-ref.js';
 import { Action } from '../../ui/action.js';
 import { MODULE_ID } from '../../constants.js';
 import { Pf1SystemContextMenuManager } from './context-menu/pf1-system-context-menu-manager.js';
+import { CombatMovementTracker } from '../../combat/combat-movement-tracker.js';
 
 const SORT_ORDERS = {
     tabs: {
@@ -445,7 +446,7 @@ export class BasePf1SystemAdapter extends FantasySystemAdapter {
         const acInfo = this.#extractArmorClass(actor);
 
         // 4. Movement Speeds (Land, Fly with Maneuverability, Swim, Climb, Burrow)
-        const movementInfo = this.#extractMovement(actor, cfg);
+        const movementInfo = this.#extractMovement(actor, cfg, token);
 
         // 5. Damage Resistances (DR + Energy Resistances)
         const resistances = this.#extractResistances(actor);
@@ -503,6 +504,16 @@ export class BasePf1SystemAdapter extends FantasySystemAdapter {
             biographyHTML,
             hasBiography: Boolean(biographyHTML || rawBio)
         };
+    }
+
+    /**
+     * Retrieve the distance the token has moved in the current combat turn.
+     * @param {Token|TokenDocument|string|null} token
+     * @param {Actor|null} [actor]
+     * @returns {{ inCombat: boolean, distance: number, units: string }}
+     */
+    getTurnMovement(token = null, actor = null) {
+        return CombatMovementTracker.getMovementThisTurn(token, actor);
     }
 
     #extractCreatureType(actor, cfg = CONFIG?.PF1) {
@@ -572,7 +583,7 @@ export class BasePf1SystemAdapter extends FantasySystemAdapter {
         };
     }
 
-    #extractMovement(actor, cfg = CONFIG?.PF1) {
+    #extractMovement(actor, cfg = CONFIG?.PF1, token = null) {
         const speed = actor?.system?.attributes?.speed ?? {};
         const land = speed.land?.total ?? speed.land?.value ?? 30;
         const primary = `${land} ft`;
@@ -587,9 +598,18 @@ export class BasePf1SystemAdapter extends FantasySystemAdapter {
         if (speed.climb?.total > 0) secondaries.push(`Climb ${speed.climb.total} ft`);
         if (speed.burrow?.total > 0) secondaries.push(`Burrow ${speed.burrow.total} ft`);
 
+        const turnMovement = CombatMovementTracker.getMovementThisTurn(token, actor);
+        const movedLabel = turnMovement.inCombat
+            ? `${turnMovement.distance} ${turnMovement.units} ${localize('BAD.page3.moved', 'moved')}`
+            : '';
+
         return {
             primary,
-            secondaries
+            secondaries,
+            inCombat: turnMovement.inCombat,
+            showMoved: turnMovement.inCombat,
+            movedDistance: turnMovement.distance,
+            movedLabel
         };
     }
 

@@ -6,6 +6,7 @@ import { TabRef } from '../../ui/tab-ref.js';
 import { Action } from '../../ui/action.js';
 import { MODULE_ID } from '../../constants.js';
 import { Pf2eSystemContextMenuManager } from './context-menu/pf2e-system-context-menu-manager.js';
+import { CombatMovementTracker } from '../../combat/combat-movement-tracker.js';
 
 const SORT_ORDERS = {
     tabs: {
@@ -487,7 +488,7 @@ export class BasePf2eSystemAdapter extends FantasySystemAdapter {
         const acInfo = this.#extractArmorClass(actor);
 
         // 4. Movement Speeds (Land, other speeds)
-        const movementInfo = this.#extractMovement(actor);
+        const movementInfo = this.#extractMovement(actor, token);
 
         // 5. Resistances
         const resistances = this.#extractResistances(actor, cfg);
@@ -543,6 +544,16 @@ export class BasePf2eSystemAdapter extends FantasySystemAdapter {
             biographyHTML,
             hasBiography: Boolean(biographyHTML || rawBio)
         };
+    }
+
+    /**
+     * Retrieve the distance the token has moved in the current combat turn.
+     * @param {Token|TokenDocument|string|null} token
+     * @param {Actor|null} [actor]
+     * @returns {{ inCombat: boolean, distance: number, units: string }}
+     */
+    getTurnMovement(token = null, actor = null) {
+        return CombatMovementTracker.getMovementThisTurn(token, actor);
     }
 
     #extractCreatureType(actor, cfg = CONFIG?.PF2E) {
@@ -607,7 +618,7 @@ export class BasePf2eSystemAdapter extends FantasySystemAdapter {
         };
     }
 
-    #extractMovement(actor) {
+    #extractMovement(actor, token = null) {
         const speed = actor?.system?.attributes?.speed ?? {};
         const primaryVal = speed.value ?? speed.total ?? 25;
         const primary = `${primaryVal} ft`;
@@ -622,9 +633,18 @@ export class BasePf2eSystemAdapter extends FantasySystemAdapter {
             }
         }
 
+        const turnMovement = CombatMovementTracker.getMovementThisTurn(token, actor);
+        const movedLabel = turnMovement.inCombat
+            ? `${turnMovement.distance} ${turnMovement.units} ${localize('BAD.page3.moved', 'moved')}`
+            : '';
+
         return {
             primary,
-            secondaries
+            secondaries,
+            inCombat: turnMovement.inCombat,
+            showMoved: turnMovement.inCombat,
+            movedDistance: turnMovement.distance,
+            movedLabel
         };
     }
 

@@ -1,0 +1,224 @@
+import { log } from '../lib/logger.js';
+
+/**
+ * Tracks token movement distance during active combat encounters.
+ */
+export class CombatMovementTracker {
+    /**
+     * Map of tokenId -> number (accumulated moved distance in current turn in grid units).
+     * @type {Map<string, number>}
+     * @private
+     */
+    static #movedDistances = new Map();
+
+    /**
+     * Map of tokenId -> { x: number, y: number, elevation: number } (last known token position).
+     * @type {Map<string, { x: number, y: number, elevation: number }>}
+     * @private
+     */
+    static #lastPositions = new Map();
+
+    /**
+     * Current combat turn identifier string (e.g. "combatId-round-turn").
+     * @type {string|null}
+     * @private
+     */
+    static #currentTurnKey = null;
+
+    /**
+     * Reset movement tracking state for a new combat turn or encounter reset.
+     * @param {Combat|null} [combat=game.combat]
+     */
+    static resetTurn(combat = game.combat) {
+        if (!combat || !combat.started) {
+            this.#movedDistances.clear();
+            this.#lastPositions.clear();
+            this.#currentTurnKey = null;
+            return;
+        }
+
+        const turnKey = `${combat.id}-${combat.round}-${combat.turn}`;
+        if (this.#currentTurnKey !== turnKey) {
+            this.#currentTurnKey = turnKey;
+            this.#movedDistances.clear();
+            this.#initializeCombatantPositions(combat);
+            log.debug(`CombatMovementTracker.resetTurn | Reset movement for turn ${turnKey}`);
+        }
+    }
+
+    /**
+     * Initialize last known positions for all tokens in active combat.
+     * @param {Combat} combat
+     * @private
+     */
+    static #initializeCombatantPositions(combat) {
+        if (!combat?.combatants) return;
+        for (const combatant of combat.combatants) {
+            const token = combatant.token?.object ?? canvas?.tokens?.get?.(combatant.tokenId) ?? combatant.token;
+            if (token) {
+                const tokenDoc = token.document ?? token;
+                this.#lastPositions.set(combatant.tokenId, {
+                    x: tokenDoc.x,
+                    y: tokenDoc.y,
+                    elevation: tokenDoc.elevation ?? 0
+                });
+            }
+        }
+    }
+
+    /**
+     * Record a movement update for a token.
+     * @param {TokenDocument} tokenDoc TokenDocument that mutated
+     * @param {Object} changes Document change delta
+     * @param {Object} [options={}] Operation options
+     */
+    static recordTokenMovement(tokenDoc, changes, options = {}) {
+        if (!tokenDoc) return;
+        const combat = game.combat;
+        if (!combat || !combat.started) return;
+
+        // Teleportation does not consume movement distance
+        if (options?.teleport) {
+            const tokenId = tokenDoc.id;
+            this.#lastPositions.set(tokenId, {
+                x: changes.x ?? tokenDoc.x,
+                y: changes.y ?? tokenDoc.y,
+                elevation: changes.elevation ?? tokenDoc.elevation ?? 0
+            });
+            return;
+        }
+
+        // Only track spatial coordinate changes
+        const hasMovedX = changes.x !== undefined;
+        const hasMovedY = changes.y !== undefined;
+        const hasMovedElevation = changes.elevation !== undefined;
+
+        if (!hasMovedX && !hasMovedY && !hasMovedElevation) return;
+
+        // Ensure turn key is synchronized
+        this.resetTurn(combat);
+
+        const tokenId = tokenDoc.id;
+        const previous = this.#lastPositions.get(tokenId) ?? {
+            x: tokenDoc.x,
+            y: tokenDoc.y,
+            elevation: tokenDoc.elevation ?? 0
+        };
+
+        const target = {
+            x: changes.x ?? previous.x,
+            y: changes.y ?? previous.y,
+            elevation: changes.elevation ?? previous.elevation
+        };
+
+        // If coordinates did not actually change, ignore
+        if (previous.x === target.x && previous.y === target.y && previous.elevation === target.elevation) {
+            return;
+        }
+
+        const stepDistance = this.measureSegmentDistance(previous, target);
+        this.#lastPositions.set(tokenId, target);
+
+        if (stepDistance > 0) {
+            const currentTotal = this.#movedDistances.get(tokenId) ?? 0;
+            const newTotal = Math.round((currentTotal + stepDistance) * 10) / 10;
+            this.#movedDistances.set(tokenId, newTotal);
+            log.debug(`CombatMovementTracker.recordTokenMovement | Token "${tokenDoc.name}" moved ${stepDistance} (turn total: ${newTotal})`);
+        }
+    }
+
+    /**
+     * Measure the distance between two waypoints in grid units (feet/meters).
+     * @param {{ x: number, y: number, elevation?: number }} p0
+     * @param {{ x: number, y: number, elevation?: number }} p1
+     * @returns {number} Distance in grid units
+     */
+    static measureSegmentDistance(p0, p1) {
+        if (canvas?.grid?.measurePath) {
+            try {
+                const result = canvas.grid.measurePath([p0, p1]);
+                if (typeof result?.distance === 'number') {
+                    return result.distance;
+                }
+            } catch (_) {}
+        }
+
+        if (canvas?.grid?.measureDistance) {
+            try {
+                return canvas.grid.measureDistance(p0, p1, { gridSpaces: true });
+            } catch (_) {}
+        }
+
+        // Fallback calculation if canvas.grid is not available (e.g. test environment)
+        const dx = p1.x - p0.x;
+        const dy = p1.y - p0.y;
+        const gridDistance = canvas?.scene?.grid?.distance ?? 5;
+        const gridSize = canvas?.scene?.grid?.size ?? 100;
+        const pixelDist = Math.hypot(dx, dy);
+        return Math.round((pixelDist / gridSize) * gridDistance);
+    }
+
+    /**
+     * Retrieve the distance the token has moved in the current combat turn.
+     * @param {Token|TokenDocument|string|null} token Target token, TokenDocument, or tokenId
+     * @param {Actor|null} [actor=null] Associated actor document
+     * @returns {{ inCombat: boolean, distance: number, units: string }}
+     */
+    static getMovementThisTurn(token = null, actor = null) {
+        const combat = game.combat;
+        const fallbackUnits = actor?.system?.attributes?.movement?.units ?? 'ft';
+        const units = canvas?.scene?.grid?.units ?? fallbackUnits;
+
+        if (!combat || !combat.started) {
+            return { inCombat: false, distance: 0, units };
+        }
+
+        const tokenDoc = typeof token === 'string'
+            ? (canvas?.tokens?.get?.(token)?.document ?? null)
+            : (token?.document ?? token ?? null);
+        const tokenId = typeof token === 'string' ? token : (tokenDoc?.id ?? token?.id);
+
+        const isCombatant = Boolean(
+            combat.combatants?.some(c => c.tokenId === tokenId || (actor && c.actorId === actor.id))
+        );
+
+        if (!isCombatant) {
+            return { inCombat: false, distance: 0, units };
+        }
+
+        // 1. Check native Foundry V13+ TokenDocument.movementHistory
+        if (Array.isArray(tokenDoc?.movementHistory) && tokenDoc.movementHistory.length > 1) {
+            if (canvas?.grid?.measurePath) {
+                try {
+                    const result = canvas.grid.measurePath(tokenDoc.movementHistory);
+                    if (typeof result?.distance === 'number') {
+                        return { inCombat: true, distance: Math.round(result.distance * 10) / 10, units };
+                    }
+                } catch (_) {}
+            }
+        }
+
+        // 2. Check internal tracker
+        const tracked = this.#movedDistances.get(tokenId) ?? 0;
+        return { inCombat: true, distance: Math.round(tracked * 10) / 10, units };
+    }
+
+    /**
+     * Explicitly set moved distance for a token (useful in tests or external integrations).
+     * @param {string} tokenId
+     * @param {number} distance
+     */
+    static setMovedDistance(tokenId, distance) {
+        if (!tokenId) return;
+        this.#movedDistances.set(tokenId, distance);
+    }
+
+    /**
+     * Clear all recorded distances and positions (e.g. when combat ends).
+     */
+    static clear() {
+        this.#movedDistances.clear();
+        this.#lastPositions.clear();
+        this.#currentTurnKey = null;
+    }
+}

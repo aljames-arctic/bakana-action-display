@@ -252,6 +252,17 @@ export class BaseSystemAdapter {
     }
 
     /**
+     * Retrieve the distance the token has moved in the current combat turn.
+     * Legacy NOP contract: returns non-combat 0 distance.
+     * @param {Token|TokenDocument|string|null} token
+     * @param {Actor|null} [actor]
+     * @returns {{ inCombat: boolean, distance: number, units: string }}
+     */
+    getTurnMovement(token = null, actor = null) {
+        return { inCombat: false, distance: 0, units: 'ft' };
+    }
+
+    /**
      * Open the sheet or edit dialog for an action or its underlying item/activity.
      * @param {Object} action The Action instance to edit
      */

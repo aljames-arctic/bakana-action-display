@@ -208,6 +208,8 @@
             "inspired": "Inspired",
             "armorClass": "Armor Class",
             "movementSpeed": "Movement Speed",
+            "moved": "moved",
+            "movedThisTurn": "Distance moved this turn",
             "resistances": "Damage Resistances",
             "immunities": "Immunities",
             "damageImmunities": "Damage Immunities",

@@ -7,6 +7,7 @@ import { ActionDisplayApp } from './ui/action-display-app.js';
 import { log } from './lib/logger.js';
 import { MODULE_ID } from './constants.js';
 import { syncActorFavorites } from './favorites/favorites-manager.js';
+import { CombatMovementTracker } from './combat/combat-movement-tracker.js';
 
 let closeDetachedHUD = false;
 let renderDebounceTimer = null;
@@ -300,6 +301,7 @@ Hooks.on('deleteActiveEffect', (effect, options, userId) => {
  * @param {Combat} combat Active combat document
  */
 export function handleCombatTurnChange(combat) {
+    CombatMovementTracker.resetTurn(combat);
     const isFeatureEnabled = Boolean(game.settings.get(MODULE_ID, 'enableCombatAutoTrackButton'));
     const isAutoTrackCombat = Boolean(game.settings.get(MODULE_ID, 'autoTrackCombat'));
     const isAutoToggleActive = isFeatureEnabled && Boolean(game.settings.get(MODULE_ID, 'autoToggleCombat'));
@@ -378,6 +380,7 @@ Hooks.on('updateCombat', (combat, changes, options, userId) => {
 });
 
 Hooks.on('deleteCombat', (combat, options, userId) => {
+    CombatMovementTracker.clear();
     const isFeatureEnabled = Boolean(game.settings.get(MODULE_ID, 'enableCombatAutoTrackButton'));
     const isAutoToggleActive = isFeatureEnabled && Boolean(game.settings.get(MODULE_ID, 'autoToggleCombat'));
     if (isAutoToggleActive) {
@@ -414,9 +417,15 @@ Hooks.on('updateCombatant', (combatant, changes, options, userId) => {
     requestHUDRender();
 });
 
-// Hook into synthetic Token document updates (actor delta mutations)
+// Hook into token position changes before database persistence to record movement
+Hooks.on('preUpdateToken', (tokenDoc, changes, options, userId) => {
+    CombatMovementTracker.recordTokenMovement(tokenDoc, changes, options);
+});
+
+// Hook into synthetic Token document updates (actor delta mutations, position updates)
 Hooks.on('updateToken', (tokenDoc, changes, options, userId) => {
     if (options?.badInternal) return;
+    CombatMovementTracker.recordTokenMovement(tokenDoc, changes, options);
     const metadataKeys = new Set(['_id', 'id', '_stats']);
     const nonMetaKeys = Object.keys(changes ?? {}).filter(k => !metadataKeys.has(k) && !k.startsWith('_stats.'));
     const isOnlyModuleFlags = nonMetaKeys.length > 0 && nonMetaKeys.every(key => {

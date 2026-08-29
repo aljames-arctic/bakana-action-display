@@ -9,6 +9,7 @@ import { Action } from '../../ui/action.js';
 import { Dnd5eSystemContextMenuManager } from './context-menu/dnd5e-system-context-menu-manager.js';
 import { Dnd5eSystemTabFilterManager } from './filter/dnd5e-system-tab-filter-manager.js';
 import { Dnd5eSystemContextModifier } from './context-modifier/dnd5e-system-context-modifier.js';
+import { CombatMovementTracker } from '../../combat/combat-movement-tracker.js';
 
 const ALLOWED_TYPES = new Set(['weapon', 'equipment', 'consumable', 'tool', 'backpack', 'loot', 'feat', 'spell']);
 
@@ -658,7 +659,7 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
         const acInfo = this.#extractArmorClass(actor, cfg);
 
         // 4. Movement Speeds
-        const movementInfo = this.#extractMovement(actor);
+        const movementInfo = this.#extractMovement(actor, token);
 
         // 5. Damage Resistances
         const resistances = this.#extractTraitList(system.traits?.dr, cfg?.damageTypes, cfg?.physicalWeaponBypasses ?? cfg?.itemProperties);
@@ -745,6 +746,16 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
         const next = typeof force === 'boolean' ? force : !current;
         await actor.update({ 'system.attributes.inspiration': next });
         return next;
+    }
+
+    /**
+     * Retrieve the distance the token has moved in the current combat turn.
+     * @param {Token|TokenDocument|string|null} token
+     * @param {Actor|null} [actor]
+     * @returns {{ inCombat: boolean, distance: number, units: string }}
+     */
+    getTurnMovement(token = null, actor = null) {
+        return CombatMovementTracker.getMovementThisTurn(token, actor);
     }
 
     #formatLabel(key, configMap = null) {
@@ -864,7 +875,7 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
         };
     }
 
-    #extractMovement(actor) {
+    #extractMovement(actor, token = null) {
         const mov = actor?.system?.attributes?.movement ?? {};
         const units = mov.units ?? 'ft';
         const walk = mov.walk ?? 0;
@@ -909,13 +920,22 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
         const secondary = secondaries.join(', ');
         const full = secondaries.length > 0 ? `${primary}, ${secondary}` : primary;
 
+        const turnMovement = CombatMovementTracker.getMovementThisTurn(token, actor);
+        const movedLabel = turnMovement.inCombat
+            ? `${turnMovement.distance} ${turnMovement.units} ${localize('BAD.page3.moved', 'moved')}`
+            : '';
+
         return {
             primary,
             secondary,
             secondaries,
             full,
             speeds,
-            units
+            units,
+            inCombat: turnMovement.inCombat,
+            showMoved: turnMovement.inCombat,
+            movedDistance: turnMovement.distance,
+            movedLabel
         };
     }
 

@@ -2776,6 +2776,22 @@ button.bad-token-inspiration-btn.active:hover,
     text-overflow: ellipsis;
 }
 
+.bad-stat-speed .bad-token-stat-value {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0.25em;
+    white-space: normal;
+}
+
+.bad-token-stat-moved {
+    font-size: 0.72em;
+    font-weight: 600;
+    color: #6ee7b7;
+    opacity: 0.95;
+    letter-spacing: 0.01em;
+}
+
 .bad-token-stat-label {
     font-size: 0.68em;
     font-weight: 600;

@@ -4,6 +4,7 @@ import { initializeModuleAdapters, BaseModuleAdapter } from './module/index.js';
 import { MODULE_ID } from '../constants.js';
 import { log } from '../lib/logger.js';
 import { Action } from '../ui/action.js';
+import { CombatMovementTracker } from '../combat/combat-movement-tracker.js';
 
 /**
  * Unified Adapter Singleton for Bakana's Action Display.
@@ -386,6 +387,16 @@ class Adapter {
      */
     async toggleInspiration(actor, force) {
         return (await this.system?.toggleInspiration?.(actor, force)) ?? false;
+    }
+
+    /**
+     * Retrieve the distance the token has moved in the current combat turn.
+     * @param {Token|TokenDocument|string|null} token
+     * @param {Actor|null} [actor]
+     * @returns {{ inCombat: boolean, distance: number, units: string }}
+     */
+    getTurnMovement(token = null, actor = null) {
+        return CombatMovementTracker.getMovementThisTurn(token, actor);
     }
 
     /**
