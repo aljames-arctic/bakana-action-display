@@ -41,11 +41,12 @@ const groupStack = [];
 /**
  * Internal helper to create a styled console group (or collapsed group)
  * respecting the log verbosity level and highlighting with level-specific colors.
- * @param {boolean} collapsed Whether to use console.groupCollapsed
+ * Groups default to collapsed for 'info' and 'debug', and expanded for 'warn' and 'error'.
+ * @param {boolean|null} forceCollapse Explicit collapse override, or null to default (info & debug collapsed, warn & error expanded)
  * @param {string} message Group label/message
  * @param {...*} args Optional verbosity level as first argument, followed by group payload
  */
-function _createGroup(collapsed, message, ...args) {
+function _createGroup(forceCollapse, message, ...args) {
     let level = 'info';
     let groupArgs = args;
     if (args.length > 0 && VERBOSITY_LEVELS[args[0]] !== undefined) {
@@ -54,7 +55,8 @@ function _createGroup(collapsed, message, ...args) {
     }
     if (getVerbosityLevel() >= VERBOSITY_LEVELS[level]) {
         const style = GROUP_STYLES[level] ?? GROUP_STYLES['info'];
-        const consoleFn = (collapsed && console.groupCollapsed) ? console.groupCollapsed : console.group;
+        const shouldCollapse = forceCollapse ?? (level === 'debug' || level === 'info');
+        const consoleFn = (shouldCollapse && console.groupCollapsed) ? console.groupCollapsed : console.group;
         consoleFn(`%c${MODULE_TLA} | ${message}`, style, ...groupArgs);
         groupStack.push(true);
     } else {
@@ -89,10 +91,13 @@ export const log = {
         }
     },
     group(message, ...args) {
-        _createGroup(false, message, ...args);
+        _createGroup(null, message, ...args);
     },
     groupCollapsed(message, ...args) {
         _createGroup(true, message, ...args);
+    },
+    groupExpanded(message, ...args) {
+        _createGroup(false, message, ...args);
     },
     groupEnd() {
         if (groupStack.pop()) {

@@ -9,9 +9,11 @@ import { log } from '../../src/lib/logger.js';
 test('log.group and log.groupEnd respect verbosity levels and encapsulate debug groups', () => {
     const groups = [];
     const origGroup = console.group;
+    const origGroupCollapsed = console.groupCollapsed;
     const origGroupEnd = console.groupEnd;
 
     console.group = (...args) => groups.push({ type: 'start', args });
+    console.groupCollapsed = (...args) => groups.push({ type: 'start', args });
     console.groupEnd = () => groups.push({ type: 'end' });
 
     try {
@@ -32,6 +34,7 @@ test('log.group and log.groupEnd respect verbosity levels and encapsulate debug 
         assert.equal(groups[1].type, 'end');
     } finally {
         console.group = origGroup;
+        console.groupCollapsed = origGroupCollapsed;
         console.groupEnd = origGroupEnd;
         log.setVerbosity('warn');
     }
@@ -50,47 +53,54 @@ test('log.group and log.groupCollapsed apply distinct color highlights per verbo
     log.setVerbosity('debug');
 
     try {
-        // Error: red (#ef4444)
+        // Error: red (#ef4444), starts out expanded
         log.group('Error group', 'error');
         log.groupEnd();
-        assert.equal(groups[0].type, 'group');
+        assert.equal(groups[0].type, 'group', 'Error group should start out expanded');
         assert.ok(groups[0].args[0].includes('BAD | Error group'));
         assert.ok(groups[0].args[1].includes('#ef4444'), 'Error group should have red highlight');
 
-        // Warn: yellow-orange (#f59e0b)
+        // Warn: yellow-orange (#f59e0b), starts out expanded
         log.group('Warn group', 'warn');
         log.groupEnd();
-        assert.equal(groups[2].type, 'group');
+        assert.equal(groups[2].type, 'group', 'Warn group should start out expanded');
         assert.ok(groups[2].args[0].includes('BAD | Warn group'));
         assert.ok(groups[2].args[1].includes('#f59e0b'), 'Warn group should have yellow-orange highlight');
 
-        // Info: white (#ffffff)
+        // Info: white (#ffffff), starts out collapsed
         log.group('Info group', 'info');
         log.groupEnd();
-        assert.equal(groups[4].type, 'group');
+        assert.equal(groups[4].type, 'collapsed', 'Info group should start out collapsed');
         assert.ok(groups[4].args[0].includes('BAD | Info group'));
         assert.ok(groups[4].args[1].includes('#ffffff'), 'Info group should have white highlight');
 
-        // Default level (no level arg): info (#ffffff)
+        // Default level (no level arg): info (#ffffff), starts out collapsed
         log.group('Default group');
         log.groupEnd();
-        assert.equal(groups[6].type, 'group');
+        assert.equal(groups[6].type, 'collapsed', 'Default group should default to collapsed');
         assert.ok(groups[6].args[0].includes('BAD | Default group'));
         assert.ok(groups[6].args[1].includes('#ffffff'), 'Default group should default to white highlight');
 
-        // Debug: teal (#38bdf8)
+        // Debug: teal (#38bdf8), starts out collapsed
         log.group('Debug group', 'debug');
         log.groupEnd();
-        assert.equal(groups[8].type, 'group');
+        assert.equal(groups[8].type, 'collapsed', 'Debug group should start out collapsed');
         assert.ok(groups[8].args[0].includes('BAD | Debug group'));
         assert.ok(groups[8].args[1].includes('#38bdf8'), 'Debug group should have teal highlight');
 
         // Collapsed group: triggers console.groupCollapsed with styling
-        log.groupCollapsed('Collapsed debug group', 'debug');
+        log.groupCollapsed('Explicit collapsed group', 'warn');
         log.groupEnd();
         assert.equal(groups[10].type, 'collapsed');
-        assert.ok(groups[10].args[0].includes('BAD | Collapsed debug group'));
-        assert.ok(groups[10].args[1].includes('#38bdf8'), 'Collapsed debug group should have teal highlight');
+        assert.ok(groups[10].args[0].includes('BAD | Explicit collapsed group'));
+        assert.ok(groups[10].args[1].includes('#f59e0b'), 'Explicit collapsed warn group should have yellow-orange highlight');
+
+        // Expanded group: triggers console.group with styling
+        log.groupExpanded('Explicit expanded debug group', 'debug');
+        log.groupEnd();
+        assert.equal(groups[12].type, 'group', 'groupExpanded should force expanded group');
+        assert.ok(groups[12].args[0].includes('BAD | Explicit expanded debug group'));
+        assert.ok(groups[12].args[1].includes('#38bdf8'), 'Explicit expanded debug group should have teal highlight');
     } finally {
         console.group = origGroup;
         console.groupCollapsed = origGroupCollapsed;
@@ -102,9 +112,11 @@ test('log.group and log.groupCollapsed apply distinct color highlights per verbo
 test('Adapter._extractBaseActions and Adapter.getActions encapsulate extraction and filtering in log.group sections', async () => {
     const groups = [];
     const origGroup = console.group;
+    const origGroupCollapsed = console.groupCollapsed;
     const origGroupEnd = console.groupEnd;
 
     console.group = (...args) => groups.push({ type: 'start', label: args[0] });
+    console.groupCollapsed = (...args) => groups.push({ type: 'start', label: args[0] });
     console.groupEnd = () => groups.push({ type: 'end' });
 
     log.setVerbosity('debug');
@@ -142,6 +154,7 @@ test('Adapter._extractBaseActions and Adapter.getActions encapsulate extraction 
         assert.equal(starts, ends, 'Every log.group must have a corresponding log.groupEnd');
     } finally {
         console.group = origGroup;
+        console.groupCollapsed = origGroupCollapsed;
         console.groupEnd = origGroupEnd;
         log.setVerbosity('warn');
     }
@@ -150,9 +163,11 @@ test('Adapter._extractBaseActions and Adapter.getActions encapsulate extraction 
 test('BaseSystemAdapter.modifyActions encapsulates depleted action filtering in log.group section', async () => {
     const groups = [];
     const origGroup = console.group;
+    const origGroupCollapsed = console.groupCollapsed;
     const origGroupEnd = console.groupEnd;
 
     console.group = (...args) => groups.push({ type: 'start', label: args[0] });
+    console.groupCollapsed = (...args) => groups.push({ type: 'start', label: args[0] });
     console.groupEnd = () => groups.push({ type: 'end' });
 
     log.setVerbosity('debug');
@@ -177,6 +192,7 @@ test('BaseSystemAdapter.modifyActions encapsulates depleted action filtering in 
         assert.equal(starts, ends, 'Every log.group must have a matching log.groupEnd');
     } finally {
         console.group = origGroup;
+        console.groupCollapsed = origGroupCollapsed;
         console.groupEnd = origGroupEnd;
         log.setVerbosity('warn');
     }
@@ -185,9 +201,11 @@ test('BaseSystemAdapter.modifyActions encapsulates depleted action filtering in 
 test('Dnd5eSystemAdapter.modifyActions encapsulates action processing in log.group section', async () => {
     const groups = [];
     const origGroup = console.group;
+    const origGroupCollapsed = console.groupCollapsed;
     const origGroupEnd = console.groupEnd;
 
     console.group = (...args) => groups.push({ type: 'start', label: args[0] });
+    console.groupCollapsed = (...args) => groups.push({ type: 'start', label: args[0] });
     console.groupEnd = () => groups.push({ type: 'end' });
 
     log.setVerbosity('debug');
@@ -237,6 +255,7 @@ test('Dnd5eSystemAdapter.modifyActions encapsulates action processing in log.gro
         assert.equal(starts, ends, 'Every log.group must have a matching log.groupEnd');
     } finally {
         console.group = origGroup;
+        console.groupCollapsed = origGroupCollapsed;
         console.groupEnd = origGroupEnd;
         log.setVerbosity('warn');
     }
