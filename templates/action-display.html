@@ -93,13 +93,14 @@
                             <div class="bad-token-info-name-row">
                                 <div class="bad-token-info-name">{{tokenInfo.name}}</div>
                                 {{#if tokenInfo.showInspiration}}
-                                <button class="bad-token-inspiration-btn {{#if tokenInfo.inspiration}}active{{/if}}" 
-                                        type="button" 
-                                        data-action="toggleInspiration" 
-                                        aria-label="{{localize 'BAD.page3.inspiration'}}"
-                                        aria-pressed="{{#if tokenInfo.inspiration}}true{{else}}false{{/if}}">
+                                <a class="bad-token-inspiration-btn {{#if tokenInfo.inspiration}}active{{/if}}" 
+                                   role="button" 
+                                   tabindex="0"
+                                   data-action="toggleInspiration" 
+                                   aria-label="{{localize 'BAD.page3.inspiration'}}"
+                                   aria-pressed="{{#if tokenInfo.inspiration}}true{{else}}false{{/if}}">
                                     <i class="fas fa-dice-d20"></i>
-                                </button>
+                                </a>
                                 {{/if}}
                             </div>
                             <div class="bad-token-info-meta">

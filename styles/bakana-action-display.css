@@ -2583,12 +2583,22 @@ body > #tooltip.bad-summary-has-table-wrapper,
     text-overflow: ellipsis;
 }
 
+.bakana-action-display-container .bad-token-inspiration-btn,
+.bad-token-info-name-row .bad-token-inspiration-btn,
+a.bad-token-inspiration-btn,
+button.bad-token-inspiration-btn,
 .bad-token-inspiration-btn {
+    appearance: none !important;
+    -webkit-appearance: none !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
-    background: transparent !important;
+    background: none !important;
+    background-color: transparent !important;
     border: none !important;
+    border-width: 0 !important;
+    outline: none !important;
+    box-shadow: none !important;
     color: #64748b !important;
     cursor: pointer !important;
     font-size: 0.95em !important;
@@ -2597,45 +2607,79 @@ body > #tooltip.bad-summary-has-table-wrapper,
     min-width: 0 !important;
     min-height: 0 !important;
     padding: 0 0.15em !important;
+    margin: 0 !important;
     line-height: 1 !important;
     transition: color 0.15s ease, text-shadow 0.15s ease !important;
-    box-shadow: none !important;
+    text-decoration: none !important;
     flex-shrink: 0;
 }
 
+.bakana-action-display-container .bad-token-inspiration-btn i,
 .bad-token-inspiration-btn i {
     font-size: 1.1em;
     line-height: 1;
 }
 
+.bakana-action-display-container .bad-token-inspiration-btn:hover,
+.bad-token-info-name-row .bad-token-inspiration-btn:hover,
+a.bad-token-inspiration-btn:hover,
+button.bad-token-inspiration-btn:hover,
 .bad-token-inspiration-btn:hover {
     color: #94a3b8 !important;
-    background: transparent !important;
+    background: none !important;
+    background-color: transparent !important;
     border: none !important;
+    border-width: 0 !important;
+    outline: none !important;
+    box-shadow: none !important;
+    text-decoration: none !important;
 }
 
+.bakana-action-display-container .bad-token-inspiration-btn:focus,
+.bakana-action-display-container .bad-token-inspiration-btn:focus-visible,
+.bakana-action-display-container .bad-token-inspiration-btn:active,
 .bad-token-inspiration-btn:focus,
 .bad-token-inspiration-btn:focus-visible,
 .bad-token-inspiration-btn:active {
     outline: none !important;
     box-shadow: none !important;
     border: none !important;
+    border-width: 0 !important;
+    background: none !important;
+    background-color: transparent !important;
+    text-decoration: none !important;
 }
 
+.bakana-action-display-container .bad-token-inspiration-btn.active,
+.bad-token-info-name-row .bad-token-inspiration-btn.active,
+a.bad-token-inspiration-btn.active,
+button.bad-token-inspiration-btn.active,
 .bad-token-inspiration-btn.active {
     color: #f59e0b !important;
-    background: transparent !important;
+    background: none !important;
+    background-color: transparent !important;
     border: none !important;
-    text-shadow: 0 0 6px rgba(245, 158, 11, 0.6);
+    border-width: 0 !important;
+    outline: none !important;
     box-shadow: none !important;
+    text-shadow: 0 0 6px rgba(245, 158, 11, 0.6);
+    text-decoration: none !important;
 }
 
+.bakana-action-display-container .bad-token-inspiration-btn.active:hover,
+.bad-token-info-name-row .bad-token-inspiration-btn.active:hover,
+a.bad-token-inspiration-btn.active:hover,
+button.bad-token-inspiration-btn.active:hover,
 .bad-token-inspiration-btn.active:hover {
     color: #fbbf24 !important;
-    background: transparent !important;
+    background: none !important;
+    background-color: transparent !important;
     border: none !important;
-    text-shadow: 0 0 8px rgba(251, 191, 36, 0.8);
+    border-width: 0 !important;
+    outline: none !important;
     box-shadow: none !important;
+    text-shadow: 0 0 8px rgba(251, 191, 36, 0.8);
+    text-decoration: none !important;
 }
 
 .bad-token-info-meta {
