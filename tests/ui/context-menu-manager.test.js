@@ -403,6 +403,31 @@ test('ActionDisplayApp _boundOutsidePointerDown closes active dropdown when clic
     };
     app._boundOutsidePointerDown(fakeEventMenu);
     assert.equal(clearMenuStateCalled, false, 'Clicking inside the menu should not trigger outside click close');
+
+    // 4. Click inside tooltip / scrollbar -> should NOT trigger _clearMenuState
+    clearMenuStateCalled = false;
+    const fakeEventTooltip = {
+        target: {
+            closest: (sel) => {
+                if (sel.includes('#tooltip')) return { id: 'tooltip' };
+                return null;
+            }
+        }
+    };
+    app._boundOutsidePointerDown(fakeEventTooltip);
+    assert.equal(clearMenuStateCalled, false, 'Clicking inside tooltip or its scrollbar should not close dropdown');
+
+    // 5. Click outside when tooltip is focused/locked -> should NOT trigger _clearMenuState
+    clearMenuStateCalled = false;
+    game.tooltip.locked = true;
+    app._boundOutsidePointerDown(fakeEventItem2);
+    assert.equal(clearMenuStateCalled, false, 'Clicking outside while tooltip is focused must not close dropdown');
+
+    // 6. Click outside when tooltip is unlocked -> should trigger _clearMenuState
+    clearMenuStateCalled = false;
+    game.tooltip.locked = false;
+    app._boundOutsidePointerDown(fakeEventItem2);
+    assert.equal(clearMenuStateCalled, true, 'Clicking outside when tooltip is unlocked must close dropdown');
 });
 
 test('showActivityDropdown displays subactions in alphabetical order', async () => {
@@ -468,4 +493,70 @@ test('showActivityDropdown displays subactions in alphabetical order', async () 
         }
     }
 });
+
+test('showActivityDropdown keeps menu open while tooltip is focused and force-closes on action roll', async () => {
+    const mockApp = {
+        _activeLeftClickMenu: null,
+        _activeMenuTarget: null,
+        _hideItemSummaryTooltip: () => {},
+        element: { ownerDocument: { body: document.body } }
+    };
+    let removedFromDom = false;
+    const mockMenuEl = {
+        remove: () => { removedFromDom = true; },
+        querySelectorAll: () => []
+    };
+
+    const originalQuerySelector = document.querySelector;
+    document.querySelector = (sel) => {
+        if (sel.includes('#context-menu') || sel.includes('.context-menu')) return mockMenuEl;
+        return null;
+    };
+
+    const mockTarget = {
+        classList: {
+            add: () => {},
+            remove: (cls) => {}
+        },
+        getBoundingClientRect: () => ({ left: 0, top: 0, right: 100, bottom: 30, width: 100, height: 30 })
+    };
+
+    let rolled = false;
+    const subactions = [
+        { id: 'attack-1', name: 'Attack', roll: () => { rolled = true; } }
+    ];
+
+    try {
+        await showActivityDropdown(mockApp, mockTarget, subactions, { preventDefault() {}, stopPropagation() {} });
+        assert.ok(mockApp._activeLeftClickMenu, 'Left click menu should be set');
+
+        // 1. When tooltip is focused/locked, calling close() without force does not close menu
+        game.tooltip.locked = true;
+        await mockApp._activeLeftClickMenu.close();
+        assert.equal(removedFromDom, false, 'Menu should remain open while tooltip is focused');
+        assert.ok(mockApp._activeLeftClickMenu !== null, 'Menu reference should remain active');
+
+        // 2. Calling close({ force: true }) closes the menu even when tooltip is locked
+        await mockApp._activeLeftClickMenu.close({ force: true });
+        assert.equal(removedFromDom, true, 'Menu should close when force: true is passed');
+        assert.equal(mockApp._activeLeftClickMenu, null, 'Active menu reference should be cleared');
+
+        // 3. Rolling subaction unlocks tooltip and force-closes menu
+        removedFromDom = false;
+        await showActivityDropdown(mockApp, mockTarget, subactions, { preventDefault() {}, stopPropagation() {} });
+        game.tooltip.locked = true;
+
+        // Simulate clicking the item in the dropdown
+        const menuItem = mockApp._activeLeftClickMenu.menuItems[0];
+        await menuItem.callback();
+        assert.equal(rolled, true, 'Subaction roll callback should execute');
+        assert.equal(game.tooltip.locked, false, 'Tooltip lock should be released on action roll');
+        assert.equal(removedFromDom, true, 'Menu should be closed after rolling');
+        assert.equal(mockApp._activeLeftClickMenu, null);
+    } finally {
+        game.tooltip.locked = false;
+        document.querySelector = originalQuerySelector;
+    }
+});
+
 

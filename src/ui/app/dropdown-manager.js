@@ -79,8 +79,13 @@ export function buildSubactionMenuItem(sub, event, app = null) {
         usesHtml,
         economyHtml,
         usesSlotHtml,
-        callback: () => {
+        callback: async () => {
+            if (game.tooltip?.locked) {
+                game.tooltip.locked = false;
+                document.querySelector?.('#tooltip.locked, aside#tooltip.locked, div#tooltip.locked, .tooltip.locked')?.classList?.remove?.('locked');
+            }
             app?._hideItemSummaryTooltip?.();
+            await app?._activeLeftClickMenu?.close?.({ force: true });
             const item = sub?.originalItem ?? sub;
             const actor = app?.actor ?? null;
             const token = app?.token ?? null;
@@ -175,9 +180,13 @@ export function showActivityDropdown(app, target, subactions, event) {
                         ev.preventDefault();
                         ev.stopPropagation();
                         ev.stopImmediatePropagation();
+                        if (game.tooltip?.locked) {
+                            game.tooltip.locked = false;
+                            document.querySelector?.('#tooltip.locked, aside#tooltip.locked, div#tooltip.locked, .tooltip.locked')?.classList?.remove?.('locked');
+                        }
                         app._hideItemSummaryTooltip();
                         try {
-                            app._activeLeftClickMenu?.close()?.catch?.(err => {
+                            app._activeLeftClickMenu?.close({ force: true })?.catch?.(err => {
                                 log.debug("LeftClickMenu.close promise rejected:", err);
                             });
                         } catch (err) {
@@ -234,6 +243,12 @@ export function showActivityDropdown(app, target, subactions, event) {
         });
     };
 
+    const isTooltipFocused = () => {
+        if (Boolean(game.tooltip?.locked)) return true;
+        const lockedEl = document.querySelector?.('#tooltip.locked, aside#tooltip.locked, div#tooltip.locked, .tooltip.locked');
+        return Boolean(lockedEl?.classList?.contains?.('locked'));
+    };
+
     const options = {
         jQuery: false,
         onOpen: () => {
@@ -241,6 +256,7 @@ export function showActivityDropdown(app, target, subactions, event) {
             if (menuEl) applyPositioning(menuEl);
         },
         onClose: () => {
+            if (isTooltipFocused()) return;
             app?._hideItemSummaryTooltip?.();
             target?.classList?.remove?.('bad-dropdown-active');
             if (app._activeLeftClickMenu === menu) app._activeLeftClickMenu = null;
@@ -259,6 +275,9 @@ export function showActivityDropdown(app, target, subactions, event) {
 
     const origClose = menu.close?.bind(menu);
     menu.close = async (closeOptions = {}) => {
+        if (isTooltipFocused() && !closeOptions.force) {
+            return;
+        }
         app?._hideItemSummaryTooltip?.();
         const menuEl = document.querySelector('#context-menu, .context-menu');
         try {

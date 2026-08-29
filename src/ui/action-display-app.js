@@ -247,7 +247,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         }
 
         // Clean up menu states and close any open dropdowns/context menus to prevent visual leaks
-        this._clearMenuState();
+        this._clearMenuState({ force: true });
         if (this._boundOutsidePointerDown) {
             window.removeEventListener('pointerdown', this._boundOutsidePointerDown, { capture: true });
         }
@@ -878,7 +878,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
      */
     async _onChangeLeftItemType(event, target) {
         event.preventDefault();
-        this._clearMenuState();
+        this._clearMenuState({ force: true });
         const clickedId = target.dataset.type;
         if (event?.shiftKey) {
             this._onToggleLeftParent(clickedId);
@@ -896,7 +896,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
      */
     async _onChangeLeftSubItemType(event, target) {
         event.preventDefault();
-        this._clearMenuState();
+        this._clearMenuState({ force: true });
         const parentGroup = target.closest('.bad-left-tab-group');
         const parentId = parentGroup?.querySelector('.bad-left-tab')?.dataset.type;
         if (event?.shiftKey) {
@@ -938,7 +938,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
      */
     async _onChangeActionType(event, target) {
         event.preventDefault();
-        this._clearMenuState();
+        this._clearMenuState({ force: true });
         const clickedId = target.dataset.type;
         if (event?.shiftKey) {
             this._onToggleRightParent(clickedId);
@@ -956,7 +956,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
      */
     async _onChangeSubActionType(event, target) {
         event.preventDefault();
-        this._clearMenuState();
+        this._clearMenuState({ force: true });
         const parentGroup = target.closest('.bad-right-tab-group');
         const parentId = parentGroup?.querySelector('.bad-right-tab')?.dataset.type;
         if (event?.shiftKey) {
@@ -1034,7 +1034,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
      */
     async _onPreviousPage(event, target) {
         event.preventDefault();
-        this._clearMenuState();
+        this._clearMenuState({ force: true });
         this.previousPage();
     }
 
@@ -1045,7 +1045,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
      */
     async _onNextPage(event, target) {
         event.preventDefault();
-        this._clearMenuState();
+        this._clearMenuState({ force: true });
         this.nextPage();
     }
 
@@ -1056,7 +1056,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
      */
     async _onChangePage(event, target) {
         event.preventDefault();
-        this._clearMenuState();
+        this._clearMenuState({ force: true });
         const targetPage = Number(target.dataset.page ?? 1);
         if (!isNaN(targetPage) && targetPage >= 1 && targetPage <= this.totalPages && targetPage !== this.activePage) {
             this.activePage = targetPage;
@@ -1075,12 +1075,17 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
 
         if (this._preventReopen) {
             this._preventReopen = false;
-            this._clearMenuState();
+            this._clearMenuState({ force: true });
             return;
         }
 
+        if (game.tooltip?.locked) {
+            game.tooltip.locked = false;
+            document.querySelector?.('#tooltip.locked, aside#tooltip.locked, div#tooltip.locked, .tooltip.locked')?.classList?.remove?.('locked');
+        }
+
         // Close any existing open menu state before rolling or opening dropdown
-        this._clearMenuState();
+        this._clearMenuState({ force: true });
 
         const actionId = target.dataset.actionId;
         const action = (this.displayedActions ?? this.actions)?.find(a => a.id === actionId);
@@ -1359,9 +1364,14 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
 
         // Close dropdown when dragging or clicking outside the active menu/item
         this._boundOutsidePointerDown = (event) => {
+            // While the tooltip is focused/locked or the user is interacting with it (e.g. scrollbar), keep the context menu open
+            if (this.isTooltipFocused || this._isInsideTooltip(event?.target)) {
+                return;
+            }
+
             const activeTarget = this._activeContextMenuTarget ?? this._activeMenuTarget;
-            const clickedInsideMenu = Boolean(event.target.closest('#context-menu, .context-menu'));
-            const clickedActiveItem = Boolean(activeTarget && event.target.closest('.bad-action-item') === activeTarget);
+            const clickedInsideMenu = Boolean(event.target?.closest?.('#context-menu, .context-menu'));
+            const clickedActiveItem = Boolean(activeTarget && event.target?.closest?.('.bad-action-item') === activeTarget);
 
             if ((this._activeLeftClickMenu || this._activeContextMenuTarget || this._activeMenuTarget) && !clickedInsideMenu && !clickedActiveItem) {
                 this._clearMenuState();
@@ -1467,8 +1477,14 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
 
     /**
      * Clear all active context menu and dropdown target styling and close any open menus.
+     * @param {object} [options]
+     * @param {boolean} [options.force=false] Force closing even if a tooltip is focused/locked
      */
-    _clearMenuState() {
+    _clearMenuState(options = {}) {
+        if (this.isTooltipFocused && !options.force) {
+            return;
+        }
+
         const activeContextTarget = this._activeContextMenuTarget;
         const activeMenuTarget = this._activeMenuTarget;
         const activeLeftMenu = this._activeLeftClickMenu;
@@ -1485,7 +1501,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
 
         if (contextMenu) {
             try {
-                contextMenu.close({ animate: false })?.catch?.(err => {
+                contextMenu.close({ animate: false, force: true })?.catch?.(err => {
                     log.debug("ContextMenu.close promise rejected (expected during re-render):", err);
                 });
             } catch (err) {
@@ -1495,7 +1511,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
 
         if (activeLeftMenu) {
             try {
-                activeLeftMenu.close({ animate: false })?.catch?.(err => {
+                activeLeftMenu.close({ animate: false, force: true })?.catch?.(err => {
                     log.debug("LeftClickMenu.close promise rejected:", err);
                 });
             } catch (err) {
@@ -1720,6 +1736,27 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
     }
 
     /**
+     * Determine whether an item summary tooltip is currently focused/locked.
+     * @type {boolean}
+     */
+    get isTooltipFocused() {
+        if (Boolean(game.tooltip?.locked)) return true;
+        const lockedEl = document.querySelector?.('#tooltip.locked, aside#tooltip.locked, div#tooltip.locked, .tooltip.locked');
+        return Boolean(lockedEl?.classList?.contains?.('locked'));
+    }
+
+    /**
+     * Determine if a DOM element or event target is inside an item summary tooltip.
+     * @param {EventTarget|HTMLElement} target
+     * @returns {boolean}
+     * @protected
+     */
+    _isInsideTooltip(target) {
+        if (!target?.closest) return false;
+        return Boolean(target.closest('#tooltip, aside#tooltip, div#tooltip, .tooltip, .bad-item-summary-tooltip, .bad-item-summary-tooltip-wrapper'));
+    }
+
+    /**
      * Display the item summary tooltip for an action item element.
      * @param {HTMLElement} itemEl
      * @protected
@@ -1852,9 +1889,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
      * @protected
      */
     _hideItemSummaryTooltip() {
-        if (Boolean(game.tooltip?.locked)) return;
-        const lockedEl = document.querySelector?.('#tooltip.locked, aside#tooltip.locked, .tooltip.locked');
-        if (lockedEl?.classList?.contains?.('locked')) return;
+        if (this.isTooltipFocused) return;
 
         this._activeSummaryTooltip = null;
         const tooltipEl = document.querySelector?.('#tooltip, aside#tooltip, div#tooltip');
@@ -1880,8 +1915,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
      */
     _onWheel(event) {
         if (!event) return;
-        const isLocked = Boolean(game.tooltip?.locked) || Boolean(document.querySelector?.('#tooltip.locked, aside#tooltip.locked, .tooltip.locked'));
-        if (isLocked) {
+        if (this.isTooltipFocused) {
             const descEl = document.querySelector?.('#tooltip.locked .bad-summary-desc, aside#tooltip.locked .bad-summary-desc, #tooltip .bad-summary-desc, aside#tooltip .bad-summary-desc, .bad-item-summary-tooltip .bad-summary-desc');
             if (descEl) {
                 event.preventDefault?.();
@@ -2123,7 +2157,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         const activeItem = activeTarget?.closest('.bad-action-item, .bad-left-sub-tab, .bad-left-tab') ?? activeTarget;
 
         if (targetItem && activeItem === targetItem) {
-            this._clearMenuState();
+            this._clearMenuState({ force: true });
             event.preventDefault();
             event.stopPropagation();
             event.stopImmediatePropagation();
@@ -2266,7 +2300,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
      */
     setPosition(position = {}) {
         if (this._activeLeftClickMenu || this._activeContextMenuTarget) {
-            this._clearMenuState();
+            this._clearMenuState({ force: true });
         }
         const el = this.element;
         if (!el) return super.setPosition(position);

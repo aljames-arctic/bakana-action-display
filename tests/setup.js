@@ -575,6 +575,7 @@ globalThis.game = {
         element: null,
         options: null,
         active: false,
+        locked: false,
         activate(element, options = {}) {
             this.element = element;
             this.options = options;
