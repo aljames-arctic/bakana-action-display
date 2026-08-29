@@ -89,137 +89,142 @@ export class BasePf1SystemAdapter extends FantasySystemAdapter {
 
         const { attackToWeaponMap, weaponLinkedAttacks } = this.#buildWeaponAttackLinks(actor);
 
-        for (const action of actions) {
-            const item = action.originalItem;
-            const type = item.type;
+        log.group(`Pf1SystemAdapter.modifyActions | Filtering and mapping actions for "${actor?.name ?? 'Actor'}"`, 'debug');
+        try {
+            for (const action of actions) {
+                const item = action.originalItem;
+                const type = item.type;
 
-            let isUnequipped = false;
-            if (['weapon', 'equipment', 'consumable', 'loot', 'attack'].includes(type) && item.system?.equipped !== undefined) {
-                if (this.getItemEquipped(item) === false) {
-                    isUnequipped = true;
-                    const showUnequipped = Boolean((actor?.getFlag?.(MODULE_ID, `showUnequipped_${type}`) ?? false) || showAll);
-                    const isUserHidden = Boolean(actor?.getFlag?.(MODULE_ID, 'hiddenItems')?.[item.id]);
-                    if (!showUnequipped && !isUserHidden) {
-                        log.debug(`Pf1SystemAdapter.modifyActions | Filtering out unequipped ${type} "${item.name}" (ID: ${item.id}) — item.system.equipped === false and showUnequipped_${type} / showAll flag is not set`);
-                        continue;
+                let isUnequipped = false;
+                if (['weapon', 'equipment', 'consumable', 'loot', 'attack'].includes(type) && item.system?.equipped !== undefined) {
+                    if (this.getItemEquipped(item) === false) {
+                        isUnequipped = true;
+                        const showUnequipped = Boolean((actor?.getFlag?.(MODULE_ID, `showUnequipped_${type}`) ?? false) || showAll);
+                        const isUserHidden = Boolean(actor?.getFlag?.(MODULE_ID, 'hiddenItems')?.[item.id]);
+                        if (!showUnequipped && !isUserHidden) {
+                            log.debug(`Pf1SystemAdapter.modifyActions | Filtering out unequipped ${type} "${item.name}" (ID: ${item.id}) — item.system.equipped === false and showUnequipped_${type} / showAll flag is not set`);
+                            continue;
+                        }
                     }
                 }
-            }
 
-            if (item.type === 'spell') {
-                // 1. Spells in PF1e
-                const spellbookId = item.system.spellbook ?? 'primary';
-                const spellbook = this.#getSpellbook(actor, spellbookId);
-                if (!spellbook) {
-                    log.debug(`Pf1SystemAdapter.modifyActions | Filtering out spell "${item.name}" (ID: ${item.id}) — no spellbook found for spellbook ID "${spellbookId}" (item.system.spellbook)`);
-                    continue;
-                }
-
-                action.right = [TabRef.from('economy', 'action')];
-                action.activationType = 'action';
-
-                const level = item.system.level ?? 0;
-                const subTab = this.#getSpellSubTab(spellbookId, spellbook, level);
-                action.left = ['spell', subTab];
-
-                // Calculate uses (slots or prepared casts)
-                action.uses = this.#calculateSpellUses(spellbook, item);
-
-                // Roll function
-                action.roll = (event) => this.#executeItemRoll(item, null, event);
-
-                modified.push(action);
-            } else if (item.type === 'attack') {
-                // 2. Attacks in PF1e (if not linked to a weapon)
-                if (attackToWeaponMap.has(item.id)) {
-                    log.debug(`Pf1SystemAdapter.modifyActions | Skipping attack "${item.name}" (${item.id}) because it is linked to a weapon.`);
-                    continue;
-                }
-
-                const itemActions = this.#getItemActions(item);
-                if (itemActions.length === 0) {
-                    log.debug(`Pf1SystemAdapter.modifyActions | Filtering out attack "${item.name}" (ID: ${item.id}) — item.system.actions is empty`);
-                    continue;
-                }
-
-                const uses = this.#calculateUses(item, actor);
-
-                const subactions = this.#buildSubactions(item, itemActions, uses);
-                if (subactions.length === 0) {
-                    log.debug(`Pf1SystemAdapter.modifyActions | Filtering out attack "${item.name}" (ID: ${item.id}) — no subactions had a recognized activationType`);
-                    continue;
-                }
-
-                this.#promoteFirstSubaction(action, subactions, ['weapon'], uses);
-                if (isUnequipped) action.available = false;
-                modified.push(action);
-
-            } else if (item.type === 'weapon') {
-                // 3. Weapons (with ammo resolution and linked attacks merging)
-                const uses = this.#calculateUses(item, actor);
-                const linkedAttacks = weaponLinkedAttacks.get(item.id) ?? [];
-
-                const itemActionsList = linkedAttacks.length > 0
-                    ? this.#buildLinkedAttackSubactions(linkedAttacks, item, uses)
-                    : this.#buildSubactions(item, this.#getItemActions(item), uses);
-
-                if (itemActionsList.length === 0) {
-                    log.debug(`Pf1SystemAdapter.modifyActions | Filtering out weapon "${item.name}" (ID: ${item.id}) — no subactions had a recognized activationType`);
-                    continue;
-                }
-
-                this.#promoteFirstSubaction(action, itemActionsList, ['weapon'], uses);
-                if (isUnequipped) action.available = false;
-                modified.push(action);
-
-            } else if (['consumable', 'feat', 'equipment'].includes(type)) {
-                // 4. Consumables, Feats, and Equipment
-                const itemActions = item.system.actions ?? [];
-                if (itemActions.length === 0) {
-                    if (type === 'equipment') {
-                        // Passive or standard equipment item
-                        action.right = [TabRef.from('economy', 'other')];
-                        action.activationType = 'other';
-                        action.left = ['equipment'];
-                        action.uses = { available: null, max: null };
-                        action.available = !isUnequipped;
-                        action.roll = (event) => this.#executeItemRoll(item, null, event);
-                        modified.push(action);
+                if (item.type === 'spell') {
+                    // 1. Spells in PF1e
+                    const spellbookId = item.system.spellbook ?? 'primary';
+                    const spellbook = this.#getSpellbook(actor, spellbookId);
+                    if (!spellbook) {
+                        log.debug(`Pf1SystemAdapter.modifyActions | Filtering out spell "${item.name}" (ID: ${item.id}) — no spellbook found for spellbook ID "${spellbookId}" (item.system.spellbook)`);
                         continue;
                     }
-                    log.debug(`Pf1SystemAdapter.modifyActions | Filtering out ${type} "${item.name}" (ID: ${item.id}) — item.system.actions is empty`);
-                    continue;
+
+                    action.right = [TabRef.from('economy', 'action')];
+                    action.activationType = 'action';
+
+                    const level = item.system.level ?? 0;
+                    const subTab = this.#getSpellSubTab(spellbookId, spellbook, level);
+                    action.left = ['spell', subTab];
+
+                    // Calculate uses (slots or prepared casts)
+                    action.uses = this.#calculateSpellUses(spellbook, item);
+
+                    // Roll function
+                    action.roll = (event) => this.#executeItemRoll(item, null, event);
+
+                    modified.push(action);
+                } else if (item.type === 'attack') {
+                    // 2. Attacks in PF1e (if not linked to a weapon)
+                    if (attackToWeaponMap.has(item.id)) {
+                        log.debug(`Pf1SystemAdapter.modifyActions | Skipping attack "${item.name}" (${item.id}) because it is linked to a weapon.`);
+                        continue;
+                    }
+
+                    const itemActions = this.#getItemActions(item);
+                    if (itemActions.length === 0) {
+                        log.debug(`Pf1SystemAdapter.modifyActions | Filtering out attack "${item.name}" (ID: ${item.id}) — item.system.actions is empty`);
+                        continue;
+                    }
+
+                    const uses = this.#calculateUses(item, actor);
+
+                    const subactions = this.#buildSubactions(item, itemActions, uses);
+                    if (subactions.length === 0) {
+                        log.debug(`Pf1SystemAdapter.modifyActions | Filtering out attack "${item.name}" (ID: ${item.id}) — no subactions had a recognized activationType`);
+                        continue;
+                    }
+
+                    this.#promoteFirstSubaction(action, subactions, ['weapon'], uses);
+                    if (isUnequipped) action.available = false;
+                    modified.push(action);
+
+                } else if (item.type === 'weapon') {
+                    // 3. Weapons (with ammo resolution and linked attacks merging)
+                    const uses = this.#calculateUses(item, actor);
+                    const linkedAttacks = weaponLinkedAttacks.get(item.id) ?? [];
+
+                    const itemActionsList = linkedAttacks.length > 0
+                        ? this.#buildLinkedAttackSubactions(linkedAttacks, item, uses)
+                        : this.#buildSubactions(item, this.#getItemActions(item), uses);
+
+                    if (itemActionsList.length === 0) {
+                        log.debug(`Pf1SystemAdapter.modifyActions | Filtering out weapon "${item.name}" (ID: ${item.id}) — no subactions had a recognized activationType`);
+                        continue;
+                    }
+
+                    this.#promoteFirstSubaction(action, itemActionsList, ['weapon'], uses);
+                    if (isUnequipped) action.available = false;
+                    modified.push(action);
+
+                } else if (['consumable', 'feat', 'equipment'].includes(type)) {
+                    // 4. Consumables, Feats, and Equipment
+                    const itemActions = item.system.actions ?? [];
+                    if (itemActions.length === 0) {
+                        if (type === 'equipment') {
+                            // Passive or standard equipment item
+                            action.right = [TabRef.from('economy', 'other')];
+                            action.activationType = 'other';
+                            action.left = ['equipment'];
+                            action.uses = { available: null, max: null };
+                            action.available = !isUnequipped;
+                            action.roll = (event) => this.#executeItemRoll(item, null, event);
+                            modified.push(action);
+                            continue;
+                        }
+                        log.debug(`Pf1SystemAdapter.modifyActions | Filtering out ${type} "${item.name}" (ID: ${item.id}) — item.system.actions is empty`);
+                        continue;
+                    }
+
+                    const uses = this.#calculateUses(item, actor);
+
+                    const subactions = this.#buildSubactions(item, itemActions, uses);
+                    if (subactions.length === 0) {
+                        log.debug(`Pf1SystemAdapter.modifyActions | Filtering out ${type} "${item.name}" (ID: ${item.id}) — no subactions had a recognized activationType`);
+                        continue;
+                    }
+
+                    this.#promoteFirstSubaction(action, subactions, [item.type], uses);
+                    if (isUnequipped) action.available = false;
+                    modified.push(action);
+
+                } else if (item.type === 'buff') {
+                    // 5. Buffs
+                    action.right = [TabRef.from('economy', 'other')];
+                    action.activationType = 'other';
+                    action.left = ['buff'];
+
+                    action.roll = async (event) => {
+                        const active = this.#getBuffActiveState(item);
+                        await item.update({ "system.active": !active });
+                    };
+
+                    action.isActive = this.#getBuffActiveState(item);
+                    action.uses = { available: null, max: null };
+                    action.excludeFromAll = true; // Exclude buffs from the 'All Items' tab in PF1e
+
+                    modified.push(action);
                 }
-
-                const uses = this.#calculateUses(item, actor);
-
-                const subactions = this.#buildSubactions(item, itemActions, uses);
-                if (subactions.length === 0) {
-                    log.debug(`Pf1SystemAdapter.modifyActions | Filtering out ${type} "${item.name}" (ID: ${item.id}) — no subactions had a recognized activationType`);
-                    continue;
-                }
-
-                this.#promoteFirstSubaction(action, subactions, [item.type], uses);
-                if (isUnequipped) action.available = false;
-                modified.push(action);
-
-            } else if (item.type === 'buff') {
-                // 5. Buffs
-                action.right = [TabRef.from('economy', 'other')];
-                action.activationType = 'other';
-                action.left = ['buff'];
-
-                action.roll = async (event) => {
-                    const active = this.#getBuffActiveState(item);
-                    await item.update({ "system.active": !active });
-                };
-
-                action.isActive = this.#getBuffActiveState(item);
-                action.uses = { available: null, max: null };
-                action.excludeFromAll = true; // Exclude buffs from the 'All Items' tab in PF1e
-
-                modified.push(action);
             }
+        } finally {
+            log.groupEnd();
         }
 
         for (const act of modified) {

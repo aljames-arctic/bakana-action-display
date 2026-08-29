@@ -111,10 +111,15 @@ export class BasePf2eSystemAdapter extends FantasySystemAdapter {
         const spellToEntryMap = this.#buildSpellToEntryMap(actor);
 
         // 1. Process existing items (Feats, Actions, Spells)
-        for (const action of actions) {
-            if (this.#formatActionRow(action, spellToEntryMap)) {
-                modified.push(action);
+        log.group(`Pf2eSystemAdapter.modifyActions | Formatting actions for "${actor?.name ?? 'Actor'}"`, 'debug');
+        try {
+            for (const action of actions) {
+                if (this.#formatActionRow(action, spellToEntryMap)) {
+                    modified.push(action);
+                }
             }
+        } finally {
+            log.groupEnd();
         }
 
         // 2. Inject Strikes (attacks)

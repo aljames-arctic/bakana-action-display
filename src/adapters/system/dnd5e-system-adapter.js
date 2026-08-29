@@ -111,158 +111,163 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
         const showAll = actor?.getFlag?.(MODULE_ID, 'showAll') ?? false;
         const showUnprepared = Boolean((actor?.getFlag?.(MODULE_ID, 'showUnprepared') ?? false) || showAll);
 
-        for (const action of actions) {
-            const item = action.originalItem;
-            const type = item.type;
-            // Extract spell components if it's a spell (for the Spell Components tab)
-            const props = item.system?.properties;
-            const spellComponents = [];
-            if (item.type === 'spell') {
-                spellComponents.push(...this.#getComponentTabs(action));
-            }
-
-            // Check if user has hidden this item
-            // NOTE(migration): hiddenItems transitioned from legacy string[] to Record<string, boolean> object map.
-            // Array check fallback can be removed in a future cleanup once legacy world actor flags have migrated.
-            const rawHidden = actor?.getFlag?.(MODULE_ID, 'hiddenItems');
-            const isUserHidden = Array.isArray(rawHidden)
-                ? rawHidden.includes(item.id)
-                : Boolean(rawHidden?.[item.id]);
-
-            // 1. Filter out unprepared spells (unless cantrip/innate/at-will/pact/always, showUnprepared/showAll is enabled, or item is user-hidden)
-            let isSpellUnprepared = false;
-            if (type === 'spell') {
-                const prepMode = item.system.method ?? 'prepared';
-                const isPrepared = Boolean(item.system.prepared);
-                const isCantrip = (item.system.level ?? 0) === 0;
-                isSpellUnprepared = !isCantrip && !['innate', 'atwill', 'pact', 'always'].includes(prepMode) && !isPrepared;
-
-                if (!showUnprepared && isSpellUnprepared && !isUserHidden) {
-                    log.debug(`Dnd5eSystemAdapter.modifyActions | Filtering out spell "${item.name}" (ID: ${item.id}) — isPrepared === false and prepMode (${prepMode}) requires preparation; showUnprepared flag is not set`);
-                    continue;
-                }
-            }
-
-            // 2. Filter out unequipped gear (unless showUnequipped/showAll is enabled or item is user-hidden)
-            let isUnequipped = false;
-            if (this.getItemEquipped(item) === false) {
-                isUnequipped = true;
-                const showUnequipped = Boolean((actor?.getFlag?.(MODULE_ID, `showUnequipped_${type}`) ?? false) || showAll);
-
-                if (!showUnequipped && !isUserHidden) {
-                    log.debug(`Dnd5eSystemAdapter.modifyActions | Filtering out ${type} "${item.name}" (ID: ${item.id}) — item.system.equipped === false and showUnequipped_${type} / showAll flag is not set`);
-                    continue;
-                }
-            }
-
-            // 4. Process activities if they exist (D&D 5e v4+)
-            const activities = this.getItemActivities(item);
-            let mappedActivities = [];
-
-            if (activities.length > 0) {
-                // Map D&D 5e Activities to sub-actions for the generic HUD item model
-                const rawActivities = await Promise.all(activities.map(async (activity) => {
-                    const linkedAction = await this.#resolveActivityLinkedAction(activity, actor, item);
-                    const activationType = this.#getActivityActivationType(activity, item, linkedAction);
-                    if (!activationType || activationType === 'none') return null;
-
-                    const category = this.#getEconomyCategory(activationType);
-                    const subId = this.#getCanonicalSubTab(activationType);
-                    const tabRef = TabRef.from('economy', category, subId);
-
-                    return new Action({
-                        id: activity.id,
-                        name: (activity.name && activity.name.trim().length > 0) ? activity.name : (linkedAction?.name ?? activity.type.toUpperCase()),
-                        img: (activity.img && activity.img.trim().length > 0) ? activity.img : (linkedAction?.img ?? item.img),
-                        uses: this.#calculateActivityUses(activity, item),
-                        right: [tabRef],
-                        roll: async (event) => {
-                            const proxiedEvent = this._createRollEvent(event);
-                            return activity.use({ event: proxiedEvent }, { event: proxiedEvent });
-                        },
-                        originalItem: item,
-                        originalActivity: activity,
-                        linkedAction
-                    });
-                }));
-
-                mappedActivities = rawActivities.filter(Boolean);
-            }
-
-            if (mappedActivities.length > 0) {
-                // Extract spell components from linked spells on cast activities or item properties if present
-                for (const act of mappedActivities) {
-                    const compTabs = this.#getComponentTabs(act);
-                    if (compTabs.length > 0) {
-                        spellComponents.push(...compTabs);
-                        act.right = [...act.right, ...compTabs];
-                    }
+        log.group(`Dnd5eSystemAdapter.modifyActions | Filtering and mapping actions for "${actor?.name ?? 'Actor'}"`, 'debug');
+        try {
+            for (const action of actions) {
+                const item = action.originalItem;
+                const type = item.type;
+                // Extract spell components if it's a spell (for the Spell Components tab)
+                const props = item.system?.properties;
+                const spellComponents = [];
+                if (item.type === 'spell') {
+                    spellComponents.push(...this.#getComponentTabs(action));
                 }
 
-                // Single-pass Resource Filtering: Filter out depleted D&D 5e Activities unless showDepleted is enabled
-                let filteredActivities = mappedActivities;
-                if (!showDepleted) {
-                    filteredActivities = mappedActivities.filter(act => {
-                        if (act.isDepleted) {
-                            log.debug(`Dnd5eSystemAdapter.modifyActions | Filtering out activity "${act.name}" on "${item.name}" (ID: ${item.id}) — act.isDepleted === true (uses.available <= 0) and showDepleted is disabled`);
-                            return false;
-                        }
-                        return true;
-                    });
+                // Check if user has hidden this item
+                // NOTE(migration): hiddenItems transitioned from legacy string[] to Record<string, boolean> object map.
+                // Array check fallback can be removed in a future cleanup once legacy world actor flags have migrated.
+                const rawHidden = actor?.getFlag?.(MODULE_ID, 'hiddenItems');
+                const isUserHidden = Array.isArray(rawHidden)
+                    ? rawHidden.includes(item.id)
+                    : Boolean(rawHidden?.[item.id]);
 
-                    // If all activities are depleted, skip this item entirely!
-                    if (filteredActivities.length === 0) {
-                        log.debug(`Dnd5eSystemAdapter.modifyActions | Filtering out item "${item.name}" (ID: ${item.id}) — all ${mappedActivities.length} activities are depleted and showDepleted is disabled`);
+                // 1. Filter out unprepared spells (unless cantrip/innate/at-will/pact/always, showUnprepared/showAll is enabled, or item is user-hidden)
+                let isSpellUnprepared = false;
+                if (type === 'spell') {
+                    const prepMode = item.system.method ?? 'prepared';
+                    const isPrepared = Boolean(item.system.prepared);
+                    const isCantrip = (item.system.level ?? 0) === 0;
+                    isSpellUnprepared = !isCantrip && !['innate', 'atwill', 'pact', 'always'].includes(prepMode) && !isPrepared;
+
+                    if (!showUnprepared && isSpellUnprepared && !isUserHidden) {
+                        log.debug(`Dnd5eSystemAdapter.modifyActions | Filtering out spell "${item.name}" (ID: ${item.id}) — isPrepared === false and prepMode (${prepMode}) requires preparation; showUnprepared flag is not set`);
                         continue;
                     }
                 }
 
-                // Assign to hierarchical item types: [parentType, subType] (for left-side tabs)
-                const left = this.#getItemTabTypes(item, type, filteredActivities);
+                // 2. Filter out unequipped gear (unless showUnequipped/showAll is enabled or item is user-hidden)
+                let isUnequipped = false;
+                if (this.getItemEquipped(item) === false) {
+                    isUnequipped = true;
+                    const showUnequipped = Boolean((actor?.getFlag?.(MODULE_ID, `showUnequipped_${type}`) ?? false) || showAll);
 
-                // Calculate main action uses
-                const actionUses = filteredActivities.length === 1
-                    ? filteredActivities[0].uses
-                    : this.#calculateUses(item);
-
-                // Create a SINGLE Action instance for the item
-                const activityAction = new Action({
-                    ...action,
-                    name: item.name, // Keep the clean item name
-                    img: item.img, // Use the parent item's icon
-                    available: !(isSpellUnprepared || isUnequipped),
-                    subactions: filteredActivities,
-                    right: this.#collectUniqueTabs(filteredActivities),
-                    left,
-                    uses: actionUses,
-                    roll: async (event) => {
-                        // Roll the first active activity directly
-                        return filteredActivities[0].roll(event);
+                    if (!showUnequipped && !isUserHidden) {
+                        log.debug(`Dnd5eSystemAdapter.modifyActions | Filtering out ${type} "${item.name}" (ID: ${item.id}) — item.system.equipped === false and showUnequipped_${type} / showAll flag is not set`);
+                        continue;
                     }
-                });
+                }
 
-                modified.push(activityAction);
-            } else if (['equipment', 'weapon', 'consumable', 'tool', 'backpack', 'loot'].includes(type)) {
-                // Passive items (armor, passive shields, containers, loot, passive consumables/tools) are assigned right-side tab 'none' under 'economy'
-                const subType = item.system.type?.value;
-                const passiveAction = new Action({
-                    ...action,
-                    name: item.name,
-                    img: item.img,
-                    available: !(isSpellUnprepared || isUnequipped),
-                    right: [TabRef.from('economy', 'none')],
-                    left: subType ? [type, subType] : [type],
-                    uses: this.#calculateUses(item),
-                    roll: async (event) => {
-                        if (activities[0]?.use) {
-                            const proxiedEvent = this._createRollEvent(event);
-                            return activities[0].use({ event: proxiedEvent }, { event: proxiedEvent });
+                // 4. Process activities if they exist (D&D 5e v4+)
+                const activities = this.getItemActivities(item);
+                let mappedActivities = [];
+
+                if (activities.length > 0) {
+                    // Map D&D 5e Activities to sub-actions for the generic HUD item model
+                    const rawActivities = await Promise.all(activities.map(async (activity) => {
+                        const linkedAction = await this.#resolveActivityLinkedAction(activity, actor, item);
+                        const activationType = this.#getActivityActivationType(activity, item, linkedAction);
+                        if (!activationType || activationType === 'none') return null;
+
+                        const category = this.#getEconomyCategory(activationType);
+                        const subId = this.#getCanonicalSubTab(activationType);
+                        const tabRef = TabRef.from('economy', category, subId);
+
+                        return new Action({
+                            id: activity.id,
+                            name: (activity.name && activity.name.trim().length > 0) ? activity.name : (linkedAction?.name ?? activity.type.toUpperCase()),
+                            img: (activity.img && activity.img.trim().length > 0) ? activity.img : (linkedAction?.img ?? item.img),
+                            uses: this.#calculateActivityUses(activity, item),
+                            right: [tabRef],
+                            roll: async (event) => {
+                                const proxiedEvent = this._createRollEvent(event);
+                                return activity.use({ event: proxiedEvent }, { event: proxiedEvent });
+                            },
+                            originalItem: item,
+                            originalActivity: activity,
+                            linkedAction
+                        });
+                    }));
+
+                    mappedActivities = rawActivities.filter(Boolean);
+                }
+
+                if (mappedActivities.length > 0) {
+                    // Extract spell components from linked spells on cast activities or item properties if present
+                    for (const act of mappedActivities) {
+                        const compTabs = this.#getComponentTabs(act);
+                        if (compTabs.length > 0) {
+                            spellComponents.push(...compTabs);
+                            act.right = [...act.right, ...compTabs];
                         }
-                        return action.roll?.(event);
                     }
-                });
-                modified.push(passiveAction);
+
+                    // Single-pass Resource Filtering: Filter out depleted D&D 5e Activities unless showDepleted is enabled
+                    let filteredActivities = mappedActivities;
+                    if (!showDepleted) {
+                        filteredActivities = mappedActivities.filter(act => {
+                            if (act.isDepleted) {
+                                log.debug(`Dnd5eSystemAdapter.modifyActions | Filtering out activity "${act.name}" on "${item.name}" (ID: ${item.id}) — act.isDepleted === true (uses.available <= 0) and showDepleted is disabled`);
+                                return false;
+                            }
+                            return true;
+                        });
+
+                        // If all activities are depleted, skip this item entirely!
+                        if (filteredActivities.length === 0) {
+                            log.debug(`Dnd5eSystemAdapter.modifyActions | Filtering out item "${item.name}" (ID: ${item.id}) — all ${mappedActivities.length} activities are depleted and showDepleted is disabled`);
+                            continue;
+                        }
+                    }
+
+                    // Assign to hierarchical item types: [parentType, subType] (for left-side tabs)
+                    const left = this.#getItemTabTypes(item, type, filteredActivities);
+
+                    // Calculate main action uses
+                    const actionUses = filteredActivities.length === 1
+                        ? filteredActivities[0].uses
+                        : this.#calculateUses(item);
+
+                    // Create a SINGLE Action instance for the item
+                    const activityAction = new Action({
+                        ...action,
+                        name: item.name, // Keep the clean item name
+                        img: item.img, // Use the parent item's icon
+                        available: !(isSpellUnprepared || isUnequipped),
+                        subactions: filteredActivities,
+                        right: this.#collectUniqueTabs(filteredActivities),
+                        left,
+                        uses: actionUses,
+                        roll: async (event) => {
+                            // Roll the first active activity directly
+                            return filteredActivities[0].roll(event);
+                        }
+                    });
+
+                    modified.push(activityAction);
+                } else if (['equipment', 'weapon', 'consumable', 'tool', 'backpack', 'loot'].includes(type)) {
+                    // Passive items (armor, passive shields, containers, loot, passive consumables/tools) are assigned right-side tab 'none' under 'economy'
+                    const subType = item.system.type?.value;
+                    const passiveAction = new Action({
+                        ...action,
+                        name: item.name,
+                        img: item.img,
+                        available: !(isSpellUnprepared || isUnequipped),
+                        right: [TabRef.from('economy', 'none')],
+                        left: subType ? [type, subType] : [type],
+                        uses: this.#calculateUses(item),
+                        roll: async (event) => {
+                            if (activities[0]?.use) {
+                                const proxiedEvent = this._createRollEvent(event);
+                                return activities[0].use({ event: proxiedEvent }, { event: proxiedEvent });
+                            }
+                            return action.roll?.(event);
+                        }
+                    });
+                    modified.push(passiveAction);
+                }
             }
+        } finally {
+            log.groupEnd();
         }
 
         for (const act of modified) {

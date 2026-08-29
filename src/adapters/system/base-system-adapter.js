@@ -180,15 +180,20 @@ export class BaseSystemAdapter {
     async modifyActions(actions, actor) {
         if (Boolean(game.settings.get(MODULE_ID, 'showDepleted'))) return actions;
 
-        return actions.filter(action => {
-            // Never hide weapons, even if they are out of ammo or charges
-            if (action.originalItem?.type === 'weapon') return true;
-            if (this._isResourceDepleted(action)) {
-                log.debug(`BaseSystemAdapter.modifyActions | Filtering out "${action.name}" (ID: ${action.id}) — action.uses.available (${action.uses?.available}) <= 0 and showDepleted is disabled`);
-                return false;
-            }
-            return true;
-        });
+        log.group(`BaseSystemAdapter.modifyActions | Filtering depleted actions for "${actor?.name ?? 'Actor'}"`, 'debug');
+        try {
+            return actions.filter(action => {
+                // Never hide weapons, even if they are out of ammo or charges
+                if (action.originalItem?.type === 'weapon') return true;
+                if (this._isResourceDepleted(action)) {
+                    log.debug(`BaseSystemAdapter.modifyActions | Filtering out "${action.name}" (ID: ${action.id}) — action.uses.available (${action.uses?.available}) <= 0 and showDepleted is disabled`);
+                    return false;
+                }
+                return true;
+            });
+        } finally {
+            log.groupEnd();
+        }
     }
 
     extractCheckActions(actor) {

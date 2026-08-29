@@ -82,24 +82,29 @@ class Adapter {
             : (rawHidden ?? {});
         const filtered = [];
 
-        for (const action of actions) {
-            if (action.hidden) {
-                log.debug(`Adapter.getActions | Skipping "${action.name}" (ID: ${action.id}) — action.hidden === true`);
-                continue;
-            }
+        log.group(`Adapter.getActions | Processing hidden items for "${actor.name ?? 'Actor'}"`, 'debug');
+        try {
+            for (const action of actions) {
+                if (action.hidden) {
+                    log.debug(`Adapter.getActions | Skipping "${action.name}" (ID: ${action.id}) — action.hidden === true`);
+                    continue;
+                }
 
-            const itemId = action.originalItem?.id ?? action.id;
-            if (Boolean(hiddenMap[itemId])) {
-                log.debug(`Adapter.getActions | Marking "${action.name}" (ID: ${itemId}) as hidden — item is in actor's hiddenItems flag map`);
-                action.isHidden = true;
-                action.left = ['hidden'];
-                action.right = ['all'];
+                const itemId = action.originalItem?.id ?? action.id;
+                if (Boolean(hiddenMap[itemId])) {
+                    log.debug(`Adapter.getActions | Marking "${action.name}" (ID: ${itemId}) as hidden — item is in actor's hiddenItems flag map`);
+                    action.isHidden = true;
+                    action.left = ['hidden'];
+                    action.right = ['all'];
+                    filtered.push(action);
+                    continue;
+                }
+
+                action.isHidden = false;
                 filtered.push(action);
-                continue;
             }
-
-            action.isHidden = false;
-            filtered.push(action);
+        } finally {
+            log.groupEnd();
         }
 
         return filtered;
@@ -116,23 +121,28 @@ class Adapter {
         if (!actor?.items) return actions;
 
         const items = Array.from(actor.items.values());
-        for (const item of items) {
-            if (!item?.name) {
-                log.debug(`Adapter._extractBaseActions | Skipping item (ID: ${item?.id}) — item.name is missing or falsy`);
-                continue;
+        log.group(`Adapter._extractBaseActions | Extracting base actions for "${actor.name ?? 'Actor'}"`, 'debug');
+        try {
+            for (const item of items) {
+                if (!item?.name) {
+                    log.debug(`Adapter._extractBaseActions | Skipping item (ID: ${item?.id}) — item.name is missing or falsy`);
+                    continue;
+                }
+                if (this.system && !this.system.shouldExtractItem(item)) {
+                    continue;
+                }
+                actions.push(new Action({
+                    id: item.id,
+                    name: item.name,
+                    img: item.img,
+                    type: item.type,
+                    originalItem: item,
+                    left: item.type ? [item.type] : ['other'],
+                    roll: (event) => item.use?.({}, { event }) ?? item.roll?.({ event }) ?? item.sheet?.render(true)
+                }));
             }
-            if (this.system && !this.system.shouldExtractItem(item)) {
-                continue;
-            }
-            actions.push(new Action({
-                id: item.id,
-                name: item.name,
-                img: item.img,
-                type: item.type,
-                originalItem: item,
-                left: item.type ? [item.type] : ['other'],
-                roll: (event) => item.use?.({}, { event }) ?? item.roll?.({ event }) ?? item.sheet?.render(true)
-            }));
+        } finally {
+            log.groupEnd();
         }
         return actions;
     }
