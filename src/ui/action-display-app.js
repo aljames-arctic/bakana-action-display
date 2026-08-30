@@ -69,6 +69,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         this._boundOnWindowBlur = this._onWindowBlur.bind(this);
         this._boundOnWheel = this._onWheel.bind(this);
         this._boundOnWindowWheel = this._onWindowWheel.bind(this);
+        this._boundOnAutobanPointerOverCapture = this._onAutobanPointerOverCapture.bind(this);
     }
 
     /**
@@ -253,6 +254,9 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         }
         if (this._boundWindowStackPointerDown) {
             window.removeEventListener('pointerdown', this._boundWindowStackPointerDown, { capture: true });
+        }
+        if (this._boundOnAutobanPointerOverCapture) {
+            window.removeEventListener('pointerover', this._boundOnAutobanPointerOverCapture, { capture: true });
         }
         this._hideItemSummaryTooltip();
         if (this._boundOnKeyDown) {
@@ -1497,6 +1501,9 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         };
         window.addEventListener('pointerdown', this._boundWindowStackPointerDown, { capture: true });
 
+        // Intercept pointerover on enriched content-links inside autoban tooltips to prevent preview popups unless focused/locked
+        window.addEventListener('pointerover', this._boundOnAutobanPointerOverCapture, { capture: true });
+
         // Attach item summary tooltip event listeners
         this.element.addEventListener('pointerover', this._boundOnPointerOver);
         this.element.addEventListener('pointerout', this._boundOnPointerOut);
@@ -1664,6 +1671,15 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
                 this._hideItemSummaryTooltip();
             }
         }
+
+        // When leaving a tab (e.g. Verbal, Somatic, Components), close the tooltip immediately if not focused/locked
+        const tabEl = event.target?.closest?.('.bad-right-tab, .bad-right-sub-tab, .bad-tab');
+        const relatedTabEl = event.relatedTarget?.closest?.('.bad-right-tab, .bad-right-sub-tab, .bad-tab');
+        if (tabEl && tabEl !== relatedTabEl) {
+            if (!this.isTooltipFocused) {
+                game.tooltip?.deactivate?.();
+            }
+        }
     }
 
     /**
@@ -1713,6 +1729,20 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         const showSummaries = Boolean(game.settings.get(MODULE_ID, 'showItemSummaries'));
         if (!showSummaries) {
             this._hideItemSummaryTooltip();
+        }
+    }
+
+    /**
+     * Intercept pointerover on enriched content-links inside autoban tooltips.
+     * Prevents Foundry from triggering preview tooltips on content-links unless the tooltip is focused/locked.
+     * @param {PointerEvent} event
+     * @protected
+     */
+    _onAutobanPointerOverCapture(event) {
+        const link = event.target?.closest?.('.bad-autoban-tooltip .content-link');
+        if (link && !this.isTooltipFocused) {
+            event.stopImmediatePropagation?.();
+            event.preventDefault?.();
         }
     }
 
@@ -1837,8 +1867,8 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
      */
     get isTooltipFocused() {
         if (Boolean(game.tooltip?.locked)) return true;
-        const lockedEl = document.querySelector?.('#tooltip.locked, aside#tooltip.locked, div#tooltip.locked, .tooltip.locked');
-        return Boolean(lockedEl?.classList?.contains?.('locked'));
+        const lockedEl = document.querySelector?.('#tooltip.locked, aside#tooltip.locked, div#tooltip.locked, .tooltip.locked, [data-tooltip-locked="true"]');
+        return Boolean(lockedEl?.classList?.contains?.('locked') || lockedEl?.dataset?.tooltipLocked === 'true');
     }
 
     /**

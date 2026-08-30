@@ -1000,5 +1000,82 @@ test('ActionDisplayApp renders linked spell description when hovering over activ
     }
 });
 
+test('ActionDisplayApp autoban tooltip closes immediately on tab pointerout when not focused, and suppresses enrich preview unless locked', () => {
+    const actor = {
+        name: 'Gale',
+        flags: {}
+    };
+    const app = new ActionDisplayApp(actor);
+
+    let deactivated = false;
+    const originalDeactivate = globalThis.game.tooltip.deactivate;
+    globalThis.game.tooltip.deactivate = () => {
+        deactivated = true;
+    };
+    globalThis.game.tooltip.locked = false;
+
+    const verbalTabEl = {
+        closest: (selector) => {
+            if (selector.includes('bad-right-sub-tab')) return verbalTabEl;
+            return null;
+        }
+    };
+    const outsideEl = {
+        closest: () => null
+    };
+
+    try {
+        // 1. Leaving Verbal tab when NOT focused/locked -> deactivates immediately
+        deactivated = false;
+        app._onPointerOut({
+            target: verbalTabEl,
+            relatedTarget: outsideEl
+        });
+        assert.equal(deactivated, true, 'Tooltip should deactivate immediately when mouse leaves Verbal tab while unlocked');
+
+        // 2. Leaving Verbal tab when FOCUSED/LOCKED -> does NOT deactivate
+        deactivated = false;
+        globalThis.game.tooltip.locked = true;
+        app._onPointerOut({
+            target: verbalTabEl,
+            relatedTarget: outsideEl
+        });
+        assert.equal(deactivated, false, 'Tooltip should NOT deactivate when mouse leaves Verbal tab while locked');
+
+        // 3. Hovering over content-link when NOT focused/locked -> intercept and block
+        globalThis.game.tooltip.locked = false;
+        let stopped = false;
+        let prevented = false;
+        const linkEl = {
+            closest: (selector) => {
+                if (selector.includes('.bad-autoban-tooltip .content-link')) return linkEl;
+                return null;
+            }
+        };
+        app._boundOnAutobanPointerOverCapture({
+            target: linkEl,
+            stopImmediatePropagation: () => { stopped = true; },
+            preventDefault: () => { prevented = true; }
+        });
+        assert.equal(stopped, true, 'Should stop propagation of content-link hover when tooltip is unlocked');
+        assert.equal(prevented, true, 'Should prevent default of content-link hover when tooltip is unlocked');
+
+        // 4. Hovering over content-link when FOCUSED/LOCKED -> allow hover event through
+        globalThis.game.tooltip.locked = true;
+        stopped = false;
+        prevented = false;
+        app._boundOnAutobanPointerOverCapture({
+            target: linkEl,
+            stopImmediatePropagation: () => { stopped = true; },
+            preventDefault: () => { prevented = true; }
+        });
+        assert.equal(stopped, false, 'Should allow content-link hover event when tooltip is locked');
+        assert.equal(prevented, false, 'Should allow content-link default event when tooltip is locked');
+    } finally {
+        globalThis.game.tooltip.deactivate = originalDeactivate;
+        globalThis.game.tooltip.locked = false;
+    }
+});
+
 
 

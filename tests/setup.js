@@ -504,6 +504,8 @@ globalThis.document = globalThis.document ?? {
     querySelectorAll(selector) {
         return [];
     },
+    addEventListener() {},
+    removeEventListener() {},
     createElement(tag) {
         return {
             tagName: tag,
