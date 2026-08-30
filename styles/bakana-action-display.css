@@ -1606,13 +1606,20 @@ div#tooltip:has(.bad-economy-tooltip),
 #tooltip:has(.bad-autoban-tooltip),
 aside#tooltip:has(.bad-autoban-tooltip),
 div#tooltip:has(.bad-autoban-tooltip),
+.locked-tooltip:has(.bad-autoban-tooltip),
+aside.locked-tooltip:has(.bad-autoban-tooltip),
+div.locked-tooltip:has(.bad-autoban-tooltip),
 .bad-autoban-tooltip {
     text-align: left !important;
     direction: ltr !important;
-    max-width: 320px !important;
-    min-width: 200px !important;
+    max-width: 440px !important;
+    min-width: 260px !important;
     width: max-content !important;
     white-space: normal !important;
+    word-break: normal !important;
+    overflow-wrap: break-word !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
     padding: 8px 12px !important;
     background: rgba(15, 23, 42, 0.96) !important;
     backdrop-filter: blur(8px) !important;
@@ -1625,6 +1632,9 @@ div#tooltip:has(.bad-autoban-tooltip),
 #tooltip:has(.bad-autoban-tooltip) .content-link,
 aside#tooltip:has(.bad-autoban-tooltip) .content-link,
 div#tooltip:has(.bad-autoban-tooltip) .content-link,
+.locked-tooltip:has(.bad-autoban-tooltip) .content-link,
+aside.locked-tooltip:has(.bad-autoban-tooltip) .content-link,
+div.locked-tooltip:has(.bad-autoban-tooltip) .content-link,
 .bad-autoban-tooltip .content-link {
     pointer-events: none !important;
 }
@@ -1632,17 +1642,25 @@ div#tooltip:has(.bad-autoban-tooltip) .content-link,
 #tooltip.locked:has(.bad-autoban-tooltip),
 aside#tooltip.locked:has(.bad-autoban-tooltip),
 div#tooltip.locked:has(.bad-autoban-tooltip),
+.locked-tooltip:has(.bad-autoban-tooltip),
+aside.locked-tooltip:has(.bad-autoban-tooltip),
+div.locked-tooltip:has(.bad-autoban-tooltip),
 #tooltip.locked .bad-autoban-tooltip,
 aside.locked .bad-autoban-tooltip,
 div.locked .bad-autoban-tooltip,
 .locked .bad-autoban-tooltip,
 .bad-autoban-tooltip.locked {
     pointer-events: auto !important;
+    max-width: 440px !important;
+    overflow-x: hidden !important;
 }
 
 #tooltip.locked:has(.bad-autoban-tooltip) .content-link,
 aside#tooltip.locked:has(.bad-autoban-tooltip) .content-link,
 div#tooltip.locked:has(.bad-autoban-tooltip) .content-link,
+.locked-tooltip:has(.bad-autoban-tooltip) .content-link,
+aside.locked-tooltip:has(.bad-autoban-tooltip) .content-link,
+div.locked-tooltip:has(.bad-autoban-tooltip) .content-link,
 #tooltip.locked .bad-autoban-tooltip .content-link,
 aside.locked .bad-autoban-tooltip .content-link,
 div.locked .bad-autoban-tooltip .content-link,
@@ -1696,10 +1714,15 @@ div.locked .bad-autoban-tooltip .content-link,
     color: #f1f5f9;
     font-size: 0.88em;
     line-height: 1.4;
+    overflow-wrap: break-word !important;
+    word-break: normal !important;
 }
 
 .bad-autoban-list li {
     margin-bottom: 2px;
+    overflow-wrap: break-word !important;
+    word-break: normal !important;
+    white-space: normal !important;
 }
 
 .bad-autoban-list li strong {
