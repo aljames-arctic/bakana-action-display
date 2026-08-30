@@ -1676,6 +1676,11 @@ div#tooltip:has(.bad-autoban-tooltip),
     color: #fca5a5;
 }
 
+.bad-autoban-status {
+    color: #fb923c;
+    font-weight: 600;
+}
+
 /* Item Summary Tooltip Formatting */
 #tooltip:has(.bad-item-summary-tooltip),
 aside#tooltip:has(.bad-item-summary-tooltip),

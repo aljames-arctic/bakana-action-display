@@ -409,22 +409,47 @@ test('Manual unban while grappled unselects somatic on the very first click with
     assert.equal(tabColumn.activeSubTypes.has('somatic'), false, 'Subsequent render preserves unban');
 });
 
-test('Dnd5eSystemAdapter getAutoBanEffectReasons extracts causing active effect names and condition labels', () => {
+test('Dnd5eSystemAdapter getAutoBanEffectReasons extracts causing active effect names, status subcomponents, and condition labels', () => {
     const dndAdapter = new Dnd5eSystemAdapter();
     game.system = { id: 'dnd5e' };
 
     const actor = {
-        statuses: new Set(['silenced', 'restrained']),
+        statuses: new Set(['silenced', 'grappled', 'restrained']),
         effects: [
             { name: 'Silence Spell', disabled: false, isSuppressed: false, statuses: new Set(['silenced']) },
-            { name: 'Web', disabled: false, isSuppressed: false, statuses: new Set(['restrained']) },
+            { name: 'Mage Armor', disabled: false, isSuppressed: false, statuses: new Set(['grappled', 'restrained']) },
             { name: 'Paralyzed (Inactive)', disabled: true, isSuppressed: false, statuses: new Set(['paralyzed']) }
         ]
     };
 
     const reasons = dndAdapter.getAutoBanEffectReasons(actor);
-    assert.deepEqual(reasons.vocal, ['Silence Spell']);
-    assert.deepEqual(reasons.somatic, ['Web']);
+    assert.equal(reasons.vocal.length, 1);
+    assert.equal(reasons.vocal[0].name, 'Silence Spell');
+    assert.deepEqual(reasons.vocal[0].statuses, ['silenced']);
+    assert.equal(reasons.vocal[0].isDirectStatus, false);
+
+    assert.equal(reasons.somatic.length, 1);
+    assert.equal(reasons.somatic[0].name, 'Mage Armor');
+    assert.deepEqual(reasons.somatic[0].statuses, ['restrained', 'grappled']);
+    assert.equal(reasons.somatic[0].isDirectStatus, false);
+
+    // Actor with both custom active effect and direct condition
+    const actorWithDirect = {
+        statuses: new Set(['grappled', 'restrained', 'petrified']),
+        effects: [
+            { name: 'Mage Armor', disabled: false, isSuppressed: false, statuses: new Set(['grappled', 'restrained']) }
+        ]
+    };
+    const reasonsWithDirect = dndAdapter.getAutoBanEffectReasons(actorWithDirect);
+    assert.equal(reasonsWithDirect.somatic.length, 2);
+    const mageArmor = reasonsWithDirect.somatic.find(r => r.name === 'Mage Armor');
+    assert.ok(mageArmor, 'Should find Mage Armor');
+    assert.deepEqual(mageArmor.statuses, ['restrained', 'grappled']);
+    assert.equal(mageArmor.isDirectStatus, false);
+
+    const petrified = reasonsWithDirect.somatic.find(r => r.statuses.includes('petrified'));
+    assert.ok(petrified, 'Should find Petrified');
+    assert.equal(petrified.isDirectStatus, true);
 
     // When status exists without an active effect document
     const actorWithoutEffects = {
@@ -433,34 +458,44 @@ test('Dnd5eSystemAdapter getAutoBanEffectReasons extracts causing active effect 
     };
     const reasonsFallback = dndAdapter.getAutoBanEffectReasons(actorWithoutEffects);
     assert.equal(reasonsFallback.vocal.length, 1);
+    assert.equal(reasonsFallback.vocal[0].isDirectStatus, true);
     assert.equal(reasonsFallback.somatic.length, 1);
+    assert.equal(reasonsFallback.somatic[0].isDirectStatus, true);
 });
 
-test('Dnd5eSystemAdapter formatAutoBanTooltip builds stylized HTML tooltips for sub-tabs and parent tab', () => {
+test('Dnd5eSystemAdapter formatAutoBanTooltip builds stylized HTML tooltips with orange status keys', () => {
     const dndAdapter = new Dnd5eSystemAdapter();
 
-    // 1. Sub-tab tooltip for vocal
-    const vocalTooltip = dndAdapter.formatAutoBanTooltip('vocal', ['Silence Spell']);
+    // 1. Sub-tab tooltip for vocal with active effect
+    const vocalTooltip = dndAdapter.formatAutoBanTooltip('vocal', [
+        { name: 'Silence Spell', statuses: ['silenced'], isDirectStatus: false }
+    ]);
     assert.ok(vocalTooltip.includes('bad-autoban-tooltip'), 'Should have bad-autoban-tooltip wrapper');
     assert.ok(vocalTooltip.includes('Silence Spell'), 'Should list Silence Spell');
+    assert.ok(vocalTooltip.includes('<span class="bad-autoban-status">silenced</span>'), 'Should list status key in orange span');
     assert.ok(vocalTooltip.includes('bad-autoban-title'), 'Should have bad-autoban-title');
 
-    // 2. Sub-tab tooltip for somatic
-    const somaticTooltip = dndAdapter.formatAutoBanTooltip('somatic', ['Web', 'Grappled']);
+    // 2. Sub-tab tooltip for somatic with effect having status subcomponents and direct status
+    const somaticTooltip = dndAdapter.formatAutoBanTooltip('somatic', [
+        { name: 'Mage Armor', statuses: ['grappled', 'restrained'], isDirectStatus: false },
+        { name: 'Petrified', statuses: ['petrified'], isDirectStatus: true }
+    ]);
     assert.ok(somaticTooltip.includes('bad-autoban-tooltip'));
-    assert.ok(somaticTooltip.includes('Web'));
-    assert.ok(somaticTooltip.includes('Grappled'));
-    assert.ok(somaticTooltip.includes('bad-autoban-title'));
+    assert.ok(somaticTooltip.includes('Mage Armor (<span class="bad-autoban-status">grappled</span>, <span class="bad-autoban-status">restrained</span>)'));
+    assert.ok(somaticTooltip.includes('<span class="bad-autoban-status">Petrified</span>'));
 
     // 3. Consolidated parent tooltip for components
     const compTooltip = dndAdapter.formatAutoBanTooltip('components', {
-        vocal: ['Silence Spell'],
-        somatic: ['Web']
+        vocal: [{ name: 'Silence Spell', statuses: ['silenced'], isDirectStatus: false }],
+        somatic: [
+            { name: 'Mage Armor', statuses: ['grappled', 'restrained'], isDirectStatus: false },
+            { name: 'Petrified', statuses: ['petrified'], isDirectStatus: true }
+        ]
     });
     assert.ok(compTooltip.includes('bad-autoban-tooltip'));
-    assert.ok(compTooltip.includes('Silence Spell'));
-    assert.ok(compTooltip.includes('Web'));
-    assert.ok(compTooltip.includes('bad-autoban-title'));
+    assert.ok(compTooltip.includes('Silence Spell (<span class="bad-autoban-status">silenced</span>)'));
+    assert.ok(compTooltip.includes('Mage Armor (<span class="bad-autoban-status">grappled</span>, <span class="bad-autoban-status">restrained</span>)'));
+    assert.ok(compTooltip.includes('<span class="bad-autoban-status">Petrified</span>'));
 });
 
 test('Dnd5eSystemTabFilterManager logs current ban lists and effect causing reasons to log.debug during filtering', () => {
@@ -513,11 +548,13 @@ test('Dnd5eSystemTabFilterManager logs current ban lists and effect causing reas
         // Verify debug logs
         const banListLog = loggedMessages.find(args => typeof args[0] === 'string' && args[0].startsWith('Dnd5eSystemTabFilterManager.filterSubactions | Current ban lists:'));
         assert.ok(banListLog, 'Should log current ban lists and causing reasons in filterSubactions');
-        assert.deepEqual(banListLog[1], { vocal: ['Silence Aura'], somatic: [] });
+        assert.equal(banListLog[1].vocal.length, 1);
+        assert.equal(banListLog[1].vocal[0].name, 'Silence Aura');
+        assert.deepEqual(banListLog[1].vocal[0].statuses, ['silenced']);
 
         const itemFilterLog = loggedMessages.find(args => typeof args[0] === 'string' && args[0].includes('Filtering out "Misty Step"'));
         assert.ok(itemFilterLog, 'Should log filtered item with causing effect reasons');
-        assert.ok(itemFilterLog[0].includes('Silence Aura'));
+        assert.ok(itemFilterLog[0].includes('Silence Aura (silenced)'));
 
         // matchesEconomyTabs on non-subaction action
         loggedMessages.length = 0;
@@ -529,6 +566,7 @@ test('Dnd5eSystemTabFilterManager logs current ban lists and effect causing reas
 
         const skipActionLog = loggedMessages.find(args => typeof args[0] === 'string' && args[0].includes('Skipping action "Misty Step"'));
         assert.ok(skipActionLog, 'matchesEconomyTabs should log skipping action with causing effect reasons');
+        assert.ok(skipActionLog[0].includes('Silence Aura (silenced)'));
     } finally {
         log.debug = origDebug;
     }

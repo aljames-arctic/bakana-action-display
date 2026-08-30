@@ -2357,9 +2357,23 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
     }
 
     /**
-     * Retrieve the active status effects causing automatic verbal and/or somatic spell component bans.
+     * Resolve the localized display label for a status condition ID.
+     * @param {string} condId
+     * @returns {string}
+     * @private
+     */
+    #getConditionLabel(condId) {
+        const condConfig = CONFIG?.DND5E?.conditionTypes?.[condId];
+        const condName = condConfig?.label ?? condConfig?.name ?? condConfig;
+        const fallbackStatus = CONFIG?.statusEffects?.find?.(e => e.id === condId)?.name;
+        const rawLabel = condName ?? fallbackStatus ?? (condId.charAt(0).toUpperCase() + condId.slice(1));
+        return localize(rawLabel, rawLabel);
+    }
+
+    /**
+     * Retrieve the active status effects and conditions causing automatic verbal and/or somatic spell component bans.
      * @param {Actor} actor The actor document to inspect
-     * @returns {Record<'vocal'|'somatic', string[]>} Map of spell component to list of causing effect names
+     * @returns {Record<'vocal'|'somatic', Array<{ name: string, statuses: string[], isDirectStatus: boolean }>>}
      */
     getAutoBanEffectReasons(actor) {
         const result = { vocal: [], somatic: [] };
@@ -2378,36 +2392,63 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
             const matchingConditions = conditionList.filter(condId => activeStatuses.has(condId));
             if (!matchingConditions.length) continue;
 
-            const reasons = new Set();
-            for (const condId of matchingConditions) {
-                // Check if any ActiveEffect document contributed this status
-                let foundEffect = false;
-                for (const eff of activeEffects) {
+            const reasonsMap = new Map();
+            const accountedConditions = new Set();
+
+            // 1. Inspect ActiveEffects for matching status subcomponents
+            for (const eff of activeEffects) {
+                const matchedStatuses = [];
+                for (const condId of matchingConditions) {
                     const hasStatus = eff.statuses?.has?.(condId) ||
                         (Array.isArray(eff.statuses) && eff.statuses.includes(condId)) ||
                         eff.getFlag?.('core', 'statusId') === condId ||
                         eff.flags?.core?.statusId === condId;
 
                     if (hasStatus) {
-                        const effectName = eff.name ?? eff.label;
-                        if (effectName) {
-                            reasons.add(effectName);
-                            foundEffect = true;
-                        }
+                        matchedStatuses.push(condId);
+                        accountedConditions.add(condId);
                     }
                 }
 
-                // If no ActiveEffect provided a custom name, use localized or formatted condition label
-                if (!foundEffect) {
-                    const condConfig = CONFIG?.DND5E?.conditionTypes?.[condId];
-                    const condName = (condConfig && typeof condConfig === 'object') ? (condConfig.label ?? condConfig.name) : condConfig;
-                    const fallbackStatus = CONFIG?.statusEffects?.find?.(e => e.id === condId)?.name;
-                    const rawLabel = condName ?? fallbackStatus ?? (condId.charAt(0).toUpperCase() + condId.slice(1));
-                    const localized = localize(rawLabel, rawLabel);
-                    reasons.add(localized);
+                if (matchedStatuses.length > 0) {
+                    const effName = eff.name ?? eff.label ?? '';
+                    const condLabel = this.#getConditionLabel(matchedStatuses[0]);
+                    const isDirect = matchedStatuses.length === 1 && (
+                        effName.toLowerCase() === matchedStatuses[0].toLowerCase() ||
+                        effName.toLowerCase() === condLabel.toLowerCase()
+                    );
+
+                    const key = isDirect ? matchedStatuses[0] : effName;
+                    if (reasonsMap.has(key)) {
+                        const existing = reasonsMap.get(key);
+                        for (const st of matchedStatuses) {
+                            if (!existing.statuses.includes(st)) {
+                                existing.statuses.push(st);
+                            }
+                        }
+                    } else {
+                        reasonsMap.set(key, {
+                            name: isDirect ? condLabel : effName,
+                            statuses: matchedStatuses,
+                            isDirectStatus: isDirect
+                        });
+                    }
                 }
             }
-            result[comp] = Array.from(reasons);
+
+            // 2. Add any active matching condition that didn't have an ActiveEffect document
+            for (const condId of matchingConditions) {
+                if (!accountedConditions.has(condId)) {
+                    const condLabel = this.#getConditionLabel(condId);
+                    reasonsMap.set(condId, {
+                        name: condLabel,
+                        statuses: [condId],
+                        isDirectStatus: true
+                    });
+                }
+            }
+
+            result[comp] = Array.from(reasonsMap.values());
         }
 
         return result;
@@ -2415,8 +2456,9 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
 
     /**
      * Format a stylized HTML tooltip for an auto-banned component or components list.
+     * Highlights status keys in orange to differentiate from active effects with status subcomponents.
      * @param {string} comp Component identifier ('vocal'|'somatic'|'components')
-     * @param {string[]|Record<string, string[]>} reasons List of effect names or map of component to reasons
+     * @param {Array<Object|string>|Record<string, Array<Object|string>>} reasons List of effect reasons or map of component to reasons
      * @returns {string} HTML tooltip string
      */
     formatAutoBanTooltip(comp, reasons) {
@@ -2425,6 +2467,18 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
         const autoBannedStr = localize('BAD.dnd5eAutoBan.autoBanned', 'Auto-Banned');
         const causingStr = localize('BAD.dnd5eAutoBan.causingEffects', 'Causing Effect(s):');
 
+        const formatReasonHtml = (r) => {
+            if (!r) return '';
+            if (r.isDirectStatus) {
+                return `<span class="bad-autoban-status">${r.name}</span>`;
+            }
+            if (r.statuses?.length) {
+                const statusSpans = r.statuses.map(s => `<span class="bad-autoban-status">${s}</span>`).join(', ');
+                return `${r.name} (${statusSpans})`;
+            }
+            return `<span class="bad-autoban-status">${r.name ?? r}</span>`;
+        };
+
         if (comp === 'components') {
             // Consolidated tooltip for parent 'components' tab
             const entries = Object.entries(reasons).filter(([k, list]) => Array.isArray(list) && list.length > 0);
@@ -2432,7 +2486,8 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
 
             const listItems = entries.map(([c, list]) => {
                 const cLabel = this.getActionSubTabLabel(c);
-                return `<li><strong>${cLabel}</strong>: ${list.join(', ')}</li>`;
+                const subReasonsHtml = list.map(formatReasonHtml).join(', ');
+                return `<li><strong>${cLabel}</strong>: ${subReasonsHtml}</li>`;
             }).join('');
 
             const title = localize('BAD.dnd5eAutoBan.autoBannedComponents', 'Auto-Banned Components');
@@ -2444,7 +2499,7 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
 
         const compLabel = this.getActionSubTabLabel(comp);
         const title = `${autoBannedStr}: ${compLabel}`;
-        const listItems = reasonList.map(r => `<li>${r}</li>`).join('');
+        const listItems = reasonList.map(r => `<li>${formatReasonHtml(r)}</li>`).join('');
 
         return `<div class="bad-autoban-tooltip"><div class="bad-autoban-header"><i class="fas fa-ban bad-autoban-icon"></i><span class="bad-autoban-title">${title}</span></div><div class="bad-autoban-body"><span class="bad-autoban-reason-label">${causingStr}</span><ul class="bad-autoban-list">${listItems}</ul></div></div>`;
     }

@@ -123,6 +123,24 @@ export class Dnd5eSystemTabFilterManager extends BaseSystemTabFilterManager {
     }
 
     /**
+     * Format an array of reason objects or strings into a readable text list.
+     * @param {Array<Object|string>} reasons
+     * @returns {string}
+     * @private
+     */
+    #formatReasonsText(reasons) {
+        if (!Array.isArray(reasons)) return '';
+        return reasons.map(r => {
+            if (!r) return '';
+            if (r.isDirectStatus) return r.name;
+            if (r.statuses?.length) {
+                return `${r.name} (${r.statuses.join(', ')})`;
+            }
+            return String(r.name ?? r);
+        }).join(', ');
+    }
+
+    /**
      * Determine whether an action matches economy and spell component exclusion tabs in D&D 5e.
      * Logs causing effect reasons and current ban lists to log.debug when component bans are active.
      * @param {Object} action HUD Action object
@@ -144,7 +162,8 @@ export class Dnd5eSystemTabFilterManager extends BaseSystemTabFilterManager {
                 const matchedBannedComp = activeCompSubs.find(comp => this.requiresComponent(action, comp) || action.right?.some(tab => tab.root === 'components' && tab.label === comp));
                 if (matchedBannedComp) {
                     const reasons = effectReasons[matchedBannedComp] ?? [];
-                    log.debug(`Dnd5eSystemTabFilterManager.matchesEconomyTabs | Skipping action "${action.name}" (${action.id}) — requires banned component "${matchedBannedComp}" caused by effect(s): [${reasons.join(', ')}] | Current ban lists: [${activeCompSubs.join(', ')}]`, { action, bannedComponent: matchedBannedComp, reasons, activeCompSubs });
+                    const reasonsText = this.#formatReasonsText(reasons);
+                    log.debug(`Dnd5eSystemTabFilterManager.matchesEconomyTabs | Skipping action "${action.name}" (${action.id}) — requires banned component "${matchedBannedComp}" caused by effect(s): [${reasonsText}] | Current ban lists: [${activeCompSubs.join(', ')}]`, { action, bannedComponent: matchedBannedComp, reasons, activeCompSubs });
                     return false;
                 }
             }
@@ -177,7 +196,8 @@ export class Dnd5eSystemTabFilterManager extends BaseSystemTabFilterManager {
             const matchedBannedComp = activeCompSubs.find(comp => this.requiresComponent(sub, comp) || sub.right?.some(tab => tab.root === 'components' && tab.label === comp));
             if (matchedBannedComp) {
                 const reasons = effectReasons[matchedBannedComp] ?? [];
-                log.debug(`Dnd5eSystemTabFilterManager.filterSubactions | Filtering out "${sub.name}" (${sub.id}) — requires banned component "${matchedBannedComp}" caused by effect(s): [${reasons.join(', ')}] | Current ban lists: [${activeCompSubs.join(', ')}]`, { sub, bannedComponent: matchedBannedComp, reasons, activeCompSubs });
+                const reasonsText = this.#formatReasonsText(reasons);
+                log.debug(`Dnd5eSystemTabFilterManager.filterSubactions | Filtering out "${sub.name}" (${sub.id}) — requires banned component "${matchedBannedComp}" caused by effect(s): [${reasonsText}] | Current ban lists: [${activeCompSubs.join(', ')}]`, { sub, bannedComponent: matchedBannedComp, reasons, activeCompSubs });
                 return false;
             }
             return true;
