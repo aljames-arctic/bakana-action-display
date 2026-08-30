@@ -1619,6 +1619,35 @@ div#tooltip:has(.bad-autoban-tooltip),
     border: 1px solid rgba(239, 68, 68, 0.4) !important;
     border-radius: 6px !important;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6), 0 0 12px rgba(239, 68, 68, 0.2) !important;
+    pointer-events: none !important;
+}
+
+#tooltip:has(.bad-autoban-tooltip) .content-link,
+aside#tooltip:has(.bad-autoban-tooltip) .content-link,
+div#tooltip:has(.bad-autoban-tooltip) .content-link,
+.bad-autoban-tooltip .content-link {
+    pointer-events: none !important;
+}
+
+#tooltip.locked:has(.bad-autoban-tooltip),
+aside#tooltip.locked:has(.bad-autoban-tooltip),
+div#tooltip.locked:has(.bad-autoban-tooltip),
+#tooltip.locked .bad-autoban-tooltip,
+aside.locked .bad-autoban-tooltip,
+div.locked .bad-autoban-tooltip,
+.locked .bad-autoban-tooltip,
+.bad-autoban-tooltip.locked {
+    pointer-events: auto !important;
+}
+
+#tooltip.locked:has(.bad-autoban-tooltip) .content-link,
+aside#tooltip.locked:has(.bad-autoban-tooltip) .content-link,
+div#tooltip.locked:has(.bad-autoban-tooltip) .content-link,
+#tooltip.locked .bad-autoban-tooltip .content-link,
+aside.locked .bad-autoban-tooltip .content-link,
+div.locked .bad-autoban-tooltip .content-link,
+.locked .bad-autoban-tooltip .content-link,
+.bad-autoban-tooltip.locked .content-link {
     pointer-events: auto !important;
 }
 
