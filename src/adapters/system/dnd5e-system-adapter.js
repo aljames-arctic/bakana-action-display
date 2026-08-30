@@ -2493,19 +2493,23 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
 
         const autoBannedStr = localize('BAD.dnd5eAutoBan.autoBanned', 'Auto-Banned');
         const causingStr = localize('BAD.dnd5eAutoBan.causingEffects', 'Causing Effect(s):');
-
-        const formatReasonHtml = async (r) => {
+        const formatEffectHtml = async (r) => {
             if (!r) return '';
-            if (r.isDirectStatus) {
-                const condKey = r.statuses?.[0] ?? r.name;
-                return await this.enrichCondition(condKey, r.name);
+            const effectName = r?.name ?? String(r ?? '');
+            const rawStatuses = Array.isArray(r?.statuses) && r.statuses.length > 0
+                ? r.statuses
+                : [effectName];
+
+            const statusLinks = await Promise.all(rawStatuses.map(st => this.enrichCondition(st, st)));
+
+            const chunks = [];
+            for (let i = 0; i < statusLinks.length; i += 3) {
+                chunks.push(statusLinks.slice(i, i + 3));
             }
-            if (r.statuses?.length) {
-                const links = await Promise.all(r.statuses.map(st => this.enrichCondition(st, st)));
-                return `${r.name} (${links.join(', ')})`;
-            }
-            const directKey = r.name ?? String(r);
-            return await this.enrichCondition(directKey, directKey);
+
+            const rowsHtml = chunks.map(chunk => `<div class="bad-autoban-conditions-row">${chunk.join('')}</div>`).join('');
+
+            return `<li class="bad-autoban-effect-item"><span class="bad-autoban-effect-name">${effectName}</span><ul class="bad-autoban-conditions-list"><li><div class="bad-autoban-conditions-container">${rowsHtml}</div></li></ul></li>`;
         };
 
         if (comp === 'components') {
@@ -2515,13 +2519,12 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
 
             const listItems = await Promise.all(entries.map(async ([c, list]) => {
                 const cLabel = this.getActionSubTabLabel(c);
-                const subReasons = await Promise.all(list.map(formatReasonHtml));
-                const subLis = subReasons.map(sr => `<li>${sr}</li>`).join('');
-                return `<li><strong class="bad-autoban-comp-label">${cLabel}</strong><ul class="bad-autoban-sub-list">${subLis}</ul></li>`;
+                const subReasons = await Promise.all(list.map(formatEffectHtml));
+                return `<li><strong class="bad-autoban-comp-label">${cLabel}</strong><ul class="bad-autoban-sub-list bad-autoban-effects-list">${subReasons.join('')}</ul></li>`;
             }));
 
             const title = localize('BAD.dnd5eAutoBan.autoBannedComponents', 'Auto-Banned Components');
-            return `<div class="bad-autoban-tooltip"><div class="bad-autoban-header"><i class="fas fa-ban bad-autoban-icon"></i><span class="bad-autoban-title">${title}</span></div><div class="bad-autoban-body"><span class="bad-autoban-reason-label">${causingStr}</span><ul class="bad-autoban-list">${listItems.join('')}</ul></div></div>`;
+            return `<div class="bad-autoban-tooltip"><div class="bad-autoban-header"><i class="fas fa-ban bad-autoban-icon"></i><span class="bad-autoban-title">${title}</span></div><div class="bad-autoban-body"><span class="bad-autoban-reason-label">${causingStr}</span><ul class="bad-autoban-list bad-autoban-components-list">${listItems.join('')}</ul></div></div>`;
         }
 
         const reasonList = Array.isArray(reasons) ? reasons : [];
@@ -2529,9 +2532,9 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
 
         const compLabel = this.getActionSubTabLabel(comp);
         const title = `${autoBannedStr}: ${compLabel}`;
-        const listItems = await Promise.all(reasonList.map(async r => `<li>${await formatReasonHtml(r)}</li>`));
+        const listItems = await Promise.all(reasonList.map(formatEffectHtml));
 
-        return `<div class="bad-autoban-tooltip"><div class="bad-autoban-header"><i class="fas fa-ban bad-autoban-icon"></i><span class="bad-autoban-title">${title}</span></div><div class="bad-autoban-body"><span class="bad-autoban-reason-label">${causingStr}</span><ul class="bad-autoban-list">${listItems.join('')}</ul></div></div>`;
+        return `<div class="bad-autoban-tooltip"><div class="bad-autoban-header"><i class="fas fa-ban bad-autoban-icon"></i><span class="bad-autoban-title">${title}</span></div><div class="bad-autoban-body"><span class="bad-autoban-reason-label">${causingStr}</span><ul class="bad-autoban-list bad-autoban-single-comp-list">${listItems.join('')}</ul></div></div>`;
     }
 
     // #endregion

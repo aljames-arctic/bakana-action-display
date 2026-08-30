@@ -483,6 +483,9 @@ test('Dnd5eSystemAdapter formatAutoBanTooltip builds stylized HTML tooltips with
         { name: 'Petrified', statuses: ['petrified'], isDirectStatus: true }
     ]);
     assert.ok(somaticTooltip.includes('bad-autoban-tooltip'));
+    assert.ok(somaticTooltip.includes('bad-autoban-conditions-list'), 'Should contain sub-bullet status list');
+    assert.ok(somaticTooltip.includes('bad-autoban-conditions-container'), 'Should contain status container');
+    assert.ok(somaticTooltip.includes('bad-autoban-conditions-row'), 'Should contain status row');
     assert.ok(somaticTooltip.includes('Mage Armor'));
     assert.ok(somaticTooltip.includes('condgrappled000'), 'Should contain grappled compendium reference');
     assert.ok(somaticTooltip.includes('condrestrain00'), 'Should contain restrained compendium reference');
@@ -504,6 +507,13 @@ test('Dnd5eSystemAdapter formatAutoBanTooltip builds stylized HTML tooltips with
     assert.ok(compTooltip.includes('condsilenced00'));
     assert.ok(compTooltip.includes('Mage Armor'));
     assert.ok(compTooltip.includes('condpetrified0'));
+
+    // 4. Wrapping check: 4 statuses generates 2 rows with at most 3 statuses per row
+    const multiStatusTooltip = await dndAdapter.formatAutoBanTooltip('somatic', [
+        { name: 'Overwhelming Grip', statuses: ['grappled', 'restrained', 'paralyzed', 'blinded'], isDirectStatus: false }
+    ]);
+    const rowMatches = multiStatusTooltip.match(/bad-autoban-conditions-row/g);
+    assert.strictEqual(rowMatches?.length, 2, 'Should create 2 status rows for 4 statuses (max 3 per row)');
 });
 
 test('Dnd5eSystemTabFilterManager logs current ban lists and effect causing reasons to log.debug during filtering', () => {

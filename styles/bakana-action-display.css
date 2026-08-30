@@ -1723,9 +1723,11 @@ div.locked-tooltip:has(.bad-autoban-tooltip) .content-link {
 .bad-autoban-comp-label {
     color: #fca5a5;
     font-size: 0.95em;
+    font-weight: 700;
 }
 
-.bad-autoban-sub-list {
+.bad-autoban-sub-list,
+.bad-autoban-effects-list {
     margin: 3px 0 6px 0;
     padding-left: 1.2em;
     list-style-type: '– ';
@@ -1734,10 +1736,56 @@ div.locked-tooltip:has(.bad-autoban-tooltip) .content-link {
     line-height: 1.45;
 }
 
-.bad-autoban-sub-list li {
-    margin-bottom: 3px;
+.bad-autoban-effects-list > li,
+.bad-autoban-sub-list > li {
+    margin-bottom: 4px;
     padding-left: 2px;
     color: #f1f5f9;
+}
+
+.bad-autoban-effect-name {
+    font-weight: 600;
+    color: #e2e8f0;
+    display: inline-block;
+    margin-bottom: 2px;
+}
+
+/* Statuses Sub-Bullet under Effect */
+.bad-autoban-status-list,
+.bad-autoban-conditions-list {
+    margin: 2px 0 4px 0;
+    padding-left: 1.1em;
+    list-style-type: circle;
+    color: #94a3b8;
+}
+
+.bad-autoban-single-comp-list .bad-autoban-status-list,
+.bad-autoban-single-comp-list .bad-autoban-conditions-list {
+    list-style-type: '– ';
+}
+
+.bad-autoban-status-list > li,
+.bad-autoban-conditions-list > li {
+    margin-bottom: 2px;
+    padding-left: 2px;
+}
+
+/* Status container and rows (max 3 per line, left-aligned) */
+.bad-autoban-status-container,
+.bad-autoban-conditions-container {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 4px;
+    vertical-align: top;
+}
+
+.bad-autoban-status-row,
+.bad-autoban-conditions-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: nowrap;
 }
 
 .bad-autoban-tooltip .content-link {
