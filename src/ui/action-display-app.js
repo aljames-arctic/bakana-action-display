@@ -1788,7 +1788,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         event.stopImmediatePropagation?.();
         event.preventDefault?.();
 
-        // If this same tab is already the locked target, middle-clicking it toggles/dismisses the lock
+        // 3. If this same tab is already the locked target, middle-clicking it toggles/dismisses the lock
         if (this.isTooltipFocused && this._lockedTooltipTarget === tabTarget) {
             this._closeLockedTooltips();
             game.tooltip?.deactivate?.();
@@ -1796,12 +1796,25 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
             return;
         }
 
-        // If another tab or element was already locked/focused, close it before the new one locks
+        // 4. Verify that the target element actually has a non-empty tooltip
+        const tooltipContent = tabTarget.getAttribute?.('data-tooltip') ?? tabTarget.dataset?.tooltip;
+        if (!tooltipContent || !tooltipContent.trim()) {
+            return;
+        }
+
+        // 5. Verify that Foundry TooltipManager is active or #tooltip has content
+        const tooltipEl = document.querySelector?.('#tooltip, aside#tooltip, div#tooltip');
+        const hasTooltipContent = Boolean(tooltipEl?.textContent?.trim() || tooltipEl?.children?.length);
+        if (!game.tooltip?.active && !hasTooltipContent) {
+            return;
+        }
+
+        // 6. If another tab or element was already locked/focused, close it before the new one locks
         if (this.isTooltipFocused) {
             this._closeLockedTooltips();
         }
 
-        // Lock the active tooltip for this tab
+        // 7. Lock the active tooltip for this tab
         if (game.tooltip?.lockTooltip) {
             try {
                 game.tooltip.lockTooltip();

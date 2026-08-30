@@ -1089,14 +1089,27 @@ test('ActionDisplayApp single-focus discipline closes previous locked tab when m
         closest: (selector) => {
             if (selector.includes('bad-right-sub-tab')) return verbalTabEl;
             return null;
-        }
+        },
+        getAttribute: (attr) => attr === 'data-tooltip' ? 'Auto-Banned: Verbal' : null,
+        dataset: { tooltip: 'Auto-Banned: Verbal' }
     };
     const somaticTabEl = {
         name: 'somatic',
         closest: (selector) => {
             if (selector.includes('bad-right-sub-tab')) return somaticTabEl;
             return null;
-        }
+        },
+        getAttribute: (attr) => attr === 'data-tooltip' ? 'Auto-Banned: Somatic' : null,
+        dataset: { tooltip: 'Auto-Banned: Somatic' }
+    };
+    const componentsTabEl = {
+        name: 'components',
+        closest: (selector) => {
+            if (selector.includes('bad-right-tab')) return componentsTabEl;
+            return null;
+        },
+        getAttribute: () => null,
+        dataset: {}
     };
 
     let verbalClosed = false;
@@ -1116,7 +1129,28 @@ test('ActionDisplayApp single-focus discipline closes previous locked tab when m
         return originalQuerySelectorAll?.(selector) ?? [];
     };
 
+    const originalQuerySelector = document.querySelector;
+    document.querySelector = (selector) => {
+        if (selector.includes('#tooltip')) {
+            return {
+                textContent: 'Tooltip content',
+                children: [{}],
+                classList: { remove() {}, add() {} },
+                dataset: {}
+            };
+        }
+        return originalQuerySelector?.(selector) ?? null;
+    };
+
     try {
+        // 0. Middle-click "Components" parent tab without tooltip -> does nothing (cannot lock empty tooltip)
+        app._onMiddleClickCapture({
+            button: 1,
+            target: componentsTabEl,
+            stopImmediatePropagation: () => {},
+            preventDefault: () => {}
+        });
+        assert.equal(app._lockedTooltipTarget, null, 'Components tab without tooltip must not be locked');
         // 1. Middle-click "Verbal" -> locks Verbal
         app._onMiddleClickCapture({
             button: 1,
@@ -1187,6 +1221,7 @@ test('ActionDisplayApp single-focus discipline closes previous locked tab when m
         assert.equal(prevented, true, 'Should prevent default of auxclick on HUD tab');
     } finally {
         document.querySelectorAll = originalQuerySelectorAll;
+        document.querySelector = originalQuerySelector;
         globalThis.game.tooltip.locked = false;
     }
 });
