@@ -1077,5 +1077,107 @@ test('ActionDisplayApp autoban tooltip closes immediately on tab pointerout when
     }
 });
 
+test('ActionDisplayApp single-focus discipline closes previous locked tab when middle-clicking another tab', () => {
+    const actor = {
+        name: 'Gale',
+        flags: {}
+    };
+    const app = new ActionDisplayApp(actor);
+
+    const verbalTabEl = {
+        name: 'verbal',
+        closest: (selector) => {
+            if (selector.includes('bad-right-sub-tab')) return verbalTabEl;
+            return null;
+        }
+    };
+    const somaticTabEl = {
+        name: 'somatic',
+        closest: (selector) => {
+            if (selector.includes('bad-right-sub-tab')) return somaticTabEl;
+            return null;
+        }
+    };
+
+    let verbalClosed = false;
+    const mockVerbalLockedEl = {
+        classList: {
+            contains: (cls) => cls === 'locked-tooltip' || cls === 'locked',
+            remove: () => {}
+        },
+        querySelector: () => null,
+        remove: () => { verbalClosed = true; }
+    };
+
+    const originalQuerySelectorAll = document.querySelectorAll;
+    let lockedQueryResults = [];
+    document.querySelectorAll = (selector) => {
+        if (selector.includes('locked')) return lockedQueryResults;
+        return originalQuerySelectorAll?.(selector) ?? [];
+    };
+
+    try {
+        // 1. Middle-click "Verbal" -> locks Verbal
+        app._onMiddleClickCapture({
+            button: 1,
+            target: verbalTabEl,
+            stopImmediatePropagation: () => {},
+            preventDefault: () => {}
+        });
+        assert.equal(app._lockedTooltipTarget, verbalTabEl, 'Locked target should be Verbal');
+
+        // Simulate Verbal now being locked
+        globalThis.game.tooltip.locked = true;
+        lockedQueryResults = [mockVerbalLockedEl];
+
+        // 2. Middle-click "Somatic" -> closes Verbal, sets locked target to Somatic
+        app._onMiddleClickCapture({
+            button: 1,
+            target: somaticTabEl,
+            stopImmediatePropagation: () => {},
+            preventDefault: () => {}
+        });
+        assert.equal(verbalClosed, true, 'Verbal locked tooltip should have been closed/removed');
+        assert.equal(app._lockedTooltipTarget, somaticTabEl, 'Locked target should now be Somatic');
+
+        // Simulate Foundry locking Somatic
+        globalThis.game.tooltip.locked = true;
+
+        // 3. Middle-click "Somatic" again (same tab) -> toggles/dismisses lock
+        let stopped = false;
+        let prevented = false;
+        app._onMiddleClickCapture({
+            button: 1,
+            target: somaticTabEl,
+            stopImmediatePropagation: () => { stopped = true; },
+            preventDefault: () => { prevented = true; }
+        });
+        assert.equal(stopped, true, 'Should stop propagation when middle-clicking same locked tab to dismiss');
+        assert.equal(prevented, true, 'Should prevent default when middle-clicking same locked tab to dismiss');
+        assert.equal(app._lockedTooltipTarget, null, 'Locked target should be cleared');
+
+        // 4. Middle-clicking inside a locked tooltip -> dismisses locked tooltip
+        stopped = false;
+        prevented = false;
+        const insideLockedEl = {
+            closest: (selector) => {
+                if (selector.includes('locked-tooltip') || selector.includes('#tooltip.locked')) return insideLockedEl;
+                return null;
+            }
+        };
+        app._onMiddleClickCapture({
+            button: 1,
+            target: insideLockedEl,
+            stopImmediatePropagation: () => { stopped = true; },
+            preventDefault: () => { prevented = true; }
+        });
+        assert.equal(stopped, true, 'Should stop propagation when middle-clicking inside locked tooltip');
+        assert.equal(prevented, true, 'Should prevent default when middle-clicking inside locked tooltip');
+    } finally {
+        document.querySelectorAll = originalQuerySelectorAll;
+        globalThis.game.tooltip.locked = false;
+    }
+});
+
 
 

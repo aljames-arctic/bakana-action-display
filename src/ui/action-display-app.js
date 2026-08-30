@@ -70,6 +70,8 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         this._boundOnWheel = this._onWheel.bind(this);
         this._boundOnWindowWheel = this._onWindowWheel.bind(this);
         this._boundOnAutobanPointerOverCapture = this._onAutobanPointerOverCapture.bind(this);
+        this._lockedTooltipTarget = null;
+        this._boundOnMiddleClickCapture = this._onMiddleClickCapture.bind(this);
     }
 
     /**
@@ -258,6 +260,10 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         if (this._boundOnAutobanPointerOverCapture) {
             window.removeEventListener('pointerover', this._boundOnAutobanPointerOverCapture, { capture: true });
         }
+        if (this._boundOnMiddleClickCapture) {
+            window.removeEventListener('auxclick', this._boundOnMiddleClickCapture, { capture: true });
+        }
+        this._closeLockedTooltips();
         this._hideItemSummaryTooltip();
         if (this._boundOnKeyDown) {
             window.removeEventListener('keydown', this._boundOnKeyDown);
@@ -1144,10 +1150,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
             return;
         }
 
-        if (game.tooltip?.locked) {
-            game.tooltip.locked = false;
-            document.querySelector?.('#tooltip.locked, aside#tooltip.locked, div#tooltip.locked, .tooltip.locked')?.classList?.remove?.('locked');
-        }
+        this._closeLockedTooltips();
 
         // Close any existing open menu state before rolling or opening dropdown
         this._clearMenuState({ force: true });
@@ -1504,6 +1507,9 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         // Intercept pointerover on enriched content-links inside autoban tooltips to prevent preview popups unless focused/locked
         window.addEventListener('pointerover', this._boundOnAutobanPointerOverCapture, { capture: true });
 
+        // Intercept middle-click on tabs and elements to enforce single-focus tooltip discipline
+        window.addEventListener('auxclick', this._boundOnMiddleClickCapture, { capture: true });
+
         // Attach item summary tooltip event listeners
         this.element.addEventListener('pointerover', this._boundOnPointerOver);
         this.element.addEventListener('pointerout', this._boundOnPointerOut);
@@ -1747,6 +1753,116 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
     }
 
     /**
+     * Intercept middle-click (auxclick with button === 1) events in the capture phase.
+     * Enforces single-focus discipline: if a tab tooltip is already focused/locked,
+     * middle-clicking another tab will close the previous locked tooltip so two tabs
+     * can never be focused simultaneously.
+     * @param {MouseEvent} event
+     * @protected
+     */
+    _onMiddleClickCapture(event) {
+        if (event.button !== 1) return;
+
+        // Check if middle-click is on or inside an already-locked tooltip
+        const isInsideLockedTooltip = Boolean(event.target?.closest?.('.locked-tooltip, #tooltip.locked, aside#tooltip.locked, div#tooltip.locked, [data-tooltip-locked="true"]'));
+        if (isInsideLockedTooltip) {
+            this._closeLockedTooltips();
+            game.tooltip?.deactivate?.();
+            this._lockedTooltipTarget = null;
+            event.stopImmediatePropagation?.();
+            event.preventDefault?.();
+            return;
+        }
+
+        // Check if middle-click is on a tab or tooltip-bearing element inside the HUD
+        const tabTarget = event.target?.closest?.('.bad-right-tab, .bad-right-sub-tab, .bad-tab, .bad-action-item, [data-tooltip]');
+        if (!tabTarget) return;
+
+        // If this same tab is already the locked target, middle-clicking it toggles/dismisses the lock
+        if (this.isTooltipFocused && this._lockedTooltipTarget === tabTarget) {
+            this._closeLockedTooltips();
+            game.tooltip?.deactivate?.();
+            this._lockedTooltipTarget = null;
+            event.stopImmediatePropagation?.();
+            event.preventDefault?.();
+            return;
+        }
+
+        // If another tab or element was already locked/focused, close it before the new one locks
+        if (this.isTooltipFocused) {
+            this._closeLockedTooltips();
+        }
+
+        this._lockedTooltipTarget = tabTarget;
+    }
+
+    /**
+     * Close and dismiss any existing locked or focused tooltips across the DOM and Foundry TooltipManager.
+     * @param {HTMLElement} [except] Optional tooltip element or target to exclude from closing
+     * @protected
+     */
+    _closeLockedTooltips(except = null) {
+        if (game.tooltip) {
+            game.tooltip.locked = false;
+        }
+
+        const lockedSelectors = [
+            '.locked-tooltip',
+            'aside.locked-tooltip',
+            'div.locked-tooltip',
+            '.locked:not(#tooltip)',
+            '[data-tooltip-locked="true"]:not(#tooltip)'
+        ].join(', ');
+
+        const lockedElements = document.querySelectorAll?.(lockedSelectors) ?? [];
+        for (const el of lockedElements) {
+            if (except && (el === except || el.contains?.(except))) continue;
+            try {
+                const closeBtn = el.querySelector?.('button.close, a.close, [data-action="close"], .close-button, i.fa-times, i.fa-xmark');
+                if (closeBtn?.click) {
+                    closeBtn.click();
+                } else {
+                    el.remove?.();
+                }
+            } catch (_) {
+                el.remove?.();
+            }
+        }
+
+        const primaryTooltip = document.querySelector?.('#tooltip, aside#tooltip, div#tooltip');
+        if (primaryTooltip && primaryTooltip !== except) {
+            primaryTooltip.classList?.remove?.('locked');
+            if (primaryTooltip.dataset) {
+                delete primaryTooltip.dataset.tooltipLocked;
+            }
+        }
+
+        try {
+            if (game.tooltip?.lockedTooltips) {
+                if (game.tooltip.lockedTooltips instanceof Map) {
+                    for (const [id, tooltip] of game.tooltip.lockedTooltips.entries()) {
+                        if (except && tooltip === except) continue;
+                        tooltip?.remove?.();
+                        game.tooltip.lockedTooltips.delete(id);
+                    }
+                } else if (Array.isArray(game.tooltip.lockedTooltips) || game.tooltip.lockedTooltips instanceof Set) {
+                    for (const tooltip of Array.from(game.tooltip.lockedTooltips)) {
+                        if (except && tooltip === except) continue;
+                        tooltip?.remove?.();
+                    }
+                    if (Array.isArray(game.tooltip.lockedTooltips)) {
+                        game.tooltip.lockedTooltips.length = 0;
+                    } else {
+                        game.tooltip.lockedTooltips.clear?.();
+                    }
+                }
+            }
+        } catch (_) {}
+
+        this._lockedTooltipTarget = null;
+    }
+
+    /**
      * Choose the optimal tooltip direction (LEFT or RIGHT) based on viewport position.
      * @param {HTMLElement} element
      * @returns {string}
@@ -1867,8 +1983,8 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
      */
     get isTooltipFocused() {
         if (Boolean(game.tooltip?.locked)) return true;
-        const lockedEl = document.querySelector?.('#tooltip.locked, aside#tooltip.locked, div#tooltip.locked, .tooltip.locked, [data-tooltip-locked="true"]');
-        return Boolean(lockedEl?.classList?.contains?.('locked') || lockedEl?.dataset?.tooltipLocked === 'true');
+        const lockedEl = document.querySelector?.('#tooltip.locked, aside#tooltip.locked, div#tooltip.locked, .tooltip.locked, .locked-tooltip, [data-tooltip-locked="true"]');
+        return Boolean(lockedEl?.classList?.contains?.('locked') || lockedEl?.classList?.contains?.('locked-tooltip') || lockedEl?.dataset?.tooltipLocked === 'true');
     }
 
     /**
