@@ -465,6 +465,35 @@ class Adapter {
     }
 
     /**
+     * Format a stylized HTML tooltip for an action economy reminder bar.
+     * @param {Object} sysType
+     * @param {string|null} [color]
+     * @returns {string}
+     */
+    formatEconomyTooltip(sysType, color) {
+        return this.system?.formatEconomyTooltip?.(sysType, color) ?? '';
+    }
+
+    /**
+     * Retrieve active status effects causing automatic verbal/somatic spell component bans.
+     * @param {Actor} actor
+     * @returns {Record<'vocal'|'somatic', string[]>}
+     */
+    getAutoBanEffectReasons(actor) {
+        return this.system?.getAutoBanEffectReasons?.(actor) ?? { vocal: [], somatic: [] };
+    }
+
+    /**
+     * Format a stylized HTML tooltip for automatically added verbal/somatic bans.
+     * @param {string} comp
+     * @param {string[]} reasons
+     * @returns {string}
+     */
+    formatAutoBanTooltip(comp, reasons) {
+        return this.system?.formatAutoBanTooltip?.(comp, reasons) ?? '';
+    }
+
+    /**
      * Get item summary data for rich tooltips.
      * @param {Object} action
      * @param {Object} [item]

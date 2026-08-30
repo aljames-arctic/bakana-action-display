@@ -1,5 +1,6 @@
 import { BaseSystemTabFilterManager } from './base-system-tab-filter-manager.js';
 import { TabRef } from '../../../ui/tab-ref.js';
+import { log } from '../../../lib/logger.js';
 
 const COMPONENT_NAMES = {
     'vocal': ['vocal', 'verbal'],
@@ -122,23 +123,64 @@ export class Dnd5eSystemTabFilterManager extends BaseSystemTabFilterManager {
     }
 
     /**
+     * Determine whether an action matches economy and spell component exclusion tabs in D&D 5e.
+     * Logs causing effect reasons and current ban lists to log.debug when component bans are active.
+     * @param {Object} action HUD Action object
+     * @param {Object} filterContext Active filter state
+     * @returns {boolean}
+     */
+    matchesEconomyTabs(action, filterContext) {
+        if (!action) return false;
+        const activeCompSubs = this.getActiveExclusionSubs(filterContext);
+
+        if (!filterContext?._inFilterSubactions && activeCompSubs.length > 0) {
+            const actor = filterContext?.actor ?? this.adapter?.actor ?? action.actor ?? action.originalItem?.actor ?? null;
+            const effectReasons = this.adapter?.getAutoBanEffectReasons?.(actor) ?? {};
+
+            log.debug(`Dnd5eSystemTabFilterManager.matchesEconomyTabs | Evaluating action "${action.name}" (${action.id}) against active component ban lists: [${activeCompSubs.join(', ')}] | Effect causing reasons:`, effectReasons);
+
+            // If action has no subactions, evaluate direct component bans on action
+            if (!action.subactions?.length) {
+                const matchedBannedComp = activeCompSubs.find(comp => this.requiresComponent(action, comp) || action.right?.some(tab => tab.root === 'components' && tab.label === comp));
+                if (matchedBannedComp) {
+                    const reasons = effectReasons[matchedBannedComp] ?? [];
+                    log.debug(`Dnd5eSystemTabFilterManager.matchesEconomyTabs | Skipping action "${action.name}" (${action.id}) — requires banned component "${matchedBannedComp}" caused by effect(s): [${reasons.join(', ')}] | Current ban lists: [${activeCompSubs.join(', ')}]`, { action, bannedComponent: matchedBannedComp, reasons, activeCompSubs });
+                    return false;
+                }
+            }
+        }
+
+        return super.matchesEconomyTabs(action, filterContext);
+    }
+
+    /**
      * Filter subactions taking D&D 5e spell component exclusions into account.
+     * Logs causing effect reasons and current ban lists to log.debug when filtering.
      * @param {Object[]} subactions Array of subactions
      * @param {Object} filterContext Active filter state
      * @returns {Object[]} Qualifying subactions
      */
     filterSubactions(subactions, filterContext) {
-        const baseFiltered = super.filterSubactions(subactions, filterContext);
+        const baseFiltered = super.filterSubactions(subactions, { ...filterContext, _inFilterSubactions: true });
         const activeCompSubs = this.getActiveExclusionSubs(filterContext);
 
         if (activeCompSubs.length === 0) {
             return baseFiltered;
         }
 
+        const actor = filterContext?.actor ?? this.adapter?.actor ?? subactions?.[0]?.actor ?? subactions?.[0]?.originalItem?.actor ?? null;
+        const effectReasons = this.adapter?.getAutoBanEffectReasons?.(actor) ?? {};
+
+        log.debug(`Dnd5eSystemTabFilterManager.filterSubactions | Current ban lists: [${activeCompSubs.join(', ')}] | Effect causing reasons:`, effectReasons);
+
         return baseFiltered.filter(sub => {
-            const hasPropertyMatch = activeCompSubs.some(comp => this.requiresComponent(sub, comp));
-            const hasTabMatch = sub.right?.some(tab => tab.root === 'components' && activeCompSubs.includes(tab.label));
-            return !hasPropertyMatch && !hasTabMatch;
+            const matchedBannedComp = activeCompSubs.find(comp => this.requiresComponent(sub, comp) || sub.right?.some(tab => tab.root === 'components' && tab.label === comp));
+            if (matchedBannedComp) {
+                const reasons = effectReasons[matchedBannedComp] ?? [];
+                log.debug(`Dnd5eSystemTabFilterManager.filterSubactions | Filtering out "${sub.name}" (${sub.id}) — requires banned component "${matchedBannedComp}" caused by effect(s): [${reasons.join(', ')}] | Current ban lists: [${activeCompSubs.join(', ')}]`, { sub, bannedComponent: matchedBannedComp, reasons, activeCompSubs });
+                return false;
+            }
+            return true;
         });
     }
 }

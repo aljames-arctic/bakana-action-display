@@ -1547,6 +1547,135 @@ div#tooltip:has(.bad-expression-tooltip),
     white-space: nowrap;
 }
 
+/* Action Economy Tooltip Formatting */
+#tooltip:has(.bad-economy-tooltip),
+aside#tooltip:has(.bad-economy-tooltip),
+div#tooltip:has(.bad-economy-tooltip),
+.bad-economy-tooltip {
+    text-align: left !important;
+    direction: ltr !important;
+    max-width: 280px !important;
+    min-width: 140px !important;
+    width: max-content !important;
+    white-space: normal !important;
+    padding: 6px 10px !important;
+    background: rgba(15, 23, 42, 0.96) !important;
+    backdrop-filter: blur(8px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    border-radius: 6px !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6) !important;
+}
+
+.bad-economy-tooltip {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.bad-economy-tooltip-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.bad-economy-tooltip-bar {
+    display: inline-block;
+    width: 4px;
+    height: 14px;
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+
+.bad-economy-tooltip-label {
+    font-size: 0.95em;
+    font-weight: 600;
+    color: #f8fafc;
+    line-height: 1.2;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.bad-economy-tooltip-category {
+    font-size: 0.72em;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #94a3b8;
+    margin-left: 12px;
+}
+
+/* Auto-Ban Spell Components Tooltip Formatting */
+#tooltip:has(.bad-autoban-tooltip),
+aside#tooltip:has(.bad-autoban-tooltip),
+div#tooltip:has(.bad-autoban-tooltip),
+.bad-autoban-tooltip {
+    text-align: left !important;
+    direction: ltr !important;
+    max-width: 320px !important;
+    min-width: 200px !important;
+    width: max-content !important;
+    white-space: normal !important;
+    padding: 8px 12px !important;
+    background: rgba(15, 23, 42, 0.96) !important;
+    backdrop-filter: blur(8px) !important;
+    border: 1px solid rgba(239, 68, 68, 0.4) !important;
+    border-radius: 6px !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6), 0 0 12px rgba(239, 68, 68, 0.2) !important;
+}
+
+.bad-autoban-tooltip {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.bad-autoban-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid rgba(239, 68, 68, 0.25);
+    padding-bottom: 4px;
+}
+
+.bad-autoban-icon {
+    color: #ef4444;
+    font-size: 1.1em;
+}
+
+.bad-autoban-title {
+    font-weight: 700;
+    font-size: 0.95em;
+    color: #fca5a5;
+    letter-spacing: 0.02em;
+}
+
+.bad-autoban-body {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.bad-autoban-reason-label {
+    font-size: 0.8em;
+    color: #cbd5e1;
+    font-weight: 600;
+}
+
+.bad-autoban-list {
+    margin: 0;
+    padding-left: 1.2em;
+    list-style-type: disc;
+    color: #f1f5f9;
+    font-size: 0.88em;
+    line-height: 1.4;
+}
+
+.bad-autoban-list li {
+    margin-bottom: 2px;
+}
+
+.bad-autoban-list li strong {
+    color: #fca5a5;
+}
+
 /* Item Summary Tooltip Formatting */
 #tooltip:has(.bad-item-summary-tooltip),
 aside#tooltip:has(.bad-item-summary-tooltip),

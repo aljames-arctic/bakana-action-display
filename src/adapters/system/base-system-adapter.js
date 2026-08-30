@@ -584,14 +584,29 @@ export class BaseSystemAdapter {
         for (const sysType of enabledTypes) {
             const isActive = activeTypes.has(sysType.id);
             const color = isActive ? this.getEconomyColor(sysType.id, userColors) : null;
+            const tooltip = isActive ? this.formatEconomyTooltip(sysType, color) : '';
             indicators.push({
                 type: sysType.id,
                 label: sysType.label,
                 active: isActive,
-                color
+                color,
+                tooltip
             });
         }
         return indicators;
+    }
+
+    /**
+     * Format a stylized HTML tooltip for an action economy reminder bar.
+     * @param {Object} sysType System economy type definition
+     * @param {string|null} [color=null] Active bar color
+     * @returns {string} HTML string for the tooltip
+     */
+    formatEconomyTooltip(sysType, color = null) {
+        const econColor = color ?? sysType?.defaultColor ?? '#64748b';
+        const label = sysType?.label ?? sysType?.id ?? '';
+        const category = localize('BAD.common.actionEconomy', 'Action Economy');
+        return `<div class="bad-economy-tooltip"><div class="bad-economy-tooltip-header"><span class="bad-economy-tooltip-bar" style="background-color: ${econColor}; box-shadow: 0 0 6px ${econColor};"></span><span class="bad-economy-tooltip-label">${label}</span></div><div class="bad-economy-tooltip-category">${category}</div></div>`;
     }
 
     /**

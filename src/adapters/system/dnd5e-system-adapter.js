@@ -2345,13 +2345,108 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
         }
 
         if (changed && actor.isOwner && actor.setFlag) {
+            const effectReasons = this.getAutoBanEffectReasons(actor);
             actor.setFlag(MODULE_ID, 'autoBanState', {
                 conditions: updatedConditions,
-                manualUnbans: updatedManualUnbans
+                manualUnbans: updatedManualUnbans,
+                effectReasons
             }, { badInternal: true }).catch(err => {
                 log.debug('Error setting autoBanState flag:', err);
             });
         }
+    }
+
+    /**
+     * Retrieve the active status effects causing automatic verbal and/or somatic spell component bans.
+     * @param {Actor} actor The actor document to inspect
+     * @returns {Record<'vocal'|'somatic', string[]>} Map of spell component to list of causing effect names
+     */
+    getAutoBanEffectReasons(actor) {
+        const result = { vocal: [], somatic: [] };
+        if (!actor || game.system?.id !== 'dnd5e') return result;
+
+        const config = game.settings.get(MODULE_ID, 'dnd5eAutoBanConditions');
+        if (!config?.enabled) return result;
+
+        const activeStatuses = this.getActorStatuses(actor);
+
+        // Gather all active, non-disabled, non-suppressed effects on actor
+        const activeEffects = Array.from(actor.effects ?? []).filter(eff => !eff.disabled && !eff.isSuppressed);
+
+        for (const comp of ['vocal', 'somatic']) {
+            const conditionList = Array.isArray(config[comp]) ? config[comp] : [];
+            const matchingConditions = conditionList.filter(condId => activeStatuses.has(condId));
+            if (!matchingConditions.length) continue;
+
+            const reasons = new Set();
+            for (const condId of matchingConditions) {
+                // Check if any ActiveEffect document contributed this status
+                let foundEffect = false;
+                for (const eff of activeEffects) {
+                    const hasStatus = eff.statuses?.has?.(condId) ||
+                        (Array.isArray(eff.statuses) && eff.statuses.includes(condId)) ||
+                        eff.getFlag?.('core', 'statusId') === condId ||
+                        eff.flags?.core?.statusId === condId;
+
+                    if (hasStatus) {
+                        const effectName = eff.name ?? eff.label;
+                        if (effectName) {
+                            reasons.add(effectName);
+                            foundEffect = true;
+                        }
+                    }
+                }
+
+                // If no ActiveEffect provided a custom name, use localized or formatted condition label
+                if (!foundEffect) {
+                    const condConfig = CONFIG?.DND5E?.conditionTypes?.[condId];
+                    const condName = (condConfig && typeof condConfig === 'object') ? (condConfig.label ?? condConfig.name) : condConfig;
+                    const fallbackStatus = CONFIG?.statusEffects?.find?.(e => e.id === condId)?.name;
+                    const rawLabel = condName ?? fallbackStatus ?? (condId.charAt(0).toUpperCase() + condId.slice(1));
+                    const localized = localize(rawLabel, rawLabel);
+                    reasons.add(localized);
+                }
+            }
+            result[comp] = Array.from(reasons);
+        }
+
+        return result;
+    }
+
+    /**
+     * Format a stylized HTML tooltip for an auto-banned component or components list.
+     * @param {string} comp Component identifier ('vocal'|'somatic'|'components')
+     * @param {string[]|Record<string, string[]>} reasons List of effect names or map of component to reasons
+     * @returns {string} HTML tooltip string
+     */
+    formatAutoBanTooltip(comp, reasons) {
+        if (!reasons) return '';
+
+        const autoBannedStr = localize('BAD.dnd5eAutoBan.autoBanned', 'Auto-Banned');
+        const causingStr = localize('BAD.dnd5eAutoBan.causingEffects', 'Causing Effect(s):');
+
+        if (comp === 'components') {
+            // Consolidated tooltip for parent 'components' tab
+            const entries = Object.entries(reasons).filter(([k, list]) => Array.isArray(list) && list.length > 0);
+            if (!entries.length) return '';
+
+            const listItems = entries.map(([c, list]) => {
+                const cLabel = this.getActionSubTabLabel(c);
+                return `<li><strong>${cLabel}</strong>: ${list.join(', ')}</li>`;
+            }).join('');
+
+            const title = localize('BAD.dnd5eAutoBan.autoBannedComponents', 'Auto-Banned Components');
+            return `<div class="bad-autoban-tooltip"><div class="bad-autoban-header"><i class="fas fa-ban bad-autoban-icon"></i><span class="bad-autoban-title">${title}</span></div><div class="bad-autoban-body"><span class="bad-autoban-reason-label">${causingStr}</span><ul class="bad-autoban-list">${listItems}</ul></div></div>`;
+        }
+
+        const reasonList = Array.isArray(reasons) ? reasons : [];
+        if (!reasonList.length) return '';
+
+        const compLabel = this.getActionSubTabLabel(comp);
+        const title = `${autoBannedStr}: ${compLabel}`;
+        const listItems = reasonList.map(r => `<li>${r}</li>`).join('');
+
+        return `<div class="bad-autoban-tooltip"><div class="bad-autoban-header"><i class="fas fa-ban bad-autoban-icon"></i><span class="bad-autoban-title">${title}</span></div><div class="bad-autoban-body"><span class="bad-autoban-reason-label">${causingStr}</span><ul class="bad-autoban-list">${listItems}</ul></div></div>`;
     }
 
     // #endregion

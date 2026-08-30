@@ -312,7 +312,7 @@
                                 {{#each this.economyIndicators}}
                                 <div class="bad-economy-slot {{#unless this.active}}bad-economy-slot-empty{{/unless}}">
                                     {{#if this.active}}
-                                    <span class="bad-economy-bar" style="background-color: {{this.color}}" title="{{this.label}}"></span>
+                                    <span class="bad-economy-bar" style="background-color: {{this.color}}" data-tooltip="{{this.tooltip}}" data-tooltip-direction="UP"></span>
                                     {{/if}}
                                 </div>
                                 {{/each}}
@@ -351,7 +351,7 @@
                                 {{#each this.economyIndicators}}
                                 <div class="bad-economy-slot {{#unless this.active}}bad-economy-slot-empty{{/unless}}">
                                     {{#if this.active}}
-                                    <span class="bad-economy-bar" style="background-color: {{this.color}}" title="{{this.label}}"></span>
+                                    <span class="bad-economy-bar" style="background-color: {{this.color}};" data-tooltip="{{this.tooltip}}" data-tooltip-direction="UP"></span>
                                     {{/if}}
                                 </div>
                                 {{/each}}
@@ -392,7 +392,7 @@
                             {{#each this.economyIndicators}}
                             <div class="bad-economy-slot {{#unless this.active}}bad-economy-slot-empty{{/unless}}">
                                 {{#if this.active}}
-                                <span class="bad-economy-bar" style="background-color: {{this.color}}" title="{{this.label}}"></span>
+                                <span class="bad-economy-bar" style="background-color: {{this.color}};" data-tooltip="{{this.tooltip}}" data-tooltip-direction="UP"></span>
                                 {{/if}}
                             </div>
                             {{/each}}
@@ -425,7 +425,8 @@
             <div class="bad-right-tab {{#if this.active}}active{{/if}} {{#if this.activeParent}}active-parent{{/if}}" 
                  data-action="changeActionType" 
                  data-type="{{this.id}}" 
-                 data-has-sub-tabs="{{#if this.subTabs.length}}true{{else}}false{{/if}}">
+                 data-has-sub-tabs="{{#if this.subTabs.length}}true{{else}}false{{/if}}"
+                 {{#if this.tooltip}}data-tooltip="{{this.tooltip}}" data-tooltip-direction="LEFT"{{/if}}>
                 <div class="bad-right-tab-icon">
                     <i class="{{this.icon}}"></i>
                 </div>
@@ -439,7 +440,8 @@
                 <div class="bad-right-sub-tab-group {{#if this.subTabs.length}}has-nested{{/if}}">
                     <button class="bad-right-sub-tab {{#if this.active}}active{{/if}} {{#if this.excluded}}excluded{{/if}}" 
                             data-action="changeSubActionType" 
-                            data-type="{{this.id}}">
+                            data-type="{{this.id}}"
+                            {{#if this.tooltip}}data-tooltip="{{this.tooltip}}" data-tooltip-direction="LEFT"{{/if}}>
                         {{this.label}}
                     </button>
                     {{#if this.subTabs.length}}
@@ -447,7 +449,8 @@
                         {{#each this.subTabs}}
                         <button class="bad-right-sub-tab bad-nested-sub-tab {{#if this.active}}active{{/if}} {{#if this.excluded}}excluded{{/if}}" 
                                 data-action="changeSubActionType" 
-                                data-type="{{this.id}}">
+                                data-type="{{this.id}}"
+                                {{#if this.tooltip}}data-tooltip="{{this.tooltip}}" data-tooltip-direction="LEFT"{{/if}}>
                             {{this.label}}
                         </button>
                         {{/each}}

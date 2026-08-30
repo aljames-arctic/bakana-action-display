@@ -8,6 +8,7 @@ import { Dnd5eAutoBanConfigApp, DEFAULT_DND5E_AUTOBAN_CONFIG } from '../../src/u
 import { ActionDisplayApp } from '../../src/ui/action-display-app.js';
 import { HUDTabColumn } from '../../src/ui/hud-tab-column.js';
 import { actionDisplay } from '../../src/action-display.js';
+import { log } from '../../src/lib/logger.js';
 
 test('Dnd5eAutoBanConfigApp prepares context, adds/removes conditions, resets defaults, and saves config', async () => {
     game.system = { id: 'dnd5e' };
@@ -406,4 +407,186 @@ test('Manual unban while grappled unselects somatic on the very first click with
     // Subsequent renders while grappled must not re-ban it
     adapter.updateTabs(actor, tabColumn);
     assert.equal(tabColumn.activeSubTypes.has('somatic'), false, 'Subsequent render preserves unban');
+});
+
+test('Dnd5eSystemAdapter getAutoBanEffectReasons extracts causing active effect names and condition labels', () => {
+    const dndAdapter = new Dnd5eSystemAdapter();
+    game.system = { id: 'dnd5e' };
+
+    const actor = {
+        statuses: new Set(['silenced', 'restrained']),
+        effects: [
+            { name: 'Silence Spell', disabled: false, isSuppressed: false, statuses: new Set(['silenced']) },
+            { name: 'Web', disabled: false, isSuppressed: false, statuses: new Set(['restrained']) },
+            { name: 'Paralyzed (Inactive)', disabled: true, isSuppressed: false, statuses: new Set(['paralyzed']) }
+        ]
+    };
+
+    const reasons = dndAdapter.getAutoBanEffectReasons(actor);
+    assert.deepEqual(reasons.vocal, ['Silence Spell']);
+    assert.deepEqual(reasons.somatic, ['Web']);
+
+    // When status exists without an active effect document
+    const actorWithoutEffects = {
+        statuses: new Set(['silenced', 'grappled']),
+        effects: []
+    };
+    const reasonsFallback = dndAdapter.getAutoBanEffectReasons(actorWithoutEffects);
+    assert.equal(reasonsFallback.vocal.length, 1);
+    assert.equal(reasonsFallback.somatic.length, 1);
+});
+
+test('Dnd5eSystemAdapter formatAutoBanTooltip builds stylized HTML tooltips for sub-tabs and parent tab', () => {
+    const dndAdapter = new Dnd5eSystemAdapter();
+
+    // 1. Sub-tab tooltip for vocal
+    const vocalTooltip = dndAdapter.formatAutoBanTooltip('vocal', ['Silence Spell']);
+    assert.ok(vocalTooltip.includes('bad-autoban-tooltip'), 'Should have bad-autoban-tooltip wrapper');
+    assert.ok(vocalTooltip.includes('Silence Spell'), 'Should list Silence Spell');
+    assert.ok(vocalTooltip.includes('bad-autoban-title'), 'Should have bad-autoban-title');
+
+    // 2. Sub-tab tooltip for somatic
+    const somaticTooltip = dndAdapter.formatAutoBanTooltip('somatic', ['Web', 'Grappled']);
+    assert.ok(somaticTooltip.includes('bad-autoban-tooltip'));
+    assert.ok(somaticTooltip.includes('Web'));
+    assert.ok(somaticTooltip.includes('Grappled'));
+    assert.ok(somaticTooltip.includes('bad-autoban-title'));
+
+    // 3. Consolidated parent tooltip for components
+    const compTooltip = dndAdapter.formatAutoBanTooltip('components', {
+        vocal: ['Silence Spell'],
+        somatic: ['Web']
+    });
+    assert.ok(compTooltip.includes('bad-autoban-tooltip'));
+    assert.ok(compTooltip.includes('Silence Spell'));
+    assert.ok(compTooltip.includes('Web'));
+    assert.ok(compTooltip.includes('bad-autoban-title'));
+});
+
+test('Dnd5eSystemTabFilterManager logs current ban lists and effect causing reasons to log.debug during filtering', () => {
+    const dndAdapter = new Dnd5eSystemAdapter();
+    const filterManager = dndAdapter.filterManager;
+
+    const actor = {
+        statuses: new Set(['silenced']),
+        effects: [
+            { name: 'Silence Aura', disabled: false, isSuppressed: false, statuses: new Set(['silenced']) }
+        ]
+    };
+
+    const loggedMessages = [];
+    const origDebug = log.debug;
+    log.debug = (...args) => {
+        loggedMessages.push(args);
+        origDebug(...args);
+    };
+
+    try {
+        const vocalSpell = {
+            id: 'sub-vocal',
+            name: 'Misty Step',
+            type: 'spell',
+            properties: new Set(['vocal']),
+            right: [{ root: 'components', label: 'vocal' }]
+        };
+        const somaticOnlySpell = {
+            id: 'sub-somatic',
+            name: 'Shield',
+            type: 'spell',
+            properties: new Set(['somatic']),
+            right: [{ root: 'components', label: 'somatic' }]
+        };
+
+        const filterContext = {
+            actor,
+            right: {
+                activeParents: new Set(['components']),
+                activeSubTypes: new Set(['vocal'])
+            }
+        };
+
+        // Filter subactions
+        const filtered = filterManager.filterSubactions([vocalSpell, somaticOnlySpell], filterContext);
+        assert.equal(filtered.length, 1);
+        assert.equal(filtered[0].id, 'sub-somatic');
+
+        // Verify debug logs
+        const banListLog = loggedMessages.find(args => typeof args[0] === 'string' && args[0].startsWith('Dnd5eSystemTabFilterManager.filterSubactions | Current ban lists:'));
+        assert.ok(banListLog, 'Should log current ban lists and causing reasons in filterSubactions');
+        assert.deepEqual(banListLog[1], { vocal: ['Silence Aura'], somatic: [] });
+
+        const itemFilterLog = loggedMessages.find(args => typeof args[0] === 'string' && args[0].includes('Filtering out "Misty Step"'));
+        assert.ok(itemFilterLog, 'Should log filtered item with causing effect reasons');
+        assert.ok(itemFilterLog[0].includes('Silence Aura'));
+
+        // matchesEconomyTabs on non-subaction action
+        loggedMessages.length = 0;
+        const matches = filterManager.matchesEconomyTabs(vocalSpell, filterContext);
+        assert.equal(matches, false, 'Vocal spell should not match when vocal is banned');
+
+        const matchesLog = loggedMessages.find(args => typeof args[0] === 'string' && args[0].includes('Evaluating action "Misty Step"'));
+        assert.ok(matchesLog, 'matchesEconomyTabs should log evaluation against ban lists');
+
+        const skipActionLog = loggedMessages.find(args => typeof args[0] === 'string' && args[0].includes('Skipping action "Misty Step"'));
+        assert.ok(skipActionLog, 'matchesEconomyTabs should log skipping action with causing effect reasons');
+    } finally {
+        log.debug = origDebug;
+    }
+});
+
+test('ActionDisplayApp attaches auto-ban tooltips to right-side components subtabs and parent tab', async () => {
+    const dndAdapter = new Dnd5eSystemAdapter();
+    adapter.system = dndAdapter;
+    game.system = { id: 'dnd5e' };
+
+    const actor = {
+        id: 'actor-autoban-tooltip',
+        isOwner: true,
+        statuses: new Set(['silenced']),
+        effects: [
+            { name: 'Zone of Silence', disabled: false, isSuppressed: false, statuses: new Set(['silenced']) }
+        ],
+        getFlag: (mod, key) => null,
+        setFlag: async () => {}
+    };
+
+    const token = {
+        id: 'token-autoban',
+        document: { id: 'token-autoban', isOwner: true },
+        actor
+    };
+
+    const origGetActions = adapter.getActions;
+    adapter.getActions = async () => [
+        {
+            id: 'act-spell',
+            name: 'Misty Step',
+            available: true,
+            left: [{ root: 'item_type', label: 'spell', path: 'item_type/spell' }],
+            right: [{ root: 'components', label: 'vocal', path: 'components/vocal' }]
+        }
+    ];
+
+    try {
+        const app = new ActionDisplayApp(token);
+        app.rightTabs.activeParents.add('components');
+        app.rightTabs.activeSubTypes.add('vocal');
+
+        const context = await app._prepareContext({});
+        const compTab = context.actionTypes.find(t => t.id === 'components');
+        assert.ok(compTab, 'Components tab should exist');
+        assert.ok(compTab.tooltip, 'Components parent tab should have auto-ban tooltip');
+        assert.ok(compTab.tooltip.includes('Zone of Silence'), 'Parent tooltip should list Zone of Silence');
+
+        const vocalSubTab = compTab.subTabs.find(st => st.id === 'vocal');
+        assert.ok(vocalSubTab, 'Vocal sub-tab should exist');
+        assert.ok(vocalSubTab.tooltip, 'Vocal sub-tab should have auto-ban tooltip');
+        assert.ok(vocalSubTab.tooltip.includes('Zone of Silence'), 'Sub-tab tooltip should list Zone of Silence');
+
+        const somaticSubTab = compTab.subTabs.find(st => st.id === 'somatic');
+        assert.ok(somaticSubTab, 'Somatic sub-tab should exist');
+        assert.equal(somaticSubTab.tooltip, '', 'Somatic sub-tab should have empty tooltip when not banned');
+    } finally {
+        adapter.getActions = origGetActions;
+    }
 });

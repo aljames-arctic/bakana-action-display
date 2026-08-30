@@ -536,20 +536,43 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         }
 
         // Ensure all canonical sub-tabs exist for exclusion groups (e.g. vocal, somatic, material under components)
+        const autoBanReasons = adapter.getAutoBanEffectReasons?.(this.actor) ?? {};
         for (const parent of Object.values(parentGroups)) {
             if (adapter.isExclusionTab(parent.id)) {
                 const canonicalSubs = adapter.getExclusionSubTabs(parent.id);
                 for (const subId of canonicalSubs) {
                     let subTab = parent.subTabs.find(t => t.id === subId);
+                    const isActive = this.rightTabs.activeParents.has(parent.id);
+                    const isSubActive = this.rightTabs.activeSubTypes.has(subId);
+                    const isExcluded = isActive && isSubActive;
+
+                    const subReasons = autoBanReasons[subId] ?? [];
+                    const subTooltip = (isExcluded && subReasons.length > 0)
+                        ? adapter.formatAutoBanTooltip?.(subId, subReasons) ?? ''
+                        : '';
+
                     if (!subTab) {
-                        const isActive = this.rightTabs.activeParents.has(parent.id);
-                        const isSubActive = this.rightTabs.activeSubTypes.has(subId);
                         parent.addSubTab({
                             id: subId,
                             label: adapter.getActionSubTabLabel(subId),
                             active: false,
-                            excluded: isActive && isSubActive
+                            excluded: isExcluded,
+                            tooltip: subTooltip
                         });
+                    } else if (subTooltip) {
+                        subTab.tooltip = subTooltip;
+                    }
+                }
+
+                if (parent.id === 'components') {
+                    const activeAutoBans = {};
+                    for (const [comp, reasons] of Object.entries(autoBanReasons)) {
+                        if (this.rightTabs.activeSubTypes.has(comp) && reasons?.length > 0) {
+                            activeAutoBans[comp] = reasons;
+                        }
+                    }
+                    if (Object.keys(activeAutoBans).length > 0) {
+                        parent.tooltip = adapter.formatAutoBanTooltip?.('components', activeAutoBans) ?? '';
                     }
                 }
             }
@@ -885,6 +908,8 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
      */
     _getFilterContext() {
         return {
+            actor: this.actor,
+            token: this.token,
             left: {
                 activeParents: this.leftTabs.activeParents,
                 activeSubTypes: this.leftTabs.activeSubTypes,

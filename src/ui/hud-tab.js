@@ -34,12 +34,14 @@ export class HUDTab {
         excluded = false,
         showUnprepared = false,
         subTabs = [],
+        tooltip = '',
         onLeftClick = null,
         onRightClick = null
     } = {}) {
         this.id = id;
         this.label = label;
         this.icon = icon;
+        this.tooltip = tooltip;
         this._level = level;
         this.combinator = combinator;
         this._parent = null;

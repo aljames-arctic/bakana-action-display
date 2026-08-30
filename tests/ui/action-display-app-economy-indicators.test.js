@@ -437,3 +437,21 @@ test('Dropdown context menu actions segmentation when economy colors are disable
         await game.settings.set(MODULE_ID, 'enableEconomyIndicators', false);
     }
 });
+
+test('extractEconomyIndicators generates stylized tooltips and dropdown items use data-tooltip', () => {
+    const dndAdapter = new Dnd5eSystemAdapter();
+    const action = {
+        name: 'Fireball',
+        right: [TabRef.from('economy', 'action')]
+    };
+    const indicators = dndAdapter.extractEconomyIndicators(action, {});
+    const actionSlot = indicators.find(i => i.type === 'action');
+    assert.ok(actionSlot.tooltip, 'Active slot should have tooltip');
+    assert.ok(actionSlot.tooltip.includes('bad-economy-tooltip'), 'Tooltip should contain bad-economy-tooltip');
+    assert.ok(actionSlot.tooltip.includes('bad-economy-tooltip-header'), 'Tooltip should contain bad-economy-tooltip-header');
+    assert.ok(actionSlot.tooltip.includes('#3b82f6'), 'Tooltip should contain action color');
+    assert.ok(actionSlot.tooltip.includes('Action'), 'Tooltip should contain Action label');
+
+    const bonusSlot = indicators.find(i => i.type === 'bonus');
+    assert.equal(bonusSlot.tooltip, '', 'Inactive slot should have empty tooltip');
+});

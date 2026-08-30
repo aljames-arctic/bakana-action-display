@@ -190,7 +190,10 @@
             "somaticTitle": "Somatic Components",
             "somaticHint": "Spells requiring Somatic components will be banned when the actor has any of these conditions:",
             "noConditions": "No conditions configured",
-            "saved": "D&D 5e configuration saved."
+            "saved": "D&D 5e configuration saved.",
+            "autoBanned": "Auto-Banned",
+            "autoBannedComponents": "Auto-Banned Components",
+            "causingEffects": "Causing Effect(s):"
         },
         "dnd5e": {
             "upcast": "Upcast"

@@ -62,7 +62,7 @@ export function buildSubactionMenuItem(sub, event, app = null) {
             const slotsHtml = indicators.map(ind => {
                 const slotClass = ind.active ? "" : " bad-economy-slot-empty";
                 const barHtml = ind.active
-                    ? `<span class="bad-economy-bar" style="background-color: ${ind.color}" title="${ind.label}"></span>`
+                    ? `<span class="bad-economy-bar" style="background-color: ${ind.color}" data-tooltip="${(ind.tooltip ?? '').replace(/"/g, '&quot;')}" data-tooltip-direction="UP"></span>`
                     : "";
                 return `<div class="bad-economy-slot${slotClass}">${barHtml}</div>`;
             }).join("");
