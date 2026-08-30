@@ -2516,7 +2516,8 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
             const listItems = await Promise.all(entries.map(async ([c, list]) => {
                 const cLabel = this.getActionSubTabLabel(c);
                 const subReasons = await Promise.all(list.map(formatReasonHtml));
-                return `<li><strong>${cLabel}</strong>: ${subReasons.join(', ')}</li>`;
+                const subLis = subReasons.map(sr => `<li>${sr}</li>`).join('');
+                return `<li><strong class="bad-autoban-comp-label">${cLabel}</strong><ul class="bad-autoban-sub-list">${subLis}</ul></li>`;
             }));
 
             const title = localize('BAD.dnd5eAutoBan.autoBannedComponents', 'Auto-Banned Components');

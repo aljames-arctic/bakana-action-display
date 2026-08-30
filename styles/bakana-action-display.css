@@ -1719,8 +1719,25 @@ div.locked-tooltip:has(.bad-autoban-tooltip) .content-link {
     white-space: normal !important;
 }
 
-.bad-autoban-list li strong {
+.bad-autoban-list li strong,
+.bad-autoban-comp-label {
     color: #fca5a5;
+    font-size: 0.95em;
+}
+
+.bad-autoban-sub-list {
+    margin: 3px 0 6px 0;
+    padding-left: 1.2em;
+    list-style-type: '– ';
+    color: #cbd5e1;
+    font-size: 0.95em;
+    line-height: 1.45;
+}
+
+.bad-autoban-sub-list li {
+    margin-bottom: 3px;
+    padding-left: 2px;
+    color: #f1f5f9;
 }
 
 .bad-autoban-tooltip .content-link {

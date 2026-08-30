@@ -498,6 +498,8 @@ test('Dnd5eSystemAdapter formatAutoBanTooltip builds stylized HTML tooltips with
         ]
     });
     assert.ok(compTooltip.includes('bad-autoban-tooltip'));
+    assert.ok(compTooltip.includes('bad-autoban-sub-list'), 'Should contain nested sub-list for causing effects');
+    assert.ok(compTooltip.includes('bad-autoban-comp-label'), 'Should contain component label');
     assert.ok(compTooltip.includes('Silence Spell'));
     assert.ok(compTooltip.includes('condsilenced00'));
     assert.ok(compTooltip.includes('Mage Armor'));
