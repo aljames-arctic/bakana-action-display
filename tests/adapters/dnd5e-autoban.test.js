@@ -463,29 +463,34 @@ test('Dnd5eSystemAdapter getAutoBanEffectReasons extracts causing active effect 
     assert.equal(reasonsFallback.somatic[0].isDirectStatus, true);
 });
 
-test('Dnd5eSystemAdapter formatAutoBanTooltip builds stylized HTML tooltips with orange status keys', () => {
+test('Dnd5eSystemAdapter formatAutoBanTooltip builds stylized HTML tooltips with enriched content-links', async () => {
     const dndAdapter = new Dnd5eSystemAdapter();
 
     // 1. Sub-tab tooltip for vocal with active effect
-    const vocalTooltip = dndAdapter.formatAutoBanTooltip('vocal', [
+    const vocalTooltip = await dndAdapter.formatAutoBanTooltip('vocal', [
         { name: 'Silence Spell', statuses: ['silenced'], isDirectStatus: false }
     ]);
     assert.ok(vocalTooltip.includes('bad-autoban-tooltip'), 'Should have bad-autoban-tooltip wrapper');
     assert.ok(vocalTooltip.includes('Silence Spell'), 'Should list Silence Spell');
-    assert.ok(vocalTooltip.includes('<span class="bad-autoban-status">silenced</span>'), 'Should list status key in orange span');
+    assert.ok(vocalTooltip.includes('content-link'), 'Should enrich status condition with content-link');
+    assert.ok(vocalTooltip.includes('silenced'), 'Should list status condition label');
+    assert.ok(!vocalTooltip.includes('bad-autoban-status'), 'Should not use plain orange status span');
     assert.ok(vocalTooltip.includes('bad-autoban-title'), 'Should have bad-autoban-title');
 
     // 2. Sub-tab tooltip for somatic with effect having status subcomponents and direct status
-    const somaticTooltip = dndAdapter.formatAutoBanTooltip('somatic', [
+    const somaticTooltip = await dndAdapter.formatAutoBanTooltip('somatic', [
         { name: 'Mage Armor', statuses: ['grappled', 'restrained'], isDirectStatus: false },
         { name: 'Petrified', statuses: ['petrified'], isDirectStatus: true }
     ]);
     assert.ok(somaticTooltip.includes('bad-autoban-tooltip'));
-    assert.ok(somaticTooltip.includes('Mage Armor (<span class="bad-autoban-status">grappled</span>, <span class="bad-autoban-status">restrained</span>)'));
-    assert.ok(somaticTooltip.includes('<span class="bad-autoban-status">Petrified</span>'));
+    assert.ok(somaticTooltip.includes('Mage Armor'));
+    assert.ok(somaticTooltip.includes('condgrappled000'), 'Should contain grappled compendium reference');
+    assert.ok(somaticTooltip.includes('condrestrain00'), 'Should contain restrained compendium reference');
+    assert.ok(somaticTooltip.includes('condpetrified0'), 'Should contain petrified compendium reference');
+    assert.ok(somaticTooltip.includes('Petrified'));
 
     // 3. Consolidated parent tooltip for components
-    const compTooltip = dndAdapter.formatAutoBanTooltip('components', {
+    const compTooltip = await dndAdapter.formatAutoBanTooltip('components', {
         vocal: [{ name: 'Silence Spell', statuses: ['silenced'], isDirectStatus: false }],
         somatic: [
             { name: 'Mage Armor', statuses: ['grappled', 'restrained'], isDirectStatus: false },
@@ -493,9 +498,10 @@ test('Dnd5eSystemAdapter formatAutoBanTooltip builds stylized HTML tooltips with
         ]
     });
     assert.ok(compTooltip.includes('bad-autoban-tooltip'));
-    assert.ok(compTooltip.includes('Silence Spell (<span class="bad-autoban-status">silenced</span>)'));
-    assert.ok(compTooltip.includes('Mage Armor (<span class="bad-autoban-status">grappled</span>, <span class="bad-autoban-status">restrained</span>)'));
-    assert.ok(compTooltip.includes('<span class="bad-autoban-status">Petrified</span>'));
+    assert.ok(compTooltip.includes('Silence Spell'));
+    assert.ok(compTooltip.includes('condsilenced00'));
+    assert.ok(compTooltip.includes('Mage Armor'));
+    assert.ok(compTooltip.includes('condpetrified0'));
 });
 
 test('Dnd5eSystemTabFilterManager logs current ban lists and effect causing reasons to log.debug during filtering', () => {

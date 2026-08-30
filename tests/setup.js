@@ -30,6 +30,10 @@ globalThis.TextEditor = {
         } else {
             enriched = enriched.replace(/\[\[lookup\s+@[^\]]+\]\]\{([^}]*)\}/gi, '$1');
         }
+        enriched = enriched.replace(/@UUID\[([^\]]+)\](?:\{([^}]+)\})?/gi, (match, uuid, label) => {
+            const displayLabel = label || uuid.split('.').pop();
+            return `<a class="content-link" draggable="true" data-link data-uuid="${uuid}"><i class="fas fa-file-lines"></i>${displayLabel}</a>`;
+        });
         return enriched;
     }
 };
@@ -123,21 +127,22 @@ globalThis.CONFIG.DND5E = globalThis.CONFIG.DND5E ?? {
         thunder: { label: 'Thunder' }
     },
     conditionTypes: {
-        blinded: { label: 'Blinded' },
-        charmed: { label: 'Charmed' },
-        deafened: { label: 'Deafened' },
-        exhaustion: { label: 'Exhaustion' },
-        frightened: { label: 'Frightened' },
-        grappled: { label: 'Grappled' },
-        incapacitated: { label: 'Incapacitated' },
-        invisible: { label: 'Invisible' },
-        paralyzed: { label: 'Paralyzed' },
-        petrified: { label: 'Petrified' },
-        poisoned: { label: 'Poisoned' },
-        prone: { label: 'Prone' },
-        restrained: { label: 'Restrained' },
-        stunned: { label: 'Stunned' },
-        unconscious: { label: 'Unconscious' }
+        blinded: { label: 'Blinded', reference: 'Compendium.dnd5e.rules.JournalEntry.rules0000000000.JournalEntryPage.condblinded0000' },
+        charmed: { label: 'Charmed', reference: 'Compendium.dnd5e.rules.JournalEntry.rules0000000000.JournalEntryPage.condcharmed0000' },
+        deafened: { label: 'Deafened', reference: 'Compendium.dnd5e.rules.JournalEntry.rules0000000000.JournalEntryPage.conddeafened000' },
+        exhaustion: { label: 'Exhaustion', reference: 'Compendium.dnd5e.rules.JournalEntry.rules0000000000.JournalEntryPage.condexhaust0000' },
+        frightened: { label: 'Frightened', reference: 'Compendium.dnd5e.rules.JournalEntry.rules0000000000.JournalEntryPage.condfrighten000' },
+        grappled: { label: 'Grappled', reference: 'Compendium.dnd5e.rules.JournalEntry.rules0000000000.JournalEntryPage.condgrappled000' },
+        incapacitated: { label: 'Incapacitated', reference: 'Compendium.dnd5e.rules.JournalEntry.rules0000000000.JournalEntryPage.condincapac000' },
+        invisible: { label: 'Invisible', reference: 'Compendium.dnd5e.rules.JournalEntry.rules0000000000.JournalEntryPage.condinvisibl00' },
+        paralyzed: { label: 'Paralyzed', reference: 'Compendium.dnd5e.rules.JournalEntry.rules0000000000.JournalEntryPage.condparalyze00' },
+        petrified: { label: 'Petrified', reference: 'Compendium.dnd5e.rules.JournalEntry.rules0000000000.JournalEntryPage.condpetrified0' },
+        poisoned: { label: 'Poisoned', reference: 'Compendium.dnd5e.rules.JournalEntry.rules0000000000.JournalEntryPage.condpoisoned00' },
+        prone: { label: 'Prone', reference: 'Compendium.dnd5e.rules.JournalEntry.rules0000000000.JournalEntryPage.condprone000000' },
+        restrained: { label: 'Restrained', reference: 'Compendium.dnd5e.rules.JournalEntry.rules0000000000.JournalEntryPage.condrestrain00' },
+        silenced: { label: 'Silenced', reference: 'Compendium.dnd5e.rules.JournalEntry.rules0000000000.JournalEntryPage.condsilenced00' },
+        stunned: { label: 'Stunned', reference: 'Compendium.dnd5e.rules.JournalEntry.rules0000000000.JournalEntryPage.condstunned000' },
+        unconscious: { label: 'Unconscious', reference: 'Compendium.dnd5e.rules.JournalEntry.rules0000000000.JournalEntryPage.condunconsc000' }
     },
     languages: {
         common: { label: 'Common' },

@@ -484,13 +484,23 @@ class Adapter {
     }
 
     /**
+     * Get the enriched HTML content-link for a status condition ID.
+     * @param {string} condId
+     * @param {string} [customLabel]
+     * @returns {Promise<string>}
+     */
+    async enrichCondition(condId, customLabel = null) {
+        return (await this.system?.enrichCondition?.(condId, customLabel)) ?? '';
+    }
+
+    /**
      * Format a stylized HTML tooltip for automatically added verbal/somatic bans.
      * @param {string} comp
-     * @param {string[]} reasons
-     * @returns {string}
+     * @param {Array<Object|string>|Record<string, Array<Object|string>>} reasons
+     * @returns {Promise<string>}
      */
-    formatAutoBanTooltip(comp, reasons) {
-        return this.system?.formatAutoBanTooltip?.(comp, reasons) ?? '';
+    async formatAutoBanTooltip(comp, reasons) {
+        return (await this.system?.formatAutoBanTooltip?.(comp, reasons)) ?? '';
     }
 
     /**

@@ -548,7 +548,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
 
                     const subReasons = autoBanReasons[subId] ?? [];
                     const subTooltip = (isExcluded && subReasons.length > 0)
-                        ? adapter.formatAutoBanTooltip?.(subId, subReasons) ?? ''
+                        ? (await adapter.formatAutoBanTooltip?.(subId, subReasons)) ?? ''
                         : '';
 
                     if (!subTab) {
@@ -572,7 +572,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
                         }
                     }
                     if (Object.keys(activeAutoBans).length > 0) {
-                        parent.tooltip = adapter.formatAutoBanTooltip?.('components', activeAutoBans) ?? '';
+                        parent.tooltip = (await adapter.formatAutoBanTooltip?.('components', activeAutoBans)) ?? '';
                     }
                 }
             }
