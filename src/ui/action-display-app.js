@@ -72,6 +72,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         this._boundOnAutobanPointerOverCapture = this._onAutobanPointerOverCapture.bind(this);
         this._lockedTooltipTarget = null;
         this._boundOnMiddleClickCapture = this._onMiddleClickCapture.bind(this);
+        this._boundOnAuxClickCapture = this._onAuxClickCapture.bind(this);
     }
 
     /**
@@ -261,9 +262,13 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
             window.removeEventListener('pointerover', this._boundOnAutobanPointerOverCapture, { capture: true });
         }
         if (this._boundOnMiddleClickCapture) {
-            window.removeEventListener('auxclick', this._boundOnMiddleClickCapture, { capture: true });
+            window.removeEventListener('pointerdown', this._boundOnMiddleClickCapture, { capture: true });
+        }
+        if (this._boundOnAuxClickCapture) {
+            window.removeEventListener('auxclick', this._boundOnAuxClickCapture, { capture: true });
         }
         this._closeLockedTooltips();
+        this._lockedTooltipTarget = null;
         this._hideItemSummaryTooltip();
         if (this._boundOnKeyDown) {
             window.removeEventListener('keydown', this._boundOnKeyDown);
@@ -1508,7 +1513,8 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         window.addEventListener('pointerover', this._boundOnAutobanPointerOverCapture, { capture: true });
 
         // Intercept middle-click on tabs and elements to enforce single-focus tooltip discipline
-        window.addEventListener('auxclick', this._boundOnMiddleClickCapture, { capture: true });
+        window.addEventListener('pointerdown', this._boundOnMiddleClickCapture, { capture: true });
+        window.addEventListener('auxclick', this._boundOnAuxClickCapture, { capture: true });
 
         // Attach item summary tooltip event listeners
         this.element.addEventListener('pointerover', this._boundOnPointerOver);
@@ -1778,13 +1784,15 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         const tabTarget = event.target?.closest?.('.bad-right-tab, .bad-right-sub-tab, .bad-tab, .bad-action-item, [data-tooltip]');
         if (!tabTarget) return;
 
+        // Stop browser default middle-click behaviors (auto-scroll/paste) and Foundry default handler
+        event.stopImmediatePropagation?.();
+        event.preventDefault?.();
+
         // If this same tab is already the locked target, middle-clicking it toggles/dismisses the lock
         if (this.isTooltipFocused && this._lockedTooltipTarget === tabTarget) {
             this._closeLockedTooltips();
             game.tooltip?.deactivate?.();
             this._lockedTooltipTarget = null;
-            event.stopImmediatePropagation?.();
-            event.preventDefault?.();
             return;
         }
 
@@ -1793,7 +1801,31 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
             this._closeLockedTooltips();
         }
 
+        // Lock the active tooltip for this tab
+        if (game.tooltip?.lockTooltip) {
+            try {
+                game.tooltip.lockTooltip();
+            } catch (_) {}
+        } else if (game.tooltip) {
+            game.tooltip.locked = true;
+            document.querySelector?.('#tooltip')?.classList?.add?.('locked');
+        }
+
         this._lockedTooltipTarget = tabTarget;
+    }
+
+    /**
+     * Intercept auxclick events on HUD elements to prevent browser middle-click side-effects.
+     * @param {MouseEvent} event
+     * @protected
+     */
+    _onAuxClickCapture(event) {
+        if (event.button !== 1) return;
+        const isOurTarget = Boolean(event.target?.closest?.('.bad-right-tab, .bad-right-sub-tab, .bad-tab, .bad-action-item, [data-tooltip], .locked-tooltip, #tooltip.locked'));
+        if (isOurTarget) {
+            event.stopImmediatePropagation?.();
+            event.preventDefault?.();
+        }
     }
 
     /**
@@ -1982,6 +2014,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
      * @type {boolean}
      */
     get isTooltipFocused() {
+        if (Boolean(this._lockedTooltipTarget)) return true;
         if (Boolean(game.tooltip?.locked)) return true;
         const lockedEl = document.querySelector?.('#tooltip.locked, aside#tooltip.locked, div#tooltip.locked, .tooltip.locked, .locked-tooltip, [data-tooltip-locked="true"]');
         return Boolean(lockedEl?.classList?.contains?.('locked') || lockedEl?.classList?.contains?.('locked-tooltip') || lockedEl?.dataset?.tooltipLocked === 'true');

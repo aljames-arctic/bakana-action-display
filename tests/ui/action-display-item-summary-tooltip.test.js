@@ -1173,6 +1173,18 @@ test('ActionDisplayApp single-focus discipline closes previous locked tab when m
         });
         assert.equal(stopped, true, 'Should stop propagation when middle-clicking inside locked tooltip');
         assert.equal(prevented, true, 'Should prevent default when middle-clicking inside locked tooltip');
+
+        // 5. Auxclick on tab is cancelled to prevent browser middle-click behaviors
+        stopped = false;
+        prevented = false;
+        app._onAuxClickCapture({
+            button: 1,
+            target: verbalTabEl,
+            stopImmediatePropagation: () => { stopped = true; },
+            preventDefault: () => { prevented = true; }
+        });
+        assert.equal(stopped, true, 'Should stop propagation of auxclick on HUD tab');
+        assert.equal(prevented, true, 'Should prevent default of auxclick on HUD tab');
     } finally {
         document.querySelectorAll = originalQuerySelectorAll;
         globalThis.game.tooltip.locked = false;
