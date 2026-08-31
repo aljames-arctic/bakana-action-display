@@ -10,19 +10,21 @@ import { syncActorFavorites } from './favorites/favorites-manager.js';
 import { CombatMovementTracker } from './combat/combat-movement-tracker.js';
 
 let closeDetachedHUD = false;
+let explicitlyClosedTokenId = null;
 let renderDebounceTimer = null;
+
+export function setExplicitlyClosedTokenId(tokenId) {
+    explicitlyClosedTokenId = tokenId;
+}
 
 // Initialize hook
 Hooks.once('init', async () => {
     log.info("Initializing Bakana's Action Display");
 
-    // Initialize the unified adapter (Foundry, System, Module layers) first
-    await adapter.init();
-
     // Register module keybindings (Shift+Space toggle)
     registerKeybindings();
 
-    // Wrap TokenHUD prototype methods (bind, clear, close)
+    // Wrap TokenHUD prototype methods (clear, close)
     wrapTokenHUD();
 
     // Wrap Token.prototype._onClickRight during init so it is bound correctly by all tokens' InteractionManagers
@@ -41,6 +43,9 @@ Hooks.once('init', async () => {
             return originalRightClick.call(this, event);
         };
     }
+
+    // Initialize the unified adapter (Foundry, System, Module layers)
+    await adapter.init();
 
     // Initialize the core coordinator
     actionDisplay.init();
@@ -67,18 +72,17 @@ function wrapTokenHUD() {
 
     const originalClear = hudClass.prototype.clear;
     hudClass.prototype.clear = function (...args) {
-        const result = originalClear.apply(this, args);
-        handleHUDClose();
-        return result;
+        const closingToken = this.object;
+        if (closingToken) this._badClosingToken = closingToken;
+        handleHUDClose(closingToken);
+        return originalClear.apply(this, args);
     };
 
     const originalClose = hudClass.prototype.close;
     hudClass.prototype.close = function (...args) {
-        const currentApp = actionDisplay.activeApp;
-        if (this.object && (this.object === currentApp?.token || this.object?.id === currentApp?.token?.id)) {
-            return originalClose.apply(this, args);
-        }
-        handleHUDClose();
+        const closingToken = this.object;
+        if (closingToken) this._badClosingToken = closingToken;
+        handleHUDClose(closingToken);
         return originalClose.apply(this, args);
     };
 }
@@ -86,13 +90,17 @@ function wrapTokenHUD() {
 /**
  * Shared helper to close the HUD if it is attached, if persistence is disabled,
  * or if a close was explicitly triggered by right-clicking the token.
+ * If closingToken is provided, only closes if it matches the current activeApp token.
+ * @param {Token|string|null} [closingToken=null]
  */
-function handleHUDClose() {
+function handleHUDClose(closingToken = null) {
     const currentApp = actionDisplay.activeApp;
     if (currentApp) {
-        const hud = canvas?.hud?.token;
-        if (hud?.object && (hud.object === currentApp.token || hud.object?.id === currentApp.token?.id)) {
-            return;
+        if (closingToken) {
+            const matchesActiveToken = currentApp.token === closingToken || currentApp.token?.id === closingToken.id || currentApp.token?.id === closingToken;
+            if (!matchesActiveToken) {
+                return;
+            }
         }
 
         const persist = game.settings.get(MODULE_ID, 'persistDetached');
@@ -102,10 +110,11 @@ function handleHUDClose() {
             if (currentApp.element) {
                 currentApp.element.style.display = 'none';
             }
-            currentApp.close();
+            currentApp.close({ hudClosing: true });
             actionDisplay.activeApp = null;
         }
     }
+    explicitlyClosedTokenId = null;
     closeDetachedHUD = false; // Always reset
 }
 
@@ -172,6 +181,7 @@ Hooks.once('ready', async () => {
 export function handleHUDBind(token) {
     if (!token || !token.document?.isOwner) return;
 
+    explicitlyClosedTokenId = null;
     setLastSelectedToken(token);
     closeDetachedHUD = false;
 
@@ -183,6 +193,9 @@ export function handleHUDBind(token) {
 
     // If we already have an active rendered app for this token, preserve it to keep its tab/scroll state
     if ((currentApp?.token === token || currentApp?.token?.id === token.id) && currentApp?.rendered) {
+        if (currentApp.isTracked) {
+            currentApp.setPosition();
+        }
         return;
     }
 
@@ -191,7 +204,7 @@ export function handleHUDBind(token) {
         if (currentApp.element) {
             currentApp.element.style.display = 'none';
         }
-        currentApp.close();
+        currentApp.close({ switchingTokens: true });
         actionDisplay.activeApp = null;
     }
 
@@ -222,11 +235,31 @@ Hooks.on('renderTokenHUD', (tokenHUD, html, data) => {
 
 // Hook into Token HUD closing to close our overlay if tracked or closed via token click
 Hooks.on('closeTokenHUD', (tokenHUD, html) => {
+    explicitlyClosedTokenId = null;
     const currentApp = actionDisplay.activeApp;
-    if (tokenHUD?.object && (tokenHUD.object === currentApp?.token || tokenHUD.object?.id === currentApp?.token?.id)) {
+    if (!currentApp) return;
+
+    // If TokenHUD is currently associated with activeApp's token, ignore this close event
+    if (tokenHUD?.object && (tokenHUD.object === currentApp.token || tokenHUD.object?.id === currentApp.token?.id)) {
+        if (tokenHUD) tokenHUD._badClosingToken = null;
         return;
     }
-    handleHUDClose();
+
+    const closingToken = tokenHUD?._badClosingToken;
+    if (tokenHUD) {
+        tokenHUD._badClosingToken = null;
+    }
+
+    // Close activeApp if the closing event specifically targeted activeApp's token,
+    // or if TokenHUD has closed completely with no active object.
+    if (closingToken) {
+        const matchesActiveToken = currentApp.token === closingToken || currentApp.token?.id === closingToken.id || currentApp.token?.id === closingToken;
+        if (matchesActiveToken) {
+            handleHUDClose(closingToken);
+        }
+    } else if (!tokenHUD?.object) {
+        handleHUDClose();
+    }
 });
 
 // Hook into canvas pan to update attached HUD position dynamically

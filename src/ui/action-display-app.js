@@ -8,6 +8,7 @@ import { createActionContextMenu } from './app/context-menu-manager.js';
 import { showActivityDropdown } from './app/dropdown-manager.js';
 import { categorizeActions } from '../categorization/categorization-manager.js';
 import { syncActorFavorites } from '../favorites/favorites-manager.js';
+import { setExplicitlyClosedTokenId } from '../module.js';
 
 // Cache to persist tab states per actor across HUD rebuilds
 const activeTabCache = new Map();
@@ -292,6 +293,10 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
 
         if (actionDisplay.activeApp === this) {
             actionDisplay.activeApp = null;
+        }
+
+        if (!options.switchingTokens && !options.hudClosing) {
+            setExplicitlyClosedTokenId(this.token?.id ?? null);
         }
 
         const result = await super.close(options);
