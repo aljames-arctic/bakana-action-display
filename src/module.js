@@ -67,14 +67,15 @@ function wrapTokenHUD() {
 
     const originalClear = hudClass.prototype.clear;
     hudClass.prototype.clear = function (...args) {
+        const result = originalClear.apply(this, args);
         handleHUDClose();
-        return originalClear.apply(this, args);
+        return result;
     };
 
     const originalClose = hudClass.prototype.close;
     hudClass.prototype.close = function (...args) {
         const currentApp = actionDisplay.activeApp;
-        if (this.rendered && (this.object === currentApp?.token || this.object?.id === currentApp?.token?.id)) {
+        if (this.object && (this.object === currentApp?.token || this.object?.id === currentApp?.token?.id)) {
             return originalClose.apply(this, args);
         }
         handleHUDClose();
@@ -90,7 +91,7 @@ function handleHUDClose() {
     const currentApp = actionDisplay.activeApp;
     if (currentApp) {
         const hud = canvas?.hud?.token;
-        if (hud?.rendered && (hud.object === currentApp.token || hud.object?.id === currentApp.token?.id)) {
+        if (hud?.object && (hud.object === currentApp.token || hud.object?.id === currentApp.token?.id)) {
             return;
         }
 
@@ -212,17 +213,9 @@ Hooks.on('renderTokenHUD', (tokenHUD, html, data) => {
     const token = tokenHUD?.object;
     if (!token) return;
     const currentApp = actionDisplay.activeApp;
-    if (currentApp && (currentApp.token === token || currentApp.token?.id === token.id)) {
+    if (currentApp?.rendered && (currentApp.token === token || currentApp.token?.id === token.id)) {
         if (currentApp.isTracked) {
-            if (currentApp.rendered) {
-                currentApp.setPosition();
-            } else {
-                currentApp.render().then(() => {
-                    if (currentApp.isTracked) {
-                        currentApp.setPosition();
-                    }
-                });
-            }
+            currentApp.setPosition();
         }
     }
 });
@@ -230,7 +223,7 @@ Hooks.on('renderTokenHUD', (tokenHUD, html, data) => {
 // Hook into Token HUD closing to close our overlay if tracked or closed via token click
 Hooks.on('closeTokenHUD', (tokenHUD, html) => {
     const currentApp = actionDisplay.activeApp;
-    if (tokenHUD?.rendered && (tokenHUD.object === currentApp?.token || tokenHUD.object?.id === currentApp?.token?.id)) {
+    if (tokenHUD?.object && (tokenHUD.object === currentApp?.token || tokenHUD.object?.id === currentApp?.token?.id)) {
         return;
     }
     handleHUDClose();

@@ -132,14 +132,15 @@ test('Token switching via TokenHUD lifecycle is resilient to async closeTokenHUD
     assert.ok(actionDisplay.activeApp);
     assert.equal(actionDisplay.activeApp.token.id, 'token-lifecycle-2');
 
-    // 3. Asynchronous closeTokenHUD event finishes from Token 1's clear/fade
+    // 3. Asynchronous closeTokenHUD event finishes from Token 1's clear/fade (where rendered is false)
+    canvas.hud.token.rendered = false;
     Hooks.callAll('closeTokenHUD', canvas.hud.token, {});
 
-    // Action Display must remain open for Token 2 because TokenHUD is currently rendered for Token 2
-    assert.ok(actionDisplay.activeApp, 'Active app must not be closed by previous token closeTokenHUD');
+    // Action Display must remain open for Token 2 because TokenHUD is currently bound to Token 2
+    assert.ok(actionDisplay.activeApp, 'Active app must not be closed by previous token closeTokenHUD even when rendered=false');
     assert.equal(actionDisplay.activeApp.token.id, 'token-lifecycle-2');
 
-    // 4. TokenHUD closes completely (user clicks off)
+    // 4. TokenHUD closes completely (user clicks off, setting object to null)
     canvas.hud.token.object = null;
     canvas.hud.token.rendered = false;
     Hooks.callAll('closeTokenHUD', canvas.hud.token, {});
