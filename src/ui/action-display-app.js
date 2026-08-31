@@ -2630,12 +2630,20 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
 
             if (isHorizontal) {
                 top = Math.clamp(tokenTop + (tokenHeight / 2) - (appHeight / 2), 10, window.innerHeight - appHeight - 10);
+                const sideLeft = positionSide === 'left'
+                    ? tokenLeft - pixelOffset - appWidth
+                    : tokenLeft + tokenWidth + pixelOffset;
                 targetPosition.top = top;
+                targetPosition.left = sideLeft;
             } else {
                 const minLeft = Math.max(10, tabExtension);
                 const maxLeft = Math.min(window.innerWidth - appWidth - 10, window.innerWidth - appWidth - tabExtension);
                 left = Math.clamp(tokenLeft + (tokenWidth / 2) - (appWidth / 2), minLeft, maxLeft);
+                const sideTop = positionSide === 'above'
+                    ? tokenTop - pixelOffset - appHeight
+                    : tokenTop + tokenHeight + pixelOffset;
                 targetPosition.left = left;
+                targetPosition.top = sideTop;
             }
 
             const result = super.setPosition(adapter.foundry.mergeObject(position, targetPosition));
@@ -2645,21 +2653,21 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
                 el.style.top = `${top}px`;
                 el.style.bottom = '';
                 if (positionSide === 'left') {
-                    el.style.right = `${window.innerWidth - tokenLeft + pixelOffset}px`;
                     el.style.left = '';
+                    el.style.right = `${window.innerWidth - tokenLeft + pixelOffset}px`;
                 } else {
-                    el.style.left = `${tokenLeft + tokenWidth + pixelOffset}px`;
                     el.style.right = '';
+                    el.style.left = `${tokenLeft + tokenWidth + pixelOffset}px`;
                 }
             } else {
                 el.style.left = `${left}px`;
                 el.style.right = '';
                 if (positionSide === 'above') {
-                    el.style.bottom = `${window.innerHeight - tokenTop + pixelOffset}px`;
                     el.style.top = '';
+                    el.style.bottom = `${window.innerHeight - tokenTop + pixelOffset}px`;
                 } else {
-                    el.style.top = `${tokenTop + tokenHeight + pixelOffset}px`;
                     el.style.bottom = '';
+                    el.style.top = `${tokenTop + tokenHeight + pixelOffset}px`;
                 }
             }
 

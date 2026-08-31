@@ -73,6 +73,10 @@ function wrapTokenHUD() {
 
     const originalClose = hudClass.prototype.close;
     hudClass.prototype.close = function (...args) {
+        const currentApp = actionDisplay.activeApp;
+        if (this.rendered && (this.object === currentApp?.token || this.object?.id === currentApp?.token?.id)) {
+            return originalClose.apply(this, args);
+        }
         handleHUDClose();
         return originalClose.apply(this, args);
     };
@@ -85,6 +89,11 @@ function wrapTokenHUD() {
 function handleHUDClose() {
     const currentApp = actionDisplay.activeApp;
     if (currentApp) {
+        const hud = canvas?.hud?.token;
+        if (hud?.rendered && (hud.object === currentApp.token || hud.object?.id === currentApp.token?.id)) {
+            return;
+        }
+
         const persist = game.settings.get(MODULE_ID, 'persistDetached');
         const shouldClose = currentApp.isTracked || !persist || closeDetachedHUD;
 
@@ -203,15 +212,27 @@ Hooks.on('renderTokenHUD', (tokenHUD, html, data) => {
     const token = tokenHUD?.object;
     if (!token) return;
     const currentApp = actionDisplay.activeApp;
-    if (currentApp?.rendered && (currentApp.token === token || currentApp.token?.id === token.id)) {
+    if (currentApp && (currentApp.token === token || currentApp.token?.id === token.id)) {
         if (currentApp.isTracked) {
-            currentApp.setPosition();
+            if (currentApp.rendered) {
+                currentApp.setPosition();
+            } else {
+                currentApp.render().then(() => {
+                    if (currentApp.isTracked) {
+                        currentApp.setPosition();
+                    }
+                });
+            }
         }
     }
 });
 
 // Hook into Token HUD closing to close our overlay if tracked or closed via token click
 Hooks.on('closeTokenHUD', (tokenHUD, html) => {
+    const currentApp = actionDisplay.activeApp;
+    if (tokenHUD?.rendered && (tokenHUD.object === currentApp?.token || tokenHUD.object?.id === currentApp?.token?.id)) {
+        return;
+    }
     handleHUDClose();
 });
 
