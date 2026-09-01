@@ -160,11 +160,17 @@
 
 .bakana-action-display-container .bad-control-btn.active:hover,
 .bad-control-btn.active:hover {
-    color: #ffffff !important;
+    color: #d8b4fe !important;
     background: rgba(167, 139, 250, 0.28) !important;
     border-color: transparent !important;
+    text-shadow: 0 0 8px rgba(167, 139, 250, 0.7) !important;
     outline: none !important;
     box-shadow: none !important;
+}
+
+.bakana-action-display-container .bad-control-btn.active:focus,
+.bad-control-btn.active:focus {
+    color: #c084fc !important;
 }
 
 /* Right-Click Selected: Icon is outlined in orange (no purple highlight) */
@@ -204,9 +210,10 @@
 .bakana-action-display-container .bad-control-btn.active.auto-toggle-active:hover,
 .bad-combat-track-btn.active.auto-toggle-active:hover,
 .bad-control-btn.active.auto-toggle-active:hover {
-    color: #ffffff !important;
+    color: #d8b4fe !important;
     background: rgba(167, 139, 250, 0.28) !important;
     border-color: #fb923c !important;
+    text-shadow: 0 0 8px rgba(167, 139, 250, 0.7) !important;
     outline: none !important;
     box-shadow: 0 0 7px rgba(249, 115, 22, 0.65) !important;
 }

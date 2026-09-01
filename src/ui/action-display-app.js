@@ -1109,10 +1109,11 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
      */
     async _onRightClickToggleAnchor(event, target) {
         event?.preventDefault?.();
+        target?.blur?.();
         const current = Boolean(game.settings.get(MODULE_ID, 'persistHUD'));
         const next = !current;
         await game.settings.set(MODULE_ID, 'persistHUD', next);
-        this.render();
+        await this.render();
     }
 
     /**
@@ -1246,10 +1247,12 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
      * Toggle the "Show Depleted Items" setting.
      */
     async _onToggleFilterResources(event, target) {
+        event?.preventDefault?.();
+        target?.blur?.();
         const current = Boolean(game.settings.get(MODULE_ID, 'showDepleted'));
         const next = target?.checked ?? !current;
         await game.settings.set(MODULE_ID, 'showDepleted', next);
-        this.render();
+        await this.render();
     }
 
     /**
@@ -1258,6 +1261,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
      */
     async _onToggleCombatAutoTrack(event, target) {
         event?.preventDefault?.();
+        target?.blur?.();
         const current = Boolean(game.settings.get(MODULE_ID, 'autoTrackCombat'));
         const next = target?.checked ?? !current;
         await game.settings.set(MODULE_ID, 'autoTrackCombat', next);
@@ -1299,7 +1303,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
                 }
             }
         }
-        this.render();
+        await this.render();
     }
 
     /**
@@ -1311,10 +1315,11 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
      */
     async _onRightClickCombatAutoTrack(event, target) {
         event?.preventDefault?.();
+        target?.blur?.();
         const current = Boolean(game.settings.get(MODULE_ID, 'autoToggleCombat'));
         const next = !current;
         await game.settings.set(MODULE_ID, 'autoToggleCombat', next);
-        this.render();
+        await this.render();
     }
 
     /**
@@ -1322,6 +1327,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
      */
     async _onToggleItemSummaries(event, target) {
         event?.preventDefault?.();
+        target?.blur?.();
         const current = Boolean(game.settings.get(MODULE_ID, 'showItemSummaries'));
         const next = target?.checked ?? !current;
         await game.settings.set(MODULE_ID, 'showItemSummaries', next);
@@ -1334,7 +1340,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
                 this._hideItemSummaryTooltip();
             }
         }
-        this.render();
+        await this.render();
     }
 
     /**
@@ -1369,10 +1375,11 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
      */
     async _onRightClickRecenterToken(event, target) {
         event?.preventDefault?.();
+        target?.blur?.();
         const current = Boolean(game.settings.get(MODULE_ID, 'autoCenterOnToken'));
         const next = !current;
         await game.settings.set(MODULE_ID, 'autoCenterOnToken', next);
-        this.render();
+        await this.render();
     }
 
     /**
