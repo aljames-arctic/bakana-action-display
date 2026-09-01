@@ -389,9 +389,6 @@ export class BaseFoundryAdapter {
         if (!token) return;
         const placeable = token.object ?? (token.control ? token : canvas?.tokens?.get?.(token.id));
         placeable?.control?.({ releaseOthers: true });
-        if (canvas?.tokens && Array.isArray(canvas.tokens.controlled)) {
-            canvas.tokens.controlled = [placeable ?? token];
-        }
     }
 
     /**

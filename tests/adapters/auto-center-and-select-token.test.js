@@ -19,6 +19,7 @@ test('BaseFoundryAdapter selectToken and centerCanvasOnToken work correctly', as
         control: (opts) => {
             controlledCalled = true;
             controlledOptions = opts;
+            globalThis.canvas.tokens.controlled = [mockToken];
         }
     };
 
