@@ -23,7 +23,7 @@
                 <i class="fas fa-crosshairs"></i>
             </button>
             {{/if}}
-            <button class="bad-control-btn bad-pin-btn" data-action="toggleAnchor">
+            <button class="bad-control-btn bad-pin-btn {{#if persistHUD}}active persist-active{{/if}}" data-action="toggleAnchor">
                 <i class="fas {{#if isAttached}}fa-link{{else}}fa-unlink{{/if}}"></i>
             </button>
             <button class="bad-control-btn bad-close-btn" data-action="closeHUD">

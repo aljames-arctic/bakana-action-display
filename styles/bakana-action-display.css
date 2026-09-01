@@ -231,6 +231,26 @@
     box-shadow: 0 0 6px rgba(56, 189, 248, 0.6) !important;
 }
 
+/* Pin Button Persist Active: Symbol is colored emerald green */
+.bakana-action-display-container .bad-pin-btn.persist-active,
+.bad-pin-btn.persist-active {
+    color: #34d399 !important;
+    background: rgba(52, 211, 153, 0.18) !important;
+    border-color: rgba(52, 211, 153, 0.5) !important;
+    text-shadow: 0 0 6px rgba(52, 211, 153, 0.5) !important;
+    outline: none !important;
+    box-shadow: 0 0 4px rgba(52, 211, 153, 0.35) !important;
+}
+
+.bakana-action-display-container .bad-pin-btn.persist-active:hover,
+.bad-pin-btn.persist-active:hover {
+    color: #ffffff !important;
+    background: rgba(52, 211, 153, 0.28) !important;
+    border-color: #34d399 !important;
+    outline: none !important;
+    box-shadow: 0 0 6px rgba(52, 211, 153, 0.6) !important;
+}
+
 .bad-summary-toggle-btn i {
     transform: scale(1.35, 0.92);
     transform-origin: center center;

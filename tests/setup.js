@@ -417,7 +417,7 @@ const settingsStore = new Map([
     ['bakana-action-display.economyColors', {}],
     ['bakana-action-display.categorizationConfig', { enabled: false, categories: [] }],
     ['bakana-action-display.isAttached', true],
-    ['bakana-action-display.persistDetached', true],
+    ['bakana-action-display.persistHUD', false],
     ['bakana-action-display.autoTrackCombat', false],
     ['bakana-action-display.autoToggleCombat', false],
     ['bakana-action-display.autoCenterOnToken', false],

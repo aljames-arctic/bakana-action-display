@@ -9,7 +9,7 @@ import { MODULE_ID } from './constants.js';
 import { syncActorFavorites } from './favorites/favorites-manager.js';
 import { CombatMovementTracker } from './combat/combat-movement-tracker.js';
 
-let closeDetachedHUD = false;
+let closePersistentHUD = false;
 let explicitlyClosedTokenId = null;
 let renderDebounceTimer = null;
 
@@ -35,9 +35,9 @@ Hooks.once('init', async () => {
             const isTokenHUDOpen = Boolean(canvas?.hud?.token?.rendered && (canvas.hud.token.object === this || canvas.hud.token.object?.id === this.id));
             const currentApp = actionDisplay.activeApp;
             if (isTokenHUDOpen && (currentApp?.token === this || currentApp?.token?.id === this.id)) {
-                const persist = game.settings.get(MODULE_ID, 'persistDetached');
-                if (persist && currentApp?.isDetached) {
-                    closeDetachedHUD = true;
+                const persist = Boolean(game.settings.get(MODULE_ID, 'persistHUD'));
+                if (persist) {
+                    closePersistentHUD = true;
                 }
             }
             return originalRightClick.call(this, event);
@@ -103,8 +103,8 @@ function handleHUDClose(closingToken = null) {
             }
         }
 
-        const persist = game.settings.get(MODULE_ID, 'persistDetached');
-        const shouldClose = currentApp.isTracked || !persist || closeDetachedHUD;
+        const persist = Boolean(game.settings.get(MODULE_ID, 'persistHUD'));
+        const shouldClose = !persist || closePersistentHUD;
 
         if (shouldClose) {
             if (currentApp.element) {
@@ -115,7 +115,7 @@ function handleHUDClose(closingToken = null) {
         }
     }
     explicitlyClosedTokenId = null;
-    closeDetachedHUD = false; // Always reset
+    closePersistentHUD = false; // Always reset
 }
 
 /**
@@ -183,7 +183,7 @@ export function handleHUDBind(token) {
 
     explicitlyClosedTokenId = null;
     setLastSelectedToken(token);
-    closeDetachedHUD = false;
+    closePersistentHUD = false;
 
     if (token.actor) {
         syncActorFavorites(token.actor);

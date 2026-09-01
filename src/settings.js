@@ -285,16 +285,6 @@ Hooks.once('init', () => {
         default: true
     });
 
-    // Register Persist Detached HUD Setting
-    game.settings.register(MODULE_ID, 'persistDetached', {
-        name: game.i18n.localize('BAD.settings.persistDetached.name'),
-        hint: game.i18n.localize('BAD.settings.persistDetached.hint'),
-        scope: 'user',
-        config: true,
-        type: Boolean,
-        default: true
-    });
-
     // Register Toggle Tab Selection Setting
     game.settings.register(MODULE_ID, 'toggleTabSelection', {
         name: game.i18n.localize('BAD.settings.toggleTabSelection.name'),
@@ -409,6 +399,14 @@ Hooks.once('init', () => {
         config: false,
         type: Boolean,
         default: true
+    });
+
+    // Register Persist HUD Setting (true = stays open across outside clicks, false = closes on outside click)
+    game.settings.register(MODULE_ID, 'persistHUD', {
+        scope: 'client',
+        config: false,
+        type: Boolean,
+        default: false
     });
 
     // Register HUD Detached Position (coordinates)

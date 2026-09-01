@@ -703,6 +703,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         context.showItemSummaries = game.settings.get(MODULE_ID, 'showItemSummaries') ?? false;
         context.enableCenterOnToken = game.settings.get(MODULE_ID, 'enableCenterOnToken') ?? false;
         context.autoCenterOnToken = Boolean(game.settings.get(MODULE_ID, 'autoCenterOnToken'));
+        context.persistHUD = Boolean(game.settings.get(MODULE_ID, 'persistHUD'));
         context.enableItemSummaryButton = game.settings.get(MODULE_ID, 'enableItemSummaryButton') ?? false;
         context.enableCombatAutoTrackButton = game.settings.get(MODULE_ID, 'enableCombatAutoTrackButton') ?? false;
         context.autoTrackCombat = game.settings.get(MODULE_ID, 'autoTrackCombat') ?? false;
@@ -1095,6 +1096,22 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         }
 
         await game.settings.set(MODULE_ID, 'isAttached', this.isAttached);
+        this.render();
+    }
+
+    /**
+     * Right-click handler on the Anchor/Pin button.
+     * Toggles HUD persistence across outside left-clicks.
+     * When toggled off, the HUD closes if you left click outside the HUD.
+     * When toggled on, the HUD stays open until you right click on the token or otherwise close it.
+     * @param {Event} [event] Triggering event
+     * @param {HTMLElement} [target] Triggering element
+     */
+    async _onRightClickToggleAnchor(event, target) {
+        event?.preventDefault?.();
+        const current = Boolean(game.settings.get(MODULE_ID, 'persistHUD'));
+        const next = !current;
+        await game.settings.set(MODULE_ID, 'persistHUD', next);
         this.render();
     }
 
@@ -2415,6 +2432,16 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
             return;
         }
 
+        // Intercept right-clicks on attachment/anchor button (link icon)
+        const pinBtn = event.target?.closest?.('.bad-pin-btn');
+        if (pinBtn) {
+            event.preventDefault();
+            event.stopPropagation();
+            event.stopImmediatePropagation();
+            this._onRightClickToggleAnchor(event, pinBtn);
+            return;
+        }
+
         if (this._preventReopen) {
             this._preventReopen = false;
 
@@ -2646,16 +2673,16 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
 
         if (this.isAttached && this.token) {
             // --- ATTACHED MODE (Dynamic Token Placement) ---
-            const tokenTransform = this.token.worldTransform;
+            const tokenTransform = this.token.worldTransform ?? { tx: this.token.x ?? 0, ty: this.token.y ?? 0 };
             const canvasScale = game.canvas.stage?.scale?.x ?? 1;
             const gridSize = game.canvas.grid?.size ?? 100;
             const anchorSide = game.settings.get(MODULE_ID, 'hudAnchorSide') ?? 'vertical';
 
-            const tokenWidth = this.token.w * canvasScale;
-            const tokenHeight = this.token.h * canvasScale;
+            const tokenWidth = (this.token.w ?? 100) * canvasScale;
+            const tokenHeight = (this.token.h ?? 100) * canvasScale;
 
-            const tokenLeft = tokenTransform.tx;
-            const tokenTop = tokenTransform.ty;
+            const tokenLeft = tokenTransform.tx ?? 0;
+            const tokenTop = tokenTransform.ty ?? 0;
 
             const isHorizontal = anchorSide === 'horizontal';
             const gridOffset = game.settings.get(MODULE_ID, isHorizontal ? 'hudGridOffsetHorizontal' : 'hudGridOffset') ?? 0.5;
