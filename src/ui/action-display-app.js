@@ -702,6 +702,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         context.showDepleted = game.settings.get(MODULE_ID, 'showDepleted') ?? false;
         context.showItemSummaries = game.settings.get(MODULE_ID, 'showItemSummaries') ?? false;
         context.enableCenterOnToken = game.settings.get(MODULE_ID, 'enableCenterOnToken') ?? false;
+        context.autoCenterOnToken = Boolean(game.settings.get(MODULE_ID, 'autoCenterOnToken'));
         context.enableItemSummaryButton = game.settings.get(MODULE_ID, 'enableItemSummaryButton') ?? false;
         context.enableCombatAutoTrackButton = game.settings.get(MODULE_ID, 'enableCombatAutoTrackButton') ?? false;
         context.autoTrackCombat = game.settings.get(MODULE_ID, 'autoTrackCombat') ?? false;
@@ -1249,12 +1250,20 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
             if (combat?.started && combat.combatant) {
                 const currentCombatant = combat.combatant;
                 const token = currentCombatant.token?.object
+                    ?? (currentCombatant.token?.center ? currentCombatant.token : null)
                     ?? canvas?.tokens?.get?.(currentCombatant.tokenId)
                     ?? (currentCombatant.token && canvas?.tokens?.placeables?.includes(currentCombatant.token) ? currentCombatant.token : null)
                     ?? currentCombatant.actor?.getActiveTokens?.()?.[0]
+                    ?? currentCombatant.token
                     ?? null;
 
                 if (token && adapter.foundry.isUserInCharge(token)) {
+                    adapter.foundry.selectToken(token);
+                    const isCenterEnabled = Boolean(game.settings.get(MODULE_ID, 'enableCenterOnToken'));
+                    const isAutoCenterActive = isCenterEnabled && Boolean(game.settings.get(MODULE_ID, 'autoCenterOnToken'));
+                    if (isAutoCenterActive) {
+                        adapter.foundry.centerCanvasOnToken(token);
+                    }
                     if (this.token !== token && this.token?.id !== token.id) {
                         if (this.element) {
                             this.element.style.display = 'none';
@@ -1312,19 +1321,41 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
     }
 
     /**
-     * Recenter the canvas view on the active HUD token.
+     * Recenter the canvas view on the current combatant (or active HUD token).
+     * Does not change auto-center state.
+     * @param {Event} [event] Triggering event
+     * @param {HTMLElement} [target] Triggering element
      */
     async _onRecenterToken(event, target) {
-        if (!this.token) return;
-        const center = this.token.center ?? {
-            x: (this.token.x ?? 0) + ((this.token.w ?? 0) / 2),
-            y: (this.token.y ?? 0) + ((this.token.h ?? 0) / 2)
-        };
-        if (canvas?.animatePan) {
-            await canvas.animatePan({ x: center.x, y: center.y });
-        } else if (canvas?.pan) {
-            canvas.pan({ x: center.x, y: center.y });
+        event?.preventDefault?.();
+        const combat = game.combat;
+        const combatant = combat?.combatant;
+        const combatToken = combatant?.token?.object
+            ?? (combatant?.token?.center ? combatant.token : null)
+            ?? canvas?.tokens?.get?.(combatant?.tokenId)
+            ?? (combatant?.token && canvas?.tokens?.placeables?.includes(combatant?.token) ? combatant?.token : null)
+            ?? combatant?.actor?.getActiveTokens?.()?.[0]
+            ?? combatant?.token
+            ?? null;
+
+        const targetToken = combatToken ?? this.token;
+        if (targetToken) {
+            await adapter.foundry.centerCanvasOnToken(targetToken);
         }
+    }
+
+    /**
+     * Right-click handler on the Recenter (crosshairs) button.
+     * Toggles automatic canvas centering on tokens the user is in charge of.
+     * @param {Event} [event] Triggering event
+     * @param {HTMLElement} [target] Triggering element
+     */
+    async _onRightClickRecenterToken(event, target) {
+        event?.preventDefault?.();
+        const current = Boolean(game.settings.get(MODULE_ID, 'autoCenterOnToken'));
+        const next = !current;
+        await game.settings.set(MODULE_ID, 'autoCenterOnToken', next);
+        this.render();
     }
 
     /**
@@ -2371,6 +2402,16 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
             event.stopPropagation();
             event.stopImmediatePropagation();
             this._onRightClickCombatAutoTrack(event, combatTrackBtn);
+            return;
+        }
+
+        // Intercept right-clicks on recenter button (crosshairs icon)
+        const recenterBtn = event.target?.closest?.('.bad-recenter-btn');
+        if (recenterBtn) {
+            event.preventDefault();
+            event.stopPropagation();
+            event.stopImmediatePropagation();
+            this._onRightClickRecenterToken(event, recenterBtn);
             return;
         }
 

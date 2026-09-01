@@ -365,4 +365,50 @@ export class BaseFoundryAdapter {
 
         return false;
     }
+
+    /**
+     * Determine if a token is currently visible to the specified user.
+     * @param {Token|PlaceableObject} token Target token to evaluate
+     * @param {User} [user=game.user] Target user to evaluate (defaults to active client user)
+     * @returns {boolean} True if the token is visible to the user
+     */
+    isTokenVisible(token, user = game.user) {
+        if (!token || !user) return false;
+        if (user.isGM) return true;
+        if (token.visible !== undefined) return Boolean(token.visible);
+        const tokenDoc = token.document ?? token;
+        return !tokenDoc?.hidden;
+    }
+
+    /**
+     * Exclusively select/control the specified token on canvas.
+     * @param {Token|PlaceableObject} token Target token to select
+     * @returns {void}
+     */
+    selectToken(token) {
+        if (!token) return;
+        const placeable = token.object ?? (token.control ? token : canvas?.tokens?.get?.(token.id));
+        placeable?.control?.({ releaseOthers: true });
+        if (canvas?.tokens && Array.isArray(canvas.tokens.controlled)) {
+            canvas.tokens.controlled = [placeable ?? token];
+        }
+    }
+
+    /**
+     * Recenter the canvas view on the token's center coordinates.
+     * @param {Token|PlaceableObject} token Target token to center on
+     * @returns {Promise<void>}
+     */
+    async centerCanvasOnToken(token) {
+        if (!token) return;
+        const center = token.center ?? {
+            x: (token.x ?? 0) + ((token.w ?? 0) / 2),
+            y: (token.y ?? 0) + ((token.h ?? 0) / 2)
+        };
+        if (canvas?.animatePan) {
+            await canvas.animatePan({ x: center.x, y: center.y });
+        } else if (canvas?.pan) {
+            canvas.pan({ x: center.x, y: center.y });
+        }
+    }
 }

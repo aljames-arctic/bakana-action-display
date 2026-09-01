@@ -173,6 +173,14 @@ Hooks.once('init', () => {
         default: false
     });
 
+    // Register Auto-Center on Token Setting (Client Scope, default disabled)
+    game.settings.register(MODULE_ID, 'autoCenterOnToken', {
+        scope: 'client',
+        config: false,
+        type: Boolean,
+        default: false
+    });
+
     // ==========================================
     // User Scope Settings & Menus
     // ==========================================

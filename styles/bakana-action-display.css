@@ -211,6 +211,26 @@
     box-shadow: 0 0 7px rgba(249, 115, 22, 0.65) !important;
 }
 
+/* Auto-Center Active: Symbol is colored sky blue */
+.bakana-action-display-container .bad-recenter-btn.auto-center-active,
+.bad-recenter-btn.auto-center-active {
+    color: #38bdf8 !important;
+    background: rgba(56, 189, 248, 0.18) !important;
+    border-color: rgba(56, 189, 248, 0.5) !important;
+    text-shadow: 0 0 6px rgba(56, 189, 248, 0.5) !important;
+    outline: none !important;
+    box-shadow: 0 0 4px rgba(56, 189, 248, 0.35) !important;
+}
+
+.bakana-action-display-container .bad-recenter-btn.auto-center-active:hover,
+.bad-recenter-btn.auto-center-active:hover {
+    color: #ffffff !important;
+    background: rgba(56, 189, 248, 0.28) !important;
+    border-color: #38bdf8 !important;
+    outline: none !important;
+    box-shadow: 0 0 6px rgba(56, 189, 248, 0.6) !important;
+}
+
 .bad-summary-toggle-btn i {
     transform: scale(1.35, 0.92);
     transform-origin: center center;

@@ -19,6 +19,10 @@
                 "name": "Center on Token Button",
                 "hint": "Display a button in the HUD control bar to recenter the canvas view on the active token."
             },
+            "autoCenterOnToken": {
+                "name": "Auto-Center on Token",
+                "hint": "Automatically recenters the canvas view when combat advances to a token you are in charge of."
+            },
             "enableItemSummaryButton": {
                 "name": "Item Summary Tooltip Button",
                 "hint": "Display a ? button in the HUD control bar to toggle rich item summary tooltips without holding the ? key."

@@ -420,6 +420,7 @@ const settingsStore = new Map([
     ['bakana-action-display.persistDetached', true],
     ['bakana-action-display.autoTrackCombat', false],
     ['bakana-action-display.autoToggleCombat', false],
+    ['bakana-action-display.autoCenterOnToken', false],
     ['bakana-action-display.dnd5eAutoBanConditions', {
         enabled: true,
         vocal: ['silenced', 'incapacitated', 'paralyzed', 'petrified', 'stunned', 'unconscious'],
