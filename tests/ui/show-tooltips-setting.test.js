@@ -1,0 +1,159 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import '../setup.js';
+import { ActionDisplayApp } from '../../src/ui/action-display-app.js';
+import { ControlBarManager } from '../../src/ui/app/control-bar-manager.js';
+import { Dnd5eSystemContextModifier } from '../../src/adapters/system/context-modifier/dnd5e-system-context-modifier.js';
+import { Pf1SystemAdapter } from '../../src/adapters/system/pf1-system-adapter.js';
+import { Pf2eSystemAdapter } from '../../src/adapters/system/pf2e-system-adapter.js';
+import { HUDTab } from '../../src/ui/hud-tab.js';
+import { MODULE_ID } from '../../src/constants.js';
+
+test('showTooltips setting defaults to false', () => {
+    const settingValue = game.settings.get(MODULE_ID, 'showTooltips');
+    assert.equal(settingValue, false, 'showTooltips should be false by default');
+});
+
+test('ActionDisplayApp._prepareContext populates context.showTooltips and control button tooltips based on setting', async () => {
+    const app = new ActionDisplayApp({ actor: { id: 'test-actor', isOwner: true } });
+
+    // 1. When showTooltips is false (default)
+    await game.settings.set(MODULE_ID, 'showTooltips', false);
+    const contextDefault = await app._prepareContext({});
+    assert.equal(contextDefault.showTooltips, false);
+    for (const btn of [...contextDefault.controlButtons.left, ...contextDefault.controlButtons.right]) {
+        assert.equal(btn.tooltip, null, `Button ${btn.id} should have null tooltip when showTooltips is false`);
+    }
+
+    // 2. When showTooltips is true
+    await game.settings.set(MODULE_ID, 'showTooltips', true);
+    try {
+        const contextEnabled = await app._prepareContext({});
+        assert.equal(contextEnabled.showTooltips, true);
+        for (const btn of [...contextEnabled.controlButtons.left, ...contextEnabled.controlButtons.right]) {
+            assert.ok(typeof btn.tooltip === 'string' && btn.tooltip.length > 0, `Button ${btn.id} should have tooltip when showTooltips is true`);
+        }
+    } finally {
+        await game.settings.set(MODULE_ID, 'showTooltips', false);
+    }
+});
+
+test('Dnd5eSystemContextModifier sets right-click tab tooltips only when showTooltips is true', () => {
+    const modifier = new Dnd5eSystemContextModifier({});
+    const mockApp = {
+        actor: {
+            id: 'actor-1',
+            isOwner: true,
+            getFlag: () => false
+        },
+        leftTabs: {
+            activeParents: new Set(),
+            activeSubTypes: new Set()
+        }
+    };
+
+    const makeTabGroups = () => [
+        new HUDTab({ id: 'all', label: 'All Items' }),
+        new HUDTab({ id: 'spell', label: 'Spells' }),
+        new HUDTab({ id: 'weapon', label: 'Weapons' }),
+        new HUDTab({ id: 'equipment', label: 'Equipment' }),
+        new HUDTab({ id: 'consumable', label: 'Consumables' }),
+        new HUDTab({ id: 'tool', label: 'Tools' }),
+        new HUDTab({ id: 'backpack', label: 'Backpacks' }),
+        new HUDTab({ id: 'loot', label: 'Loot' })
+    ];
+
+    // Case 1: showTooltips = false
+    const contextDisabled = { itemTypes: makeTabGroups(), showTooltips: false };
+    modifier.modifyContext(contextDisabled, mockApp);
+    for (const tab of contextDisabled.itemTypes) {
+        assert.equal(tab.tooltip, '', `Tab ${tab.id} should have empty tooltip when showTooltips is false`);
+    }
+
+    // Case 2: showTooltips = true
+    const contextEnabled = { itemTypes: makeTabGroups(), showTooltips: true };
+    modifier.modifyContext(contextEnabled, mockApp);
+    const allTab = contextEnabled.itemTypes.find(t => t.id === 'all');
+    assert.ok(allTab.tooltip.includes('BAD.tabs.allTooltip') || allTab.tooltip.includes('Right-Click: Toggle Show All'));
+
+    const spellTab = contextEnabled.itemTypes.find(t => t.id === 'spell');
+    assert.ok(spellTab.tooltip.includes('BAD.tabs.unpreparedSpellsTooltip') || spellTab.tooltip.includes('Right-Click: Toggle Show Unprepared Spells'));
+
+    const weaponTab = contextEnabled.itemTypes.find(t => t.id === 'weapon');
+    assert.ok(weaponTab.tooltip.includes('BAD.tabs.unequippedWeaponsTooltip') || weaponTab.tooltip.includes('Right-Click: Toggle Show Unequipped Weapons'));
+
+    const equipmentTab = contextEnabled.itemTypes.find(t => t.id === 'equipment');
+    assert.ok(equipmentTab.tooltip.includes('BAD.tabs.unequippedEquipmentTooltip') || equipmentTab.tooltip.includes('Right-Click: Toggle Show Unequipped Equipment'));
+
+    const toolTab = contextEnabled.itemTypes.find(t => t.id === 'tool');
+    assert.ok(toolTab.tooltip.includes('BAD.tabs.unequippedItemsTooltip') || toolTab.tooltip.includes('Right-Click: Toggle Show Unequipped Items'));
+});
+
+test('Pf1SystemAdapter and Pf2eSystemAdapter set right-click tab tooltips when showTooltips is true', () => {
+    const pf1 = new Pf1SystemAdapter();
+    const pf2e = new Pf2eSystemAdapter();
+
+    const mockApp = {
+        actor: {
+            id: 'actor-1',
+            isOwner: true,
+            getFlag: () => false
+        }
+    };
+
+    // PF1
+    const pf1ContextDisabled = {
+        itemTypes: [
+            new HUDTab({ id: 'all', label: 'All' }),
+            new HUDTab({ id: 'weapon', label: 'Weapons' }),
+            new HUDTab({ id: 'buff', label: 'Buffs' }),
+            new HUDTab({ id: 'equipment', label: 'Equipment' })
+        ],
+        showTooltips: false
+    };
+    pf1.modifyContext(pf1ContextDisabled, mockApp);
+    for (const tab of pf1ContextDisabled.itemTypes) {
+        assert.equal(tab.tooltip, '');
+    }
+
+    const pf1ContextEnabled = {
+        itemTypes: [
+            new HUDTab({ id: 'all', label: 'All' }),
+            new HUDTab({ id: 'weapon', label: 'Weapons' }),
+            new HUDTab({ id: 'buff', label: 'Buffs' }),
+            new HUDTab({ id: 'equipment', label: 'Equipment' })
+        ],
+        showTooltips: true
+    };
+    pf1.modifyContext(pf1ContextEnabled, mockApp);
+    assert.ok(pf1ContextEnabled.itemTypes.find(t => t.id === 'all').tooltip.includes('BAD.tabs.allTooltip') || pf1ContextEnabled.itemTypes.find(t => t.id === 'all').tooltip.includes('Right-Click: Toggle Show All'));
+    assert.ok(pf1ContextEnabled.itemTypes.find(t => t.id === 'buff').tooltip.includes('BAD.tabs.inactiveBuffsTooltip') || pf1ContextEnabled.itemTypes.find(t => t.id === 'buff').tooltip.includes('Right-Click: Toggle Show Inactive Buffs'));
+
+    // PF2e
+    const pf2eContextDisabled = {
+        itemTypes: [
+            new HUDTab({ id: 'all', label: 'All' }),
+            new HUDTab({ id: 'weapon', label: 'Weapons' }),
+            new HUDTab({ id: 'consumable', label: 'Consumables' }),
+            new HUDTab({ id: 'equipment', label: 'Equipment' })
+        ],
+        showTooltips: false
+    };
+    pf2e.modifyContext(pf2eContextDisabled, mockApp);
+    for (const tab of pf2eContextDisabled.itemTypes) {
+        assert.equal(tab.tooltip, '');
+    }
+
+    const pf2eContextEnabled = {
+        itemTypes: [
+            new HUDTab({ id: 'all', label: 'All' }),
+            new HUDTab({ id: 'weapon', label: 'Weapons' }),
+            new HUDTab({ id: 'consumable', label: 'Consumables' }),
+            new HUDTab({ id: 'equipment', label: 'Equipment' })
+        ],
+        showTooltips: true
+    };
+    pf2e.modifyContext(pf2eContextEnabled, mockApp);
+    assert.ok(pf2eContextEnabled.itemTypes.find(t => t.id === 'all').tooltip.includes('BAD.tabs.allTooltip') || pf2eContextEnabled.itemTypes.find(t => t.id === 'all').tooltip.includes('Right-Click: Toggle Show All'));
+    assert.ok(pf2eContextEnabled.itemTypes.find(t => t.id === 'consumable').tooltip.includes('BAD.tabs.unequippedItemsTooltip') || pf2eContextEnabled.itemTypes.find(t => t.id === 'consumable').tooltip.includes('Right-Click: Toggle Show Unequipped Items'));
+});

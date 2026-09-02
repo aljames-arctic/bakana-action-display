@@ -743,6 +743,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         context.isDetached = this.isDetached;
         context.showDepleted = game.settings.get(MODULE_ID, 'showDepleted') ?? false;
         context.showItemSummaries = game.settings.get(MODULE_ID, 'showItemSummaries') ?? false;
+        context.showTooltips = Boolean(game.settings.get(MODULE_ID, 'showTooltips'));
         context.enableCenterOnToken = game.settings.get(MODULE_ID, 'enableCenterOnToken') ?? false;
         context.autoCenterOnToken = Boolean(game.settings.get(MODULE_ID, 'autoCenterOnToken'));
         context.persistHUD = Boolean(game.settings.get(MODULE_ID, 'persistHUD'));

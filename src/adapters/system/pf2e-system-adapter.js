@@ -455,6 +455,13 @@ export class BasePf2eSystemAdapter extends FantasySystemAdapter {
             equipmentParent.showUnprepared = Boolean(showUnequippedEquipment || showAll);
         }
 
+        if (context.showTooltips) {
+            if (allParent) allParent.tooltip = localize('BAD.tabs.allTooltip', 'Right-Click: Toggle Show All (Equipped & Unequipped Items, Prepared & Unprepared Spells)');
+            if (weaponParent) weaponParent.tooltip = localize('BAD.tabs.unequippedWeaponsTooltip', 'Right-Click: Toggle Show Unequipped Weapons');
+            if (consumableParent) consumableParent.tooltip = localize('BAD.tabs.unequippedItemsTooltip', 'Right-Click: Toggle Show Unequipped Items');
+            if (equipmentParent) equipmentParent.tooltip = localize('BAD.tabs.unequippedEquipmentTooltip', 'Right-Click: Toggle Show Unequipped Equipment');
+        }
+
         const spellGroup = context.itemTypes?.find(g => g.id === 'spell');
         if (spellGroup?.subTabs?.length) {
             spellGroup.subTabs.sort((a, b) =>

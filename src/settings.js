@@ -358,6 +358,21 @@ Hooks.once('init', () => {
     // Client Scope Settings
     // ==========================================
 
+    // Register Show Tooltips Setting
+    game.settings.register(MODULE_ID, 'showTooltips', {
+        name: game.i18n.localize('BAD.settings.showTooltips.name'),
+        hint: game.i18n.localize('BAD.settings.showTooltips.hint'),
+        scope: 'client',
+        config: true,
+        type: Boolean,
+        default: false,
+        onChange: () => {
+            if (actionDisplay.activeApp?.rendered) {
+                actionDisplay.activeApp.render();
+            }
+        }
+    });
+
     // Register Log Verbosity Setting
     game.settings.register(MODULE_ID, 'logVerbosity', {
         name: game.i18n.localize('BAD.settings.logVerbosity.name'),
@@ -499,7 +514,7 @@ export function injectSettingsHeaders(html, app) {
             icon: 'fas fa-user'
         },
         {
-            keys: ['logVerbosity'],
+            keys: ['showTooltips', 'logVerbosity'],
             scope: 'client',
             title: game.i18n.localize('BAD.settingsSections.client') ?? 'Client Settings',
             icon: 'fas fa-desktop'

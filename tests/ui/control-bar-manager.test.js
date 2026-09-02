@@ -67,9 +67,15 @@ test('ControlBarManager.prepareControlButtons prepares structured button models 
     assert.equal(closeBtn.contextAction, null);
     assert.equal(closeBtn.icon, 'fas fa-times');
 
-    // Control buttons should not have tooltips
+    // Control buttons should not have tooltips by default (showTooltips: false)
     for (const btn of [...buttons.left, ...buttons.right]) {
-        assert.equal(btn.tooltip, undefined, `Button ${btn.id} should not have a tooltip`);
+        assert.equal(btn.tooltip, null, `Button ${btn.id} should not have a tooltip by default`);
+    }
+
+    // When showTooltips is enabled, buttons receive localized tooltips
+    const buttonsWithTooltips = ControlBarManager.prepareControlButtons({ ...mockContext, showTooltips: true }, true);
+    for (const btn of [...buttonsWithTooltips.left, ...buttonsWithTooltips.right]) {
+        assert.ok(typeof btn.tooltip === 'string' && btn.tooltip.length > 0, `Button ${btn.id} should have a tooltip when showTooltips is enabled`);
     }
 });
 

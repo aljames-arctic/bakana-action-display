@@ -83,6 +83,10 @@
                 "name": "HUD Grid Offset (Horizontal)",
                 "hint": "Controls the horizontal distance (in grid units) to offset the HUD to the left or right of the token."
             },
+            "showTooltips": {
+                "name": "Show Tooltips",
+                "hint": "Display contextual hover tooltips for HUD control buttons, page options, and tab right-click actions."
+            },
             "logVerbosity": {
                 "name": "Log Verbosity Level",
                 "hint": "Controls the level of detail printed to the browser console.",
@@ -269,6 +273,14 @@
                 "name": "Toggle Action Display HUD",
                 "hint": "Open or close the Action Display HUD for the currently controlled token."
             }
+        },
+        "tabs": {
+            "allTooltip": "Right-Click: Toggle Show All (Equipped & Unequipped Items, Prepared & Unprepared Spells)",
+            "unpreparedSpellsTooltip": "Right-Click: Toggle Show Unprepared Spells",
+            "unequippedWeaponsTooltip": "Right-Click: Toggle Show Unequipped Weapons",
+            "unequippedEquipmentTooltip": "Right-Click: Toggle Show Unequipped Equipment",
+            "unequippedItemsTooltip": "Right-Click: Toggle Show Unequipped Items",
+            "inactiveBuffsTooltip": "Right-Click: Toggle Show Inactive Buffs"
         }
     }
 }

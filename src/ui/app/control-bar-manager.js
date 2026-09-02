@@ -10,6 +10,7 @@ import { log } from '../../lib/logger.js';
  * @property {boolean} isActive Primary active flag (illuminated purple state)
  * @property {boolean} isSecondaryActive Secondary active flag (e.g. orange outline state)
  * @property {boolean} isVisible Whether button should be rendered
+ * @property {string|null} tooltip Localized tooltip text when showTooltips is enabled
  * @property {string} ariaLabel Accessibility label
  */
 
@@ -27,6 +28,7 @@ export class ControlBarManager {
      * @returns {ControlBarModel}
      */
     static prepareControlButtons(context, isAttached) {
+        const showTooltips = Boolean(context.showTooltips);
         const showDepleted = Boolean(context.showDepleted);
         const autoTrackCombat = Boolean(context.autoTrackCombat);
         const autoToggleCombat = Boolean(context.autoToggleCombat);
@@ -47,6 +49,11 @@ export class ControlBarManager {
                 isActive: showDepleted,
                 isSecondaryActive: false,
                 isVisible: true,
+                tooltip: showTooltips
+                    ? (showDepleted
+                        ? (game.i18n?.localize?.('BAD.controlButtons.filterResources.tooltipHide') ?? 'Hide Depleted Items')
+                        : (game.i18n?.localize?.('BAD.controlButtons.filterResources.tooltipShow') ?? 'Show Depleted Items'))
+                    : null,
                 ariaLabel: game.i18n?.localize?.('BAD.controlButtons.filterResources.label') ?? 'Filter Resources'
             },
             {
@@ -58,6 +65,10 @@ export class ControlBarManager {
                 isActive: autoTrackCombat,
                 isSecondaryActive: autoToggleCombat,
                 isVisible: enableCombatAutoTrack,
+                tooltip: showTooltips
+                    ? (game.i18n?.localize?.('BAD.controlButtons.combatTrack.tooltip')
+                        ?? 'Left-Click: Follow Active Combatant Turn\nRight-Click: Toggle Auto-Select Token on Turn Change')
+                    : null,
                 ariaLabel: game.i18n?.localize?.('BAD.controlButtons.combatTrack.label') ?? 'Combat Turn Tracker'
             },
             {
@@ -69,6 +80,11 @@ export class ControlBarManager {
                 isActive: showItemSummaries,
                 isSecondaryActive: false,
                 isVisible: enableItemSummaryButton,
+                tooltip: showTooltips
+                    ? (showItemSummaries
+                        ? (game.i18n?.localize?.('BAD.controlButtons.itemSummary.tooltipDisable') ?? 'Disable Rich Item Summaries')
+                        : (game.i18n?.localize?.('BAD.controlButtons.itemSummary.tooltipEnable') ?? 'Enable Rich Item Summaries (without holding ?)'))
+                    : null,
                 ariaLabel: game.i18n?.localize?.('BAD.controlButtons.itemSummary.label') ?? 'Item Summary Tooltips'
             }
         ];
@@ -83,6 +99,10 @@ export class ControlBarManager {
                 isActive: autoCenterOnToken,
                 isSecondaryActive: false,
                 isVisible: enableCenterOnToken,
+                tooltip: showTooltips
+                    ? (game.i18n?.localize?.('BAD.controlButtons.recenter.tooltip')
+                        ?? 'Left-Click: Recenter Canvas on Active Combatant\nRight-Click: Toggle Auto-Centering on Turn Change')
+                    : null,
                 ariaLabel: game.i18n?.localize?.('BAD.controlButtons.recenter.label') ?? 'Recenter View'
             },
             {
@@ -94,6 +114,13 @@ export class ControlBarManager {
                 isActive: persistHUD,
                 isSecondaryActive: false,
                 isVisible: true,
+                tooltip: showTooltips
+                    ? (isAttached
+                        ? (game.i18n?.localize?.('BAD.controlButtons.anchor.tooltipAttached')
+                            ?? 'Left-Click: Detach HUD from Token\nRight-Click: Toggle HUD Persistence on Outside Click')
+                        : (game.i18n?.localize?.('BAD.controlButtons.anchor.tooltipDetached')
+                            ?? 'Left-Click: Attach HUD to Token\nRight-Click: Toggle HUD Persistence on Outside Click'))
+                    : null,
                 ariaLabel: game.i18n?.localize?.('BAD.controlButtons.anchor.label') ?? 'HUD Placement & Persistence'
             },
             {
@@ -105,6 +132,9 @@ export class ControlBarManager {
                 isActive: false,
                 isSecondaryActive: false,
                 isVisible: true,
+                tooltip: showTooltips
+                    ? (game.i18n?.localize?.('BAD.controlButtons.close.tooltip') ?? 'Close HUD')
+                    : null,
                 ariaLabel: game.i18n?.localize?.('BAD.controlButtons.close.label') ?? 'Close HUD'
             }
         ];

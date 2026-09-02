@@ -39,7 +39,8 @@
 {{#*inline "leftSubTab"}}
 <button class="bad-left-sub-tab {{#if isNested}}bad-nested-sub-tab{{/if}} {{#if tab.active}}active{{/if}} {{#if tab.showUnprepared}}unprepared-active{{/if}}" 
         data-action="changeLeftSubItemType" 
-        data-type="{{tab.id}}">
+        data-type="{{tab.id}}"
+        {{#if @root.showTooltips}}{{#if tab.tooltip}}data-tooltip="{{tab.tooltip}}" data-tooltip-direction="RIGHT"{{/if}}{{/if}}>
     {{tab.label}}
 </button>
 {{/inline}}
@@ -58,6 +59,7 @@
 <button class="{{this.className}} {{#if this.isActive}}active{{/if}} {{#if this.isSecondaryActive}}auto-toggle-active{{/if}}" 
         data-action="{{this.action}}"
         {{#if this.contextAction}}data-context-action="{{this.contextAction}}"{{/if}}
+        {{#if @root.showTooltips}}{{#if this.tooltip}}data-tooltip="{{this.tooltip}}" data-tooltip-direction="DOWN"{{/if}}{{/if}}
         aria-label="{{this.ariaLabel}}">
     <i class="{{this.icon}}"></i>
 </button>
@@ -108,7 +110,8 @@
             <div class="bad-left-tab {{#if this.active}}active{{/if}} {{#if this.activeParent}}active-parent{{/if}} {{#if this.showUnprepared}}unprepared-active{{/if}}" 
                  data-action="changeLeftItemType" 
                  data-type="{{this.id}}" 
-                 data-has-sub-tabs="{{#if this.subTabs.length}}true{{else}}false{{/if}}">
+                 data-has-sub-tabs="{{#if this.subTabs.length}}true{{else}}false{{/if}}"
+                 {{#if @root.showTooltips}}{{#if this.tooltip}}data-tooltip="{{this.tooltip}}" data-tooltip-direction="RIGHT"{{/if}}{{/if}}>
                 <span class="bad-left-tab-text">{{this.label}}</span>
                 <div class="bad-left-tab-icon">
                     <i class="{{this.icon}}"></i>
@@ -157,6 +160,7 @@
                                    role="button" 
                                    tabindex="0"
                                    data-action="toggleInspiration" 
+                                   {{#if @root.showTooltips}}data-tooltip="{{#if tokenInfo.inspiration}}{{localize 'BAD.page3.inspired'}}{{else}}{{localize 'BAD.page3.inspiration'}}{{/if}}" data-tooltip-direction="UP"{{/if}}
                                    aria-label="{{localize 'BAD.page3.inspiration'}}"
                                    aria-pressed="{{#if tokenInfo.inspiration}}true{{else}}false{{/if}}">
                                     <i class="fas fa-dice-d20"></i>

@@ -178,9 +178,55 @@ export class Dnd5eSystemContextModifier extends BaseSystemContextModifier {
             lootParent.showUnprepared = Boolean(showUnequippedLoot || showAll);
         }
 
-        this.#ensureAllSubTab(findParent('spell'), app, localize('BAD.common.allSpells', 'All Spells'), 'showUnprepared', true, showAll);
-        this.#ensureAllSubTab(findParent('weapon'), app, localize('BAD.common.allWeapons', 'All Weapons'), 'showUnequipped_weapon', false, showAll);
-        this.#ensureAllSubTab(findParent('equipment'), app, localize('BAD.common.allEquipment', 'All Equipment'), 'showUnequipped_equipment', false, showAll);
+        const showTooltips = Boolean(context.showTooltips);
+        if (showTooltips) {
+            if (allParent) {
+                allParent.tooltip = localize('BAD.tabs.allTooltip', 'Right-Click: Toggle Show All (Equipped & Unequipped Items, Prepared & Unprepared Spells)');
+            }
+            if (spellParent) {
+                spellParent.tooltip = localize('BAD.tabs.unpreparedSpellsTooltip', 'Right-Click: Toggle Show Unprepared Spells');
+            }
+            if (weaponParent) {
+                weaponParent.tooltip = localize('BAD.tabs.unequippedWeaponsTooltip', 'Right-Click: Toggle Show Unequipped Weapons');
+            }
+            if (equipmentParent) {
+                equipmentParent.tooltip = localize('BAD.tabs.unequippedEquipmentTooltip', 'Right-Click: Toggle Show Unequipped Equipment');
+            }
+            for (const gearType of ['consumable', 'tool', 'backpack', 'loot']) {
+                const p = findParent(gearType);
+                if (p) {
+                    p.tooltip = localize('BAD.tabs.unequippedItemsTooltip', 'Right-Click: Toggle Show Unequipped Items');
+                }
+            }
+        }
+
+        this.#ensureAllSubTab(
+            findParent('spell'),
+            app,
+            localize('BAD.common.allSpells', 'All Spells'),
+            'showUnprepared',
+            true,
+            showAll,
+            showTooltips ? localize('BAD.tabs.unpreparedSpellsTooltip', 'Right-Click: Toggle Show Unprepared Spells') : ''
+        );
+        this.#ensureAllSubTab(
+            findParent('weapon'),
+            app,
+            localize('BAD.common.allWeapons', 'All Weapons'),
+            'showUnequipped_weapon',
+            false,
+            showAll,
+            showTooltips ? localize('BAD.tabs.unequippedWeaponsTooltip', 'Right-Click: Toggle Show Unequipped Weapons') : ''
+        );
+        this.#ensureAllSubTab(
+            findParent('equipment'),
+            app,
+            localize('BAD.common.allEquipment', 'All Equipment'),
+            'showUnequipped_equipment',
+            false,
+            showAll,
+            showTooltips ? localize('BAD.tabs.unequippedEquipmentTooltip', 'Right-Click: Toggle Show Unequipped Equipment') : ''
+        );
     }
 
     /**
@@ -191,8 +237,9 @@ export class Dnd5eSystemContextModifier extends BaseSystemContextModifier {
      * @param {string} flagKey Actor flag key for unprepared/unequipped display toggle
      * @param {boolean} [requireSubTabs=false] Only inject if parent has existing subtabs
      * @param {boolean} [forceShow=false] Force orange indicator if showAll is true
+     * @param {string} [tooltip=''] Contextual tooltip when showTooltips is enabled
      */
-    #ensureAllSubTab(parent, app, label, flagKey, requireSubTabs = false, forceShow = false) {
+    #ensureAllSubTab(parent, app, label, flagKey, requireSubTabs = false, forceShow = false, tooltip = '') {
         if (!parent || !parent.addSubTab || (requireSubTabs && parent.subTabs?.length === 0)) return;
         const flagValue = app?.actor?.getFlag?.(MODULE_ID, flagKey) ?? false;
         const showUnprepared = Boolean(forceShow || flagValue);
@@ -200,7 +247,8 @@ export class Dnd5eSystemContextModifier extends BaseSystemContextModifier {
             id: 'all',
             label,
             active: Boolean(app?.leftTabs?.activeParents?.has(parent.id) && app?.leftTabs?.activeSubTypes?.size === 0),
-            showUnprepared
+            showUnprepared,
+            tooltip
         });
         parent.updateOrder?.(Object.keys(SORT_ORDERS.tabs[parent.id]));
     }
