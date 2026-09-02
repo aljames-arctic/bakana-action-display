@@ -432,3 +432,53 @@ test('ActionDisplayApp clamps activePage in _prepareContext if cached page excee
     assert.equal(context.pages.length, 1);
     assert.deepEqual(context.pages[0], { page: 1, active: true });
 });
+
+test('ActionDisplayApp defaultPage internal module setting updates on shift+click and governs new HUDs', async () => {
+    ActionDisplayApp.clearTabCache();
+
+    // 1. Initial state: defaultPage defaults to 1
+    assert.equal(ActionDisplayApp.defaultPage, 1);
+    assert.equal(actionDisplay.defaultPage, 1);
+
+    // 2. A newly opened HUD for an un-cached actor opens to defaultPage (1)
+    const app1 = new ActionDisplayApp({ actor: { id: 'actor-init-1', uuid: 'Actor.Init1' } });
+    assert.equal(app1.activePage, 1);
+    app1.totalPages = 3;
+    app1.render = () => {};
+    app1._saveTabState();
+
+    // 3. Normal (un-shifted) changePage on app1 does NOT change defaultPage
+    await app1._onChangePage({ preventDefault: () => {}, shiftKey: false }, { dataset: { page: '2' } });
+    assert.equal(app1.activePage, 2);
+    assert.equal(ActionDisplayApp.defaultPage, 1, 'Un-shifted changePage must not change defaultPage');
+    assert.equal(actionDisplay.defaultPage, 1);
+
+    // 4. A new HUD for another un-cached actor opens to defaultPage (1), not app1's page (2)
+    const app2 = new ActionDisplayApp({ actor: { id: 'actor-init-2', uuid: 'Actor.Init2' } });
+    assert.equal(app2.activePage, 1, 'New un-cached actor HUD must open to defaultPage 1');
+    app2.totalPages = 3;
+    app2.render = () => {};
+
+    // 5. Shift+click on page 3 updates app2, cached app1, AND defaultPage to 3
+    await app2._onChangePage({ preventDefault: () => {}, shiftKey: true }, { dataset: { page: '3' } });
+    assert.equal(app2.activePage, 3);
+    assert.equal(ActionDisplayApp.defaultPage, 3, 'Shift-click must update defaultPage to 3');
+    assert.equal(actionDisplay.defaultPage, 3);
+
+    const cache = ActionDisplayApp.getActiveTabCache();
+    assert.equal(cache.get('Actor.Init1').activePage, 3, 'Cached Actor 1 must be updated to page 3');
+    assert.equal(cache.get('Actor.Init2').activePage, 3, 'Cached Actor 2 must be updated to page 3');
+
+    // 6. A subsequent new HUD for an un-cached Actor 3 opens to defaultPage (3)
+    const app3 = new ActionDisplayApp({ actor: { id: 'actor-init-3', uuid: 'Actor.Init3' } });
+    assert.equal(app3.activePage, 3, 'New un-cached actor HUD must open to updated defaultPage 3');
+
+    // 7. Calling clearTabCache resets defaultPage back to 1
+    ActionDisplayApp.clearTabCache();
+    assert.equal(ActionDisplayApp.defaultPage, 1, 'clearTabCache must reset defaultPage to 1');
+    assert.equal(actionDisplay.defaultPage, 1);
+
+    // 8. New HUD after clearTabCache opens to defaultPage 1
+    const app4 = new ActionDisplayApp({ actor: { id: 'actor-init-4', uuid: 'Actor.Init4' } });
+    assert.equal(app4.activePage, 1);
+});

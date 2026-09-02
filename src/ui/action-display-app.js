@@ -31,13 +31,30 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
     static instances = new Set();
 
     /**
+     * Default page for newly opened HUDs (internal module setting, resets on reload).
+     * Delegates to actionDisplay.defaultPage.
+     * @type {number}
+     */
+    static get defaultPage() {
+        return actionDisplay.defaultPage;
+    }
+
+    static set defaultPage(val) {
+        actionDisplay.defaultPage = val;
+    }
+
+    /**
      * Update the active page for all cached HUD states (in-memory, active instances, and persisted settings).
+     * Also updates the internal defaultPage module setting for newly opened HUDs.
      * @param {number} targetPage Target page number
      * @param {ActionDisplayApp|null} [callerInstance=null] The instance initiating the change
      */
     static setAllCachedHUDsPage(targetPage, callerInstance = null) {
-        const parsed = Number(targetPage);
+        const parsed = parseInt(targetPage, 10);
         const page = (!isNaN(parsed) && parsed > 0) ? parsed : 1;
+
+        // 0. Update internal defaultPage module setting for newly opened HUDs
+        ActionDisplayApp.defaultPage = page;
 
         // 1. Update in-memory active tab cache entries
         for (const [key, state] of activeTabCache.entries()) {
@@ -101,6 +118,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         activeTabCache.clear();
         lastActiveTabState = null;
         ActionDisplayApp.instances.clear();
+        ActionDisplayApp.defaultPage = 1;
     }
 
     constructor(token, options = {}) {
@@ -112,9 +130,10 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         this.totalPages = 1;
 
         const actorKey = this.actor?.uuid ?? this.actor?.id;
+        const hasActorCache = Boolean(activeTabCache.has(actorKey) || (actorKey && game.settings.get(MODULE_ID, 'persistTabState') && game.settings.get(MODULE_ID, 'hudTabStates')?.[actorKey]));
         const cached = this.retrieveActorTabCache(actorKey);
-        const parsedPage = Number(cached?.activePage ?? 1);
-        this.activePage = (!isNaN(parsedPage) && parsedPage > 0) ? parsedPage : 1;
+        const parsedPage = Number((hasActorCache ? cached?.activePage : null) ?? ActionDisplayApp.defaultPage);
+        this.activePage = (!isNaN(parsedPage) && parsedPage > 0) ? parsedPage : ActionDisplayApp.defaultPage;
         this._cachedPages = cached?.pages ?? {
             '1-left': cached?.left,
             '1-right': cached?.right
@@ -352,7 +371,12 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         };
 
         // Track most recent active tab selections for seamless actor switching
-        lastActiveTabState = serialized;
+        lastActiveTabState = {
+            activePage: ActionDisplayApp.defaultPage,
+            left: this.leftTabs.serialize(),
+            right: this.rightTabs.serialize(),
+            pages: this._cachedPages
+        };
 
         if (!actorKey) return;
 
@@ -396,12 +420,12 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         if (!cached && game.settings.get(MODULE_ID, 'persistTabState')) {
             const rawStates = game.settings.get(MODULE_ID, 'hudTabStates');
             const allStates = (rawStates && typeof rawStates === 'object') ? rawStates : {};
-            cached = (actorKey ? allStates[actorKey] : null) ?? lastActiveTabState;
+            cached = (actorKey ? allStates[actorKey] : null) ?? (lastActiveTabState ? { ...lastActiveTabState } : null);
             if (cached && actorKey) {
                 activeTabCache.set(actorKey, cached);
             }
         } else if (!cached && lastActiveTabState) {
-            cached = lastActiveTabState;
+            cached = { ...lastActiveTabState };
         }
         return cached;
     }

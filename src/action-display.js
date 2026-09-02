@@ -79,6 +79,21 @@ class ActionDisplay {
     activeApp = null;
 
     /**
+     * Default page number for newly opened HUDs (internal module setting, resets on reload).
+     * @type {number}
+     */
+    _defaultPage = 1;
+
+    get defaultPage() {
+        return this._defaultPage;
+    }
+
+    set defaultPage(val) {
+        const parsed = parseInt(val, 10);
+        this._defaultPage = (!isNaN(parsed) && parsed > 0) ? parsed : 1;
+    }
+
+    /**
      * Handler delegate for HUD toggling.
      * @type {Function|null}
      */
