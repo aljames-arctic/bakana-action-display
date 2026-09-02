@@ -204,3 +204,38 @@ test('injectSettingsHeaders moves economyColorsMenu into the User Settings secti
         document.createElement = origCreateElement;
     }
 });
+
+test('injectSettingsHeaders places showTooltips in the User Settings section', () => {
+    const origCreateElement = document.createElement;
+    document.createElement = (tagName) => new MockElement(tagName);
+
+    try {
+        const root = new MockElement('div', { className: 'settings-list' });
+
+        // User settings
+        const fgTooltips = new MockElement('div', { className: 'form-group' });
+        const inputTooltips = new MockElement('input', { name: 'bakana-action-display.showTooltips' });
+        fgTooltips.appendChild(inputTooltips);
+        root.appendChild(fgTooltips);
+
+        // Client settings
+        const fgLog = new MockElement('div', { className: 'form-group' });
+        const inputLog = new MockElement('input', { name: 'bakana-action-display.logVerbosity' });
+        fgLog.appendChild(inputLog);
+        root.appendChild(fgLog);
+
+        injectSettingsHeaders(root);
+
+        // Expect User Header before fgTooltips, Client Header before fgLog
+        assert.equal(root.children[0].className, 'bad-settings-section-header');
+        assert.equal(root.children[0].dataset.scope, 'user');
+        assert.equal(root.children[1], fgTooltips, 'showTooltips should be placed under User Settings');
+
+        assert.equal(root.children[2].className, 'bad-settings-section-header');
+        assert.equal(root.children[2].dataset.scope, 'client');
+        assert.equal(root.children[3], fgLog, 'logVerbosity should be placed under Client Settings');
+    } finally {
+        document.createElement = origCreateElement;
+    }
+});
+

@@ -354,15 +354,11 @@ Hooks.once('init', () => {
         }
     });
 
-    // ==========================================
-    // Client Scope Settings
-    // ==========================================
-
-    // Register Show Tooltips Setting
+    // Register Show Tooltips Setting (User Scope)
     game.settings.register(MODULE_ID, 'showTooltips', {
         name: game.i18n.localize('BAD.settings.showTooltips.name'),
         hint: game.i18n.localize('BAD.settings.showTooltips.hint'),
-        scope: 'client',
+        scope: 'user',
         config: true,
         type: Boolean,
         default: false,
@@ -372,6 +368,10 @@ Hooks.once('init', () => {
             }
         }
     });
+
+    // ==========================================
+    // Client Scope Settings
+    // ==========================================
 
     // Register Log Verbosity Setting
     game.settings.register(MODULE_ID, 'logVerbosity', {
@@ -508,13 +508,13 @@ export function injectSettingsHeaders(html, app) {
             icon: 'fas fa-globe'
         },
         {
-            keys: ['economyColorsMenu', 'hudOpacity', 'hudScale', 'fontSize'],
+            keys: ['economyColorsMenu', 'hudOpacity', 'hudScale', 'fontSize', 'persistTabState', 'toggleTabSelection', 'hudAnchorSide', 'hudGridOffset', 'hudGridOffsetHorizontal', 'showTooltips'],
             scope: 'user',
             title: game.i18n.localize('BAD.settingsSections.user') ?? 'User Settings',
             icon: 'fas fa-user'
         },
         {
-            keys: ['showTooltips', 'logVerbosity'],
+            keys: ['logVerbosity'],
             scope: 'client',
             title: game.i18n.localize('BAD.settingsSections.client') ?? 'Client Settings',
             icon: 'fas fa-desktop'
