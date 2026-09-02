@@ -2,33 +2,33 @@
     <!-- Control Bar (Filter Resources + Grip + Recenter + Pin Button + Close Button) -->
     <div class="bad-control-bar">
         <div class="bad-control-group bad-control-left">
-            <button class="bad-control-btn bad-filter-resources-btn {{#if showDepleted}}active{{/if}}" data-action="toggleFilterResources">
-                <i class="fas {{#if showDepleted}}fa-eye{{else}}fa-eye-slash{{/if}}"></i>
-            </button>
-            {{#if enableCombatAutoTrackButton}}
-            <button class="bad-control-btn bad-combat-track-btn {{#if autoTrackCombat}}active{{/if}} {{#if autoToggleCombat}}auto-toggle-active{{/if}}" data-action="toggleCombatAutoTrack">
-                <i class="fas fa-sword"></i>
-            </button>
-            {{/if}}
-            {{#if enableItemSummaryButton}}
-            <button class="bad-control-btn bad-summary-toggle-btn {{#if showItemSummaries}}active{{/if}}" data-action="toggleItemSummaries">
-                <i class="fas fa-question"></i>
+            {{#each controlButtons.left}}
+            {{#if this.isVisible}}
+            <button class="{{this.className}} {{#if this.isActive}}active{{/if}} {{#if this.isSecondaryActive}}auto-toggle-active{{/if}}" 
+                    data-action="{{this.action}}"
+                    {{#if this.contextAction}}data-context-action="{{this.contextAction}}"{{/if}}
+                    data-tooltip="{{this.tooltip}}"
+                    data-tooltip-direction="DOWN"
+                    aria-label="{{this.ariaLabel}}">
+                <i class="{{this.icon}}"></i>
             </button>
             {{/if}}
+            {{/each}}
         </div>
         <div class="bad-drag-handle"><i class="fas fa-grip"></i></div>
         <div class="bad-control-group bad-control-right">
-            {{#if enableCenterOnToken}}
-            <button class="bad-control-btn bad-recenter-btn {{#if autoCenterOnToken}}active{{/if}}" data-action="recenterToken">
-                <i class="fas fa-crosshairs"></i>
+            {{#each controlButtons.right}}
+            {{#if this.isVisible}}
+            <button class="{{this.className}} {{#if this.isActive}}active{{/if}} {{#if this.isSecondaryActive}}auto-toggle-active{{/if}}" 
+                    data-action="{{this.action}}"
+                    {{#if this.contextAction}}data-context-action="{{this.contextAction}}"{{/if}}
+                    data-tooltip="{{this.tooltip}}"
+                    data-tooltip-direction="DOWN"
+                    aria-label="{{this.ariaLabel}}">
+                <i class="{{this.icon}}"></i>
             </button>
             {{/if}}
-            <button class="bad-control-btn bad-pin-btn {{#if persistHUD}}active{{/if}}" data-action="toggleAnchor">
-                <i class="fas {{#if isAttached}}fa-link{{else}}fa-unlink{{/if}}"></i>
-            </button>
-            <button class="bad-control-btn bad-close-btn" data-action="closeHUD">
-                <i class="fas fa-times"></i>
-            </button>
+            {{/each}}
         </div>
     </div>
 

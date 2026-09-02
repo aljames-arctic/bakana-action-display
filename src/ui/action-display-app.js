@@ -6,6 +6,7 @@ import { HUDTabColumn } from './hud-tab-column.js';
 import { HUDTab } from './hud-tab.js';
 import { createActionContextMenu } from './app/context-menu-manager.js';
 import { showActivityDropdown } from './app/dropdown-manager.js';
+import { ControlBarManager } from './app/control-bar-manager.js';
 import { categorizeActions } from '../categorization/categorization-manager.js';
 import { syncActorFavorites } from '../favorites/favorites-manager.js';
 import { setExplicitlyClosedTokenId } from '../module.js';
@@ -338,6 +339,12 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
             nextPage: ActionDisplayApp.prototype._onNextPage,
             changePage: ActionDisplayApp.prototype._onChangePage,
             toggleInspiration: ActionDisplayApp.prototype._onToggleInspiration
+        },
+        // Declarative Context Actions API - maps data-context-action attributes to static right-click handlers
+        contextActions: {
+            toggleAutoCenter: ActionDisplayApp.prototype._onRightClickRecenterToken,
+            toggleHUDPersistence: ActionDisplayApp.prototype._onRightClickToggleAnchor,
+            toggleCombatAutoToggle: ActionDisplayApp.prototype._onRightClickCombatAutoTrack
         }
     };
 
@@ -812,6 +819,9 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
 
         // Save serialized tab selections for active actor
         this._saveTabState();
+
+        // Standardize control bar button models for declarative UI rendering
+        context.controlButtons = ControlBarManager.prepareControlButtons(context, this.isAttached);
 
         return context;
     }
@@ -1517,8 +1527,14 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
     _onFirstRender(context, options) {
         super._onFirstRender(context, options);
 
-        // Prevent clicks inside the HUD from bubbling up to the canvas/document
-        this.element.addEventListener('click', (event) => event.stopPropagation());
+        // Prevent clicks inside the HUD from bubbling up to the canvas/document, and auto-blur action buttons immediately
+        this.element.addEventListener('click', (event) => {
+            const actionBtn = event.target?.closest?.('button[data-action], a[data-action]');
+            if (actionBtn) {
+                actionBtn.blur?.();
+            }
+            event.stopPropagation();
+        });
 
         // Intercept right-click pointerdown and contextmenu events in the capture phase to support toggling the menu off
         this.element.addEventListener('pointerdown', this._boundOnPointerDownCapture, { capture: true });
@@ -2419,35 +2435,9 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
     async _onContextMenuCapture(event) {
         if (event.target?.closest?.('#context-menu, .context-menu, .context-item')) return;
 
-        // Intercept right-clicks on combat auto-track button (sword icon)
-        const combatTrackBtn = event.target?.closest?.('.bad-combat-track-btn');
-        if (combatTrackBtn) {
-            event.preventDefault();
-            event.stopPropagation();
-            event.stopImmediatePropagation();
-            this._onRightClickCombatAutoTrack(event, combatTrackBtn);
-            return;
-        }
-
-        // Intercept right-clicks on recenter button (crosshairs icon)
-        const recenterBtn = event.target?.closest?.('.bad-recenter-btn');
-        if (recenterBtn) {
-            event.preventDefault();
-            event.stopPropagation();
-            event.stopImmediatePropagation();
-            this._onRightClickRecenterToken(event, recenterBtn);
-            return;
-        }
-
-        // Intercept right-clicks on attachment/anchor button (link icon)
-        const pinBtn = event.target?.closest?.('.bad-pin-btn');
-        if (pinBtn) {
-            event.preventDefault();
-            event.stopPropagation();
-            event.stopImmediatePropagation();
-            this._onRightClickToggleAnchor(event, pinBtn);
-            return;
-        }
+        // Delegate control button right-clicks declaratively via ControlBarManager
+        const handled = await ControlBarManager.dispatchContextAction(this, event);
+        if (handled) return;
 
         if (this._preventReopen) {
             this._preventReopen = false;

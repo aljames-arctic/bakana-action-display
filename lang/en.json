@@ -153,6 +153,35 @@
                 }
             }
         },
+        "controlButtons": {
+            "filterResources": {
+                "label": "Filter Resources",
+                "tooltipShow": "Show Depleted Items",
+                "tooltipHide": "Hide Depleted Items"
+            },
+            "combatTrack": {
+                "label": "Combat Turn Tracker",
+                "tooltip": "Left-Click: Follow Active Combatant Turn\nRight-Click: Toggle Auto-Select Token on Turn Change"
+            },
+            "itemSummary": {
+                "label": "Item Summary Tooltips",
+                "tooltipEnable": "Enable Rich Item Summaries (without holding ?)",
+                "tooltipDisable": "Disable Rich Item Summaries"
+            },
+            "recenter": {
+                "label": "Recenter View",
+                "tooltip": "Left-Click: Recenter Canvas on Active Combatant\nRight-Click: Toggle Auto-Centering on Turn Change"
+            },
+            "anchor": {
+                "label": "HUD Placement & Persistence",
+                "tooltipAttached": "Left-Click: Detach HUD from Token\nRight-Click: Toggle HUD Persistence on Outside Click",
+                "tooltipDetached": "Left-Click: Attach HUD to Token\nRight-Click: Toggle HUD Persistence on Outside Click"
+            },
+            "close": {
+                "label": "Close HUD",
+                "tooltip": "Close HUD"
+            }
+        },
         "core": {
             "searchPlaceholder": "Filter actions...",
             "hidden": "Hidden",
