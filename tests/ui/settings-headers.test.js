@@ -239,3 +239,77 @@ test('injectSettingsHeaders places showTooltips in the User Settings section', (
     }
 });
 
+test('injectSettingsHeaders moves both economyColorsMenu and hudConfigMenu into the User Settings section', () => {
+    const origCreateElement = document.createElement;
+    document.createElement = (tagName) => new MockElement(tagName);
+
+    try {
+        const root = new MockElement('div', { className: 'settings-list' });
+
+        // Foundry renders all menus at the top of the module section
+        const fgCatMenu = new MockElement('div', { className: 'form-group' });
+        const btnCat = new MockElement('button', { dataset: { key: 'bakana-action-display.categorizationMenu' } });
+        fgCatMenu.appendChild(btnCat);
+        root.appendChild(fgCatMenu);
+
+        const fgEconMenu = new MockElement('div', { className: 'form-group' });
+        const btnEcon = new MockElement('button', { dataset: { key: 'bakana-action-display.economyColorsMenu' } });
+        fgEconMenu.appendChild(btnEcon);
+        root.appendChild(fgEconMenu);
+
+        const fgHudMenu = new MockElement('div', { className: 'form-group' });
+        const btnHud = new MockElement('button', { dataset: { key: 'bakana-action-display.hudConfigMenu' } });
+        fgHudMenu.appendChild(btnHud);
+        root.appendChild(fgHudMenu);
+
+        // World settings follow
+        const fgCenter = new MockElement('div', { className: 'form-group' });
+        const inputCenter = new MockElement('input', { name: 'bakana-action-display.enableCenterOnToken' });
+        fgCenter.appendChild(inputCenter);
+        root.appendChild(fgCenter);
+
+        // User settings (persistTabState)
+        const fgPersistTab = new MockElement('div', { className: 'form-group' });
+        const inputPersistTab = new MockElement('input', { name: 'bakana-action-display.persistTabState' });
+        fgPersistTab.appendChild(inputPersistTab);
+        root.appendChild(fgPersistTab);
+
+        // Client settings
+        const fgLog = new MockElement('div', { className: 'form-group' });
+        const inputLog = new MockElement('input', { name: 'bakana-action-display.logVerbosity' });
+        fgLog.appendChild(inputLog);
+        root.appendChild(fgLog);
+
+        injectSettingsHeaders(root);
+
+        // Expected DOM structure:
+        // [0]: World Header
+        // [1]: fgCatMenu (World Menu)
+        // [2]: fgCenter (World Setting)
+        // [3]: User Header
+        // [4]: fgEconMenu (User Menu)
+        // [5]: fgHudMenu (User Menu)
+        // [6]: fgPersistTab (User Setting)
+        // [7]: Client Header
+        // [8]: fgLog (Client Setting)
+        assert.equal(root.children.length, 9);
+        assert.equal(root.children[0].className, 'bad-settings-section-header');
+        assert.equal(root.children[0].dataset.scope, 'world');
+        assert.equal(root.children[1], fgCatMenu);
+        assert.equal(root.children[2], fgCenter);
+
+        assert.equal(root.children[3].className, 'bad-settings-section-header');
+        assert.equal(root.children[3].dataset.scope, 'user');
+        assert.equal(root.children[4], fgEconMenu, 'economyColorsMenu should be located under User Settings header');
+        assert.equal(root.children[5], fgHudMenu, 'hudConfigMenu should be located under User Settings header');
+        assert.equal(root.children[6], fgPersistTab, 'persistTabState should follow user menus under User Settings header');
+
+        assert.equal(root.children[7].className, 'bad-settings-section-header');
+        assert.equal(root.children[7].dataset.scope, 'client');
+        assert.equal(root.children[8], fgLog);
+    } finally {
+        document.createElement = origCreateElement;
+    }
+});
+
+

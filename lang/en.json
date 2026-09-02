@@ -43,6 +43,11 @@
                 "label": "Configure Colors",
                 "hint": "Customize the indicator bar color for each action economy type for this system."
             },
+            "hudConfigMenu": {
+                "name": "HUD Configuration",
+                "label": "Configure HUD",
+                "hint": "Customize HUD opacity, scale, font size, attachment side, and grid offsets."
+            },
             "hudOpacity": {
                 "name": "HUD Opacity",
                 "hint": "Controls the transparency of the Action Display HUD overlay."
@@ -156,6 +161,14 @@
                     "hint": "When enabled, activities flagged as automation-only by Midi-QOL are ignored entirely by the Action Display HUD."
                 }
             }
+        },
+        "hudConfig": {
+            "title": "Configure HUD",
+            "description": "Customize the appearance, scaling, and token attachment offsets for the Action Display HUD.",
+            "resetDefaults": "Reset to Defaults",
+            "saved": "HUD configuration saved successfully.",
+            "appearance": "Appearance & Sizing",
+            "positioning": "Token Positioning & Attachment"
         },
         "controlButtons": {
             "filterResources": {

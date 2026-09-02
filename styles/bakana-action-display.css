@@ -3288,5 +3288,128 @@ button.bad-token-inspiration-btn.active:hover,
     font-style: italic;
 }
 
+/* HUD Configuration Window & Dialog */
+.bad-hud-config-window {
+    min-width: 480px;
+}
 
+.bad-hud-config {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85em;
+    padding: 0.5em;
+    color: #f0f0f5;
+    font-family: "Signika", sans-serif;
+}
 
+.bad-hud-config-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85em;
+    max-height: 520px;
+    overflow-y: auto;
+    padding-right: 0.3em;
+}
+
+.bad-hud-config-section {
+    border: 1px solid rgba(167, 139, 250, 0.2);
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 6px;
+    padding: 0.6em 0.8em;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5em;
+}
+
+.bad-hud-config-section legend {
+    font-size: 0.95em;
+    font-weight: 700;
+    color: #c4b5fd;
+    padding: 0 0.5em;
+    display: flex;
+    align-items: center;
+    gap: 0.4em;
+}
+
+.bad-hud-config-section legend i {
+    color: #a78bfa;
+}
+
+.bad-hud-config-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1em;
+    padding: 0.4em 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.bad-hud-config-row:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.bad-hud-config-label-group {
+    flex: 1;
+    min-width: 0;
+}
+
+.bad-hud-config-label-group label {
+    font-weight: 600;
+    font-size: 0.92em;
+    color: #f1f5f9;
+    display: block;
+    margin-bottom: 0.15em;
+}
+
+.bad-hud-config-label-group .bad-setting-hint {
+    padding-left: 0;
+    font-size: 0.82em;
+    color: #94a3b8;
+    line-height: 1.35;
+    margin: 0;
+}
+
+.bad-hud-config-control-group {
+    display: flex;
+    align-items: center;
+    gap: 0.6em;
+    flex-shrink: 0;
+    width: 175px;
+    justify-content: flex-end;
+}
+
+.bad-hud-config-control-group input[type="range"] {
+    flex: 1;
+    accent-color: #7c3aed;
+    cursor: pointer;
+}
+
+.bad-range-value {
+    font-variant-numeric: tabular-nums;
+    min-width: 3.2em;
+    text-align: right;
+    font-size: 0.88em;
+    color: #cbd5e1;
+    font-weight: 600;
+}
+
+.bad-hud-config-select {
+    background-color: #1a162b !important;
+    background: #1a162b !important;
+    color: #f8fafc !important;
+    border: 1px solid rgba(167, 139, 250, 0.4) !important;
+    border-radius: 0.35em !important;
+    padding: 0.35em 0.5em !important;
+    font-size: 0.88em !important;
+    width: 100%;
+    cursor: pointer;
+}
+
+.bad-hud-config-select option {
+    background-color: #1a162b !important;
+    background: #1a162b !important;
+    color: #f8fafc !important;
+    padding: 0.35em 0.5em !important;
+}

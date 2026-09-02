@@ -1,0 +1,103 @@
+<div class="bad-hud-config">
+    <div class="bad-config-header-row">
+        <p class="bad-config-desc">
+            {{localize "BAD.hudConfig.description"}}
+        </p>
+    </div>
+
+    <div class="bad-hud-config-body">
+        <!-- Appearance & Sizing Group -->
+        <fieldset class="bad-hud-config-section">
+            <legend><i class="fas fa-eye"></i> {{localize "BAD.hudConfig.appearance"}}</legend>
+
+            <div class="bad-hud-config-row">
+                <div class="bad-hud-config-label-group">
+                    <label for="bad-hud-opacity">{{localize "BAD.settings.hudOpacity.name"}}</label>
+                    <p class="bad-setting-hint">{{localize "BAD.settings.hudOpacity.hint"}}</p>
+                </div>
+                <div class="bad-hud-config-control-group">
+                    <input type="range" id="bad-hud-opacity" name="hudOpacity" min="0.1" max="1.0" step="0.05" value="{{config.hudOpacity}}" />
+                    <span class="bad-range-value" data-for="hudOpacity">{{config.hudOpacity}}</span>
+                </div>
+            </div>
+
+            <div class="bad-hud-config-row">
+                <div class="bad-hud-config-label-group">
+                    <label for="bad-hud-scale">{{localize "BAD.settings.hudScale.name"}}</label>
+                    <p class="bad-setting-hint">{{localize "BAD.settings.hudScale.hint"}}</p>
+                </div>
+                <div class="bad-hud-config-control-group">
+                    <input type="range" id="bad-hud-scale" name="hudScale" min="0.5" max="1.5" step="0.05" value="{{config.hudScale}}" />
+                    <span class="bad-range-value" data-for="hudScale">{{config.hudScale}}</span>
+                </div>
+            </div>
+
+            <div class="bad-hud-config-row">
+                <div class="bad-hud-config-label-group">
+                    <label for="bad-hud-font-size">{{localize "BAD.settings.fontSize.name"}}</label>
+                    <p class="bad-setting-hint">{{localize "BAD.settings.fontSize.hint"}}</p>
+                </div>
+                <div class="bad-hud-config-control-group">
+                    <input type="range" id="bad-hud-font-size" name="fontSize" min="10" max="24" step="1" value="{{config.fontSize}}" data-unit="px" />
+                    <span class="bad-range-value" data-for="fontSize">{{config.fontSize}}px</span>
+                </div>
+            </div>
+        </fieldset>
+
+        <!-- Positioning & Attachment Group -->
+        <fieldset class="bad-hud-config-section">
+            <legend><i class="fas fa-arrows-alt"></i> {{localize "BAD.hudConfig.positioning"}}</legend>
+
+            <div class="bad-hud-config-row">
+                <div class="bad-hud-config-label-group">
+                    <label for="bad-hud-anchor-side">{{localize "BAD.settings.hudAnchorSide.name"}}</label>
+                    <p class="bad-setting-hint">{{localize "BAD.settings.hudAnchorSide.hint"}}</p>
+                </div>
+                <div class="bad-hud-config-control-group">
+                    <select id="bad-hud-anchor-side" name="hudAnchorSide" class="bad-hud-config-select">
+                        {{#each anchorSideChoices}}
+                        <option value="{{this.id}}" {{#if this.selected}}selected{{/if}}>{{this.label}}</option>
+                        {{/each}}
+                    </select>
+                </div>
+            </div>
+
+            <div class="bad-hud-config-row">
+                <div class="bad-hud-config-label-group">
+                    <label for="bad-hud-grid-offset">{{localize "BAD.settings.hudGridOffset.name"}}</label>
+                    <p class="bad-setting-hint">{{localize "BAD.settings.hudGridOffset.hint"}}</p>
+                </div>
+                <div class="bad-hud-config-control-group">
+                    <input type="range" id="bad-hud-grid-offset" name="hudGridOffset" min="0" max="1" step="0.1" value="{{config.hudGridOffset}}" />
+                    <span class="bad-range-value" data-for="hudGridOffset">{{config.hudGridOffset}}</span>
+                </div>
+            </div>
+
+            <div class="bad-hud-config-row">
+                <div class="bad-hud-config-label-group">
+                    <label for="bad-hud-grid-offset-horizontal">{{localize "BAD.settings.hudGridOffsetHorizontal.name"}}</label>
+                    <p class="bad-setting-hint">{{localize "BAD.settings.hudGridOffsetHorizontal.hint"}}</p>
+                </div>
+                <div class="bad-hud-config-control-group">
+                    <input type="range" id="bad-hud-grid-offset-horizontal" name="hudGridOffsetHorizontal" min="0" max="3" step="0.1" value="{{config.hudGridOffsetHorizontal}}" />
+                    <span class="bad-range-value" data-for="hudGridOffsetHorizontal">{{config.hudGridOffsetHorizontal}}</span>
+                </div>
+            </div>
+        </fieldset>
+    </div>
+
+    <!-- Footer Controls -->
+    <div class="bad-config-footer">
+        <button type="button" class="bad-config-btn bad-config-btn-secondary" data-action="resetDefaults">
+            <i class="fas fa-undo"></i> {{localize "BAD.common.resetDefaults"}}
+        </button>
+        <div class="bad-config-footer-actions">
+            <button type="button" class="bad-config-btn" data-action="closeConfig">
+                <i class="fas fa-times"></i> {{localize "BAD.common.cancel"}}
+            </button>
+            <button type="button" class="bad-config-btn bad-config-btn-primary" data-action="saveConfig">
+                <i class="fas fa-save"></i> {{localize "BAD.common.save"}}
+            </button>
+        </div>
+    </div>
+</div>

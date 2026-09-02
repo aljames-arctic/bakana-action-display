@@ -426,7 +426,15 @@ const settingsStore = new Map([
         vocal: ['silenced', 'incapacitated', 'paralyzed', 'petrified', 'stunned', 'unconscious'],
         somatic: ['restrained', 'incapacitated', 'paralyzed', 'petrified', 'stunned', 'unconscious', 'grappled']
     }],
-    ['bakana-action-display.showTooltips', true]
+    ['bakana-action-display.showTooltips', true],
+    ['bakana-action-display.hudOpacity', 0.88],
+    ['bakana-action-display.hudScale', 1.0],
+    ['bakana-action-display.fontSize', 14],
+    ['bakana-action-display.hudAnchorSide', 'vertical'],
+    ['bakana-action-display.hudGridOffset', 0.5],
+    ['bakana-action-display.hudGridOffsetHorizontal', 0.5],
+    ['bakana-action-display.persistTabState', true],
+    ['bakana-action-display.toggleTabSelection', false]
 ]);
 
 globalThis.CONST = globalThis.CONST ?? {};

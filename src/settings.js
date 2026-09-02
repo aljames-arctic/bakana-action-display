@@ -3,6 +3,7 @@ import { log } from "./lib/logger.js";
 import { actionDisplay } from "./action-display.js";
 import { CategorizationConfigApp } from "./categorization/categorization-config-app.js";
 import { EconomyColorsConfigApp } from "./ui/economy-colors-config-app.js";
+import { HUDConfigApp } from "./ui/hud-config-app.js";
 import { ModuleIntegrationsConfigApp } from "./ui/module-integrations-config-app.js";
 import { Dnd5eAutoBanConfigApp, DEFAULT_DND5E_AUTOBAN_CONFIG } from "./ui/dnd5e-autoban-config-app.js";
 import { hasActiveModuleAdapters } from "./adapters/module/index.js";
@@ -195,6 +196,16 @@ Hooks.once('init', () => {
         restricted: false
     });
 
+    // Register Configure HUD Menu Button (User Scope)
+    game.settings.registerMenu(MODULE_ID, 'hudConfigMenu', {
+        name: game.i18n.localize('BAD.hudConfig.title'),
+        label: game.i18n.localize('BAD.settings.hudConfigMenu.label'),
+        hint: game.i18n.localize('BAD.settings.hudConfigMenu.hint'),
+        icon: 'fas fa-sliders-h',
+        type: HUDConfigApp,
+        restricted: false
+    });
+
     // Register Action Economy Indicators Setting (User Scope, default disabled, configured in menu)
     game.settings.register(MODULE_ID, 'enableEconomyIndicators', {
         scope: 'user',
@@ -221,12 +232,12 @@ Hooks.once('init', () => {
         }
     });
 
-    // Register HUD Opacity Setting (Slider)
+    // Register HUD Opacity Setting (Storage, configured in Configure HUD submenu)
     game.settings.register(MODULE_ID, 'hudOpacity', {
         name: game.i18n.localize('BAD.settings.hudOpacity.name'),
         hint: game.i18n.localize('BAD.settings.hudOpacity.hint'),
         scope: 'user',
-        config: true,
+        config: false,
         type: Number,
         range: {
             min: 0.1,
@@ -239,12 +250,12 @@ Hooks.once('init', () => {
         }
     });
 
-    // Register HUD Scale Setting (Slider)
+    // Register HUD Scale Setting (Storage, configured in Configure HUD submenu)
     game.settings.register(MODULE_ID, 'hudScale', {
         name: game.i18n.localize('BAD.settings.hudScale.name'),
         hint: game.i18n.localize('BAD.settings.hudScale.hint'),
         scope: 'user',
-        config: true,
+        config: false,
         type: Number,
         range: {
             min: 0.5,
@@ -257,12 +268,12 @@ Hooks.once('init', () => {
         }
     });
 
-    // Register HUD Font Size Setting (Slider)
+    // Register HUD Font Size Setting (Storage, configured in Configure HUD submenu)
     game.settings.register(MODULE_ID, 'fontSize', {
         name: game.i18n.localize('BAD.settings.fontSize.name'),
         hint: game.i18n.localize('BAD.settings.fontSize.hint'),
         scope: 'user',
-        config: true,
+        config: false,
         type: Number,
         range: {
             min: 10,
@@ -295,12 +306,12 @@ Hooks.once('init', () => {
         default: false
     });
 
-    // Register HUD Attachment Side Setting (Vertical vs Horizontal)
+    // Register HUD Attachment Side Setting (Storage, configured in Configure HUD submenu)
     game.settings.register(MODULE_ID, 'hudAnchorSide', {
         name: game.i18n.localize('BAD.settings.hudAnchorSide.name'),
         hint: game.i18n.localize('BAD.settings.hudAnchorSide.hint'),
         scope: 'user',
-        config: true,
+        config: false,
         type: String,
         default: 'vertical',
         choices: {
@@ -314,12 +325,12 @@ Hooks.once('init', () => {
         }
     });
 
-    // Register HUD Grid Offset Setting (Vertical)
+    // Register HUD Grid Offset Setting (Vertical) (Storage, configured in Configure HUD submenu)
     game.settings.register(MODULE_ID, 'hudGridOffset', {
         name: game.i18n.localize('BAD.settings.hudGridOffset.name'),
         hint: game.i18n.localize('BAD.settings.hudGridOffset.hint'),
         scope: 'user',
-        config: true,
+        config: false,
         type: Number,
         range: {
             min: 0,
@@ -334,12 +345,12 @@ Hooks.once('init', () => {
         }
     });
 
-    // Register HUD Grid Offset Setting (Horizontal)
+    // Register HUD Grid Offset Setting (Horizontal) (Storage, configured in Configure HUD submenu)
     game.settings.register(MODULE_ID, 'hudGridOffsetHorizontal', {
         name: game.i18n.localize('BAD.settings.hudGridOffsetHorizontal.name'),
         hint: game.i18n.localize('BAD.settings.hudGridOffsetHorizontal.hint'),
         scope: 'user',
-        config: true,
+        config: false,
         type: Number,
         range: {
             min: 0,
@@ -470,31 +481,49 @@ export function injectSettingsHeaders(html, app) {
 
     if (!root?.querySelector) return;
 
-    // 1. Move economyColorsMenu (User Menu) into the User Settings section before hudOpacity if both are present
-    const economyMenuSelector = [
-        `[data-key="${MODULE_ID}.economyColorsMenu"]`,
-        `[data-action="${MODULE_ID}.economyColorsMenu"]`,
-        `[data-setting-id="${MODULE_ID}.economyColorsMenu"]`,
-        `[data-entry-id="${MODULE_ID}.economyColorsMenu"]`,
-        `[data-key="economyColorsMenu"]`,
-        `[data-action="economyColorsMenu"]`
-    ].join(', ');
-    const hudOpacitySelector = [
-        `[name="${MODULE_ID}.hudOpacity"]`,
-        `[data-setting-id="${MODULE_ID}.hudOpacity"]`,
-        `[data-entry-id="${MODULE_ID}.hudOpacity"]`,
-        `[name="hudOpacity"]`
-    ].join(', ');
+    // 1. Move user-scoped menus (economyColorsMenu, hudConfigMenu) into the User Settings section before the first regular user setting
+    const userSettingKeys = ['persistTabState', 'toggleTabSelection', 'showTooltips', 'hudOpacity', 'hudScale', 'fontSize'];
+    let firstUserSettingEl = null;
+    for (const key of userSettingKeys) {
+        const selector = [
+            `[data-setting-id="${MODULE_ID}.${key}"]`,
+            `[data-entry-id="${MODULE_ID}.${key}"]`,
+            `[name="${MODULE_ID}.${key}"]`,
+            `[data-key="${MODULE_ID}.${key}"]`,
+            `[data-action="${MODULE_ID}.${key}"]`,
+            `[data-setting-id="${key}"]`,
+            `[data-entry-id="${key}"]`,
+            `[name="${key}"]`,
+            `[data-key="${key}"]`,
+            `[data-action="${key}"]`
+        ].join(', ');
+        firstUserSettingEl = root.querySelector(selector);
+        if (firstUserSettingEl) break;
+    }
 
-    const economyMenuEl = root.querySelector(economyMenuSelector);
-    const hudOpacityEl = root.querySelector(hudOpacitySelector);
-
-    if (economyMenuEl && hudOpacityEl) {
-        const economyFg = economyMenuEl.closest('.form-group') ?? economyMenuEl;
-        const hudOpacityFg = hudOpacityEl.closest('.form-group') ?? hudOpacityEl;
-        if (economyFg && hudOpacityFg && economyFg.parentNode && economyFg.parentNode === hudOpacityFg.parentNode) {
-            if (economyFg.nextElementSibling !== hudOpacityFg) {
-                hudOpacityFg.parentNode.insertBefore(economyFg, hudOpacityFg);
+    const userMenuKeys = ['economyColorsMenu', 'hudConfigMenu'];
+    if (firstUserSettingEl) {
+        const userSettingFg = firstUserSettingEl.closest('.form-group') ?? firstUserSettingEl;
+        const parent = userSettingFg.parentNode;
+        if (parent) {
+            for (const menuKey of userMenuKeys) {
+                const menuSelector = [
+                    `[data-key="${MODULE_ID}.${menuKey}"]`,
+                    `[data-action="${MODULE_ID}.${menuKey}"]`,
+                    `[data-setting-id="${MODULE_ID}.${menuKey}"]`,
+                    `[data-entry-id="${MODULE_ID}.${menuKey}"]`,
+                    `[data-key="${menuKey}"]`,
+                    `[data-action="${menuKey}"]`
+                ].join(', ');
+                const menuEl = root.querySelector(menuSelector);
+                if (menuEl) {
+                    const menuFg = menuEl.closest('.form-group') ?? menuEl;
+                    if (menuFg && menuFg.parentNode === parent && menuFg !== userSettingFg) {
+                        if (menuFg.nextElementSibling !== userSettingFg) {
+                            parent.insertBefore(menuFg, userSettingFg);
+                        }
+                    }
+                }
             }
         }
     }
@@ -508,7 +537,7 @@ export function injectSettingsHeaders(html, app) {
             icon: 'fas fa-globe'
         },
         {
-            keys: ['economyColorsMenu', 'hudOpacity', 'hudScale', 'fontSize', 'persistTabState', 'toggleTabSelection', 'hudAnchorSide', 'hudGridOffset', 'hudGridOffsetHorizontal', 'showTooltips'],
+            keys: ['economyColorsMenu', 'hudConfigMenu', 'persistTabState', 'toggleTabSelection', 'showTooltips', 'hudOpacity', 'hudScale', 'fontSize', 'hudAnchorSide', 'hudGridOffset', 'hudGridOffsetHorizontal'],
             scope: 'user',
             title: game.i18n.localize('BAD.settingsSections.user') ?? 'User Settings',
             icon: 'fas fa-user'
