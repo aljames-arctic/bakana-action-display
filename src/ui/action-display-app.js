@@ -24,14 +24,94 @@ let lastActiveTabState = null;
 export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin(adapter.foundry.ApplicationV2) {
     // #region Application Initialization & Lifecycle
 
+    /**
+     * Active HUD application instances.
+     * @type {Set<ActionDisplayApp>}
+     */
+    static instances = new Set();
+
+    /**
+     * Update the active page for all cached HUD states (in-memory, active instances, and persisted settings).
+     * @param {number} targetPage Target page number
+     * @param {ActionDisplayApp|null} [callerInstance=null] The instance initiating the change
+     */
+    static setAllCachedHUDsPage(targetPage, callerInstance = null) {
+        const parsed = Number(targetPage);
+        const page = (!isNaN(parsed) && parsed > 0) ? parsed : 1;
+
+        // 1. Update in-memory active tab cache entries
+        for (const [key, state] of activeTabCache.entries()) {
+            if (state && typeof state === 'object') {
+                state.activePage = page;
+            }
+        }
+
+        // 2. Update the lastActiveTabState fallback
+        if (lastActiveTabState && typeof lastActiveTabState === 'object') {
+            lastActiveTabState.activePage = page;
+        }
+
+        // 3. Update any active/open HUD instances
+        for (const instance of ActionDisplayApp.instances) {
+            const maxPage = instance.totalPages ?? page;
+            instance.activePage = Math.min(Math.max(1, page), maxPage);
+            if (instance !== callerInstance && instance.rendered) {
+                instance.render();
+            }
+        }
+
+        // 4. Update persisted tab states in client settings if enabled
+        let persistEnabled = false;
+        try {
+            persistEnabled = Boolean(game.settings?.get?.(MODULE_ID, 'persistTabState'));
+        } catch {
+            persistEnabled = false;
+        }
+
+        if (persistEnabled) {
+            try {
+                const rawStates = game.settings.get(MODULE_ID, 'hudTabStates');
+                const allStates = (rawStates && typeof rawStates === 'object')
+                    ? adapter.foundry.duplicate(rawStates)
+                    : {};
+                for (const state of Object.values(allStates)) {
+                    if (state && typeof state === 'object') {
+                        state.activePage = page;
+                    }
+                }
+                game.settings.set(MODULE_ID, 'hudTabStates', allStates);
+            } catch (err) {
+                log.error("Failed to update persisted tab states for all cached HUDs:", err);
+            }
+        }
+    }
+
+    /**
+     * Retrieve the in-memory active tab cache map (for inspection or testing).
+     * @returns {Map<string, Object>}
+     */
+    static getActiveTabCache() {
+        return activeTabCache;
+    }
+
+    /**
+     * Clear all cached tab and HUD states across memory, instances, and settings.
+     */
+    static clearTabCache() {
+        activeTabCache.clear();
+        lastActiveTabState = null;
+        ActionDisplayApp.instances.clear();
+    }
+
     constructor(token, options = {}) {
         super(options);
+        ActionDisplayApp.instances.add(this);
         this.token = token;
-        this.actor = token.actor;
+        this.actor = token?.actor;
         this.actions = [];
         this.totalPages = 1;
 
-        const actorKey = this.actor?.uuid;
+        const actorKey = this.actor?.uuid ?? this.actor?.id;
         const cached = this.retrieveActorTabCache(actorKey);
         const parsedPage = Number(cached?.activePage ?? 1);
         this.activePage = (!isNaN(parsedPage) && parsedPage > 0) ? parsedPage : 1;
@@ -170,8 +250,10 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
 
     /**
      * Navigate to the previous HUD page and re-render.
+     * @param {Object} [options={}]
+     * @param {boolean} [options.shiftKey=false] Whether shift was held to update all cached HUDs
      */
-    previousPage() {
+    previousPage({ shiftKey = false } = {}) {
         const parsed = Number(this.activePage);
         const current = (!isNaN(parsed) && parsed > 0) ? parsed : 1;
         if (this.totalPages <= 1) {
@@ -182,13 +264,18 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
             this.activePage = current - 1;
         }
         this._saveTabState();
+        if (shiftKey) {
+            ActionDisplayApp.setAllCachedHUDsPage(this.activePage, this);
+        }
         this.render();
     }
 
     /**
      * Navigate to the next HUD page and re-render.
+     * @param {Object} [options={}]
+     * @param {boolean} [options.shiftKey=false] Whether shift was held to update all cached HUDs
      */
-    nextPage() {
+    nextPage({ shiftKey = false } = {}) {
         const parsed = Number(this.activePage);
         const current = (!isNaN(parsed) && parsed > 0) ? parsed : 1;
         if (this.totalPages <= 1) {
@@ -199,7 +286,31 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
             this.activePage = current + 1;
         }
         this._saveTabState();
+        if (shiftKey) {
+            ActionDisplayApp.setAllCachedHUDsPage(this.activePage, this);
+        }
         this.render();
+    }
+
+    /**
+     * Navigate to a specific HUD page number and re-render.
+     * @param {number} targetPage Target page number
+     * @param {Object} [options={}]
+     * @param {boolean} [options.shiftKey=false] Whether shift was held to update all cached HUDs
+     */
+    changePage(targetPage, { shiftKey = false } = {}) {
+        const parsed = Number(targetPage);
+        if (!isNaN(parsed) && parsed >= 1 && parsed <= this.totalPages) {
+            const pageChanged = parsed !== this.activePage;
+            this.activePage = parsed;
+            this._saveTabState();
+            if (shiftKey) {
+                ActionDisplayApp.setAllCachedHUDsPage(parsed, this);
+            }
+            if (pageChanged) {
+                this.render();
+            }
+        }
     }
 
     /**
@@ -227,7 +338,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
      * Capped to at most 25 most-recently-used actors using LRU pruning.
      */
     _saveTabState() {
-        const actorKey = this.actor?.uuid;
+        const actorKey = this.actor?.uuid ?? this.actor?.id;
 
         if (!this._cachedPages) this._cachedPages = {};
         this._cachedPages[`${this.activePage}-left`] = this.leftTabs.serialize();
@@ -252,7 +363,10 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         if (game.settings.get(MODULE_ID, 'persistTabState')) {
             try {
                 const MAX_PERSISTED_ACTORS = 25;
-                const allStates = adapter.foundry.duplicate(game.settings.get(MODULE_ID, 'hudTabStates') ?? {});
+                const rawStates = game.settings.get(MODULE_ID, 'hudTabStates');
+                const allStates = (rawStates && typeof rawStates === 'object')
+                    ? adapter.foundry.duplicate(rawStates)
+                    : {};
 
                 // Re-insert key to refresh its LRU position (most recent at end)
                 delete allStates[actorKey];
@@ -280,7 +394,8 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
     retrieveActorTabCache(actorKey) {
         let cached = activeTabCache.get(actorKey);
         if (!cached && game.settings.get(MODULE_ID, 'persistTabState')) {
-            const allStates = game.settings.get(MODULE_ID, 'hudTabStates') ?? {};
+            const rawStates = game.settings.get(MODULE_ID, 'hudTabStates');
+            const allStates = (rawStates && typeof rawStates === 'object') ? rawStates : {};
             cached = (actorKey ? allStates[actorKey] : null) ?? lastActiveTabState;
             if (cached && actorKey) {
                 activeTabCache.set(actorKey, cached);
@@ -349,6 +464,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
             setExplicitlyClosedTokenId(this.token?.id ?? null);
         }
 
+        ActionDisplayApp.instances.delete(this);
         const result = await super.close(options);
         return result;
     }
@@ -418,6 +534,12 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         const allActions = await (actionDisplay.getActions ? actionDisplay.getActions(this.actor) : adapter.getActions(this.actor));
         this.actions = allActions; // Cache all processed actions for high-performance UI lookups
         this.totalPages = allActions.reduce((max, a) => Math.max(max, a.page ?? 1), 1);
+        if (this.activePage > this.totalPages) {
+            this.activePage = this.totalPages;
+        }
+        if (this.activePage < 1) {
+            this.activePage = 1;
+        }
         const rawActions = allActions.filter(a => (a.page ?? 1) === this.activePage);
 
         const existingItemCombinations = new Set();
@@ -1127,7 +1249,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
     async _onPreviousPage(event, target) {
         event.preventDefault();
         this._clearMenuState({ force: true });
-        this.previousPage();
+        this.previousPage({ shiftKey: Boolean(event?.shiftKey) });
     }
 
     /**
@@ -1138,7 +1260,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
     async _onNextPage(event, target) {
         event.preventDefault();
         this._clearMenuState({ force: true });
-        this.nextPage();
+        this.nextPage({ shiftKey: Boolean(event?.shiftKey) });
     }
 
     /**
@@ -1149,12 +1271,8 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
     async _onChangePage(event, target) {
         event.preventDefault();
         this._clearMenuState({ force: true });
-        const targetPage = Number(target.dataset.page ?? 1);
-        if (!isNaN(targetPage) && targetPage >= 1 && targetPage <= this.totalPages && targetPage !== this.activePage) {
-            this.activePage = targetPage;
-            this._saveTabState();
-            this.render();
-        }
+        const targetPage = Number(target?.dataset?.page ?? 1);
+        this.changePage(targetPage, { shiftKey: Boolean(event?.shiftKey) });
     }
 
     /**

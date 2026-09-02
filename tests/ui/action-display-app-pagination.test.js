@@ -6,6 +6,7 @@ import { actionDisplay } from '../../src/action-display.js';
 import { HUDTab } from '../../src/ui/hud-tab.js';
 import { adapter } from '../../src/adapters/index.js';
 import { Dnd5eSystemAdapter } from '../../src/adapters/system/dnd5e-system-adapter.js';
+import { MODULE_ID } from '../../src/constants.js';
 
 test('ActionDisplayApp previousPage and nextPage cycle through pages without cyclePage or all-tab triggers', async () => {
     assert.equal(typeof ActionDisplayApp.prototype.cyclePage, 'undefined', 'old cyclePage method should be removed');
@@ -296,5 +297,138 @@ test('ActionDisplayApp Page 3 renders inspiration indicator and toggles inspirat
     game.user = prevUser;
 });
 
+test('ActionDisplayApp shift + changePage updates activePage on current HUD and all cached HUDs', async () => {
+    ActionDisplayApp.clearTabCache();
 
+    const app1 = new ActionDisplayApp({ actor: { id: 'actor-1', uuid: 'Actor.1' } });
+    app1.totalPages = 3;
+    app1.activePage = 1;
+    app1.render = () => {};
+    app1._saveTabState();
 
+    const app2 = new ActionDisplayApp({ actor: { id: 'actor-2', uuid: 'Actor.2' } });
+    app2.totalPages = 3;
+    app2.activePage = 1;
+    app2.render = () => {};
+    app2._saveTabState();
+
+    const cache = ActionDisplayApp.getActiveTabCache();
+    assert.equal(cache.get('Actor.1').activePage, 1);
+    assert.equal(cache.get('Actor.2').activePage, 1);
+
+    // Normal changePage without shift should only update current HUD
+    await app2._onChangePage({ preventDefault: () => {}, shiftKey: false }, { dataset: { page: '2' } });
+    assert.equal(app2.activePage, 2);
+    assert.equal(cache.get('Actor.2').activePage, 2);
+    assert.equal(cache.get('Actor.1').activePage, 1, 'Actor 1 cache should remain on page 1 without shiftKey');
+
+    // Shift + changePage should update current HUD and all cached HUDs
+    await app2._onChangePage({ preventDefault: () => {}, shiftKey: true }, { dataset: { page: '3' } });
+    assert.equal(app2.activePage, 3);
+    assert.equal(cache.get('Actor.2').activePage, 3);
+    assert.equal(cache.get('Actor.1').activePage, 3, 'Actor 1 cache should be updated to page 3 with shiftKey');
+
+    // A newly instantiated HUD for Actor 1 restores on page 3
+    const app1Restored = new ActionDisplayApp({ actor: { id: 'actor-1', uuid: 'Actor.1' } });
+    assert.equal(app1Restored.activePage, 3);
+});
+
+test('ActionDisplayApp shift + changePage updates persisted hudTabStates when persistTabState is enabled', async () => {
+    ActionDisplayApp.clearTabCache();
+    game.settings.set(MODULE_ID, 'persistTabState', true);
+    game.settings.set(MODULE_ID, 'hudTabStates', {
+        'Actor.A': { activePage: 1, left: {}, right: {} },
+        'Actor.B': { activePage: 1, left: {}, right: {} }
+    });
+
+    const app = new ActionDisplayApp({ actor: { id: 'actor-a', uuid: 'Actor.A' } });
+    app.totalPages = 3;
+    app.activePage = 1;
+    app.render = () => {};
+
+    await app._onChangePage({ preventDefault: () => {}, shiftKey: true }, { dataset: { page: '2' } });
+    assert.equal(app.activePage, 2);
+
+    const persisted = game.settings.get(MODULE_ID, 'hudTabStates');
+    assert.equal(persisted['Actor.A'].activePage, 2);
+    assert.equal(persisted['Actor.B'].activePage, 2);
+
+    game.settings.set(MODULE_ID, 'persistTabState', false);
+});
+
+test('ActionDisplayApp shift + previousPage and nextPage update all cached HUDs', async () => {
+    ActionDisplayApp.clearTabCache();
+
+    const app1 = new ActionDisplayApp({ actor: { id: 'actor-prev-1', uuid: 'Actor.Prev1' } });
+    app1.totalPages = 3;
+    app1.activePage = 1;
+    app1.render = () => {};
+    app1._saveTabState();
+
+    const app2 = new ActionDisplayApp({ actor: { id: 'actor-prev-2', uuid: 'Actor.Prev2' } });
+    app2.totalPages = 3;
+    app2.activePage = 1;
+    app2.render = () => {};
+    app2._saveTabState();
+
+    const cache = ActionDisplayApp.getActiveTabCache();
+
+    // Shift + nextPage moves to page 2 and updates all cached HUDs
+    await app2._onNextPage({ preventDefault: () => {}, shiftKey: true }, {});
+    assert.equal(app2.activePage, 2);
+    assert.equal(cache.get('Actor.Prev1').activePage, 2);
+    assert.equal(cache.get('Actor.Prev2').activePage, 2);
+
+    // Shift + previousPage moves to page 1 and updates all cached HUDs
+    await app2._onPreviousPage({ preventDefault: () => {}, shiftKey: true }, {});
+    assert.equal(app2.activePage, 1);
+    assert.equal(cache.get('Actor.Prev1').activePage, 1);
+    assert.equal(cache.get('Actor.Prev2').activePage, 1);
+});
+
+test('ActionDisplayApp shift-clicking already active page bubble propagates page to all other cached HUDs', async () => {
+    ActionDisplayApp.clearTabCache();
+
+    const app1 = new ActionDisplayApp({ actor: { id: 'actor-sync-1', uuid: 'Actor.Sync1' } });
+    app1.totalPages = 3;
+    app1.activePage = 1;
+    app1.render = () => {};
+    app1._saveTabState();
+
+    const app2 = new ActionDisplayApp({ actor: { id: 'actor-sync-2', uuid: 'Actor.Sync2' } });
+    app2.totalPages = 3;
+    app2.activePage = 2;
+    app2.render = () => {};
+    app2._saveTabState();
+
+    const cache = ActionDisplayApp.getActiveTabCache();
+    assert.equal(cache.get('Actor.Sync1').activePage, 1);
+    assert.equal(cache.get('Actor.Sync2').activePage, 2);
+
+    // Shift-click page 2 while app2 is already on page 2
+    await app2._onChangePage({ preventDefault: () => {}, shiftKey: true }, { dataset: { page: '2' } });
+    assert.equal(app2.activePage, 2);
+    assert.equal(cache.get('Actor.Sync1').activePage, 2, 'Actor 1 cache should be synchronized to page 2');
+});
+
+test('ActionDisplayApp clamps activePage in _prepareContext if cached page exceeds actor totalPages', async () => {
+    ActionDisplayApp.clearTabCache();
+
+    // Actor with only 1 page has cached activePage = 3
+    const cache = ActionDisplayApp.getActiveTabCache();
+    cache.set('Actor.SinglePage', { activePage: 3, left: {}, right: {}, pages: {} });
+
+    const app = new ActionDisplayApp({ actor: { id: 'actor-single', uuid: 'Actor.SinglePage' } });
+    assert.equal(app.activePage, 3);
+
+    actionDisplay.getActions = async () => [
+        { id: 'act-only-page-1', name: 'Punch', page: 1, left: ['weapon'] }
+    ];
+
+    const context = await app._prepareContext({});
+    assert.equal(app.totalPages, 1);
+    assert.equal(app.activePage, 1, 'activePage should clamp to 1 when actor only has 1 page');
+    assert.equal(context.activePage, 1);
+    assert.equal(context.pages.length, 1);
+    assert.deepEqual(context.pages[0], { page: 1, active: true });
+});
