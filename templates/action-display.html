@@ -40,7 +40,7 @@
 <button class="bad-left-sub-tab {{#if isNested}}bad-nested-sub-tab{{/if}} {{#if tab.active}}active{{/if}} {{#if tab.showUnprepared}}unprepared-active{{/if}}" 
         data-action="changeLeftSubItemType" 
         data-type="{{tab.id}}"
-        {{#if @root.showTooltips}}{{#if tab.tooltip}}data-tooltip="{{tab.tooltip}}" data-tooltip-direction="RIGHT"{{/if}}{{/if}}>
+        {{#if @root.showTooltips}}{{#if tab.tooltip}}data-tooltip="{{tab.tooltip}}" data-tooltip-direction="RIGHT" data-tooltip-class="bad-multiline-tooltip"{{/if}}{{/if}}>
     {{tab.label}}
 </button>
 {{/inline}}
@@ -59,7 +59,7 @@
 <button class="{{this.className}} {{#if this.isActive}}active{{/if}} {{#if this.isSecondaryActive}}auto-toggle-active{{/if}}" 
         data-action="{{this.action}}"
         {{#if this.contextAction}}data-context-action="{{this.contextAction}}"{{/if}}
-        {{#if @root.showTooltips}}{{#if this.tooltip}}data-tooltip="{{this.tooltip}}" data-tooltip-direction="DOWN"{{/if}}{{/if}}
+        {{#if @root.showTooltips}}{{#if this.tooltip}}data-tooltip="{{this.tooltip}}" data-tooltip-direction="DOWN" data-tooltip-class="bad-multiline-tooltip"{{/if}}{{/if}}
         aria-label="{{this.ariaLabel}}">
     <i class="{{this.icon}}"></i>
 </button>
@@ -111,7 +111,7 @@
                  data-action="changeLeftItemType" 
                  data-type="{{this.id}}" 
                  data-has-sub-tabs="{{#if this.subTabs.length}}true{{else}}false{{/if}}"
-                 {{#if @root.showTooltips}}{{#if this.tooltip}}data-tooltip="{{this.tooltip}}" data-tooltip-direction="RIGHT"{{/if}}{{/if}}>
+                 {{#if @root.showTooltips}}{{#if this.tooltip}}data-tooltip="{{this.tooltip}}" data-tooltip-direction="RIGHT" data-tooltip-class="bad-multiline-tooltip"{{/if}}{{/if}}>
                 <span class="bad-left-tab-text">{{this.label}}</span>
                 <div class="bad-left-tab-icon">
                     <i class="{{this.icon}}"></i>

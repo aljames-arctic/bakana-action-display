@@ -414,10 +414,10 @@ export class BasePf1SystemAdapter extends FantasySystemAdapter {
         }
 
         if (context.showTooltips) {
-            if (allParent) allParent.tooltip = localize('BAD.tabs.allTooltip', 'Right-Click: Toggle Show All (Equipped & Unequipped Items, Prepared & Unprepared Spells)');
-            if (weaponParent) weaponParent.tooltip = localize('BAD.tabs.unequippedWeaponsTooltip', 'Right-Click: Toggle Show Unequipped Weapons');
-            if (buffParent) buffParent.tooltip = localize('BAD.tabs.inactiveBuffsTooltip', 'Right-Click: Toggle Show Inactive Buffs');
-            if (equipmentParent) equipmentParent.tooltip = localize('BAD.tabs.unequippedEquipmentTooltip', 'Right-Click: Toggle Show Unequipped Equipment');
+            if (allParent) allParent.tooltip = localize('BAD.tabs.allTooltip', 'Right Click: Toggle Show All (Equipped & Unequipped Items, Prepared & Unprepared Spells)');
+            if (weaponParent) weaponParent.tooltip = localize('BAD.tabs.unequippedWeaponsTooltip', 'Right Click: Toggle Show Unequipped Weapons');
+            if (buffParent) buffParent.tooltip = localize('BAD.tabs.inactiveBuffsTooltip', 'Right Click: Toggle Show Inactive Buffs');
+            if (equipmentParent) equipmentParent.tooltip = localize('BAD.tabs.unequippedEquipmentTooltip', 'Right Click: Toggle Show Unequipped Equipment');
         }
 
         const spellGroup = context.itemTypes?.find(g => g.id === 'spell');

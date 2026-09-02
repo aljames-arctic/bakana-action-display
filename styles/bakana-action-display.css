@@ -1826,6 +1826,15 @@ div.locked-tooltip:has(.bad-autoban-tooltip) .content-link {
     object-fit: contain;
 }
 
+/* Multiline Tooltip Formatting */
+#tooltip.bad-multiline-tooltip,
+aside#tooltip.bad-multiline-tooltip,
+div#tooltip.bad-multiline-tooltip {
+    white-space: pre-line !important;
+    text-align: left !important;
+    line-height: 1.4 !important;
+}
+
 /* Item Summary Tooltip Formatting */
 #tooltip:has(.bad-item-summary-tooltip),
 aside#tooltip:has(.bad-item-summary-tooltip),
