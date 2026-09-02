@@ -425,7 +425,8 @@ const settingsStore = new Map([
         enabled: true,
         vocal: ['silenced', 'incapacitated', 'paralyzed', 'petrified', 'stunned', 'unconscious'],
         somatic: ['restrained', 'incapacitated', 'paralyzed', 'petrified', 'stunned', 'unconscious', 'grappled']
-    }]
+    }],
+    ['bakana-action-display.showTooltips', true]
 ]);
 
 globalThis.CONST = globalThis.CONST ?? {};

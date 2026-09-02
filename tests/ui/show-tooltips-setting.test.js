@@ -10,32 +10,31 @@ import { Pf2eSystemAdapter } from '../../src/adapters/system/pf2e-system-adapter
 import { HUDTab } from '../../src/ui/hud-tab.js';
 import { MODULE_ID } from '../../src/constants.js';
 
-test('showTooltips setting defaults to false', () => {
+test('showTooltips setting defaults to true', () => {
     const settingValue = game.settings.get(MODULE_ID, 'showTooltips');
-    assert.equal(settingValue, false, 'showTooltips should be false by default');
+    assert.equal(settingValue, true, 'showTooltips should be true by default');
 });
 
 test('ActionDisplayApp._prepareContext populates context.showTooltips and control button tooltips based on setting', async () => {
     const app = new ActionDisplayApp({ actor: { id: 'test-actor', isOwner: true } });
 
-    // 1. When showTooltips is false (default)
-    await game.settings.set(MODULE_ID, 'showTooltips', false);
+    // 1. By default, showTooltips is true
     const contextDefault = await app._prepareContext({});
-    assert.equal(contextDefault.showTooltips, false);
+    assert.equal(contextDefault.showTooltips, true);
     for (const btn of [...contextDefault.controlButtons.left, ...contextDefault.controlButtons.right]) {
-        assert.equal(btn.tooltip, null, `Button ${btn.id} should have null tooltip when showTooltips is false`);
+        assert.ok(typeof btn.tooltip === 'string' && btn.tooltip.length > 0, `Button ${btn.id} should have tooltip when showTooltips is true`);
     }
 
-    // 2. When showTooltips is true
-    await game.settings.set(MODULE_ID, 'showTooltips', true);
+    // 2. When showTooltips is false
+    await game.settings.set(MODULE_ID, 'showTooltips', false);
     try {
-        const contextEnabled = await app._prepareContext({});
-        assert.equal(contextEnabled.showTooltips, true);
-        for (const btn of [...contextEnabled.controlButtons.left, ...contextEnabled.controlButtons.right]) {
-            assert.ok(typeof btn.tooltip === 'string' && btn.tooltip.length > 0, `Button ${btn.id} should have tooltip when showTooltips is true`);
+        const contextDisabled = await app._prepareContext({});
+        assert.equal(contextDisabled.showTooltips, false);
+        for (const btn of [...contextDisabled.controlButtons.left, ...contextDisabled.controlButtons.right]) {
+            assert.equal(btn.tooltip, null, `Button ${btn.id} should have null tooltip when showTooltips is false`);
         }
     } finally {
-        await game.settings.set(MODULE_ID, 'showTooltips', false);
+        await game.settings.set(MODULE_ID, 'showTooltips', true);
     }
 });
 

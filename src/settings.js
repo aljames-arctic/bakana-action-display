@@ -361,7 +361,7 @@ Hooks.once('init', () => {
         scope: 'user',
         config: true,
         type: Boolean,
-        default: false,
+        default: true,
         onChange: () => {
             if (actionDisplay.activeApp?.rendered) {
                 actionDisplay.activeApp.render();
