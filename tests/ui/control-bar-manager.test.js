@@ -66,6 +66,11 @@ test('ControlBarManager.prepareControlButtons prepares structured button models 
     assert.equal(closeBtn.action, 'closeHUD');
     assert.equal(closeBtn.contextAction, null);
     assert.equal(closeBtn.icon, 'fas fa-times');
+
+    // Control buttons should not have tooltips
+    for (const btn of [...buttons.left, ...buttons.right]) {
+        assert.equal(btn.tooltip, undefined, `Button ${btn.id} should not have a tooltip`);
+    }
 });
 
 test('ControlBarManager.prepareControlButtons updates dynamic icons based on state', () => {

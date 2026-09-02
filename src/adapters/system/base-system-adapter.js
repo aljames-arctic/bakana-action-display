@@ -605,8 +605,7 @@ export class BaseSystemAdapter {
     formatEconomyTooltip(sysType, color = null) {
         const econColor = color ?? sysType?.defaultColor ?? '#64748b';
         const label = sysType?.label ?? sysType?.id ?? '';
-        const category = localize('BAD.common.actionEconomy', 'Action Economy');
-        return `<div class="bad-economy-tooltip"><div class="bad-economy-tooltip-header"><span class="bad-economy-tooltip-bar" style="background-color: ${econColor}; box-shadow: 0 0 6px ${econColor};"></span><span class="bad-economy-tooltip-label">${label}</span></div><div class="bad-economy-tooltip-category">${category}</div></div>`;
+        return `<div class="bad-economy-tooltip"><div class="bad-economy-tooltip-header"><span class="bad-economy-tooltip-bar" style="background-color: ${econColor}; box-shadow: 0 0 6px ${econColor};"></span><span class="bad-economy-tooltip-label">${label}</span></div></div>`;
     }
 
     /**

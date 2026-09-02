@@ -451,6 +451,8 @@ test('extractEconomyIndicators generates stylized tooltips and dropdown items us
     assert.ok(actionSlot.tooltip.includes('bad-economy-tooltip-header'), 'Tooltip should contain bad-economy-tooltip-header');
     assert.ok(actionSlot.tooltip.includes('#3b82f6'), 'Tooltip should contain action color');
     assert.ok(actionSlot.tooltip.includes('Action'), 'Tooltip should contain Action label');
+    assert.equal(actionSlot.tooltip.includes('Action Economy'), false, 'Tooltip should not contain Action Economy');
+    assert.equal(actionSlot.tooltip.includes('bad-economy-tooltip-category'), false, 'Tooltip should not contain bad-economy-tooltip-category');
 
     const bonusSlot = indicators.find(i => i.type === 'bonus');
     assert.equal(bonusSlot.tooltip, '', 'Inactive slot should have empty tooltip');
