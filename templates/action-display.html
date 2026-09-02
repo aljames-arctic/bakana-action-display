@@ -1,33 +1,103 @@
+{{#*inline "actionItem"}}
+<div class="bad-action-item {{#if this.isHidden}}bad-item-hidden{{/if}} {{#if this.isActive}}bad-item-active{{/if}} {{#unless this.available}}unprepared{{/unless}}" data-action="rollAction" data-action-id="{{this.id}}">
+    {{#if this.img}}
+    <img class="bad-action-icon" src="{{this.img}}" alt="{{this.name}}" />
+    {{else}}
+    <div class="bad-action-icon-placeholder"><i class="fas fa-dice-d20"></i></div>
+    {{/if}}
+    
+    <span class="bad-action-name">{{this.name}}</span>
+    
+    {{#if @root.showEconomyIndicators}}
+    <div class="bad-economy-bars">
+        {{#each this.economyIndicators}}
+        <div class="bad-economy-slot {{#unless this.active}}bad-economy-slot-empty{{/unless}}">
+            {{#if this.active}}
+            <span class="bad-economy-bar" style="background-color: {{this.color}};" data-tooltip="{{this.tooltip}}" data-tooltip-direction="UP"></span>
+            {{/if}}
+        </div>
+        {{/each}}
+    </div>
+    {{/if}}
+
+    <div class="bad-action-uses-slot">
+        {{#unless (eq this.uses.available null)}}
+        <span class="bad-action-uses {{#if (eq this.uses.available 0)}}depleted{{/if}} {{#if this.uses.isUpcast}}upcast{{/if}}">
+            {{this.uses.available}}{{#if this.uses.max}} / {{this.uses.max}}{{/if}}
+        </span>
+        {{/unless}}
+    </div>
+</div>
+{{/inline}}
+
+{{#*inline "noActionsPlaceholder"}}
+<div class="bad-no-actions">
+    <i class="fas fa-info-circle"></i> {{localize "BAD.core.noActions"}}
+</div>
+{{/inline}}
+
+{{#*inline "leftSubTab"}}
+<button class="bad-left-sub-tab {{#if isNested}}bad-nested-sub-tab{{/if}} {{#if tab.active}}active{{/if}} {{#if tab.showUnprepared}}unprepared-active{{/if}}" 
+        data-action="changeLeftSubItemType" 
+        data-type="{{tab.id}}">
+    {{tab.label}}
+</button>
+{{/inline}}
+
+{{#*inline "rightSubTab"}}
+<button class="bad-right-sub-tab {{#if isNested}}bad-nested-sub-tab{{/if}} {{#if tab.active}}active{{/if}} {{#if tab.excluded}}excluded{{/if}}" 
+        data-action="changeSubActionType" 
+        data-type="{{tab.id}}"
+        {{#if tab.tooltip}}data-tooltip="{{tab.tooltip}}" data-tooltip-direction="LEFT"{{/if}}>
+    {{tab.label}}
+</button>
+{{/inline}}
+
+{{#*inline "controlButton"}}
+{{#if this.isVisible}}
+<button class="{{this.className}} {{#if this.isActive}}active{{/if}} {{#if this.isSecondaryActive}}auto-toggle-active{{/if}}" 
+        data-action="{{this.action}}"
+        {{#if this.contextAction}}data-context-action="{{this.contextAction}}"{{/if}}
+        data-tooltip="{{this.tooltip}}"
+        data-tooltip-direction="DOWN"
+        aria-label="{{this.ariaLabel}}">
+    <i class="{{this.icon}}"></i>
+</button>
+{{/if}}
+{{/inline}}
+
+{{#*inline "traitRow"}}
+<div class="bad-token-trait-row">
+    <div class="bad-token-trait-header">
+        <i class="{{icon}}"></i>
+        <span class="bad-token-trait-label">{{label}}</span>
+    </div>
+    <div class="bad-token-trait-content">
+        {{#if items.length}}
+            <div class="bad-token-tags">
+                {{#each items}}
+                <span class="bad-token-tag {{../tagClass}}">{{this}}</span>
+                {{/each}}
+            </div>
+        {{else}}
+            <span class="bad-token-trait-empty">{{localize "BAD.page3.none"}}</span>
+        {{/if}}
+    </div>
+</div>
+{{/inline}}
+
 <div class="bakana-action-display-container">
     <!-- Control Bar (Filter Resources + Grip + Recenter + Pin Button + Close Button) -->
     <div class="bad-control-bar">
         <div class="bad-control-group bad-control-left">
             {{#each controlButtons.left}}
-            {{#if this.isVisible}}
-            <button class="{{this.className}} {{#if this.isActive}}active{{/if}} {{#if this.isSecondaryActive}}auto-toggle-active{{/if}}" 
-                    data-action="{{this.action}}"
-                    {{#if this.contextAction}}data-context-action="{{this.contextAction}}"{{/if}}
-                    data-tooltip="{{this.tooltip}}"
-                    data-tooltip-direction="DOWN"
-                    aria-label="{{this.ariaLabel}}">
-                <i class="{{this.icon}}"></i>
-            </button>
-            {{/if}}
+            {{> controlButton}}
             {{/each}}
         </div>
         <div class="bad-drag-handle"><i class="fas fa-grip"></i></div>
         <div class="bad-control-group bad-control-right">
             {{#each controlButtons.right}}
-            {{#if this.isVisible}}
-            <button class="{{this.className}} {{#if this.isActive}}active{{/if}} {{#if this.isSecondaryActive}}auto-toggle-active{{/if}}" 
-                    data-action="{{this.action}}"
-                    {{#if this.contextAction}}data-context-action="{{this.contextAction}}"{{/if}}
-                    data-tooltip="{{this.tooltip}}"
-                    data-tooltip-direction="DOWN"
-                    aria-label="{{this.ariaLabel}}">
-                <i class="{{this.icon}}"></i>
-            </button>
-            {{/if}}
+            {{> controlButton}}
             {{/each}}
         </div>
     </div>
@@ -52,19 +122,11 @@
             <div class="bad-left-sub-tabs">
                 {{#each this.subTabs}}
                 <div class="bad-left-sub-tab-group {{#if this.subTabs.length}}has-nested{{/if}}">
-                    <button class="bad-left-sub-tab {{#if this.active}}active{{/if}} {{#if this.showUnprepared}}unprepared-active{{/if}}" 
-                            data-action="changeLeftSubItemType" 
-                            data-type="{{this.id}}">
-                        {{this.label}}
-                    </button>
+                    {{> leftSubTab tab=this isNested=false}}
                     {{#if this.subTabs.length}}
                     <div class="bad-left-sub-tabs bad-nested-sub-tabs">
                         {{#each this.subTabs}}
-                        <button class="bad-left-sub-tab bad-nested-sub-tab {{#if this.active}}active{{/if}}" 
-                                data-action="changeLeftSubItemType" 
-                                data-type="{{this.id}}">
-                            {{this.label}}
-                        </button>
+                        {{> leftSubTab tab=this isNested=true}}
                         {{/each}}
                     </div>
                     {{/if}}
@@ -168,23 +230,7 @@
                     <!-- Traits & Defenses: Resistances, Immunities, Vulnerabilities, Languages, Senses -->
                     <div class="bad-token-info-section bad-token-traits-section">
                         <!-- Damage Resistances -->
-                        <div class="bad-token-trait-row">
-                            <div class="bad-token-trait-header">
-                                <i class="fas fa-shield-halved"></i>
-                                <span class="bad-token-trait-label">{{localize "BAD.page3.resistances"}}</span>
-                            </div>
-                            <div class="bad-token-trait-content">
-                                {{#if tokenInfo.resistances.length}}
-                                    <div class="bad-token-tags">
-                                        {{#each tokenInfo.resistances}}
-                                        <span class="bad-token-tag bad-tag-resistance">{{this}}</span>
-                                        {{/each}}
-                                    </div>
-                                {{else}}
-                                    <span class="bad-token-trait-empty">{{localize "BAD.page3.none"}}</span>
-                                {{/if}}
-                            </div>
-                        </div>
+                        {{> traitRow icon="fas fa-shield-halved" label=(localize "BAD.page3.resistances") items=tokenInfo.resistances tagClass="bad-tag-resistance"}}
 
                         <!-- Immunities (Damage & Condition) -->
                         <div class="bad-token-trait-row">
@@ -209,58 +255,14 @@
                         </div>
 
                         <!-- Damage Vulnerabilities -->
-                        <div class="bad-token-trait-row">
-                            <div class="bad-token-trait-header">
-                                <i class="fas fa-heart-crack"></i>
-                                <span class="bad-token-trait-label">{{localize "BAD.page3.vulnerabilities"}}</span>
-                            </div>
-                            <div class="bad-token-trait-content">
-                                {{#if tokenInfo.vulnerabilities.length}}
-                                    <div class="bad-token-tags">
-                                        {{#each tokenInfo.vulnerabilities}}
-                                        <span class="bad-token-tag bad-tag-vulnerability">{{this}}</span>
-                                        {{/each}}
-                                    </div>
-                                {{else}}
-                                    <span class="bad-token-trait-empty">{{localize "BAD.page3.none"}}</span>
-                                {{/if}}
-                            </div>
-                        </div>
+                        {{> traitRow icon="fas fa-heart-crack" label=(localize "BAD.page3.vulnerabilities") items=tokenInfo.vulnerabilities tagClass="bad-tag-vulnerability"}}
 
                         <!-- Languages -->
-                        <div class="bad-token-trait-row">
-                            <div class="bad-token-trait-header">
-                                <i class="fas fa-comments"></i>
-                                <span class="bad-token-trait-label">{{localize "BAD.page3.languages"}}</span>
-                            </div>
-                            <div class="bad-token-trait-content">
-                                {{#if tokenInfo.languages.length}}
-                                    <div class="bad-token-tags">
-                                        {{#each tokenInfo.languages}}
-                                        <span class="bad-token-tag bad-tag-language">{{this}}</span>
-                                        {{/each}}
-                                    </div>
-                                {{else}}
-                                    <span class="bad-token-trait-empty">{{localize "BAD.page3.none"}}</span>
-                                {{/if}}
-                            </div>
-                        </div>
+                        {{> traitRow icon="fas fa-comments" label=(localize "BAD.page3.languages") items=tokenInfo.languages tagClass="bad-tag-language"}}
 
                         {{#if tokenInfo.senses.length}}
                         <!-- Senses -->
-                        <div class="bad-token-trait-row">
-                            <div class="bad-token-trait-header">
-                                <i class="fas fa-eye"></i>
-                                <span class="bad-token-trait-label">{{localize "BAD.page3.senses"}}</span>
-                            </div>
-                            <div class="bad-token-trait-content">
-                                <div class="bad-token-tags">
-                                    {{#each tokenInfo.senses}}
-                                    <span class="bad-token-tag bad-tag-sense">{{this}}</span>
-                                    {{/each}}
-                                </div>
-                            </div>
-                        </div>
+                        {{> traitRow icon="fas fa-eye" label=(localize "BAD.page3.senses") items=tokenInfo.senses tagClass="bad-tag-sense"}}
                         {{/if}}
                     </div>
 
@@ -284,9 +286,7 @@
                     </div>
                 </div>
                 {{else}}
-                <div class="bad-no-actions">
-                    <i class="fas fa-info-circle"></i> {{localize "BAD.core.noActions"}}
-                </div>
+                    {{> noActionsPlaceholder}}
                 {{/if}}
             {{else if isCategorized}}
                 {{#if categorizedSections.length}}
@@ -298,35 +298,7 @@
                     </div>
                     {{#if this.items.length}}
                         {{#each this.items}}
-                        <div class="bad-action-item {{#if this.isHidden}}bad-item-hidden{{/if}} {{#if this.isActive}}bad-item-active{{/if}} {{#unless this.available}}unprepared{{/unless}}" data-action="rollAction" data-action-id="{{this.id}}">
-                            {{#if this.img}}
-                            <img class="bad-action-icon" src="{{this.img}}" alt="{{this.name}}" />
-                            {{else}}
-                            <div class="bad-action-icon-placeholder"><i class="fas fa-dice-d20"></i></div>
-                            {{/if}}
-                            
-                            <span class="bad-action-name">{{this.name}}</span>
-                            
-                            {{#if @root.showEconomyIndicators}}
-                            <div class="bad-economy-bars">
-                                {{#each this.economyIndicators}}
-                                <div class="bad-economy-slot {{#unless this.active}}bad-economy-slot-empty{{/unless}}">
-                                    {{#if this.active}}
-                                    <span class="bad-economy-bar" style="background-color: {{this.color}}" data-tooltip="{{this.tooltip}}" data-tooltip-direction="UP"></span>
-                                    {{/if}}
-                                </div>
-                                {{/each}}
-                            </div>
-                            {{/if}}
-
-                            <div class="bad-action-uses-slot">
-                                {{#unless (eq this.uses.available null)}}
-                                <span class="bad-action-uses {{#if (eq this.uses.available 0)}}depleted{{/if}} {{#if this.uses.isUpcast}}upcast{{/if}}">
-                                    {{this.uses.available}}{{#if this.uses.max}} / {{this.uses.max}}{{/if}}
-                                </span>
-                                {{/unless}}
-                            </div>
-                        </div>
+                        {{> actionItem}}
                         {{/each}}
                     {{/if}}
                     {{#if this.subsections.length}}
@@ -337,81 +309,21 @@
                             {{/if}}
                         </div>
                         {{#each this.items}}
-                        <div class="bad-action-item {{#if this.isHidden}}bad-item-hidden{{/if}} {{#if this.isActive}}bad-item-active{{/if}} {{#unless this.available}}unprepared{{/unless}}" data-action="rollAction" data-action-id="{{this.id}}">
-                            {{#if this.img}}
-                            <img class="bad-action-icon" src="{{this.img}}" alt="{{this.name}}" />
-                            {{else}}
-                            <div class="bad-action-icon-placeholder"><i class="fas fa-dice-d20"></i></div>
-                            {{/if}}
-                            
-                            <span class="bad-action-name">{{this.name}}</span>
-                            
-                            {{#if @root.showEconomyIndicators}}
-                            <div class="bad-economy-bars">
-                                {{#each this.economyIndicators}}
-                                <div class="bad-economy-slot {{#unless this.active}}bad-economy-slot-empty{{/unless}}">
-                                    {{#if this.active}}
-                                    <span class="bad-economy-bar" style="background-color: {{this.color}};" data-tooltip="{{this.tooltip}}" data-tooltip-direction="UP"></span>
-                                    {{/if}}
-                                </div>
-                                {{/each}}
-                            </div>
-                            {{/if}}
-
-                            <div class="bad-action-uses-slot">
-                                {{#unless (eq this.uses.available null)}}
-                                <span class="bad-action-uses {{#if (eq this.uses.available 0)}}depleted{{/if}} {{#if this.uses.isUpcast}}upcast{{/if}}">
-                                    {{this.uses.available}}{{#if this.uses.max}} / {{this.uses.max}}{{/if}}
-                                </span>
-                                {{/unless}}
-                            </div>
-                        </div>
+                        {{> actionItem}}
                         {{/each}}
                         {{/each}}
                     {{/if}}
                     {{/each}}
                 {{else}}
-                    <div class="bad-no-actions">
-                        <i class="fas fa-info-circle"></i> {{localize "BAD.core.noActions"}}
-                    </div>
+                    {{> noActionsPlaceholder}}
                 {{/if}}
             {{else}}
                 {{#if items.length}}
                     {{#each items}}
-                    <div class="bad-action-item {{#if this.isHidden}}bad-item-hidden{{/if}} {{#if this.isActive}}bad-item-active{{/if}} {{#unless this.available}}unprepared{{/unless}}" data-action="rollAction" data-action-id="{{this.id}}">
-                        {{#if this.img}}
-                        <img class="bad-action-icon" src="{{this.img}}" alt="{{this.name}}" />
-                        {{else}}
-                        <div class="bad-action-icon-placeholder"><i class="fas fa-dice-d20"></i></div>
-                        {{/if}}
-                        
-                        <span class="bad-action-name">{{this.name}}</span>
-                        
-                        {{#if @root.showEconomyIndicators}}
-                        <div class="bad-economy-bars">
-                            {{#each this.economyIndicators}}
-                            <div class="bad-economy-slot {{#unless this.active}}bad-economy-slot-empty{{/unless}}">
-                                {{#if this.active}}
-                                <span class="bad-economy-bar" style="background-color: {{this.color}};" data-tooltip="{{this.tooltip}}" data-tooltip-direction="UP"></span>
-                                {{/if}}
-                            </div>
-                            {{/each}}
-                        </div>
-                        {{/if}}
-
-                        <div class="bad-action-uses-slot">
-                            {{#unless (eq this.uses.available null)}}
-                            <span class="bad-action-uses {{#if (eq this.uses.available 0)}}depleted{{/if}} {{#if this.uses.isUpcast}}upcast{{/if}}">
-                                {{this.uses.available}}{{#if this.uses.max}} / {{this.uses.max}}{{/if}}
-                            </span>
-                            {{/unless}}
-                        </div>
-                    </div>
+                    {{> actionItem}}
                     {{/each}}
                 {{else}}
-                    <div class="bad-no-actions">
-                        <i class="fas fa-info-circle"></i> {{localize "BAD.core.noActions"}}
-                    </div>
+                    {{> noActionsPlaceholder}}
                 {{/if}}
             {{/if}}
         </div>
@@ -438,21 +350,11 @@
             <div class="bad-right-sub-tabs">
                 {{#each this.subTabs}}
                 <div class="bad-right-sub-tab-group {{#if this.subTabs.length}}has-nested{{/if}}">
-                    <button class="bad-right-sub-tab {{#if this.active}}active{{/if}} {{#if this.excluded}}excluded{{/if}}" 
-                            data-action="changeSubActionType" 
-                            data-type="{{this.id}}"
-                            {{#if this.tooltip}}data-tooltip="{{this.tooltip}}" data-tooltip-direction="LEFT"{{/if}}>
-                        {{this.label}}
-                    </button>
+                    {{> rightSubTab tab=this isNested=false}}
                     {{#if this.subTabs.length}}
                     <div class="bad-right-sub-tabs bad-nested-sub-tabs">
                         {{#each this.subTabs}}
-                        <button class="bad-right-sub-tab bad-nested-sub-tab {{#if this.active}}active{{/if}} {{#if this.excluded}}excluded{{/if}}" 
-                                data-action="changeSubActionType" 
-                                data-type="{{this.id}}"
-                                {{#if this.tooltip}}data-tooltip="{{this.tooltip}}" data-tooltip-direction="LEFT"{{/if}}>
-                            {{this.label}}
-                        </button>
+                        {{> rightSubTab tab=this isNested=true}}
                         {{/each}}
                     </div>
                     {{/if}}

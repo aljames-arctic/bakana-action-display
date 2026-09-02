@@ -356,13 +356,7 @@ export function handleCombatTurnChange(combat) {
 
     const currentApp = actionDisplay.activeApp;
     const combatant = combat?.combatant;
-    const token = combatant?.token?.object
-        ?? (combatant?.token?.center ? combatant?.token : null)
-        ?? canvas?.tokens?.get?.(combatant?.tokenId)
-        ?? (combatant?.token && canvas?.tokens?.placeables?.includes(combatant?.token) ? combatant?.token : null)
-        ?? combatant?.actor?.getActiveTokens?.()?.[0]
-        ?? combatant?.token
-        ?? null;
+    const token = adapter.foundry.getTokenFromCombatant(combatant);
 
     if (token) {
         const isMyTurn = Boolean(token && adapter.foundry.isUserInCharge(token));

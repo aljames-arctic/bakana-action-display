@@ -53,6 +53,13 @@ test('BaseFoundryAdapter and FoundryCurrentAdapter getCombatantByToken and getCo
     assert.equal(v14.getCombatantByToken(mockCombatV14, 't1'), mockCombatant);
     assert.deepEqual(v14.getCombatantsByToken(mockCombatV14, 't1'), [mockCombatant]);
     assert.equal(v14.getCombatantByToken(mockCombatV14, { id: 't1' }), mockCombatant);
+
+    // getTokenFromCombatant resolves token placeables from various combatant structures
+    const mockToken = { id: 't1', center: { x: 100, y: 100 } };
+    assert.equal(v12.getTokenFromCombatant(null), null);
+    assert.equal(v12.getTokenFromCombatant({ token: { object: mockToken } }), mockToken);
+    assert.equal(v12.getTokenFromCombatant({ token: mockToken }), mockToken);
+    assert.equal(v12.getTokenFromCombatant({ actor: { getActiveTokens: () => [mockToken] } }), mockToken);
 });
 
 test('BaseFoundryAdapter (v12) and FoundryCurrentAdapter (v14+) constructor getters contract', () => {

@@ -120,6 +120,55 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
     }
 
     /**
+     * Ensure at least one tab is active in the column, falling back to 'all'.
+     * @param {HUDTab[]} tabs
+     * @param {HUDTabColumn} column
+     * @private
+     */
+    _ensureDefaultTab(tabs, column) {
+        if (tabs.length && !tabs.some(p => column.activeParents.has(p.id))) {
+            column.resetToDefault();
+            const allTab = tabs.find(t => t.id === 'all');
+            if (allTab) {
+                allTab.active = true;
+                allTab.expanded = true;
+            }
+        }
+    }
+
+    /**
+     * Resolve the combatant associated with the current HUD token/actor.
+     * @param {Combat} [combat=game.combat]
+     * @returns {Combatant|null}
+     * @private
+     */
+    _getCombatant(combat = game.combat) {
+        if (!combat) return null;
+        return adapter.foundry.getCombatantByToken(combat, this.token)
+            ?? (this.actor ? combat.combatants?.find?.(c => c.actorId === this.actor.id) : null)
+            ?? this.actor?.combatant
+            ?? null;
+    }
+
+    /**
+     * Helper to toggle a boolean setting and re-render the HUD.
+     * @param {string} settingKey
+     * @param {Event} [event]
+     * @param {HTMLElement} [target]
+     * @returns {Promise<boolean>} The new boolean setting value
+     * @protected
+     */
+    async _toggleBooleanSetting(settingKey, event, target) {
+        event?.preventDefault?.();
+        target?.blur?.();
+        const current = Boolean(game.settings.get(MODULE_ID, settingKey));
+        const next = target?.checked ?? !current;
+        await game.settings.set(MODULE_ID, settingKey, next);
+        await this.render();
+        return next;
+    }
+
+    /**
      * Navigate to the previous HUD page and re-render.
      */
     previousPage() {
@@ -469,14 +518,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         this.leftTabs.prune(leftGroups);
 
         // If no active left parent type is available, default to 'all'
-        if (itemTypes.length && !itemTypes.some(p => this.leftTabs.activeParents.has(p.id))) {
-            this.leftTabs.resetToDefault();
-            const allTab = itemTypes.find(t => t.id === 'all');
-            if (allTab) {
-                allTab.active = true;
-                allTab.expanded = true;
-            }
-        }
+        this._ensureDefaultTab(itemTypes, this.leftTabs);
 
         // Update active tabs and filter state based on actor status
         if (this.actor) {
@@ -656,14 +698,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         this.rightTabs.prune(parentGroups, id => adapter.isExclusionTab(id));
 
         // If no active parent type is available, default to 'all'
-        if (actionTypes.length && !actionTypes.some(p => this.rightTabs.activeParents.has(p.id))) {
-            this.rightTabs.resetToDefault();
-            const allTab = actionTypes.find(t => t.id === 'all');
-            if (allTab) {
-                allTab.active = true;
-                allTab.expanded = true;
-            }
-        }
+        this._ensureDefaultTab(actionTypes, this.rightTabs);
 
         // 4. Extract action economy indicators and filter actions based on state & search query
         const showEconomyIndicators = Boolean(game.settings.get(MODULE_ID, 'enableEconomyIndicators'));
@@ -726,37 +761,26 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         const pageConfig = adapter.getPageConfig(this.activePage, this.actor);
         const rawCatConfig = game.settings.get(MODULE_ID, 'categorizationConfig');
         const isCategorizationEnabled = Boolean(rawCatConfig?.enabled);
+        const useCategorization = isCategorizationEnabled || pageConfig?.defaultLayout === 'categorized';
 
-        if (isCategorizationEnabled) {
+        if (useCategorization) {
+            const rawCategories = pageConfig?.categories ?? adapter.getDefaultCategories() ?? [];
+            const fallbackCategories = pageConfig?.categories ? rawCategories : rawCategories.map(cat => ({ ...cat, subcategories: [] }));
+            const catConfig = isCategorizationEnabled ? rawCatConfig : { enabled: true, categories: fallbackCategories };
             const othersLabel = game.i18n?.localize?.('BAD.categorization.others') ?? 'Other Actions';
-            const categorized = categorizeActions(visibleActions, rawCatConfig, othersLabel, {
+            context.isCategorized = true;
+            context.categorizedSections = categorizeActions(visibleActions, catConfig, othersLabel, {
                 actor: this.actor,
                 token: this.token,
                 user: game.user
-            });
-            context.isCategorized = true;
-            context.categorizedSections = categorized ?? [];
+            }) ?? [];
             context.layout = 'categorized';
-        } else if (pageConfig?.defaultLayout === 'categorized') {
-            const rawCategories = pageConfig.categories ?? adapter.getDefaultCategories() ?? [];
-            const categories = pageConfig.categories ? rawCategories : rawCategories.map(cat => ({ ...cat, subcategories: [] }));
-            const othersLabel = game.i18n?.localize?.('BAD.categorization.others') ?? 'Other Actions';
-            const categorized = categorizeActions(visibleActions, { enabled: true, categories }, othersLabel, {
-                actor: this.actor,
-                token: this.token,
-                user: game.user
-            });
-            context.isCategorized = true;
-            context.categorizedSections = categorized ?? [];
-            context.layout = 'categorized';
-        } else if (pageConfig?.defaultLayout === 'tokenInfo' || pageConfig?.defaultLayout === 'info') {
-            context.isCategorized = false;
-            context.categorizedSections = null;
-            context.layout = 'tokenInfo';
         } else {
             context.isCategorized = false;
             context.categorizedSections = null;
-            context.layout = pageConfig?.defaultLayout ?? 'flat';
+            context.layout = (pageConfig?.defaultLayout === 'tokenInfo' || pageConfig?.defaultLayout === 'info')
+                ? 'tokenInfo'
+                : (pageConfig?.defaultLayout ?? 'flat');
         }
 
         const parsedActivePage = Number(this.activePage);
@@ -782,13 +806,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
 
         if (enableCombatButtons) {
             const combat = game.combat;
-            let combatant = null;
-            if (combat) {
-                combatant = adapter.foundry.getCombatantByToken(combat, this.token)
-                    ?? (this.actor ? combat.combatants?.find?.(c => c.actorId === this.actor.id) : null)
-                    ?? this.actor?.combatant
-                    ?? null;
-            }
+            const combatant = this._getCombatant(combat);
 
             if (combatant) {
                 const canInteract = Boolean(this.actor?.isOwner || this.token?.document?.isOwner || game.user?.isGM);
@@ -965,130 +983,98 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
     /* -------------------------------------------- */
 
     /**
-     * Handle left-side item type (parent) selection clicks.
-     * @param {Event} event Click event
-     * @param {HTMLElement} target Clicked element
+     * Unified handler for parent tab click interactions.
+     * @private
      */
-    async _onChangeLeftItemType(event, target) {
-        event.preventDefault();
+    _handleParentTabClick(side, target, event) {
+        event?.preventDefault?.();
         this._clearMenuState({ force: true });
-        const clickedId = target.dataset.type;
+        const isLeft = side === 'left';
+        const column = isLeft ? this.leftTabs : this.rightTabs;
+        const groups = isLeft ? this.leftGroups : this.parentGroups;
+        const clickedId = target?.dataset?.type;
+
         if (event?.shiftKey) {
-            this._onToggleLeftParent(clickedId);
+            this._handleParentTabToggle(side, clickedId);
             return;
         }
-        const tab = this.leftGroups?.[clickedId];
-        tab?.onLeftClick(this, this.leftTabs, this.leftGroups, event);
+        const tab = groups?.[clickedId];
+        tab?.onLeftClick(this, column, groups, event);
         this.render();
     }
 
     /**
-     * Handle left-side item sub-type selection clicks.
-     * @param {Event} event Click event
-     * @param {HTMLElement} target Clicked element
+     * Unified handler for parent tab toggle interactions.
+     * @private
      */
-    async _onChangeLeftSubItemType(event, target) {
-        event.preventDefault();
+    _handleParentTabToggle(side, parentId) {
+        const isLeft = side === 'left';
+        const column = isLeft ? this.leftTabs : this.rightTabs;
+        const groups = isLeft ? this.leftGroups : this.parentGroups;
+        const tab = groups?.[parentId];
+        tab?.onRightClick(this, column, groups);
+        this.render();
+    }
+
+    /**
+     * Unified handler for sub-tab click interactions.
+     * @private
+     */
+    _handleSubTabClick(side, target, event) {
+        event?.preventDefault?.();
         this._clearMenuState({ force: true });
-        const parentGroup = target.closest('.bad-left-tab-group');
-        const parentId = parentGroup?.querySelector('.bad-left-tab')?.dataset.type;
+        const isLeft = side === 'left';
+        const column = isLeft ? this.leftTabs : this.rightTabs;
+        const groups = isLeft ? this.leftGroups : this.parentGroups;
+        const groupSelector = isLeft ? '.bad-left-tab-group' : '.bad-right-tab-group';
+        const parentSelector = isLeft ? '.bad-left-tab' : '.bad-right-tab';
+
+        const parentGroup = target?.closest?.(groupSelector);
+        const parentId = parentGroup?.querySelector(parentSelector)?.dataset?.type;
+        const subId = target?.dataset?.type;
+
         if (event?.shiftKey) {
-            this._onToggleLeftSub(target, target.dataset.type);
+            this._handleSubTabToggle(side, target, subId);
             return;
         }
-        const subTab = this.leftGroups?.[parentId]?.getSubTab(target.dataset.type);
-        subTab?.onLeftClick(this, this.leftTabs, this.leftGroups, event);
-        this.render();
-    }
 
-    /**
-     * Handle right-click toggling of a left-side parent tab.
-     * @param {string} parentId The parent tab ID
-     */
-    _onToggleLeftParent(parentId) {
-        const tab = this.leftGroups?.[parentId];
-        tab?.onRightClick(this, this.leftTabs, this.leftGroups);
-        this.render();
-    }
-
-    /**
-     * Handle right-click toggling of a left-side sub-tab.
-     * @param {HTMLElement} target Clicked DOM element
-     * @param {string} type Sub-tab identifier
-     */
-    _onToggleLeftSub(target, type) {
-        const parentGroup = target.closest('.bad-left-tab-group');
-        const parentId = parentGroup?.querySelector('.bad-left-tab')?.dataset.type;
-        const subTab = this.leftGroups?.[parentId]?.getSubTab(type);
-        subTab?.onRightClick(this, this.leftTabs, this.leftGroups);
-        this.render();
-    }
-
-    /**
-     * Handle right-side action type (parent tab) selection clicks.
-     * @param {Event} event Click event
-     * @param {HTMLElement} target Clicked element
-     */
-    async _onChangeActionType(event, target) {
-        event.preventDefault();
-        this._clearMenuState({ force: true });
-        const clickedId = target.dataset.type;
-        if (event?.shiftKey) {
-            this._onToggleRightParent(clickedId);
-            return;
-        }
-        const tab = this.parentGroups?.[clickedId];
-        tab?.onLeftClick(this, this.rightTabs, this.parentGroups, event);
-        this.render();
-    }
-
-    /**
-     * Handle right-side action sub-tab selection clicks.
-     * @param {Event} event Click event
-     * @param {HTMLElement} target Clicked element
-     */
-    async _onChangeSubActionType(event, target) {
-        event.preventDefault();
-        this._clearMenuState({ force: true });
-        const parentGroup = target.closest('.bad-right-tab-group');
-        const parentId = parentGroup?.querySelector('.bad-right-tab')?.dataset.type;
-        if (event?.shiftKey) {
-            this._onToggleRightSub(target, target.dataset.type);
-            return;
-        }
-        const subTab = this.parentGroups?.[parentId]?.getSubTab(target.dataset.type);
-        subTab?.onLeftClick(this, this.rightTabs, this.parentGroups, event);
-        if (this.actor && parentId) {
-            adapter.recordManualTabToggle(this.actor, parentId, target.dataset.type, this.rightTabs.activeSubTypes.has(target.dataset.type));
+        const subTab = groups?.[parentId]?.getSubTab(subId);
+        subTab?.onLeftClick(this, column, groups, event);
+        if (!isLeft && this.actor && parentId) {
+            adapter.recordManualTabToggle(this.actor, parentId, subId, column.activeSubTypes.has(subId));
         }
         this.render();
     }
 
     /**
-     * Handle right-click toggling of a right-side parent tab.
-     * @param {string} parentId The parent tab ID
+     * Unified handler for sub-tab toggle interactions.
+     * @private
      */
-    _onToggleRightParent(parentId) {
-        const tab = this.parentGroups?.[parentId];
-        tab?.onRightClick(this, this.rightTabs, this.parentGroups);
-        this.render();
-    }
+    _handleSubTabToggle(side, target, subId) {
+        const isLeft = side === 'left';
+        const column = isLeft ? this.leftTabs : this.rightTabs;
+        const groups = isLeft ? this.leftGroups : this.parentGroups;
+        const groupSelector = isLeft ? '.bad-left-tab-group' : '.bad-right-tab-group';
+        const parentSelector = isLeft ? '.bad-left-tab' : '.bad-right-tab';
 
-    /**
-     * Handle right-click toggling of a right-side sub-tab.
-     * @param {HTMLElement} target Clicked DOM element
-     * @param {string} type Sub-tab identifier
-     */
-    _onToggleRightSub(target, type) {
-        const parentGroup = target.closest('.bad-right-tab-group');
-        const parentId = parentGroup?.querySelector('.bad-right-tab')?.dataset.type;
-        const subTab = this.parentGroups?.[parentId]?.getSubTab(type);
-        subTab?.onRightClick(this, this.rightTabs, this.parentGroups);
-        if (this.actor && parentId) {
-            adapter.recordManualTabToggle(this.actor, parentId, type, this.rightTabs.activeSubTypes.has(type));
+        const parentGroup = target?.closest?.(groupSelector);
+        const parentId = parentGroup?.querySelector(parentSelector)?.dataset?.type;
+        const subTab = groups?.[parentId]?.getSubTab(subId);
+        subTab?.onRightClick(this, column, groups);
+        if (!isLeft && this.actor && parentId) {
+            adapter.recordManualTabToggle(this.actor, parentId, subId, column.activeSubTypes.has(subId));
         }
         this.render();
     }
+
+    _onChangeLeftItemType(event, target) { return this._handleParentTabClick('left', target, event); }
+    _onChangeLeftSubItemType(event, target) { return this._handleSubTabClick('left', target, event); }
+    _onToggleLeftParent(parentId) { return this._handleParentTabToggle('left', parentId); }
+    _onToggleLeftSub(target, type) { return this._handleSubTabToggle('left', target, type); }
+    _onChangeActionType(event, target) { return this._handleParentTabClick('right', target, event); }
+    _onChangeSubActionType(event, target) { return this._handleSubTabClick('right', target, event); }
+    _onToggleRightParent(parentId) { return this._handleParentTabToggle('right', parentId); }
+    _onToggleRightSub(target, type) { return this._handleSubTabToggle('right', target, type); }
 
     /**
      * Toggle between Attached (dynamic token tracking) and Detached (floating) modes.
@@ -1118,12 +1104,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
      * @param {HTMLElement} [target] Triggering element
      */
     async _onRightClickToggleAnchor(event, target) {
-        event?.preventDefault?.();
-        target?.blur?.();
-        const current = Boolean(game.settings.get(MODULE_ID, 'persistHUD'));
-        const next = !current;
-        await game.settings.set(MODULE_ID, 'persistHUD', next);
-        await this.render();
+        return this._toggleBooleanSetting('persistHUD', event, target);
     }
 
     /**
@@ -1257,12 +1238,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
      * Toggle the "Show Depleted Items" setting.
      */
     async _onToggleFilterResources(event, target) {
-        event?.preventDefault?.();
-        target?.blur?.();
-        const current = Boolean(game.settings.get(MODULE_ID, 'showDepleted'));
-        const next = target?.checked ?? !current;
-        await game.settings.set(MODULE_ID, 'showDepleted', next);
-        await this.render();
+        return this._toggleBooleanSetting('showDepleted', event, target);
     }
 
     /**
@@ -1279,14 +1255,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         if (next) {
             const combat = game.combat;
             if (combat?.started && combat.combatant) {
-                const currentCombatant = combat.combatant;
-                const token = currentCombatant.token?.object
-                    ?? (currentCombatant.token?.center ? currentCombatant.token : null)
-                    ?? canvas?.tokens?.get?.(currentCombatant.tokenId)
-                    ?? (currentCombatant.token && canvas?.tokens?.placeables?.includes(currentCombatant.token) ? currentCombatant.token : null)
-                    ?? currentCombatant.actor?.getActiveTokens?.()?.[0]
-                    ?? currentCombatant.token
-                    ?? null;
+                const token = adapter.foundry.getTokenFromCombatant(combat.combatant);
 
                 if (token && adapter.foundry.isUserInCharge(token)) {
                     adapter.foundry.selectToken(token);
@@ -1324,33 +1293,21 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
      * @param {HTMLElement} [target] Triggering element
      */
     async _onRightClickCombatAutoTrack(event, target) {
-        event?.preventDefault?.();
-        target?.blur?.();
-        const current = Boolean(game.settings.get(MODULE_ID, 'autoToggleCombat'));
-        const next = !current;
-        await game.settings.set(MODULE_ID, 'autoToggleCombat', next);
-        await this.render();
+        return this._toggleBooleanSetting('autoToggleCombat', event, target);
     }
 
     /**
      * Toggle the "Show Item Summaries" setting.
      */
     async _onToggleItemSummaries(event, target) {
-        event?.preventDefault?.();
-        target?.blur?.();
-        const current = Boolean(game.settings.get(MODULE_ID, 'showItemSummaries'));
-        const next = target?.checked ?? !current;
-        await game.settings.set(MODULE_ID, 'showItemSummaries', next);
+        const next = await this._toggleBooleanSetting('showItemSummaries', event, target);
         if (next) {
             if (this._hoveredActionItem) {
                 await this._showItemSummaryTooltip(this._hoveredActionItem);
             }
-        } else {
-            if (!this._isQuestionMarkHeld) {
-                this._hideItemSummaryTooltip();
-            }
+        } else if (!this._isQuestionMarkHeld) {
+            this._hideItemSummaryTooltip();
         }
-        await this.render();
     }
 
     /**
@@ -1361,16 +1318,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
      */
     async _onRecenterToken(event, target) {
         event?.preventDefault?.();
-        const combat = game.combat;
-        const combatant = combat?.combatant;
-        const combatToken = combatant?.token?.object
-            ?? (combatant?.token?.center ? combatant.token : null)
-            ?? canvas?.tokens?.get?.(combatant?.tokenId)
-            ?? (combatant?.token && canvas?.tokens?.placeables?.includes(combatant?.token) ? combatant?.token : null)
-            ?? combatant?.actor?.getActiveTokens?.()?.[0]
-            ?? combatant?.token
-            ?? null;
-
+        const combatToken = adapter.foundry.getTokenFromCombatant(game.combat?.combatant);
         const targetToken = combatToken ?? this.token;
         if (targetToken) {
             await adapter.foundry.centerCanvasOnToken(targetToken);
@@ -1384,12 +1332,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
      * @param {HTMLElement} [target] Triggering element
      */
     async _onRightClickRecenterToken(event, target) {
-        event?.preventDefault?.();
-        target?.blur?.();
-        const current = Boolean(game.settings.get(MODULE_ID, 'autoCenterOnToken'));
-        const next = !current;
-        await game.settings.set(MODULE_ID, 'autoCenterOnToken', next);
-        await this.render();
+        return this._toggleBooleanSetting('autoCenterOnToken', event, target);
     }
 
     /**
@@ -1413,11 +1356,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         const combat = game.combat;
         if (!combat) return;
 
-        const combatant = adapter.foundry.getCombatantByToken(combat, this.token)
-            ?? (this.actor ? combat.combatants?.find?.(c => c.actorId === this.actor.id) : null)
-            ?? this.actor?.combatant
-            ?? null;
-
+        const combatant = this._getCombatant(combat);
         if (!combatant) return;
         log.info(`Rolling initiative for "${this.actor?.name ?? 'Token'}" (Combatant ID: ${combatant.id})`);
         try {
@@ -2036,12 +1975,11 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
 
         let html = `<div class="bad-item-summary-tooltip${tableClass}"${widthStyle}>`;
         html += '<div class="bad-summary-header">';
+        const formatTag = tag => typeof tag === 'string' ? tag : (tag?.label ? `${tag.label}: ${tag.value}` : tag?.value);
         const headerTags = Array.isArray(summary.headerTags) ? summary.headerTags : (summary.headerTag ? [summary.headerTag] : []);
         let headerTagsHtml = '';
         for (const tag of headerTags) {
-            const text = typeof tag === 'string'
-                ? tag
-                : (tag?.label ? `${tag.label}: ${tag.value}` : tag?.value);
+            const text = formatTag(tag);
             if (text) {
                 headerTagsHtml += `<span class="bad-summary-tag">${text}</span>`;
             }
@@ -2068,22 +2006,14 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
                         if (typeof item === 'string' && item.endsWith(':')) {
                             html += `<span class="bad-summary-row-label">${item}</span>`;
                         } else {
-                            const text = typeof item === 'string'
-                                ? item
-                                : (item?.label ? `${item.label}: ${item.value}` : item?.value);
-                            if (text) {
-                                html += `<span class="bad-summary-tag">${text}</span>`;
-                            }
+                            const text = formatTag(item);
+                            if (text) html += `<span class="bad-summary-tag">${text}</span>`;
                         }
                     }
                     html += '</div>';
                 } else {
-                    const text = typeof prop === 'string'
-                        ? prop
-                        : (prop?.label ? `${prop.label}: ${prop.value}` : prop?.value);
-                    if (text) {
-                        html += `<span class="bad-summary-tag">${text}</span>`;
-                    }
+                    const text = formatTag(prop);
+                    if (text) html += `<span class="bad-summary-tag">${text}</span>`;
                 }
             }
             html += '</div>';
@@ -2451,60 +2381,25 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
             return;
         }
 
-        // Intercept right-clicks on left parent tabs
-        const leftParentTarget = event.target.closest(".bad-left-tab");
-        if (leftParentTarget) {
+        // Intercept right-clicks on left/right parent/sub tabs
+        const tabTarget = event.target?.closest?.('.bad-left-tab, .bad-right-tab, .bad-left-sub-tab, .bad-right-sub-tab');
+        if (tabTarget) {
             event.preventDefault();
             event.stopPropagation();
             event.stopImmediatePropagation();
 
-            const parentId = leftParentTarget.dataset.type;
-            const handled = adapter.onTabRightClick(this, leftParentTarget, event);
-            if (!handled) {
-                this._onToggleLeftParent(parentId);
-            } else {
+            const isLeft = tabTarget.classList.contains('bad-left-tab') || tabTarget.classList.contains('bad-left-sub-tab');
+            const isParent = tabTarget.classList.contains('bad-left-tab') || tabTarget.classList.contains('bad-right-tab');
+            const side = isLeft ? 'left' : 'right';
+
+            const handled = isLeft && await adapter.onTabRightClick(this, tabTarget, event);
+            if (handled) {
                 this.render();
+            } else if (isParent) {
+                this._handleParentTabToggle(side, tabTarget.dataset.type);
+            } else if (tabTarget.dataset.type !== 'all') {
+                this._handleSubTabToggle(side, tabTarget, tabTarget.dataset.type);
             }
-            return;
-        }
-
-        // Intercept right-clicks on right parent tabs
-        const rightParentTarget = event.target.closest(".bad-right-tab");
-        if (rightParentTarget) {
-            event.preventDefault();
-            event.stopPropagation();
-            event.stopImmediatePropagation();
-            this._onToggleRightParent(rightParentTarget.dataset.type);
-            return;
-        }
-
-        // Intercept right-clicks on left sub-tabs
-        const leftSubTarget = event.target.closest(".bad-left-sub-tab");
-        if (leftSubTarget) {
-            event.preventDefault();
-            event.stopPropagation();
-            event.stopImmediatePropagation();
-
-            // Delegate to system adapter for custom right-click behavior (e.g. toggling unprepared spells in dnd5e)
-            const handled = adapter.onTabRightClick(this, leftSubTarget, event);
-            if (!handled) {
-                if (leftSubTarget.dataset.type !== 'all') {
-                    // Default fallback: multi-select toggle for other sub-tabs
-                    this._onToggleLeftSub(leftSubTarget, leftSubTarget.dataset.type);
-                }
-            } else {
-                this.render();
-            }
-            return;
-        }
-
-        // Intercept right-clicks on right sub-tabs
-        const rightSubTarget = event.target.closest(".bad-right-sub-tab");
-        if (rightSubTarget && rightSubTarget.dataset.type !== 'all') {
-            event.preventDefault();
-            event.stopPropagation();
-            event.stopImmediatePropagation();
-            this._onToggleRightSub(rightSubTarget, rightSubTarget.dataset.type);
             return;
         }
 

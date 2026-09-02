@@ -224,6 +224,22 @@ export class BaseFoundryAdapter {
     }
 
     /**
+     * Resolve the placeable Token or TokenDocument from a Combatant.
+     * @param {Combatant} combatant
+     * @returns {Token|null}
+     */
+    getTokenFromCombatant(combatant) {
+        if (!combatant) return null;
+        return combatant.token?.object
+            ?? (combatant.token?.center ? combatant.token : null)
+            ?? canvas?.tokens?.get?.(combatant.tokenId)
+            ?? (combatant.token && canvas?.tokens?.placeables?.includes(combatant.token) ? combatant.token : null)
+            ?? combatant.actor?.getActiveTokens?.()?.[0]
+            ?? combatant.token
+            ?? null;
+    }
+
+    /**
      * User permission tiers for ownership priority evaluation.
      * @type {Readonly<{ PLAYER: 1, TRUSTED: 2, GM: 3 }>}
      */
