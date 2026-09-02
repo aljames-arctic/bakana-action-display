@@ -165,7 +165,7 @@
             },
             "combatTrack": {
                 "label": "Combat Turn Tracker",
-                "tooltip": "Left Click: Follow Active Combatant Turn\nRight Click: Toggle Auto-Select Token on Turn Change"
+                "tooltip": "<b>Left Click:</b> Follow Active Combatant Turn\n<b>Right Click:</b> Toggle Auto-Select Token on Turn Change"
             },
             "itemSummary": {
                 "label": "Item Summary Tooltips",
@@ -174,12 +174,12 @@
             },
             "recenter": {
                 "label": "Recenter View",
-                "tooltip": "Left Click: Recenter Canvas on Active Combatant\nRight Click: Toggle Auto-Centering on Turn Change"
+                "tooltip": "<b>Left Click:</b> Recenter Canvas on Active Combatant\n<b>Right Click:</b> Toggle Auto-Centering on Turn Change"
             },
             "anchor": {
                 "label": "HUD Placement & Persistence",
-                "tooltipAttached": "Left Click: Detach HUD from Token\nRight Click: Toggle HUD Persistence on Outside Click",
-                "tooltipDetached": "Left Click: Attach HUD to Token\nRight Click: Toggle HUD Persistence on Outside Click"
+                "tooltipAttached": "<b>Left Click:</b> Detach HUD from Token\n<b>Right Click:</b> Toggle HUD Persistence on Outside Click",
+                "tooltipDetached": "<b>Left Click:</b> Attach HUD to Token\n<b>Right Click:</b> Toggle HUD Persistence on Outside Click"
             },
             "close": {
                 "label": "Close HUD",
@@ -275,12 +275,12 @@
             }
         },
         "tabs": {
-            "allTooltip": "Right Click: Toggle Show All (Equipped & Unequipped Items, Prepared & Unprepared Spells)",
-            "unpreparedSpellsTooltip": "Right Click: Toggle Show Unprepared Spells",
-            "unequippedWeaponsTooltip": "Right Click: Toggle Show Unequipped Weapons",
-            "unequippedEquipmentTooltip": "Right Click: Toggle Show Unequipped Equipment",
-            "unequippedItemsTooltip": "Right Click: Toggle Show Unequipped Items",
-            "inactiveBuffsTooltip": "Right Click: Toggle Show Inactive Buffs"
+            "allTooltip": "<b>Right Click:</b> Toggle Show All (Equipped & Unequipped Items, Prepared & Unprepared Spells)",
+            "unpreparedSpellsTooltip": "<b>Right Click:</b> Toggle Show Unprepared Spells",
+            "unequippedWeaponsTooltip": "<b>Right Click:</b> Toggle Show Unequipped Weapons",
+            "unequippedEquipmentTooltip": "<b>Right Click:</b> Toggle Show Unequipped Equipment",
+            "unequippedItemsTooltip": "<b>Right Click:</b> Toggle Show Unequipped Items",
+            "inactiveBuffsTooltip": "<b>Right Click:</b> Toggle Show Inactive Buffs"
         }
     }
 }

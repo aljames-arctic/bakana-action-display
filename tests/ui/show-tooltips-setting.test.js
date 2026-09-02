@@ -75,19 +75,19 @@ test('Dnd5eSystemContextModifier sets right-click tab tooltips only when showToo
     const contextEnabled = { itemTypes: makeTabGroups(), showTooltips: true };
     modifier.modifyContext(contextEnabled, mockApp);
     const allTab = contextEnabled.itemTypes.find(t => t.id === 'all');
-    assert.ok(allTab.tooltip.includes('BAD.tabs.allTooltip') || allTab.tooltip.includes('Right Click: Toggle Show All'));
+    assert.ok(allTab.tooltip.includes('BAD.tabs.allTooltip') || allTab.tooltip.includes('<b>Right Click:</b> Toggle Show All'));
 
     const spellTab = contextEnabled.itemTypes.find(t => t.id === 'spell');
-    assert.ok(spellTab.tooltip.includes('BAD.tabs.unpreparedSpellsTooltip') || spellTab.tooltip.includes('Right Click: Toggle Show Unprepared Spells'));
+    assert.ok(spellTab.tooltip.includes('BAD.tabs.unpreparedSpellsTooltip') || spellTab.tooltip.includes('<b>Right Click:</b> Toggle Show Unprepared Spells'));
 
     const weaponTab = contextEnabled.itemTypes.find(t => t.id === 'weapon');
-    assert.ok(weaponTab.tooltip.includes('BAD.tabs.unequippedWeaponsTooltip') || weaponTab.tooltip.includes('Right Click: Toggle Show Unequipped Weapons'));
+    assert.ok(weaponTab.tooltip.includes('BAD.tabs.unequippedWeaponsTooltip') || weaponTab.tooltip.includes('<b>Right Click:</b> Toggle Show Unequipped Weapons'));
 
     const equipmentTab = contextEnabled.itemTypes.find(t => t.id === 'equipment');
-    assert.ok(equipmentTab.tooltip.includes('BAD.tabs.unequippedEquipmentTooltip') || equipmentTab.tooltip.includes('Right Click: Toggle Show Unequipped Equipment'));
+    assert.ok(equipmentTab.tooltip.includes('BAD.tabs.unequippedEquipmentTooltip') || equipmentTab.tooltip.includes('<b>Right Click:</b> Toggle Show Unequipped Equipment'));
 
     const toolTab = contextEnabled.itemTypes.find(t => t.id === 'tool');
-    assert.ok(toolTab.tooltip.includes('BAD.tabs.unequippedItemsTooltip') || toolTab.tooltip.includes('Right Click: Toggle Show Unequipped Items'));
+    assert.ok(toolTab.tooltip.includes('BAD.tabs.unequippedItemsTooltip') || toolTab.tooltip.includes('<b>Right Click:</b> Toggle Show Unequipped Items'));
 });
 
 test('Pf1SystemAdapter and Pf2eSystemAdapter set right-click tab tooltips when showTooltips is true', () => {
@@ -127,8 +127,8 @@ test('Pf1SystemAdapter and Pf2eSystemAdapter set right-click tab tooltips when s
         showTooltips: true
     };
     pf1.modifyContext(pf1ContextEnabled, mockApp);
-    assert.ok(pf1ContextEnabled.itemTypes.find(t => t.id === 'all').tooltip.includes('BAD.tabs.allTooltip') || pf1ContextEnabled.itemTypes.find(t => t.id === 'all').tooltip.includes('Right Click: Toggle Show All'));
-    assert.ok(pf1ContextEnabled.itemTypes.find(t => t.id === 'buff').tooltip.includes('BAD.tabs.inactiveBuffsTooltip') || pf1ContextEnabled.itemTypes.find(t => t.id === 'buff').tooltip.includes('Right Click: Toggle Show Inactive Buffs'));
+    assert.ok(pf1ContextEnabled.itemTypes.find(t => t.id === 'all').tooltip.includes('BAD.tabs.allTooltip') || pf1ContextEnabled.itemTypes.find(t => t.id === 'all').tooltip.includes('<b>Right Click:</b> Toggle Show All'));
+    assert.ok(pf1ContextEnabled.itemTypes.find(t => t.id === 'buff').tooltip.includes('BAD.tabs.inactiveBuffsTooltip') || pf1ContextEnabled.itemTypes.find(t => t.id === 'buff').tooltip.includes('<b>Right Click:</b> Toggle Show Inactive Buffs'));
 
     // PF2e
     const pf2eContextDisabled = {
@@ -155,34 +155,34 @@ test('Pf1SystemAdapter and Pf2eSystemAdapter set right-click tab tooltips when s
         showTooltips: true
     };
     pf2e.modifyContext(pf2eContextEnabled, mockApp);
-    assert.ok(pf2eContextEnabled.itemTypes.find(t => t.id === 'all').tooltip.includes('BAD.tabs.allTooltip') || pf2eContextEnabled.itemTypes.find(t => t.id === 'all').tooltip.includes('Right Click: Toggle Show All'));
-    assert.ok(pf2eContextEnabled.itemTypes.find(t => t.id === 'consumable').tooltip.includes('BAD.tabs.unequippedItemsTooltip') || pf2eContextEnabled.itemTypes.find(t => t.id === 'consumable').tooltip.includes('Right Click: Toggle Show Unequipped Items'));
+    assert.ok(pf2eContextEnabled.itemTypes.find(t => t.id === 'all').tooltip.includes('BAD.tabs.allTooltip') || pf2eContextEnabled.itemTypes.find(t => t.id === 'all').tooltip.includes('<b>Right Click:</b> Toggle Show All'));
+    assert.ok(pf2eContextEnabled.itemTypes.find(t => t.id === 'consumable').tooltip.includes('BAD.tabs.unequippedItemsTooltip') || pf2eContextEnabled.itemTypes.find(t => t.id === 'consumable').tooltip.includes('<b>Right Click:</b> Toggle Show Unequipped Items'));
 });
 
 test('Tooltip formatting adheres to Left Click and Right Click newline rules', () => {
     // 1. Read en.json and verify all tooltips
     const en = JSON.parse(fs.readFileSync(new URL('../../lang/en.json', import.meta.url), 'utf8')).BAD;
 
-    // Combat turn tracker has both Left Click and Right Click separated by newline
+    // Combat turn tracker has both Left Click and Right Click separated by newline and bolded
     assert.equal(
         en.controlButtons.combatTrack.tooltip,
-        'Left Click: Follow Active Combatant Turn\nRight Click: Toggle Auto-Select Token on Turn Change'
+        '<b>Left Click:</b> Follow Active Combatant Turn\n<b>Right Click:</b> Toggle Auto-Select Token on Turn Change'
     );
 
-    // Recenter view has both Left Click and Right Click separated by newline
+    // Recenter view has both Left Click and Right Click separated by newline and bolded
     assert.equal(
         en.controlButtons.recenter.tooltip,
-        'Left Click: Recenter Canvas on Active Combatant\nRight Click: Toggle Auto-Centering on Turn Change'
+        '<b>Left Click:</b> Recenter Canvas on Active Combatant\n<b>Right Click:</b> Toggle Auto-Centering on Turn Change'
     );
 
-    // Placement & persistence has both Left Click and Right Click separated by newline
+    // Placement & persistence has both Left Click and Right Click separated by newline and bolded
     assert.equal(
         en.controlButtons.anchor.tooltipAttached,
-        'Left Click: Detach HUD from Token\nRight Click: Toggle HUD Persistence on Outside Click'
+        '<b>Left Click:</b> Detach HUD from Token\n<b>Right Click:</b> Toggle HUD Persistence on Outside Click'
     );
     assert.equal(
         en.controlButtons.anchor.tooltipDetached,
-        'Left Click: Attach HUD to Token\nRight Click: Toggle HUD Persistence on Outside Click'
+        '<b>Left Click:</b> Attach HUD to Token\n<b>Right Click:</b> Toggle HUD Persistence on Outside Click'
     );
 
     // Single action buttons do not prefix click type
@@ -194,7 +194,7 @@ test('Tooltip formatting adheres to Left Click and Right Click newline rules', (
 
     // Right-click tab tooltips
     for (const [key, val] of Object.entries(en.tabs)) {
-        assert.ok(val.startsWith('Right Click:'), `Tab tooltip ${key} should start with "Right Click:"`);
+        assert.ok(val.startsWith('<b>Right Click:</b>'), `Tab tooltip ${key} should start with "<b>Right Click:</b>"`);
         assert.ok(!val.includes('Right-Click:'), `Tab tooltip ${key} should not contain hyphenated "Right-Click:"`);
     }
 
@@ -216,13 +216,13 @@ test('Tooltip formatting adheres to Left Click and Right Click newline rules', (
         }, true);
 
         const combatBtn = buttons.left.find(b => b.id === 'combat-track');
-        assert.equal(combatBtn.tooltip, 'Left Click: Follow Active Combatant Turn\nRight Click: Toggle Auto-Select Token on Turn Change');
+        assert.equal(combatBtn.tooltip, '<b>Left Click:</b> Follow Active Combatant Turn\n<b>Right Click:</b> Toggle Auto-Select Token on Turn Change');
 
         const recenterBtn = buttons.right.find(b => b.id === 'recenter');
-        assert.equal(recenterBtn.tooltip, 'Left Click: Recenter Canvas on Active Combatant\nRight Click: Toggle Auto-Centering on Turn Change');
+        assert.equal(recenterBtn.tooltip, '<b>Left Click:</b> Recenter Canvas on Active Combatant\n<b>Right Click:</b> Toggle Auto-Centering on Turn Change');
 
         const pinBtn = buttons.right.find(b => b.id === 'pin');
-        assert.equal(pinBtn.tooltip, 'Left Click: Detach HUD from Token\nRight Click: Toggle HUD Persistence on Outside Click');
+        assert.equal(pinBtn.tooltip, '<b>Left Click:</b> Detach HUD from Token\n<b>Right Click:</b> Toggle HUD Persistence on Outside Click');
 
         const closeBtn = buttons.right.find(b => b.id === 'close');
         assert.equal(closeBtn.tooltip, 'Close HUD');

@@ -67,7 +67,7 @@ export class ControlBarManager {
                 isVisible: enableCombatAutoTrack,
                 tooltip: showTooltips
                     ? (game.i18n?.localize?.('BAD.controlButtons.combatTrack.tooltip')
-                        ?? 'Left Click: Follow Active Combatant Turn\nRight Click: Toggle Auto-Select Token on Turn Change')
+                        ?? '<b>Left Click:</b> Follow Active Combatant Turn\n<b>Right Click:</b> Toggle Auto-Select Token on Turn Change')
                     : null,
                 ariaLabel: game.i18n?.localize?.('BAD.controlButtons.combatTrack.label') ?? 'Combat Turn Tracker'
             },
@@ -101,7 +101,7 @@ export class ControlBarManager {
                 isVisible: enableCenterOnToken,
                 tooltip: showTooltips
                     ? (game.i18n?.localize?.('BAD.controlButtons.recenter.tooltip')
-                        ?? 'Left Click: Recenter Canvas on Active Combatant\nRight Click: Toggle Auto-Centering on Turn Change')
+                        ?? '<b>Left Click:</b> Recenter Canvas on Active Combatant\n<b>Right Click:</b> Toggle Auto-Centering on Turn Change')
                     : null,
                 ariaLabel: game.i18n?.localize?.('BAD.controlButtons.recenter.label') ?? 'Recenter View'
             },
@@ -117,9 +117,9 @@ export class ControlBarManager {
                 tooltip: showTooltips
                     ? (isAttached
                         ? (game.i18n?.localize?.('BAD.controlButtons.anchor.tooltipAttached')
-                            ?? 'Left Click: Detach HUD from Token\nRight Click: Toggle HUD Persistence on Outside Click')
+                            ?? '<b>Left Click:</b> Detach HUD from Token\n<b>Right Click:</b> Toggle HUD Persistence on Outside Click')
                         : (game.i18n?.localize?.('BAD.controlButtons.anchor.tooltipDetached')
-                            ?? 'Left Click: Attach HUD to Token\nRight Click: Toggle HUD Persistence on Outside Click'))
+                            ?? '<b>Left Click:</b> Attach HUD to Token\n<b>Right Click:</b> Toggle HUD Persistence on Outside Click'))
                     : null,
                 ariaLabel: game.i18n?.localize?.('BAD.controlButtons.anchor.label') ?? 'HUD Placement & Persistence'
             },

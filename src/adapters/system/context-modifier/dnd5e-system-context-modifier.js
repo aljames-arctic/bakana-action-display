@@ -181,21 +181,21 @@ export class Dnd5eSystemContextModifier extends BaseSystemContextModifier {
         const showTooltips = Boolean(context.showTooltips);
         if (showTooltips) {
             if (allParent) {
-                allParent.tooltip = localize('BAD.tabs.allTooltip', 'Right Click: Toggle Show All (Equipped & Unequipped Items, Prepared & Unprepared Spells)');
+                allParent.tooltip = localize('BAD.tabs.allTooltip', '<b>Right Click:</b> Toggle Show All (Equipped & Unequipped Items, Prepared & Unprepared Spells)');
             }
             if (spellParent) {
-                spellParent.tooltip = localize('BAD.tabs.unpreparedSpellsTooltip', 'Right Click: Toggle Show Unprepared Spells');
+                spellParent.tooltip = localize('BAD.tabs.unpreparedSpellsTooltip', '<b>Right Click:</b> Toggle Show Unprepared Spells');
             }
             if (weaponParent) {
-                weaponParent.tooltip = localize('BAD.tabs.unequippedWeaponsTooltip', 'Right Click: Toggle Show Unequipped Weapons');
+                weaponParent.tooltip = localize('BAD.tabs.unequippedWeaponsTooltip', '<b>Right Click:</b> Toggle Show Unequipped Weapons');
             }
             if (equipmentParent) {
-                equipmentParent.tooltip = localize('BAD.tabs.unequippedEquipmentTooltip', 'Right Click: Toggle Show Unequipped Equipment');
+                equipmentParent.tooltip = localize('BAD.tabs.unequippedEquipmentTooltip', '<b>Right Click:</b> Toggle Show Unequipped Equipment');
             }
             for (const gearType of ['consumable', 'tool', 'backpack', 'loot']) {
                 const p = findParent(gearType);
                 if (p) {
-                    p.tooltip = localize('BAD.tabs.unequippedItemsTooltip', 'Right Click: Toggle Show Unequipped Items');
+                    p.tooltip = localize('BAD.tabs.unequippedItemsTooltip', '<b>Right Click:</b> Toggle Show Unequipped Items');
                 }
             }
         }
@@ -207,7 +207,7 @@ export class Dnd5eSystemContextModifier extends BaseSystemContextModifier {
             'showUnprepared',
             true,
             showAll,
-            showTooltips ? localize('BAD.tabs.unpreparedSpellsTooltip', 'Right Click: Toggle Show Unprepared Spells') : ''
+            showTooltips ? localize('BAD.tabs.unpreparedSpellsTooltip', '<b>Right Click:</b> Toggle Show Unprepared Spells') : ''
         );
         this.#ensureAllSubTab(
             findParent('weapon'),
@@ -216,7 +216,7 @@ export class Dnd5eSystemContextModifier extends BaseSystemContextModifier {
             'showUnequipped_weapon',
             false,
             showAll,
-            showTooltips ? localize('BAD.tabs.unequippedWeaponsTooltip', 'Right Click: Toggle Show Unequipped Weapons') : ''
+            showTooltips ? localize('BAD.tabs.unequippedWeaponsTooltip', '<b>Right Click:</b> Toggle Show Unequipped Weapons') : ''
         );
         this.#ensureAllSubTab(
             findParent('equipment'),
@@ -225,7 +225,7 @@ export class Dnd5eSystemContextModifier extends BaseSystemContextModifier {
             'showUnequipped_equipment',
             false,
             showAll,
-            showTooltips ? localize('BAD.tabs.unequippedEquipmentTooltip', 'Right Click: Toggle Show Unequipped Equipment') : ''
+            showTooltips ? localize('BAD.tabs.unequippedEquipmentTooltip', '<b>Right Click:</b> Toggle Show Unequipped Equipment') : ''
         );
     }
 

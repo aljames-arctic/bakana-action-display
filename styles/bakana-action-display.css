@@ -1835,6 +1835,15 @@ div#tooltip.bad-multiline-tooltip {
     line-height: 1.4 !important;
 }
 
+#tooltip.bad-multiline-tooltip b,
+#tooltip.bad-multiline-tooltip strong,
+aside#tooltip.bad-multiline-tooltip b,
+aside#tooltip.bad-multiline-tooltip strong,
+div#tooltip.bad-multiline-tooltip b,
+div#tooltip.bad-multiline-tooltip strong {
+    font-weight: bold !important;
+}
+
 /* Item Summary Tooltip Formatting */
 #tooltip:has(.bad-item-summary-tooltip),
 aside#tooltip:has(.bad-item-summary-tooltip),
