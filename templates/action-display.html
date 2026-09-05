@@ -160,7 +160,7 @@
                                    role="button" 
                                    tabindex="0"
                                    data-action="toggleInspiration" 
-                                   {{#if @root.showTooltips}}data-tooltip="{{#if tokenInfo.inspiration}}{{localize 'BAD.page3.inspired'}}{{else}}{{localize 'BAD.page3.inspiration'}}{{/if}}" data-tooltip-direction="UP"{{/if}}
+                                   {{#if @root.showTooltips}}data-tooltip="{{localize 'BAD.page3.inspiration'}}" data-tooltip-direction="UP"{{/if}}
                                    aria-label="{{localize 'BAD.page3.inspiration'}}"
                                    aria-pressed="{{#if tokenInfo.inspiration}}true{{else}}false{{/if}}">
                                     <i class="fas fa-dice-d20"></i>
