@@ -178,7 +178,7 @@
             },
             "combatTrack": {
                 "label": "Combat Turn Tracker",
-                "tooltip": "<b>Left Click:</b> Follow Active Combatant Turn\n<b>Right Click:</b> Toggle Auto-Select Token on Turn Change"
+                "tooltip": "<b>Left Click:</b> Follow Active Combatant Turn\n<b>Right Click:</b> Toggle Auto-Open / Auto-Close on Turn Change"
             },
             "itemSummary": {
                 "label": "Item Summary Tooltips",

@@ -165,7 +165,7 @@ test('Tooltip formatting adheres to Left Click and Right Click newline rules', (
     // Combat turn tracker has both Left Click and Right Click separated by newline and bolded
     assert.equal(
         en.controlButtons.combatTrack.tooltip,
-        '<b>Left Click:</b> Follow Active Combatant Turn\n<b>Right Click:</b> Toggle Auto-Select Token on Turn Change'
+        '<b>Left Click:</b> Follow Active Combatant Turn\n<b>Right Click:</b> Toggle Auto-Open / Auto-Close on Turn Change'
     );
 
     // Recenter view has both Left Click and Right Click separated by newline and bolded
@@ -215,7 +215,7 @@ test('Tooltip formatting adheres to Left Click and Right Click newline rules', (
         }, true);
 
         const combatBtn = buttons.left.find(b => b.id === 'combat-track');
-        assert.equal(combatBtn.tooltip, '<b>Left Click:</b> Follow Active Combatant Turn\n<b>Right Click:</b> Toggle Auto-Select Token on Turn Change');
+        assert.equal(combatBtn.tooltip, '<b>Left Click:</b> Follow Active Combatant Turn\n<b>Right Click:</b> Toggle Auto-Open / Auto-Close on Turn Change');
 
         const recenterBtn = buttons.right.find(b => b.id === 'recenter');
         assert.equal(recenterBtn.tooltip, '<b>Left Click:</b> Recenter Canvas on Active Combatant\n<b>Right Click:</b> Toggle Auto-Centering on Turn Change');

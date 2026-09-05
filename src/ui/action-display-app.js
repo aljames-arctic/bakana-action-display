@@ -1475,7 +1475,20 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
      * @param {HTMLElement} [target] Triggering element
      */
     async _onRightClickRecenterToken(event, target) {
-        return this._toggleBooleanSetting('autoCenterOnToken', event, target);
+        const next = await this._toggleBooleanSetting('autoCenterOnToken', event, target);
+        if (next) {
+            const isCenterEnabled = Boolean(game.settings.get(MODULE_ID, 'enableCenterOnToken'));
+            if (isCenterEnabled) {
+                const combat = game.combat;
+                if (combat?.started && combat.combatant) {
+                    const token = adapter.foundry.getTokenFromCombatant(combat.combatant);
+                    if (token && adapter.foundry.isUserInCharge(token)) {
+                        await adapter.foundry.centerCanvasOnToken(token);
+                    }
+                }
+            }
+        }
+        return next;
     }
 
     /**

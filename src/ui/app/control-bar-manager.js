@@ -67,7 +67,7 @@ export class ControlBarManager {
                 isVisible: enableCombatAutoTrack,
                 tooltip: showTooltips
                     ? (game.i18n?.localize?.('BAD.controlButtons.combatTrack.tooltip')
-                        ?? '<b>Left Click:</b> Follow Active Combatant Turn\n<b>Right Click:</b> Toggle Auto-Select Token on Turn Change')
+                        ?? '<b>Left Click:</b> Follow Active Combatant Turn\n<b>Right Click:</b> Toggle Auto-Open / Auto-Close on Turn Change')
                     : null,
                 ariaLabel: game.i18n?.localize?.('BAD.controlButtons.combatTrack.label') ?? 'Combat Turn Tracker'
             },

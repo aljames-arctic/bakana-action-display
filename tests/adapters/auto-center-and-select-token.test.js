@@ -139,9 +139,58 @@ test('Recenter button: right-click toggles autoCenterOnToken between 2 states (o
 
     await app._onContextMenuCapture(mockEvent);
     assert.equal(interceptedRightClick, true, '_onContextMenuCapture must intercept right-click on .bad-recenter-btn');
+    app._onRightClickRecenterToken = ActionDisplayApp.prototype._onRightClickRecenterToken;
+
+    // 4. Right-click toggling ON during active combat centers on combatant only when in charge
+    let pannedCoords = null;
+    globalThis.canvas = {
+        animatePan: async (coords) => { pannedCoords = coords; }
+    };
+    const userGM = { id: 'user-gm-rc-center', name: 'GM', role: 4, isGM: true, active: true };
+    const userPlayer = { id: 'user-p1-rc-center', name: 'Player 1', role: 1, isGM: false, active: true };
+    globalThis.game.users = new foundry.utils.Collection([userGM, userPlayer]);
+    globalThis.game.user = userPlayer;
+
+    const tokenHero = {
+        id: 'token-hero-rc-c',
+        center: { x: 333, y: 444 },
+        document: { id: 'doc-hero', ownership: { default: 0, 'user-p1-rc-center': 3 } },
+        actor: { id: 'act-hero', ownership: { default: 0, 'user-p1-rc-center': 3 } }
+    };
+    const tokenGoblin = {
+        id: 'token-goblin-rc-c',
+        center: { x: 888, y: 999 },
+        document: { id: 'doc-goblin', ownership: { default: 0 } },
+        actor: { id: 'act-goblin', ownership: { default: 0 } }
+    };
+
+    await game.settings.set(MODULE_ID, 'enableCenterOnToken', true);
+    await game.settings.set(MODULE_ID, 'autoCenterOnToken', false);
+
+    // Scenario A: Player turn (Player is in charge) -> Centers on Hero
+    globalThis.game.combat = {
+        started: true,
+        combatant: { tokenId: 'token-hero-rc-c', token: tokenHero }
+    };
+    pannedCoords = null;
+    await app._onRightClickRecenterToken();
+    assert.deepEqual(pannedCoords, { x: 333, y: 444 }, 'Must center on token when turning on and in charge');
+
+    // Scenario B: Goblin turn (Player is NOT in charge) -> Does not center on Goblin
+    await game.settings.set(MODULE_ID, 'autoCenterOnToken', false);
+    globalThis.game.combat = {
+        started: true,
+        combatant: { tokenId: 'token-goblin-rc-c', token: tokenGoblin }
+    };
+    pannedCoords = null;
+    await app._onRightClickRecenterToken();
+    assert.equal(pannedCoords, null, 'Must not center on token when turning on if not in charge');
 
     // Cleanup
+    await game.settings.set(MODULE_ID, 'enableCenterOnToken', false);
     await game.settings.set(MODULE_ID, 'autoCenterOnToken', false);
+    globalThis.game.combat = null;
+    globalThis.game.user = userGM;
 });
 
 test('Auto-combat tracking updates currently selected token on canvas to current combatant', async () => {
