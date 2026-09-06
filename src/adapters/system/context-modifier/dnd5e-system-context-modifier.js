@@ -138,16 +138,14 @@ export class Dnd5eSystemContextModifier extends BaseSystemContextModifier {
 
         const spellParent = findParent('spell');
         if (spellParent) {
-            const showUnprepared = app?.actor?.getFlag?.(MODULE_ID, 'showUnprepared') ?? false;
-            spellParent.showUnprepared = Boolean(showUnprepared || showAll);
+            spellParent.showUnprepared = Boolean(app?.actor?.getFlag?.(MODULE_ID, 'showUnprepared') || showAll);
         }
 
         const gearTypes = ['weapon', 'equipment', 'consumable', 'tool', 'backpack', 'loot'];
         for (const type of gearTypes) {
             const parent = findParent(type);
             if (parent) {
-                const showUnequipped = Boolean(app?.actor?.getFlag?.(MODULE_ID, `showUnequipped_${type}`));
-                parent.showUnprepared = Boolean(showUnequipped || showAll);
+                parent.showUnprepared = Boolean(app?.actor?.getFlag?.(MODULE_ID, `showUnequipped_${type}`) || showAll);
             }
         }
 

@@ -109,8 +109,8 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
         const modified = [];
         const showDepleted = Boolean(game.settings.get(MODULE_ID, 'showDepleted'));
 
-        const showAll = actor?.getFlag?.(MODULE_ID, 'showAll') ?? false;
-        const showUnprepared = Boolean((actor?.getFlag?.(MODULE_ID, 'showUnprepared') ?? false) || showAll);
+        const showAll = Boolean(actor?.getFlag?.(MODULE_ID, 'showAll'));
+        const showUnprepared = Boolean(actor?.getFlag?.(MODULE_ID, 'showUnprepared') || showAll);
 
         log.group(`Dnd5eSystemAdapter.modifyActions | Filtering and mapping actions for "${actor?.name ?? 'Actor'}"`, 'debug');
         try {
@@ -150,7 +150,7 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
                 let isUnequipped = false;
                 if (this.getItemEquipped(item) === false) {
                     isUnequipped = true;
-                    const showUnequipped = Boolean((actor?.getFlag?.(MODULE_ID, `showUnequipped_${type}`) ?? false) || showAll);
+                    const showUnequipped = Boolean(actor?.getFlag?.(MODULE_ID, `showUnequipped_${type}`) || showAll);
 
                     if (!showUnequipped && !isUserHidden) {
                         log.debug(`Dnd5eSystemAdapter.modifyActions | Filtering out ${type} "${item.name}" (ID: ${item.id}) — item.system.equipped === false and showUnequipped_${type} / showAll flag is not set`);
