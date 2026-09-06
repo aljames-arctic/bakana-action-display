@@ -33,14 +33,14 @@ export function normalizeCategorizationConfig(raw) {
     const rawCategories = raw?.categories ?? [];
 
     const categories = rawCategories.map((cat, catIndex) => {
-        const catId = cat?.id || `cat_${Date.now()}_${catIndex}`;
+        const catId = cat?.id ?? `cat_${Date.now()}_${catIndex}`;
         const name = cat?.name ?? '';
         const expression = cat?.expression ?? '';
         const fallthrough = Boolean(cat?.fallthrough);
         const rawSubs = cat?.subcategories ?? [];
 
         const subcategories = rawSubs.map((sub, subIndex) => {
-            const subId = sub?.id || `sub_${Date.now()}_${subIndex}`;
+            const subId = sub?.id ?? `sub_${Date.now()}_${subIndex}`;
             const subName = sub?.name ?? '';
             const subExpr = sub?.expression ?? '';
             return {

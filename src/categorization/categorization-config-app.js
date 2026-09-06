@@ -104,7 +104,7 @@ export class CategorizationConfigApp extends adapter.foundry.HandlebarsApplicati
 
     /** @override */
     _onRender(context, options) {
-        super._onRender?.(context, options);
+        super._onRender(context, options);
         this._attachDragListeners();
         this._attachInputListeners();
         this._restoreFocus();
@@ -128,8 +128,8 @@ export class CategorizationConfigApp extends adapter.foundry.HandlebarsApplicati
         }
 
         if (input) {
-            input.focus?.();
-            input.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' });
+            input.focus();
+            input.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
         }
     }
 
@@ -376,12 +376,9 @@ export class CategorizationConfigApp extends adapter.foundry.HandlebarsApplicati
         const catIndex = Number(target.dataset.catIndex);
         if (isNaN(catIndex) || !this.config.categories[catIndex]) return;
 
-        if (!Array.isArray(this.config.categories[catIndex].subcategories)) {
-            this.config.categories[catIndex].subcategories = [];
-        }
-
-        const newSubId = `sub_${Date.now()}_${this.config.categories[catIndex].subcategories.length}`;
-        this.config.categories[catIndex].subcategories.push({
+        const subs = this.config.categories[catIndex].subcategories;
+        const newSubId = `sub_${Date.now()}_${subs.length}`;
+        subs.push({
             id: newSubId,
             name: '',
             expression: ''
