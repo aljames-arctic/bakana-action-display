@@ -231,9 +231,7 @@ export class BaseFoundryAdapter {
     getTokenFromCombatant(combatant) {
         if (!combatant) return null;
         return combatant.token?.object
-            ?? (combatant.token?.center ? combatant.token : null)
             ?? canvas?.tokens?.get?.(combatant.tokenId)
-            ?? (combatant.token && canvas?.tokens?.placeables?.includes(combatant.token) ? combatant.token : null)
             ?? combatant.actor?.getActiveTokens?.()?.[0]
             ?? combatant.token
             ?? null;
@@ -273,10 +271,10 @@ export class BaseFoundryAdapter {
     }
 
     /**
-     * Test whether a user possesses an ownership role for a given actor and token document.
-     * @param {User} user Concrete User document
-     * @param {Actor|null} actor Concrete Actor document
-     * @param {Document|null} tokenDoc Concrete TokenDocument
+     * Determine if a user has ownership level permissions over a document (actor or token).
+     * @param {User} user Target user
+     * @param {Actor} [actor] Actor document
+     * @param {TokenDocument} [tokenDoc] TokenDocument
      * @returns {boolean} True if the user has an ownership role
      */
     isUserDocumentOwner(user, actor, tokenDoc) {
@@ -288,34 +286,18 @@ export class BaseFoundryAdapter {
         }
 
         const ownerLevel = CONST?.DOCUMENT_OWNERSHIP_LEVELS?.OWNER ?? 3;
-
-        // Test actor document permissions
-        if (actor) {
-            if (actor.testUserPermission?.(user, 'OWNER')) return true;
-            if (actor.getUserLevel?.(user) >= ownerLevel) return true;
-            if (actor.ownership) {
-                const level = actor.ownership[user.id] ?? actor.ownership.default ?? 0;
+        const testDocOwnership = (doc) => {
+            if (!doc) return false;
+            if (doc.testUserPermission?.(user, 'OWNER')) return true;
+            if (doc.getUserLevel?.(user) >= ownerLevel) return true;
+            if (doc.ownership) {
+                const level = doc.ownership[user.id] ?? doc.ownership.default ?? 0;
                 if (level >= ownerLevel) return true;
             }
-            if ((user.id === game.user?.id || user === game.user) && Boolean(actor.isOwner)) {
-                return true;
-            }
-        }
+            return (user.id === game.user?.id || user === game.user) && Boolean(doc.isOwner);
+        };
 
-        // Test token document permissions
-        if (tokenDoc) {
-            if (tokenDoc.testUserPermission?.(user, 'OWNER')) return true;
-            if (tokenDoc.getUserLevel?.(user) >= ownerLevel) return true;
-            if (tokenDoc.ownership) {
-                const level = tokenDoc.ownership[user.id] ?? tokenDoc.ownership.default ?? 0;
-                if (level >= ownerLevel) return true;
-            }
-            if ((user.id === game.user?.id || user === game.user) && Boolean(tokenDoc.isOwner)) {
-                return true;
-            }
-        }
-
-        return false;
+        return testDocOwnership(actor) || testDocOwnership(tokenDoc);
     }
 
     /**
