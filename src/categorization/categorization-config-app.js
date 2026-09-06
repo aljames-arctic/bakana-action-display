@@ -293,7 +293,7 @@ export class CategorizationConfigApp extends adapter.foundry.HandlebarsApplicati
         const catElements = this.element.querySelectorAll('.bad-config-cat-row');
         catElements.forEach(catEl => {
             const catIndex = Number(catEl.dataset.catIndex);
-            if (isNaN(catIndex) || !this.config.categories[catIndex]) return;
+            if (!Number.isFinite(catIndex) || !this.config.categories[catIndex]) return;
 
             const nameInput = catEl.querySelector('.bad-cat-name-input');
             const exprInput = catEl.querySelector('.bad-cat-expr-input');
@@ -303,7 +303,7 @@ export class CategorizationConfigApp extends adapter.foundry.HandlebarsApplicati
             const subElements = catEl.parentElement?.querySelectorAll('.bad-config-sub-row') ?? [];
             subElements.forEach(subEl => {
                 const subIndex = Number(subEl.dataset.subIndex);
-                if (isNaN(subIndex) || !this.config.categories[catIndex].subcategories?.[subIndex]) return;
+                if (!Number.isFinite(subIndex) || !this.config.categories[catIndex].subcategories?.[subIndex]) return;
 
                 const subNameInput = subEl.querySelector('.bad-sub-name-input');
                 const subExprInput = subEl.querySelector('.bad-sub-expr-input');
@@ -356,7 +356,7 @@ export class CategorizationConfigApp extends adapter.foundry.HandlebarsApplicati
         event.preventDefault();
         this._syncFormData();
         const catIndex = Number(target.dataset.catIndex);
-        if (isNaN(catIndex) || !this.config.categories[catIndex]) return;
+        if (!Number.isFinite(catIndex) || !this.config.categories[catIndex]) return;
 
         this.config.categories[catIndex].fallthrough = !this.config.categories[catIndex].fallthrough;
         this.render();
@@ -371,7 +371,7 @@ export class CategorizationConfigApp extends adapter.foundry.HandlebarsApplicati
         event.preventDefault();
         this._syncFormData();
         const catIndex = Number(target.dataset.catIndex);
-        if (isNaN(catIndex) || !this.config.categories[catIndex]) return;
+        if (!Number.isFinite(catIndex) || !this.config.categories[catIndex]) return;
 
         const subs = this.config.categories[catIndex].subcategories;
         const newSubId = `sub_${Date.now()}_${subs.length}`;
@@ -393,7 +393,7 @@ export class CategorizationConfigApp extends adapter.foundry.HandlebarsApplicati
         event.preventDefault();
         this._syncFormData();
         const catIndex = Number(target.dataset.catIndex);
-        if (isNaN(catIndex) || !this.config.categories[catIndex]) return;
+        if (!Number.isFinite(catIndex) || !this.config.categories[catIndex]) return;
 
         this.config.categories.splice(catIndex, 1);
         this.render();
@@ -409,7 +409,7 @@ export class CategorizationConfigApp extends adapter.foundry.HandlebarsApplicati
         this._syncFormData();
         const catIndex = Number(target.dataset.catIndex);
         const subIndex = Number(target.dataset.subIndex);
-        if (isNaN(catIndex) || isNaN(subIndex) || !this.config.categories[catIndex]?.subcategories?.[subIndex]) return;
+        if (!Number.isFinite(catIndex) || !Number.isFinite(subIndex) || !this.config.categories[catIndex]?.subcategories?.[subIndex]) return;
 
         this.config.categories[catIndex].subcategories.splice(subIndex, 1);
         this.render();

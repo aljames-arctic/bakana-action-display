@@ -131,7 +131,7 @@ export function categorizeActions(actions, config, catchAllLabel, context = {}) 
         return null;
     }
 
-    const othersLabel = catchAllLabel?.trim?.() || 'Other Actions';
+    const othersLabel = catchAllLabel?.trim?.() ? catchAllLabel.trim() : 'Other Actions';
 
     // Map each category to an internal bucket structure
     const categoryMap = new Map();
