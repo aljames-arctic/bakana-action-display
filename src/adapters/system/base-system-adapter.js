@@ -704,8 +704,8 @@ export class BaseSystemAdapter {
         const damage = targetItem?.system?.damage?.value ?? targetItem?.system?.damage?.parts?.[0]?.[0] ?? null;
         if (damage) properties.push({ label: 'Damage', value: damage });
 
-        if (action?.uses?.available !== null && action?.uses?.available !== undefined) {
-            const usesStr = `${action.uses.available}${action.uses.max ? ' / ' + action.uses.max : ''}`;
+        if (action?.uses?.available != null) {
+            const usesStr = `${action.uses.available}${action.uses.max ? ` / ${action.uses.max}` : ''}`;
             properties.push({ label: 'Uses', value: usesStr });
         }
 

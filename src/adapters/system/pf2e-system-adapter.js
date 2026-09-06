@@ -1136,8 +1136,8 @@ export class BasePf2eSystemAdapter extends FantasySystemAdapter {
                 properties.push({ value: trait });
             }
         }
-        if (action?.uses?.available !== null && action?.uses?.available !== undefined) {
-            const usesStr = `${action.uses.available}${action.uses.max ? ' / ' + action.uses.max : ''}`;
+        if (action?.uses?.available != null) {
+            const usesStr = `${action.uses.available}${action.uses.max ? ` / ${action.uses.max}` : ''}`;
             properties.push({ label: 'Uses', value: usesStr });
         }
 

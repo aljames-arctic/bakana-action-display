@@ -1998,13 +1998,14 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
         }
 
         // 9. Uses / Quantity
-        if (action?.uses?.available !== null && action?.uses?.available !== undefined) {
-            const usesStr = `${action.uses.available}${action.uses.max ? ' / ' + action.uses.max : ''}`;
+        if (action?.uses?.available != null) {
+            const usesStr = `${action.uses.available}${action.uses.max ? ` / ${action.uses.max}` : ''}`;
             properties.push({ label: 'Uses', value: usesStr });
-        } else if (effectiveSystem.quantity && effectiveSystem.quantity > 1) {
-            properties.push({ label: 'Quantity', value: String(effectiveSystem.quantity) });
-        } else if (system.quantity && system.quantity > 1) {
-            properties.push({ label: 'Quantity', value: String(system.quantity) });
+        } else {
+            const quantity = effectiveSystem.quantity ?? system.quantity;
+            if (quantity && quantity > 1) {
+                properties.push({ label: 'Quantity', value: String(quantity) });
+            }
         }
 
         // 10. Recharge

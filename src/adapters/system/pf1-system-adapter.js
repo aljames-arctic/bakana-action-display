@@ -1155,8 +1155,8 @@ export class BasePf1SystemAdapter extends FantasySystemAdapter {
         if (targetItem?.labels?.save) {
             properties.push({ label: 'Save', value: targetItem.labels.save });
         }
-        if (action?.uses?.available !== null && action?.uses?.available !== undefined) {
-            const usesStr = `${action.uses.available}${action.uses.max ? ' / ' + action.uses.max : ''}`;
+        if (action?.uses?.available != null) {
+            const usesStr = `${action.uses.available}${action.uses.max ? ` / ${action.uses.max}` : ''}`;
             properties.push({ label: 'Uses', value: usesStr });
         }
 
