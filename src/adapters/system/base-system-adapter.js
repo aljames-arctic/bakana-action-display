@@ -322,7 +322,7 @@ export class BaseSystemAdapter {
         context.layout = 'categorized';
         const rawCats = categories ?? this.getDefaultCategories();
         const cats = (rawCats ?? []).map(cat => (categories ? cat : { ...cat, subcategories: [] }));
-        const others = catchAllLabel ?? (game.i18n?.localize?.('BAD.categorization.others') ?? 'Other Actions');
+        const others = catchAllLabel ?? localize('BAD.categorization.others', 'Other Actions');
         const categorized = categorizeActions(context.items ?? [], { enabled: true, categories: cats }, others, {
             actor: actor ?? context.actor,
             token: token ?? context.token,

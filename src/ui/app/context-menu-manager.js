@@ -1,4 +1,5 @@
 import { log } from '../../lib/logger.js';
+import { localize } from '../../lib/utils.js';
 import { adapter } from '../../adapters/index.js';
 import { isActorItemFavorite, setActorItemFavorite } from '../../favorites/favorites-manager.js';
 import { positionFloatingMenu } from './menu-utils.js';
@@ -212,7 +213,7 @@ export class ContextMenuManager {
 
             const text = li.textContent.trim();
             const matchedItem = menuItems.find(m => {
-                const localized = game.i18n.localize(m.name);
+                const localized = localize(m.name);
                 return localized && text.includes(localized);
             });
 
@@ -288,7 +289,7 @@ export class ContextMenuManager {
             li.appendChild(iconSpan);
 
             const titleSpan = document.createElement('span');
-            titleSpan.textContent = game.i18n.localize(sub.name);
+            titleSpan.textContent = localize(sub.name);
             li.appendChild(titleSpan);
 
             if (isActive) {

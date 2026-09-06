@@ -1,5 +1,6 @@
 import { MODULE_ID } from '../constants.js';
 import { log } from '../lib/logger.js';
+import { localize } from '../lib/utils.js';
 import { adapter } from '../adapters/index.js';
 import { actionDisplay } from '../action-display.js';
 
@@ -65,7 +66,7 @@ export class Dnd5eAutoBanConfigApp extends adapter.foundry.HandlebarsApplication
 
         const availableStatuses = (CONFIG.statusEffects ?? []).map(s => ({
             id: s.id,
-            name: game.i18n.localize(s.name ?? s.label ?? s.id) ?? s.id,
+            name: localize(s.name ?? s.label ?? s.id, s.id),
             img: s.img ?? s.icon ?? ''
         }));
         availableStatuses.sort((a, b) => a.name.localeCompare(b.name));
@@ -155,7 +156,7 @@ export class Dnd5eAutoBanConfigApp extends adapter.foundry.HandlebarsApplication
         await game.settings.set(MODULE_ID, 'dnd5eAutoBanConditions', this.config);
         log.info('Saved D&D 5e auto-ban spell components configuration:', this.config);
 
-        ui?.notifications?.info?.(game.i18n.localize('BAD.dnd5eAutoBan.saved'));
+        ui?.notifications?.info?.(localize('BAD.dnd5eAutoBan.saved'));
 
         if (actionDisplay.activeApp?.rendered && actionDisplay.activeApp.actor) {
             adapter.updateTabs(actionDisplay.activeApp.actor, actionDisplay.activeApp.rightTabs);

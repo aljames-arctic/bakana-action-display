@@ -2,7 +2,7 @@ import { adapter } from '../adapters/index.js';
 import { actionDisplay } from '../action-display.js';
 import { log } from '../lib/logger.js';
 import { MODULE_ID } from '../constants.js';
-import { hasIntersection } from '../lib/utils.js';
+import { hasIntersection, localize } from '../lib/utils.js';
 import { HUDTabColumn } from './hud-tab-column.js';
 import { HUDTab } from './hud-tab.js';
 import { createActionContextMenu } from './app/context-menu-manager.js';
@@ -914,7 +914,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
             const rawCategories = pageConfig?.categories ?? adapter.getDefaultCategories() ?? [];
             const fallbackCategories = pageConfig?.categories ? rawCategories : rawCategories.map(cat => ({ ...cat, subcategories: [] }));
             const catConfig = isCategorizationEnabled ? rawCatConfig : { enabled: true, categories: fallbackCategories };
-            const othersLabel = game.i18n?.localize?.('BAD.categorization.others') ?? 'Other Actions';
+            const othersLabel = localize('BAD.categorization.others', 'Other Actions');
             context.isCategorized = true;
             context.categorizedSections = categorizeActions(visibleActions, catConfig, othersLabel, {
                 actor: this.actor,

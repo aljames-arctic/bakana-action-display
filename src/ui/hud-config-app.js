@@ -1,5 +1,6 @@
 import { MODULE_ID } from '../constants.js';
 import { log } from '../lib/logger.js';
+import { localize } from '../lib/utils.js';
 import { adapter } from '../adapters/index.js';
 import { actionDisplay } from '../action-display.js';
 
@@ -67,12 +68,12 @@ export class HUDConfigApp extends adapter.foundry.HandlebarsApplicationMixin(ada
         context.anchorSideChoices = [
             {
                 id: 'vertical',
-                label: game.i18n.localize('BAD.settings.hudAnchorSide.choices.vertical'),
+                label: localize('BAD.settings.hudAnchorSide.choices.vertical'),
                 selected: this.config.hudAnchorSide === 'vertical'
             },
             {
                 id: 'horizontal',
-                label: game.i18n.localize('BAD.settings.hudAnchorSide.choices.horizontal'),
+                label: localize('BAD.settings.hudAnchorSide.choices.horizontal'),
                 selected: this.config.hudAnchorSide === 'horizontal'
             }
         ];
@@ -174,7 +175,7 @@ export class HUDConfigApp extends adapter.foundry.HandlebarsApplicationMixin(ada
             actionDisplay.activeApp.render?.();
         }
 
-        ui?.notifications?.info?.(game.i18n.localize('BAD.hudConfig.saved') ?? 'HUD configuration saved successfully.');
+        ui?.notifications?.info?.(localize('BAD.hudConfig.saved', 'HUD configuration saved successfully.'));
         log.info('Saved HUD configuration settings');
 
         this.close();

@@ -1,16 +1,43 @@
 /**
  * Helper to safely localize a key, falling back to a default string if the key is not found.
  * @param {string} key The translation key
- * @param {string} fallback The fallback string if the key is not found
+ * @param {string} [fallback] The fallback string if the key is not found (defaults to key)
  * @returns {string} The localized string or fallback
  */
-export function localize(key, fallback) {
-    if (!game.i18n) return fallback;
+export function localize(key, fallback = key) {
+    if (!key) return fallback ?? '';
+    if (!game.i18n) return fallback ?? key;
     if (game.i18n.has?.(key)) {
-        return game.i18n.localize(key) ?? fallback;
+        return game.i18n.localize(key) ?? (fallback ?? key);
     }
     const val = game.i18n.localize?.(key);
-    return (val && val !== key) ? val : fallback;
+    return (val && val !== key) ? val : (fallback ?? key);
+}
+
+/**
+ * Helper to safely format a localized template string with data variables.
+ * @param {string} key The translation key
+ * @param {Object} [data={}] Interpolation data object
+ * @param {string} [fallback] Fallback string
+ * @returns {string} The formatted localized string
+ */
+export function format(key, data = {}, fallback = key) {
+    if (!key) return fallback ?? '';
+    if (game.i18n?.format) {
+        if (game.i18n.has?.(key)) {
+            return game.i18n.format(key, data);
+        }
+        const val = game.i18n.format(key, data);
+        if (val && val !== key) return val;
+    }
+    let str = localize(key, fallback);
+    if (!str || str === key) {
+        str = fallback ?? key;
+    }
+    if (data && typeof data === 'object') {
+        return str.replace(/\{(\w+)\}/g, (match, p1) => data[p1] ?? match);
+    }
+    return str;
 }
 
 /**

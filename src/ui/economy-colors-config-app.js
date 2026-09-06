@@ -1,5 +1,6 @@
 import { MODULE_ID } from '../constants.js';
 import { log } from '../lib/logger.js';
+import { localize } from '../lib/utils.js';
 import { adapter } from '../adapters/index.js';
 import { actionDisplay } from '../action-display.js';
 import { ECONOMY_COLOR_PRESETS } from './economy-presets.js';
@@ -76,7 +77,7 @@ export class EconomyColorsConfigApp extends adapter.foundry.HandlebarsApplicatio
 
         const presets = Object.values(ECONOMY_COLOR_PRESETS).map(p => ({
             id: p.id,
-            label: game.i18n.localize(p.label) ?? p.id,
+            label: localize(p.label, p.id),
             selected: this.selectedPreset === p.id
         }));
 
@@ -273,7 +274,7 @@ export class EconomyColorsConfigApp extends adapter.foundry.HandlebarsApplicatio
         };
         await game.settings.set(MODULE_ID, 'enableEconomyIndicators', Boolean(this.enabled));
         await game.settings.set(MODULE_ID, 'economyColors', payload);
-        ui?.notifications?.info?.(game.i18n.localize('BAD.economyColors.saved'));
+        ui?.notifications?.info?.(localize('BAD.economyColors.saved'));
         if (actionDisplay.activeApp?.rendered) {
             actionDisplay.activeApp.render();
         }

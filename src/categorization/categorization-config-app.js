@@ -1,6 +1,6 @@
 import { MODULE_ID } from '../constants.js';
 import { log } from '../lib/logger.js';
-import { localize } from '../lib/utils.js';
+import { localize, format } from '../lib/utils.js';
 import {
     normalizeCategorizationConfig,
     getDefaultCategories,
@@ -442,7 +442,7 @@ export class CategorizationConfigApp extends adapter.foundry.HandlebarsApplicati
                 const check = validateExpression(cat.expression);
                 if (!check.valid) {
                     ui?.notifications?.warn?.(
-                        game.i18n.format('BAD.categorization.invalidExpressionWarning', { expr: cat.expression })
+                        format('BAD.categorization.invalidExpressionWarning', { expr: cat.expression })
                     );
                     return;
                 }
@@ -453,7 +453,7 @@ export class CategorizationConfigApp extends adapter.foundry.HandlebarsApplicati
                     const check = validateExpression(sub.expression);
                     if (!check.valid) {
                         ui?.notifications?.warn?.(
-                            game.i18n.format('BAD.categorization.invalidExpressionWarning', { expr: sub.expression })
+                            format('BAD.categorization.invalidExpressionWarning', { expr: sub.expression })
                         );
                         return;
                     }
@@ -465,7 +465,7 @@ export class CategorizationConfigApp extends adapter.foundry.HandlebarsApplicati
         await game.settings.set(MODULE_ID, 'categorizationConfig', normalized);
         log.info("Categorization configuration saved successfully");
 
-        ui?.notifications?.info?.(game.i18n.localize('BAD.categorization.saved'));
+        ui?.notifications?.info?.(localize('BAD.categorization.saved'));
 
         if (actionDisplay.activeApp?.rendered) {
             actionDisplay.activeApp.render();

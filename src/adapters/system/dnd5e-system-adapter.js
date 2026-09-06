@@ -1906,7 +1906,7 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
             const weaponType = effectiveSystem.type?.label ?? CONFIG?.DND5E?.weaponTypes?.[effectiveSystem.type?.value] ?? 'Weapon';
             subtitle = `${weaponType}${activation ? ' • ' + activation : ''}`;
         } else if (type === 'spell') {
-            const levelLabel = effectiveSystem.level === 0 ? (game.i18n?.localize?.('DND5E.SpellCantrip') ?? 'Cantrip') : (CONFIG?.DND5E?.spellLevels?.[effectiveSystem.level] ?? `${effectiveSystem.level}th Level`);
+            const levelLabel = effectiveSystem.level === 0 ? localize('DND5E.SpellCantrip', 'Cantrip') : (CONFIG?.DND5E?.spellLevels?.[effectiveSystem.level] ?? `${effectiveSystem.level}th Level`);
             const schoolLabel = CONFIG?.DND5E?.spellSchools?.[effectiveSystem.school]?.label ?? effectiveSystem.school ?? '';
             subtitle = `${levelLabel} ${schoolLabel}${activation ? ' • ' + activation : ''}`.trim();
         } else if (type === 'feat') {

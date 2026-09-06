@@ -1,5 +1,6 @@
 import { MODULE_ID } from "./constants.js";
 import { log } from "./lib/logger.js";
+import { localize } from "./lib/utils.js";
 import { actionDisplay } from "./action-display.js";
 import { CategorizationConfigApp } from "./categorization/categorization-config-app.js";
 import { EconomyColorsConfigApp } from "./ui/economy-colors-config-app.js";
@@ -15,9 +16,9 @@ Hooks.once('init', () => {
 
     // Register Categorization Configuration Menu Button
     game.settings.registerMenu(MODULE_ID, 'categorizationMenu', {
-        name: game.i18n.localize('BAD.settings.categorizationMenu.name'),
-        label: game.i18n.localize('BAD.settings.categorizationMenu.label'),
-        hint: game.i18n.localize('BAD.settings.categorizationMenu.hint'),
+        name: localize('BAD.settings.categorizationMenu.name'),
+        label: localize('BAD.settings.categorizationMenu.label'),
+        hint: localize('BAD.settings.categorizationMenu.hint'),
         icon: 'fas fa-layer-group',
         type: CategorizationConfigApp,
         restricted: true
@@ -55,9 +56,9 @@ Hooks.once('init', () => {
     // Register D&D 5e Auto-Ban Spell Components Configuration Menu (D&D 5e system only)
     if (game.system?.id === 'dnd5e') {
         game.settings.registerMenu(MODULE_ID, 'dnd5eAutoBanMenu', {
-            name: game.i18n.localize('BAD.dnd5eAutoBan.menuName'),
-            label: game.i18n.localize('BAD.dnd5eAutoBan.menuLabel'),
-            hint: game.i18n.localize('BAD.dnd5eAutoBan.menuHint'),
+            name: localize('BAD.dnd5eAutoBan.menuName'),
+            label: localize('BAD.dnd5eAutoBan.menuLabel'),
+            hint: localize('BAD.dnd5eAutoBan.menuHint'),
             icon: 'fas fa-magic',
             type: Dnd5eAutoBanConfigApp,
             restricted: true
@@ -79,9 +80,9 @@ Hooks.once('init', () => {
     // Register Module Integration Configuration Menu Button (only visible if at least one adapter module is loaded)
     if (hasActiveModuleAdapters()) {
         game.settings.registerMenu(MODULE_ID, 'moduleIntegrationsMenu', {
-            name: game.i18n.localize('BAD.moduleIntegrations.title'),
-            label: game.i18n.localize('BAD.settings.moduleIntegrationsMenu.label'),
-            hint: game.i18n.localize('BAD.settings.moduleIntegrationsMenu.hint'),
+            name: localize('BAD.moduleIntegrations.title'),
+            label: localize('BAD.settings.moduleIntegrationsMenu.label'),
+            hint: localize('BAD.settings.moduleIntegrationsMenu.hint'),
             icon: 'fas fa-puzzle-piece',
             type: ModuleIntegrationsConfigApp,
             restricted: true
@@ -90,8 +91,8 @@ Hooks.once('init', () => {
 
     // Register Center on Token Button Setting (World Scope, default disabled)
     game.settings.register(MODULE_ID, 'enableCenterOnToken', {
-        name: game.i18n.localize('BAD.settings.enableCenterOnToken.name'),
-        hint: game.i18n.localize('BAD.settings.enableCenterOnToken.hint'),
+        name: localize('BAD.settings.enableCenterOnToken.name'),
+        hint: localize('BAD.settings.enableCenterOnToken.hint'),
         scope: 'world',
         config: true,
         type: Boolean,
@@ -105,8 +106,8 @@ Hooks.once('init', () => {
 
     // Register Item Summary Tooltip Button Setting (World Scope, default enabled)
     game.settings.register(MODULE_ID, 'enableItemSummaryButton', {
-        name: game.i18n.localize('BAD.settings.enableItemSummaryButton.name'),
-        hint: game.i18n.localize('BAD.settings.enableItemSummaryButton.hint'),
+        name: localize('BAD.settings.enableItemSummaryButton.name'),
+        hint: localize('BAD.settings.enableItemSummaryButton.hint'),
         scope: 'world',
         config: true,
         type: Boolean,
@@ -120,8 +121,8 @@ Hooks.once('init', () => {
 
     // Register Enable Toggle Hotkey Setting (World Scope, default disabled)
     game.settings.register(MODULE_ID, 'enableToggleHotkey', {
-        name: game.i18n.localize('BAD.settings.enableToggleHotkey.name'),
-        hint: game.i18n.localize('BAD.settings.enableToggleHotkey.hint'),
+        name: localize('BAD.settings.enableToggleHotkey.name'),
+        hint: localize('BAD.settings.enableToggleHotkey.hint'),
         scope: 'world',
         config: true,
         type: Boolean,
@@ -130,8 +131,8 @@ Hooks.once('init', () => {
 
     // Register Enable Combat Action Buttons Setting (World Scope, default disabled)
     game.settings.register(MODULE_ID, 'enableCombatButtons', {
-        name: game.i18n.localize('BAD.settings.enableCombatButtons.name'),
-        hint: game.i18n.localize('BAD.settings.enableCombatButtons.hint'),
+        name: localize('BAD.settings.enableCombatButtons.name'),
+        hint: localize('BAD.settings.enableCombatButtons.hint'),
         scope: 'world',
         config: true,
         type: Boolean,
@@ -145,8 +146,8 @@ Hooks.once('init', () => {
 
     // Register Combat Auto-Track Button Setting (World Scope, default disabled)
     game.settings.register(MODULE_ID, 'enableCombatAutoTrackButton', {
-        name: game.i18n.localize('BAD.settings.enableCombatAutoTrackButton.name'),
-        hint: game.i18n.localize('BAD.settings.enableCombatAutoTrackButton.hint'),
+        name: localize('BAD.settings.enableCombatAutoTrackButton.name'),
+        hint: localize('BAD.settings.enableCombatAutoTrackButton.hint'),
         scope: 'world',
         config: true,
         type: Boolean,
@@ -188,9 +189,9 @@ Hooks.once('init', () => {
 
     // Register Economy Colors Menu Button (User Scope)
     game.settings.registerMenu(MODULE_ID, 'economyColorsMenu', {
-        name: game.i18n.localize('BAD.economyColors.title'),
-        label: game.i18n.localize('BAD.settings.economyColorsMenu.label'),
-        hint: game.i18n.localize('BAD.settings.economyColorsMenu.hint'),
+        name: localize('BAD.economyColors.title'),
+        label: localize('BAD.settings.economyColorsMenu.label'),
+        hint: localize('BAD.settings.economyColorsMenu.hint'),
         icon: 'fas fa-palette',
         type: EconomyColorsConfigApp,
         restricted: false
@@ -198,9 +199,9 @@ Hooks.once('init', () => {
 
     // Register Configure HUD Menu Button (User Scope)
     game.settings.registerMenu(MODULE_ID, 'hudConfigMenu', {
-        name: game.i18n.localize('BAD.hudConfig.title'),
-        label: game.i18n.localize('BAD.settings.hudConfigMenu.label'),
-        hint: game.i18n.localize('BAD.settings.hudConfigMenu.hint'),
+        name: localize('BAD.hudConfig.title'),
+        label: localize('BAD.settings.hudConfigMenu.label'),
+        hint: localize('BAD.settings.hudConfigMenu.hint'),
         icon: 'fas fa-sliders-h',
         type: HUDConfigApp,
         restricted: false
@@ -234,8 +235,8 @@ Hooks.once('init', () => {
 
     // Register HUD Opacity Setting (Storage, configured in Configure HUD submenu)
     game.settings.register(MODULE_ID, 'hudOpacity', {
-        name: game.i18n.localize('BAD.settings.hudOpacity.name'),
-        hint: game.i18n.localize('BAD.settings.hudOpacity.hint'),
+        name: localize('BAD.settings.hudOpacity.name'),
+        hint: localize('BAD.settings.hudOpacity.hint'),
         scope: 'user',
         config: false,
         type: Number,
@@ -252,8 +253,8 @@ Hooks.once('init', () => {
 
     // Register HUD Scale Setting (Storage, configured in Configure HUD submenu)
     game.settings.register(MODULE_ID, 'hudScale', {
-        name: game.i18n.localize('BAD.settings.hudScale.name'),
-        hint: game.i18n.localize('BAD.settings.hudScale.hint'),
+        name: localize('BAD.settings.hudScale.name'),
+        hint: localize('BAD.settings.hudScale.hint'),
         scope: 'user',
         config: false,
         type: Number,
@@ -270,8 +271,8 @@ Hooks.once('init', () => {
 
     // Register HUD Font Size Setting (Storage, configured in Configure HUD submenu)
     game.settings.register(MODULE_ID, 'fontSize', {
-        name: game.i18n.localize('BAD.settings.fontSize.name'),
-        hint: game.i18n.localize('BAD.settings.fontSize.hint'),
+        name: localize('BAD.settings.fontSize.name'),
+        hint: localize('BAD.settings.fontSize.hint'),
         scope: 'user',
         config: false,
         type: Number,
@@ -288,8 +289,8 @@ Hooks.once('init', () => {
 
     // Register Persist Tab State setting
     game.settings.register(MODULE_ID, 'persistTabState', {
-        name: game.i18n.localize('BAD.settings.persistTabState.name'),
-        hint: game.i18n.localize('BAD.settings.persistTabState.hint'),
+        name: localize('BAD.settings.persistTabState.name'),
+        hint: localize('BAD.settings.persistTabState.hint'),
         scope: 'user',
         config: true,
         type: Boolean,
@@ -298,8 +299,8 @@ Hooks.once('init', () => {
 
     // Register Toggle Tab Selection Setting
     game.settings.register(MODULE_ID, 'toggleTabSelection', {
-        name: game.i18n.localize('BAD.settings.toggleTabSelection.name'),
-        hint: game.i18n.localize('BAD.settings.toggleTabSelection.hint'),
+        name: localize('BAD.settings.toggleTabSelection.name'),
+        hint: localize('BAD.settings.toggleTabSelection.hint'),
         scope: 'user',
         config: true,
         type: Boolean,
@@ -308,15 +309,15 @@ Hooks.once('init', () => {
 
     // Register HUD Attachment Side Setting (Storage, configured in Configure HUD submenu)
     game.settings.register(MODULE_ID, 'hudAnchorSide', {
-        name: game.i18n.localize('BAD.settings.hudAnchorSide.name'),
-        hint: game.i18n.localize('BAD.settings.hudAnchorSide.hint'),
+        name: localize('BAD.settings.hudAnchorSide.name'),
+        hint: localize('BAD.settings.hudAnchorSide.hint'),
         scope: 'user',
         config: false,
         type: String,
         default: 'vertical',
         choices: {
-            'vertical': game.i18n.localize('BAD.settings.hudAnchorSide.choices.vertical'),
-            'horizontal': game.i18n.localize('BAD.settings.hudAnchorSide.choices.horizontal')
+            'vertical': localize('BAD.settings.hudAnchorSide.choices.vertical'),
+            'horizontal': localize('BAD.settings.hudAnchorSide.choices.horizontal')
         },
         onChange: () => {
             if (actionDisplay.activeApp?.rendered) {
@@ -327,8 +328,8 @@ Hooks.once('init', () => {
 
     // Register HUD Grid Offset Setting (Vertical) (Storage, configured in Configure HUD submenu)
     game.settings.register(MODULE_ID, 'hudGridOffset', {
-        name: game.i18n.localize('BAD.settings.hudGridOffset.name'),
-        hint: game.i18n.localize('BAD.settings.hudGridOffset.hint'),
+        name: localize('BAD.settings.hudGridOffset.name'),
+        hint: localize('BAD.settings.hudGridOffset.hint'),
         scope: 'user',
         config: false,
         type: Number,
@@ -347,8 +348,8 @@ Hooks.once('init', () => {
 
     // Register HUD Grid Offset Setting (Horizontal) (Storage, configured in Configure HUD submenu)
     game.settings.register(MODULE_ID, 'hudGridOffsetHorizontal', {
-        name: game.i18n.localize('BAD.settings.hudGridOffsetHorizontal.name'),
-        hint: game.i18n.localize('BAD.settings.hudGridOffsetHorizontal.hint'),
+        name: localize('BAD.settings.hudGridOffsetHorizontal.name'),
+        hint: localize('BAD.settings.hudGridOffsetHorizontal.hint'),
         scope: 'user',
         config: false,
         type: Number,
@@ -367,8 +368,8 @@ Hooks.once('init', () => {
 
     // Register Show Tooltips Setting (User Scope)
     game.settings.register(MODULE_ID, 'showTooltips', {
-        name: game.i18n.localize('BAD.settings.showTooltips.name'),
-        hint: game.i18n.localize('BAD.settings.showTooltips.hint'),
+        name: localize('BAD.settings.showTooltips.name'),
+        hint: localize('BAD.settings.showTooltips.hint'),
         scope: 'user',
         config: true,
         type: Boolean,
@@ -386,17 +387,17 @@ Hooks.once('init', () => {
 
     // Register Log Verbosity Setting
     game.settings.register(MODULE_ID, 'logVerbosity', {
-        name: game.i18n.localize('BAD.settings.logVerbosity.name'),
-        hint: game.i18n.localize('BAD.settings.logVerbosity.hint'),
+        name: localize('BAD.settings.logVerbosity.name'),
+        hint: localize('BAD.settings.logVerbosity.hint'),
         scope: 'client',
         config: true,
         type: String,
         default: 'warn',
         choices: {
-            'error': game.i18n.localize('BAD.settings.logVerbosity.choices.error'),
-            'warn': game.i18n.localize('BAD.settings.logVerbosity.choices.warn'),
-            'info': game.i18n.localize('BAD.settings.logVerbosity.choices.info'),
-            'debug': game.i18n.localize('BAD.settings.logVerbosity.choices.debug')
+            'error': localize('BAD.settings.logVerbosity.choices.error'),
+            'warn': localize('BAD.settings.logVerbosity.choices.warn'),
+            'info': localize('BAD.settings.logVerbosity.choices.info'),
+            'debug': localize('BAD.settings.logVerbosity.choices.debug')
         },
         onChange: value => {
             log.setVerbosity(value);
@@ -566,7 +567,7 @@ export function injectSettingsHeaders(html, app) {
             continue;
         }
 
-        const title = game.i18n.localize(section.titleKey) ?? section.defaultTitle;
+        const title = localize(section.titleKey, section.defaultTitle);
         const header = document.createElement('div');
         header.className = 'bad-settings-section-header';
         header.dataset.scope = section.scope;
