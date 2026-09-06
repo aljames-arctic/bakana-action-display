@@ -1,5 +1,5 @@
 import { log } from '../../lib/logger.js';
-import { localize } from '../../lib/utils.js';
+import { localize, deepFreeze } from '../../lib/utils.js';
 
 /**
  * @typedef {Object} ControlBarButtonConfig
@@ -21,7 +21,7 @@ import { localize } from '../../lib/utils.js';
  * @property {ControlBarButtonConfig[]} right Right-aligned control buttons
  */
 
-const LEGACY_FALLBACKS = Object.freeze([
+const LEGACY_FALLBACKS = deepFreeze([
     { selector: '.bad-combat-track-btn', method: '_onRightClickCombatAutoTrack' },
     { selector: '.bad-recenter-btn', method: '_onRightClickRecenterToken' },
     { selector: '.bad-pin-btn', method: '_onRightClickToggleAnchor' }

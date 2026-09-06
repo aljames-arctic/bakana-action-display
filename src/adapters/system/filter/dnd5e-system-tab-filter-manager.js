@@ -9,13 +9,13 @@ const COMPONENT_NAMES = deepFreeze({
     'material': ['material']
 });
 
-const COMPONENT_SHORT_KEYS = Object.freeze({
+const COMPONENT_SHORT_KEYS = deepFreeze({
     'vocal': 'v',
     'somatic': 's',
     'material': 'm'
 });
 
-const SPELL_COMPONENTS = Object.freeze(['vocal', 'somatic', 'material']);
+const SPELL_COMPONENTS = deepFreeze(['vocal', 'somatic', 'material']);
 
 /**
  * Check if a document or its system properties/components include a given spell component.

@@ -1,20 +1,21 @@
 import { MODULE_ID, MODULE_NAME, MODULE_TLA } from "../constants.js";
+import { deepFreeze } from "./utils.js";
 
-export const VERBOSITY_LEVELS = Object.freeze({
+export const VERBOSITY_LEVELS = deepFreeze({
     error: 1,
     warn: 2,
     info: 3,
     debug: 4
 });
 
-export const GROUP_STYLES = Object.freeze({
+export const GROUP_STYLES = deepFreeze({
     error: "color: #ef4444; font-weight: bold;",
     warn: "color: #f59e0b; font-weight: bold;",
     info: "color: #ffffff; font-weight: bold;",
     debug: "color: #38bdf8; font-weight: bold;"
 });
 
-export const NOTIFICATION_LABELS = Object.freeze({
+export const NOTIFICATION_LABELS = deepFreeze({
     error: " — Errors",
     warn: " — Warnings",
     info: ""
@@ -37,7 +38,7 @@ export class Logger {
         this._flushTimeout = null;
         this._batchWindowMs = 50;
 
-        this.notify = Object.freeze({
+        this.notify = deepFreeze({
             info: (message) => this._enqueueNotification("info", message),
             warn: (message) => this._enqueueNotification("warn", message),
             error: (message) => this._enqueueNotification("error", message)

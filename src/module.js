@@ -284,7 +284,7 @@ Hooks.on('deleteItem', (item, options, userId) => {
     }
 });
 
-const METADATA_KEYS = Object.freeze(new Set(['_id', 'id', '_stats']));
+const METADATA_KEYS = new Set(['_id', 'id', '_stats']);
 const MODULE_FLAG_PREFIX = `flags.${MODULE_ID}`;
 const ACTOR_DATA_FLAG_PREFIX = `actorData.flags.${MODULE_ID}`;
 const DELTA_FLAG_PREFIX = `delta.flags.${MODULE_ID}`;

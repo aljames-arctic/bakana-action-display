@@ -121,10 +121,10 @@ const LABEL_KEYS = deepFreeze({
     }
 });
 
-const LEVEL_ORDINALS = Object.freeze({ '1': '1st', '2': '2nd', '3': '3rd' });
+const LEVEL_ORDINALS = deepFreeze({ '1': '1st', '2': '2nd', '3': '3rd' });
 
-const GEAR_TYPES = Object.freeze(['weapon', 'equipment', 'consumable', 'tool', 'backpack', 'loot']);
-const GENERIC_GEAR_TYPES = Object.freeze(['consumable', 'tool', 'backpack', 'loot']);
+const GEAR_TYPES = deepFreeze(['weapon', 'equipment', 'consumable', 'tool', 'backpack', 'loot']);
+const GENERIC_GEAR_TYPES = deepFreeze(['consumable', 'tool', 'backpack', 'loot']);
 
 export class Dnd5eSystemContextModifier extends BaseSystemContextModifier {
     constructor(adapter) {

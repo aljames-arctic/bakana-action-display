@@ -1,3 +1,5 @@
+import { deepFreeze } from '../../lib/utils.js';
+
 /**
  * User permission tiers for ownership priority evaluation.
  * Tier 1: Players (least permissions)
@@ -5,7 +7,7 @@
  * Tier 3: GM / Co-GM (most permissions)
  * @type {Readonly<{ PLAYER: 1, TRUSTED: 2, GM: 3 }>}
  */
-export const USER_PERMISSION_TIERS = Object.freeze({
+export const USER_PERMISSION_TIERS = deepFreeze({
     PLAYER: 1,
     TRUSTED: 2,
     GM: 3

@@ -1,6 +1,6 @@
 import { FantasySystemAdapter } from './genre/fantasy-system-adapter.js';
 import { BaseFoundryAdapter } from '../foundry/base-foundry-adapter.js';
-import { localize, toSet } from '../../lib/utils.js';
+import { localize, toSet, deepFreeze } from '../../lib/utils.js';
 import { log } from '../../lib/logger.js';
 import { TabRef } from '../../ui/tab-ref.js';
 import { Action } from '../../ui/action.js';
@@ -8,7 +8,7 @@ import { MODULE_ID } from '../../constants.js';
 import { Pf2eSystemContextMenuManager } from './context-menu/pf2e-system-context-menu-manager.js';
 import { CombatMovementTracker } from '../../combat/combat-movement-tracker.js';
 
-const SORT_ORDERS = {
+const SORT_ORDERS = deepFreeze({
     tabs: {
         'economy': {
             'all': 0, 'action': 1, 'reaction': 2, 'free': 3, 'other': 4
@@ -28,7 +28,7 @@ const SORT_ORDERS = {
         'spell': 7,
         'other': 8
     }
-};
+});
 
 const EXTRACTABLE_TYPES = new Set(['action', 'feat', 'spell', 'consumable', 'equipment']);
 
@@ -36,22 +36,22 @@ const PF2E_SPELL_SUB_TAB_ORDER = new Map(
     ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'focus', 'innate', 'ritual'].map((id, i) => [id, i])
 );
 
-const ICONS = {
+const ICONS = deepFreeze({
     action_type: {
         'all': 'fas fa-border-all',
         'economy': 'fas fa-stopwatch',
         'ability': 'fas fa-fist-raised'
     },
     default_strike: 'systems/pf2e/icons/default-icons/melee.svg'
-};
+});
 
-const PF2E_ACTION_TYPE_MAP = {
+const PF2E_ACTION_TYPE_MAP = deepFreeze({
     'reaction': 'reaction',
     'free': 'other',
     'action': 'action'
-};
+});
 
-const PF2E_SKILL_ABILITY_MAP = Object.freeze({
+const PF2E_SKILL_ABILITY_MAP = deepFreeze({
     acrobatics: 'dex',
     arcana: 'int',
     athletics: 'str',
@@ -70,7 +70,7 @@ const PF2E_SKILL_ABILITY_MAP = Object.freeze({
     thievery: 'dex'
 });
 
-const PF2E_ABILITY_ICONS = Object.freeze({
+const PF2E_ABILITY_ICONS = deepFreeze({
     str: 'icons/svg/sword.svg',
     dex: 'icons/svg/wing.svg',
     con: 'icons/svg/shield.svg',
@@ -79,13 +79,13 @@ const PF2E_ABILITY_ICONS = Object.freeze({
     cha: 'icons/svg/paralysis.svg'
 });
 
-const PF2E_UNEQUIPPED_TAB_CONFIG = Object.freeze({
+const PF2E_UNEQUIPPED_TAB_CONFIG = deepFreeze({
     weapon: { flag: 'showUnequipped_weapon', tooltip: 'BAD.tabs.unequippedWeaponsTooltip', defaultTooltip: '<b>Right Click:</b> Toggle Show Unequipped Weapons' },
     consumable: { flag: 'showUnequipped_consumable', tooltip: 'BAD.tabs.unequippedItemsTooltip', defaultTooltip: '<b>Right Click:</b> Toggle Show Unequipped Items' },
     equipment: { flag: 'showUnequipped_equipment', tooltip: 'BAD.tabs.unequippedEquipmentTooltip', defaultTooltip: '<b>Right Click:</b> Toggle Show Unequipped Equipment' }
 });
 
-const PF2E_SIZE_MAP = Object.freeze({
+const PF2E_SIZE_MAP = deepFreeze({
     tiny: 'Tiny', sm: 'Small', med: 'Medium', lg: 'Large', huge: 'Huge', grg: 'Gargantuan'
 });
 

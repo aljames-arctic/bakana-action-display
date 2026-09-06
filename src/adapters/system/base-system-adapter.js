@@ -1,6 +1,6 @@
 import { MODULE_ID } from '../../constants.js';
 import { log } from '../../lib/logger.js';
-import { localize } from '../../lib/utils.js';
+import { localize, deepFreeze } from '../../lib/utils.js';
 import { Action } from '../../ui/action.js';
 import { BaseFoundryAdapter } from '../foundry/base-foundry-adapter.js';
 import { BaseSystemContextMenuManager } from './context-menu/base-system-context-menu-manager.js';
@@ -15,7 +15,7 @@ const MODIFIER_KEY_MAP = {
 };
 
 const EXCLUDED_ECONOMY_LABELS = new Set(['economy', 'none', 'all']);
-const DEFAULT_ECONOMY_OTHER = Object.freeze({ id: 'other', defaultColor: '#64748b', defaultEnabled: false });
+const DEFAULT_ECONOMY_OTHER = deepFreeze({ id: 'other', defaultColor: '#64748b', defaultEnabled: false });
 
 /**
  * Base class for all system-specific adapters.

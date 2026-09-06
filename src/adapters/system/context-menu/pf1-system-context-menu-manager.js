@@ -1,14 +1,15 @@
 import { BaseSystemContextMenuManager } from './base-system-context-menu-manager.js';
 import { MODULE_ID } from '../../../constants.js';
+import { deepFreeze } from '../../../lib/utils.js';
 
-const ALL_FILTER_FLAGS = Object.freeze([
+const ALL_FILTER_FLAGS = deepFreeze([
     'showAll',
     'showUnequipped_weapon',
     'showUnequipped_equipment',
     'showUnequipped_consumable'
 ]);
 
-const PF1_TAB_FLAG_MAP = Object.freeze({
+const PF1_TAB_FLAG_MAP = deepFreeze({
     weapon: 'showUnequipped_weapon',
     equipment: 'showUnequipped_equipment',
     consumable: 'showUnequipped_consumable'

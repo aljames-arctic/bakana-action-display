@@ -1,8 +1,9 @@
 import { BaseSystemContextMenuManager } from './base-system-context-menu-manager.js';
 import { log } from '../../../lib/logger.js';
 import { MODULE_ID } from '../../../constants.js';
+import { deepFreeze } from '../../../lib/utils.js';
 
-const ALL_FILTER_FLAGS = Object.freeze([
+const ALL_FILTER_FLAGS = deepFreeze([
     'showAll',
     'showUnprepared',
     'showUnequipped_weapon',
@@ -13,7 +14,7 @@ const ALL_FILTER_FLAGS = Object.freeze([
     'showUnequipped_loot'
 ]);
 
-const DND5E_TAB_FLAG_MAP = Object.freeze({
+const DND5E_TAB_FLAG_MAP = deepFreeze({
     spell: 'showUnprepared',
     weapon: 'showUnequipped_weapon',
     equipment: 'showUnequipped_equipment',

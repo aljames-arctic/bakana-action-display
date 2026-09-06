@@ -463,7 +463,7 @@ Hooks.once('init', () => {
     document.documentElement.style.setProperty('--bad-hud-font-size', `${initialFontSize}px`);
 });
 
-const USER_SETTING_KEYS = Object.freeze([
+const USER_SETTING_KEYS = deepFreeze([
     'persistTabState',
     'toggleTabSelection',
     'showTooltips',
@@ -472,7 +472,7 @@ const USER_SETTING_KEYS = Object.freeze([
     'fontSize'
 ]);
 
-const USER_MENU_KEYS = Object.freeze([
+const USER_MENU_KEYS = deepFreeze([
     'economyColorsMenu',
     'hudConfigMenu'
 ]);
