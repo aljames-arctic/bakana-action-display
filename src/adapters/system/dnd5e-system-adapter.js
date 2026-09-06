@@ -771,7 +771,7 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
         const rawSize = traits.size;
         const sizeKey = rawSize?.value ?? rawSize?.label ?? rawSize?.id ?? rawSize ?? 'med';
         const formattedSize = this.#formatLabel(sizeKey, cfg?.actorSizes);
-        const sizeLabel = formattedSize || 'Medium';
+        const sizeLabel = (formattedSize && formattedSize.length > 0) ? formattedSize : 'Medium';
 
         // Alignment
         const alignment = details.alignment ? localize(details.alignment, details.alignment) : '';
@@ -799,8 +799,9 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
 
         let fullLabel = '';
         if (swarm) {
-            const swarmSizeLabel = this.#formatLabel(swarm, cfg?.actorSizes) || swarm;
-            fullLabel = `Swarm of ${swarmSizeLabel} ${typeLabel || 'Creature'}s`;
+            const formattedSwarm = this.#formatLabel(swarm, cfg?.actorSizes);
+            const swarmSizeLabel = (formattedSwarm && formattedSwarm.length > 0) ? formattedSwarm : swarm;
+            fullLabel = `Swarm of ${swarmSizeLabel} ${typeLabel ? typeLabel : 'Creature'}s`;
         } else if (raceLabel && rawType && raceLabel !== typeLabel) {
             fullLabel = `${sizeLabel} ${typeLabel} (${raceLabel})`;
         } else if (raceLabel && !rawType) {
@@ -818,8 +819,8 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
         return {
             fullLabel: fullLabel.trim(),
             size: sizeLabel,
-            type: typeLabel || raceLabel || 'Creature',
-            subtype: subtype || raceName,
+            type: typeLabel ? typeLabel : (raceLabel ? raceLabel : 'Creature'),
+            subtype: subtype ? subtype : raceName,
             alignment,
             crLabel
         };
@@ -1997,14 +1998,15 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
 
         // 11. Description: prioritize activity-specific description, then linked spell/item description, then parent item description fallback
         const resolveDescription = (desc) => {
-            if (!desc) return '';
-            if (typeof desc === 'string') return desc.trim();
-            return desc.value || desc.chatFlavor || desc.chat || '';
+            if (!desc) return null;
+            const text = typeof desc === 'string' ? desc : (desc.value ?? desc.chatFlavor ?? desc.chat);
+            return text?.trim?.() || null;
         };
 
         let description = resolveDescription(activity?.description)
-            || resolveDescription(linkedItem?.system?.description)
-            || resolveDescription(system.description);
+            ?? resolveDescription(linkedItem?.system?.description)
+            ?? resolveDescription(system.description)
+            ?? '';
 
         if (description) {
             const descItem = linkedItem ?? targetItem;

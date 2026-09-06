@@ -34,7 +34,7 @@ function docHasComponent(doc, component) {
     // 2. Check system.components (Boolean map: { vocal: true, v: true, material: true, m: true })
     const comps = doc.system?.components ?? doc.spell?.system?.components ?? doc.components;
     if (comps) {
-        if (names.some(name => comps[name] === true) || (shortKey && comps[shortKey] === true)) return true;
+        if (names.some(name => Boolean(comps[name])) || Boolean(shortKey && comps[shortKey])) return true;
     }
 
     return false;
