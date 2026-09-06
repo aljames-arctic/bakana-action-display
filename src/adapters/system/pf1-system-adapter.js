@@ -32,6 +32,8 @@ const SORT_ORDERS = {
 };
 
 const EXTRACTABLE_TYPES = new Set(['spell', 'attack', 'weapon', 'consumable', 'feat', 'buff', 'equipment']);
+const EQUIPPABLE_TYPES = new Set(['weapon', 'equipment', 'consumable', 'loot', 'attack']);
+const ACTION_BEARING_TYPES = new Set(['consumable', 'feat', 'equipment']);
 
 const SPELL_SUB_TAB_ORDER = new Map(
     ['cantrip', 'orison', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'sla'].map((id, i) => [id, i])
@@ -97,7 +99,7 @@ export class BasePf1SystemAdapter extends FantasySystemAdapter {
                 const type = item.type;
 
                 let isUnequipped = false;
-                if (['weapon', 'equipment', 'consumable', 'loot', 'attack'].includes(type) && item.system?.equipped !== undefined) {
+                if (EQUIPPABLE_TYPES.has(type) && item.system?.equipped !== undefined) {
                     if (!this.getItemEquipped(item)) {
                         isUnequipped = true;
                         const showUnequipped = Boolean(actor?.getFlag?.(MODULE_ID, `showUnequipped_${type}`) || showAll);
@@ -175,7 +177,7 @@ export class BasePf1SystemAdapter extends FantasySystemAdapter {
                     if (isUnequipped) action.available = false;
                     modified.push(action);
 
-                } else if (['consumable', 'feat', 'equipment'].includes(type)) {
+                } else if (ACTION_BEARING_TYPES.has(type)) {
                     // 4. Consumables, Feats, and Equipment
                     const itemActions = item.system.actions ?? [];
                     if (itemActions.length === 0) {
