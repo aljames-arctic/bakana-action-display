@@ -14,6 +14,8 @@ const COMPONENT_SHORT_KEYS = {
     'material': 'm'
 };
 
+const SPELL_COMPONENTS = Object.freeze(['vocal', 'somatic', 'material']);
+
 /**
  * Check if a document or its system properties/components include a given spell component.
  * @param {Object} doc Item, activity, or spell document
@@ -98,7 +100,7 @@ export class Dnd5eSystemTabFilterManager extends BaseSystemTabFilterManager {
      * @returns {TabRef[]}
      */
     getComponentTabs(doc) {
-        return ['vocal', 'somatic', 'material']
+        return SPELL_COMPONENTS
             .filter(comp => this.requiresComponent(doc, comp))
             .map(comp => TabRef.from('components', comp));
     }
@@ -118,7 +120,7 @@ export class Dnd5eSystemTabFilterManager extends BaseSystemTabFilterManager {
      * @returns {string[]}
      */
     getExclusionSubTabs(parentId) {
-        return parentId === 'components' ? ['vocal', 'somatic', 'material'] : super.getExclusionSubTabs(parentId);
+        return parentId === 'components' ? [...SPELL_COMPONENTS] : super.getExclusionSubTabs(parentId);
     }
 
     /**

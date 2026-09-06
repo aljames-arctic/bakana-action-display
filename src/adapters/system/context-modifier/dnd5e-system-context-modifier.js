@@ -121,6 +121,9 @@ const LABEL_KEYS = {
     }
 };
 
+const GEAR_TYPES = Object.freeze(['weapon', 'equipment', 'consumable', 'tool', 'backpack', 'loot']);
+const GENERIC_GEAR_TYPES = Object.freeze(['consumable', 'tool', 'backpack', 'loot']);
+
 export class Dnd5eSystemContextModifier extends BaseSystemContextModifier {
     constructor(adapter) {
         super(adapter);
@@ -141,8 +144,7 @@ export class Dnd5eSystemContextModifier extends BaseSystemContextModifier {
             spellParent.showUnprepared = Boolean(app?.actor?.getFlag?.(MODULE_ID, 'showUnprepared') || showAll);
         }
 
-        const gearTypes = ['weapon', 'equipment', 'consumable', 'tool', 'backpack', 'loot'];
-        for (const type of gearTypes) {
+        for (const type of GEAR_TYPES) {
             const parent = findParent(type);
             if (parent) {
                 parent.showUnprepared = Boolean(app?.actor?.getFlag?.(MODULE_ID, `showUnequipped_${type}`) || showAll);
@@ -166,7 +168,7 @@ export class Dnd5eSystemContextModifier extends BaseSystemContextModifier {
             if (equipmentParent) {
                 equipmentParent.tooltip = localize('BAD.tabs.unequippedEquipmentTooltip', '<b>Right Click:</b> Toggle Show Unequipped Equipment');
             }
-            for (const gearType of ['consumable', 'tool', 'backpack', 'loot']) {
+            for (const gearType of GENERIC_GEAR_TYPES) {
                 const p = findParent(gearType);
                 if (p) {
                     p.tooltip = localize('BAD.tabs.unequippedItemsTooltip', '<b>Right Click:</b> Toggle Show Unequipped Items');
