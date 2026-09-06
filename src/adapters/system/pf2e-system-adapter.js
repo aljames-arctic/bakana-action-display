@@ -51,6 +51,44 @@ const PF2E_ACTION_TYPE_MAP = {
     'action': 'action'
 };
 
+const PF2E_SKILL_ABILITY_MAP = Object.freeze({
+    acrobatics: 'dex',
+    arcana: 'int',
+    athletics: 'str',
+    crafting: 'int',
+    deception: 'cha',
+    diplomacy: 'cha',
+    intimidation: 'cha',
+    medicine: 'wis',
+    nature: 'wis',
+    occultism: 'int',
+    performance: 'cha',
+    religion: 'wis',
+    society: 'int',
+    stealth: 'dex',
+    survival: 'wis',
+    thievery: 'dex'
+});
+
+const PF2E_ABILITY_ICONS = Object.freeze({
+    str: 'icons/svg/sword.svg',
+    dex: 'icons/svg/wing.svg',
+    con: 'icons/svg/shield.svg',
+    int: 'icons/svg/book.svg',
+    wis: 'icons/svg/eye.svg',
+    cha: 'icons/svg/paralysis.svg'
+});
+
+const PF2E_UNEQUIPPED_TAB_CONFIG = Object.freeze({
+    weapon: { flag: 'showUnequipped_weapon', tooltip: 'BAD.tabs.unequippedWeaponsTooltip', defaultTooltip: '<b>Right Click:</b> Toggle Show Unequipped Weapons' },
+    consumable: { flag: 'showUnequipped_consumable', tooltip: 'BAD.tabs.unequippedItemsTooltip', defaultTooltip: '<b>Right Click:</b> Toggle Show Unequipped Items' },
+    equipment: { flag: 'showUnequipped_equipment', tooltip: 'BAD.tabs.unequippedEquipmentTooltip', defaultTooltip: '<b>Right Click:</b> Toggle Show Unequipped Equipment' }
+});
+
+const PF2E_SIZE_MAP = Object.freeze({
+    tiny: 'Tiny', sm: 'Small', med: 'Medium', lg: 'Large', huge: 'Huge', grg: 'Gargantuan'
+});
+
 /**
  * Base system adapter for Pathfinder 2nd Edition (PF2e) (baseline).
  * Modifies the base actions list by mapping feats and spells, and injecting Strikes (attacks).
@@ -251,34 +289,6 @@ export class BasePf2eSystemAdapter extends FantasySystemAdapter {
         checkActions.push(perception);
 
         // 2. Skills
-        const PF2E_SKILL_ABILITY_MAP = {
-            acrobatics: 'dex',
-            arcana: 'int',
-            athletics: 'str',
-            crafting: 'int',
-            deception: 'cha',
-            diplomacy: 'cha',
-            intimidation: 'cha',
-            medicine: 'wis',
-            nature: 'wis',
-            occultism: 'int',
-            performance: 'cha',
-            religion: 'wis',
-            society: 'int',
-            stealth: 'dex',
-            survival: 'wis',
-            thievery: 'dex'
-        };
-
-        const abilityIcons = {
-            str: 'icons/svg/sword.svg',
-            dex: 'icons/svg/wing.svg',
-            con: 'icons/svg/shield.svg',
-            int: 'icons/svg/book.svg',
-            wis: 'icons/svg/eye.svg',
-            cha: 'icons/svg/paralysis.svg'
-        };
-
         const actorSkills = actor.skills ?? actor.system?.skills ?? {};
         const skillEntries = actorSkills instanceof Map ? Array.from(actorSkills.entries()) : Object.entries(actorSkills);
 
@@ -286,7 +296,7 @@ export class BasePf2eSystemAdapter extends FantasySystemAdapter {
             const slug = skill.slug ?? key;
             const abl = PF2E_SKILL_ABILITY_MAP[slug] ?? skill.ability ?? 'dex';
             const label = skill.label ?? skill.name ?? CONFIG?.PF2E?.skills?.[slug] ?? slug;
-            const skillImg = abilityIcons[abl] ?? 'icons/svg/d20.svg';
+            const skillImg = PF2E_ABILITY_ICONS[abl] ?? 'icons/svg/d20.svg';
             const skillAction = new Action({
                 id: `skill-${slug}`,
                 name: label,
@@ -420,12 +430,6 @@ export class BasePf2eSystemAdapter extends FantasySystemAdapter {
 
         const showAll = Boolean(app?.actor?.getFlag?.(MODULE_ID, 'showAll'));
 
-        const unequippedTabMap = {
-            weapon: { flag: 'showUnequipped_weapon', tooltip: 'BAD.tabs.unequippedWeaponsTooltip', defaultTooltip: '<b>Right Click:</b> Toggle Show Unequipped Weapons' },
-            consumable: { flag: 'showUnequipped_consumable', tooltip: 'BAD.tabs.unequippedItemsTooltip', defaultTooltip: '<b>Right Click:</b> Toggle Show Unequipped Items' },
-            equipment: { flag: 'showUnequipped_equipment', tooltip: 'BAD.tabs.unequippedEquipmentTooltip', defaultTooltip: '<b>Right Click:</b> Toggle Show Unequipped Equipment' }
-        };
-
         const allParent = context.itemTypes?.find(g => g.id === 'all');
         if (allParent) {
             allParent.showUnprepared = showAll;
@@ -434,7 +438,7 @@ export class BasePf2eSystemAdapter extends FantasySystemAdapter {
             }
         }
 
-        for (const [type, cfg] of Object.entries(unequippedTabMap)) {
+        for (const [type, cfg] of Object.entries(PF2E_UNEQUIPPED_TAB_CONFIG)) {
             const parent = context.itemTypes?.find(g => g.id === type);
             if (parent) {
                 const showFlag = Boolean(app?.actor?.getFlag?.(MODULE_ID, cfg.flag));
@@ -554,10 +558,7 @@ export class BasePf2eSystemAdapter extends FantasySystemAdapter {
         // Size
         const rawSize = traits.size;
         const sizeStr = rawSize?.value ?? rawSize?.label ?? rawSize?.id ?? rawSize ?? 'med';
-        const sizeMap = {
-            tiny: 'Tiny', sm: 'Small', med: 'Medium', lg: 'Large', huge: 'Huge', grg: 'Gargantuan'
-        };
-        const sizeLabel = cfg?.actorSizes?.[sizeStr] ? localize(cfg.actorSizes[sizeStr], sizeStr) : (sizeMap[sizeStr.toLowerCase()] ?? (sizeStr ? sizeStr.charAt(0).toUpperCase() + sizeStr.slice(1) : 'Medium'));
+        const sizeLabel = cfg?.actorSizes?.[sizeStr] ? localize(cfg.actorSizes[sizeStr], sizeStr) : (PF2E_SIZE_MAP[sizeStr.toLowerCase()] ?? (sizeStr ? sizeStr.charAt(0).toUpperCase() + sizeStr.slice(1) : 'Medium'));
 
         // Level / CR
         const level = actor.level ?? details.level?.value ?? 1;
