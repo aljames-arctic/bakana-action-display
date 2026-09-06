@@ -424,7 +424,7 @@ export class BasePf1SystemAdapter extends FantasySystemAdapter {
             );
         }
 
-        return result instanceof Promise ? result.then(() => context) : (result ?? context);
+        return (result?.then) ? result.then(() => context) : (result ?? context);
     }
 
     /**
@@ -684,7 +684,7 @@ export class BasePf1SystemAdapter extends FantasySystemAdapter {
         if (!sensesData) return [];
 
         const results = [];
-        if (typeof sensesData === 'string') {
+        if (sensesData?.split) {
             return sensesData.split(/[;,]/).map(s => s.trim()).filter(Boolean);
         }
 

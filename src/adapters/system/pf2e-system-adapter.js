@@ -290,7 +290,7 @@ export class BasePf2eSystemAdapter extends FantasySystemAdapter {
 
         // 2. Skills
         const actorSkills = actor.skills ?? actor.system?.skills ?? {};
-        const skillEntries = actorSkills instanceof Map ? Array.from(actorSkills.entries()) : Object.entries(actorSkills);
+        const skillEntries = actorSkills?.entries ? Array.from(actorSkills.entries()) : Object.entries(actorSkills);
 
         for (const [key, skill] of skillEntries) {
             const slug = skill.slug ?? key;
@@ -456,7 +456,7 @@ export class BasePf2eSystemAdapter extends FantasySystemAdapter {
             );
         }
 
-        return result instanceof Promise ? result.then(() => context) : (result ?? context);
+        return (result?.then) ? result.then(() => context) : (result ?? context);
     }
 
     /**
@@ -643,11 +643,11 @@ export class BasePf2eSystemAdapter extends FantasySystemAdapter {
         const results = [];
 
         for (const res of resistances) {
-            if (typeof res === 'string') {
-                results.push(res);
+            if (!res?.type) {
+                if (res) results.push(String(res));
                 continue;
             }
-            const typeKey = res.type ?? '';
+            const typeKey = res.type;
             const typeLabel = cfg?.damageTypes?.[typeKey] ? localize(cfg.damageTypes[typeKey], typeKey) : (typeKey.charAt(0).toUpperCase() + typeKey.slice(1));
             const value = res.value ?? '';
             const exceptions = Array.isArray(res.exceptions) && res.exceptions.length > 0 ? ` (except ${res.exceptions.join(', ')})` : '';
@@ -662,11 +662,11 @@ export class BasePf2eSystemAdapter extends FantasySystemAdapter {
         const results = [];
 
         for (const imm of immunities) {
-            if (typeof imm === 'string') {
-                results.push(imm);
+            if (!imm?.type) {
+                if (imm) results.push(String(imm));
                 continue;
             }
-            const typeKey = imm.type ?? '';
+            const typeKey = imm.type;
             const typeLabel = cfg?.immunityTypes?.[typeKey] ? localize(cfg.immunityTypes[typeKey], typeKey) : (typeKey.charAt(0).toUpperCase() + typeKey.slice(1));
             const exceptions = Array.isArray(imm.exceptions) && imm.exceptions.length > 0 ? ` (except ${imm.exceptions.join(', ')})` : '';
             results.push(`${typeLabel}${exceptions}`.trim());
@@ -680,11 +680,11 @@ export class BasePf2eSystemAdapter extends FantasySystemAdapter {
         const results = [];
 
         for (const weak of weaknesses) {
-            if (typeof weak === 'string') {
-                results.push(weak);
+            if (!weak?.type) {
+                if (weak) results.push(String(weak));
                 continue;
             }
-            const typeKey = weak.type ?? '';
+            const typeKey = weak.type;
             const typeLabel = cfg?.weaknessTypes?.[typeKey] ? localize(cfg.weaknessTypes[typeKey], typeKey) : (typeKey.charAt(0).toUpperCase() + typeKey.slice(1));
             const value = weak.value ?? '';
             const exceptions = Array.isArray(weak.exceptions) && weak.exceptions.length > 0 ? ` (except ${weak.exceptions.join(', ')})` : '';
@@ -726,11 +726,11 @@ export class BasePf2eSystemAdapter extends FantasySystemAdapter {
         const results = [];
         if (Array.isArray(sensesData)) {
             for (const sense of sensesData) {
-                if (typeof sense === 'string') {
-                    results.push(sense);
+                if (!sense?.type) {
+                    if (sense) results.push(String(sense));
                     continue;
                 }
-                const typeKey = sense.type ?? '';
+                const typeKey = sense.type;
                 const typeLabel = cfg?.senses?.[typeKey] ? localize(cfg.senses[typeKey], typeKey) : (typeKey.charAt(0).toUpperCase() + typeKey.slice(1));
                 const range = sense.value ? ` ${sense.value} ft` : '';
                 results.push(`${typeLabel}${range}`.trim());
@@ -1108,7 +1108,7 @@ export class BasePf2eSystemAdapter extends FantasySystemAdapter {
             properties.push({ label: 'Damage', value: `${system.damage.dice}${system.damage.die} ${system.damage.damageType ?? ''}`.trim() });
         }
         if (system.range) {
-            const rangeStr = typeof system.range === 'object' ? `${system.range.value ?? ''} ${system.range.unit ?? ''}`.trim() : String(system.range);
+            const rangeStr = (system.range?.value || system.range?.unit) ? `${system.range.value ?? ''} ${system.range.unit ?? ''}`.trim() : String(system.range);
             if (rangeStr) properties.push({ label: 'Range', value: rangeStr });
         }
         if (system.traits?.value && Array.isArray(system.traits.value)) {
