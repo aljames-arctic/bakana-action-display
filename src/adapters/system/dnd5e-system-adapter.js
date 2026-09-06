@@ -1445,18 +1445,17 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
     #calculateLimitedUses(uses) {
         if (!uses) return null;
 
-        if (uses.max !== undefined && uses.max !== null && uses.max !== "0" && uses.max !== 0 && uses.max !== "") {
-            const max = typeof uses.max === 'number' ? uses.max : (parseInt(uses.max, 10) || 0);
-            if (max > 0) {
-                const spent = uses.spent;
-                const available = (spent !== undefined && spent !== null)
-                    ? Math.max(0, max - spent)
-                    : (uses.value ?? max);
-                return { available, max };
-            }
+        const rawMax = Number(uses.max);
+        if (!Number.isNaN(rawMax) && rawMax > 0) {
+            const max = rawMax;
+            const spent = uses.spent;
+            const available = (spent !== undefined && spent !== null)
+                ? Math.max(0, max - spent)
+                : (uses.value ?? max);
+            return { available, max };
         }
 
-        if (typeof uses.value === 'number' && uses.value > 0 && (uses.max === null || uses.max === undefined || uses.max === "" || uses.max === 0 || uses.max === "0")) {
+        if (typeof uses.value === 'number' && uses.value > 0) {
             return { available: uses.value, max: null };
         }
 
@@ -2046,28 +2045,15 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
         }
 
         // 11. Description: prioritize activity-specific description, then linked spell/item description, then parent item description fallback
-        let description = '';
-        if (typeof activity?.description === 'string' && activity.description.trim().length > 0) {
-            description = activity.description;
-        } else if (activity?.description?.value) {
-            description = activity.description.value;
-        } else if (activity?.description?.chatFlavor) {
-            description = activity.description.chatFlavor;
-        } else if (activity?.description?.chat) {
-            description = activity.description.chat;
-        } else if (linkedItem?.system?.description?.value) {
-            description = linkedItem.system.description.value;
-        } else if (linkedItem?.system?.description?.chat) {
-            description = linkedItem.system.description.chat;
-        } else if (typeof linkedItem?.system?.description === 'string' && linkedItem.system.description.trim().length > 0) {
-            description = linkedItem.system.description;
-        } else if (system.description?.value) {
-            description = system.description.value;
-        } else if (system.description?.chat) {
-            description = system.description.chat;
-        } else if (typeof system.description === 'string' && system.description.trim().length > 0) {
-            description = system.description;
-        }
+        const resolveDescription = (desc) => {
+            if (!desc) return '';
+            if (typeof desc === 'string') return desc.trim();
+            return desc.value || desc.chatFlavor || desc.chat || '';
+        };
+
+        let description = resolveDescription(activity?.description)
+            || resolveDescription(linkedItem?.system?.description)
+            || resolveDescription(system.description);
 
         if (description) {
             const descItem = linkedItem ?? targetItem;
@@ -2112,16 +2098,7 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
             if (ablData) {
                 const mod = ablData.mod ?? 0;
                 const rawSave = ablData.save;
-                let saveMod = 0;
-                if (typeof rawSave === 'number') {
-                    saveMod = rawSave;
-                } else if (typeof rawSave?.value === 'number') {
-                    saveMod = rawSave.value;
-                } else if (typeof rawSave?.total === 'number') {
-                    saveMod = rawSave.total;
-                } else if (typeof ablData.mod === 'number') {
-                    saveMod = ablData.mod;
-                }
+                const saveMod = typeof rawSave === 'number' ? rawSave : (rawSave?.value ?? rawSave?.total ?? ablData.mod ?? 0);
 
                 const checkRow = ['Check:', { label: 'Modifier', value: mod >= 0 ? `+${mod}` : `${mod}` }];
                 const isCheckProficient = Boolean(ablData.checkProf?.hasProficiency || ablData.check?.proficient);
@@ -2139,16 +2116,7 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
             subtitle = 'Saving Throw';
             if (ablData) {
                 const rawSave = ablData.save;
-                let saveMod = 0;
-                if (typeof rawSave === 'number') {
-                    saveMod = rawSave;
-                } else if (typeof rawSave?.value === 'number') {
-                    saveMod = rawSave.value;
-                } else if (typeof rawSave?.total === 'number') {
-                    saveMod = rawSave.total;
-                } else if (typeof ablData.mod === 'number') {
-                    saveMod = ablData.mod;
-                }
+                const saveMod = typeof rawSave === 'number' ? rawSave : (rawSave?.value ?? rawSave?.total ?? ablData.mod ?? 0);
                 properties.push({ label: 'Modifier', value: saveMod >= 0 ? `+${saveMod}` : `${saveMod}` });
                 const isProficient = Boolean(ablData.saveProf?.hasProficiency || rawSave?.proficient || ablData.proficient);
                 if (isProficient) properties.push({ value: 'Proficient' });

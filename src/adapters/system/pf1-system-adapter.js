@@ -525,8 +525,7 @@ export class BasePf1SystemAdapter extends FantasySystemAdapter {
 
         // Size
         const rawSize = traits.size;
-        const sizeKey = typeof rawSize === 'string' ? rawSize : (rawSize?.value ?? rawSize?.label ?? rawSize?.id ?? 'med');
-        const sizeStr = typeof sizeKey === 'string' ? sizeKey : 'med';
+        const sizeStr = typeof rawSize === 'string' ? rawSize : (rawSize?.value ?? rawSize?.label ?? rawSize?.id ?? 'med');
         const sizeMap = {
             fine: 'Fine', dim: 'Diminutive', tiny: 'Tiny', sm: 'Small',
             med: 'Medium', lg: 'Large', huge: 'Huge', grg: 'Gargantuan', col: 'Colossal'
