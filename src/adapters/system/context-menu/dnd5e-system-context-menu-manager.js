@@ -2,7 +2,7 @@ import { BaseSystemContextMenuManager } from './base-system-context-menu-manager
 import { log } from '../../../lib/logger.js';
 import { MODULE_ID } from '../../../constants.js';
 
-const ALL_FILTER_FLAGS = [
+const ALL_FILTER_FLAGS = Object.freeze([
     'showAll',
     'showUnprepared',
     'showUnequipped_weapon',
@@ -11,7 +11,17 @@ const ALL_FILTER_FLAGS = [
     'showUnequipped_tool',
     'showUnequipped_backpack',
     'showUnequipped_loot'
-];
+]);
+
+const DND5E_TAB_FLAG_MAP = Object.freeze({
+    spell: 'showUnprepared',
+    weapon: 'showUnequipped_weapon',
+    equipment: 'showUnequipped_equipment',
+    consumable: 'showUnequipped_consumable',
+    tool: 'showUnequipped_tool',
+    backpack: 'showUnequipped_backpack',
+    loot: 'showUnequipped_loot'
+});
 
 const INNATE_OR_PACT_METHODS = new Set(['innate', 'atwill', 'pact']);
 const EQUIPPABLE_ITEM_TYPES = new Set(['weapon', 'equipment', 'consumable', 'tool', 'backpack', 'loot']);
@@ -112,15 +122,6 @@ export class Dnd5eSystemContextMenuManager extends BaseSystemContextMenuManager 
      * @returns {boolean} True if handled
      */
     onTabRightClick(app, el, event) {
-        const flagMap = {
-            spell: 'showUnprepared',
-            weapon: 'showUnequipped_weapon',
-            equipment: 'showUnequipped_equipment',
-            consumable: 'showUnequipped_consumable',
-            tool: 'showUnequipped_tool',
-            backpack: 'showUnequipped_backpack',
-            loot: 'showUnequipped_loot'
-        };
-        return this.handleFilterTabRightClick(app, el, flagMap, ALL_FILTER_FLAGS);
+        return this.handleFilterTabRightClick(app, el, DND5E_TAB_FLAG_MAP, ALL_FILTER_FLAGS);
     }
 }

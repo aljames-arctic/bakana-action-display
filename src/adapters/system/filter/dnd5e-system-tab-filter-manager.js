@@ -2,17 +2,17 @@ import { BaseSystemTabFilterManager } from './base-system-tab-filter-manager.js'
 import { TabRef } from '../../../ui/tab-ref.js';
 import { log } from '../../../lib/logger.js';
 
-const COMPONENT_NAMES = {
-    'vocal': ['vocal', 'verbal'],
-    'somatic': ['somatic'],
-    'material': ['material']
-};
+const COMPONENT_NAMES = Object.freeze({
+    'vocal': Object.freeze(['vocal', 'verbal']),
+    'somatic': Object.freeze(['somatic']),
+    'material': Object.freeze(['material'])
+});
 
-const COMPONENT_SHORT_KEYS = {
+const COMPONENT_SHORT_KEYS = Object.freeze({
     'vocal': 'v',
     'somatic': 's',
     'material': 'm'
-};
+});
 
 const SPELL_COMPONENTS = Object.freeze(['vocal', 'somatic', 'material']);
 

@@ -1,12 +1,18 @@
 import { BaseSystemContextMenuManager } from './base-system-context-menu-manager.js';
 import { MODULE_ID } from '../../../constants.js';
 
-const ALL_FILTER_FLAGS = [
+const ALL_FILTER_FLAGS = Object.freeze([
     'showAll',
     'showUnequipped_weapon',
     'showUnequipped_equipment',
     'showUnequipped_consumable'
-];
+]);
+
+const PF1_TAB_FLAG_MAP = Object.freeze({
+    weapon: 'showUnequipped_weapon',
+    equipment: 'showUnequipped_equipment',
+    consumable: 'showUnequipped_consumable'
+});
 
 const EQUIPPABLE_ITEM_TYPES = new Set(['weapon', 'equipment', 'consumable', 'attack']);
 
@@ -78,11 +84,6 @@ export class Pf1SystemContextMenuManager extends BaseSystemContextMenuManager {
      * @returns {boolean} True if handled
      */
     onTabRightClick(app, el, event) {
-        const flagMap = {
-            weapon: 'showUnequipped_weapon',
-            equipment: 'showUnequipped_equipment',
-            consumable: 'showUnequipped_consumable'
-        };
-        return this.handleFilterTabRightClick(app, el, flagMap, ALL_FILTER_FLAGS);
+        return this.handleFilterTabRightClick(app, el, PF1_TAB_FLAG_MAP, ALL_FILTER_FLAGS);
     }
 }

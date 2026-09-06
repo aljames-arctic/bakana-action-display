@@ -1,7 +1,7 @@
 import { localize } from '../../../lib/utils.js';
 
-const ICONS = {
-    item_type: {
+const ICONS = Object.freeze({
+    item_type: Object.freeze({
         'all': 'fas fa-border-all',
         'weapon': 'fas fa-sword',
         'spell': 'fas fa-wand-magic-sparkles',
@@ -14,16 +14,16 @@ const ICONS = {
         'abilityCheck': 'fas fa-dice-d20',
         'other': 'fas fa-ellipsis',
         'hidden': 'fas fa-eye-slash'
-    },
-    action_type: {
+    }),
+    action_type: Object.freeze({
         'all': 'fas fa-border-all',
         'ability': 'fas fa-fist-raised',
         'none': 'fas fa-ban'
-    }
-};
+    })
+});
 
-const SORT_ORDERS = {
-    item_type: {
+const SORT_ORDERS = Object.freeze({
+    item_type: Object.freeze({
         'all': 0,
         'weapon': 1,
         'spell': 2,
@@ -37,13 +37,23 @@ const SORT_ORDERS = {
         'loot': 9,
         'other': 10,
         'hidden': 11
-    },
-    action_type: {
+    }),
+    action_type: Object.freeze({
         'all': 0,
         'economy': 1,
         'none': 2
-    }
-};
+    })
+});
+
+const ABILITY_LABEL_KEYS = Object.freeze({
+    all: Object.freeze(['BAD.core.allActions', 'All']),
+    str: Object.freeze(['DND5E.AbilityStr', 'Strength']),
+    dex: Object.freeze(['DND5E.AbilityDex', 'Dexterity']),
+    con: Object.freeze(['DND5E.AbilityCon', 'Constitution']),
+    int: Object.freeze(['DND5E.AbilityInt', 'Intelligence']),
+    wis: Object.freeze(['DND5E.AbilityWis', 'Wisdom']),
+    cha: Object.freeze(['DND5E.AbilityCha', 'Charisma'])
+});
 
 /**
  * Manages UI context modifications, tab label/icon localization, and sort orders
@@ -179,15 +189,7 @@ export class BaseSystemContextModifier {
      * @returns {string}
      */
     getActionSubTabLabel(subId) {
-        const abilityLabels = {
-            all: localize('BAD.core.allActions', 'All'),
-            str: localize('DND5E.AbilityStr', 'Strength'),
-            dex: localize('DND5E.AbilityDex', 'Dexterity'),
-            con: localize('DND5E.AbilityCon', 'Constitution'),
-            int: localize('DND5E.AbilityInt', 'Intelligence'),
-            wis: localize('DND5E.AbilityWis', 'Wisdom'),
-            cha: localize('DND5E.AbilityCha', 'Charisma')
-        };
-        return abilityLabels[subId] ?? subId.toUpperCase();
+        const config = ABILITY_LABEL_KEYS[subId];
+        return config ? localize(config[0], config[1]) : subId.toUpperCase();
     }
 }

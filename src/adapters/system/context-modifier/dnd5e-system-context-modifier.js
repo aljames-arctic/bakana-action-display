@@ -2,23 +2,23 @@ import { BaseSystemContextModifier } from './base-system-context-modifier.js';
 import { localize } from '../../../lib/utils.js';
 import { MODULE_ID } from '../../../constants.js';
 
-const SORT_ORDERS = {
-    tabs: {
-        'spell': {
+const SORT_ORDERS = Object.freeze({
+    tabs: Object.freeze({
+        'spell': Object.freeze({
             'all': 0, 'level_0': 1, 'level_1': 2, 'level_2': 3, 'level_3': 4,
             'level_4': 5, 'level_5': 6, 'level_6': 7, 'level_7': 8, 'level_8': 9,
             'level_9': 10, 'itemCharges': 99
-        },
-        'weapon': {
+        }),
+        'weapon': Object.freeze({
             'all': 0, 'simpleM': 1, 'martialM': 2, 'simpleR': 3, 'martialR': 4,
             'natural': 5, 'improv': 6, 'siege': 7
-        },
-        'equipment': {
+        }),
+        'equipment': Object.freeze({
             'all': 0, 'light': 1, 'medium': 2, 'heavy': 3, 'shield': 4,
             'clothing': 5, 'trinket': 6, 'ring': 7, 'rod': 8, 'wand': 9,
             'wondrous': 10, 'vehicle': 11, 'natural': 12
-        },
-        'economy': {
+        }),
+        'economy': Object.freeze({
             'all': 0,
             'standard': 1,
             'time': 2,
@@ -29,17 +29,17 @@ const SORT_ORDERS = {
             'special': 7,
             'other': 8,
             'none': 9
-        },
-        'standard': { 'all': 0, 'action': 1, 'bonus': 2, 'reaction': 3 },
-        'time': { 'all': 0, 'minute': 1, 'hour': 2, 'day': 3 },
-        'rest': { 'all': 0, 'longRest': 1, 'shortRest': 2, 'long': 1, 'short': 2 },
-        'combat': { 'all': 0, 'encounter': 1, 'turnStart': 2, 'turnEnd': 3 },
-        'monster': { 'all': 0, 'legendary': 1, 'mythic': 2, 'lair': 3 },
-        'vehicle': { 'all': 0, 'crew': 1 },
-        'components': { 'vocal': 0, 'somatic': 1, 'material': 2 },
-        'ability': { 'all': 0, 'str': 1, 'dex': 2, 'con': 3, 'int': 4, 'wis': 5, 'cha': 6 }
-    },
-    item_type: {
+        }),
+        'standard': Object.freeze({ 'all': 0, 'action': 1, 'bonus': 2, 'reaction': 3 }),
+        'time': Object.freeze({ 'all': 0, 'minute': 1, 'hour': 2, 'day': 3 }),
+        'rest': Object.freeze({ 'all': 0, 'longRest': 1, 'shortRest': 2, 'long': 1, 'short': 2 }),
+        'combat': Object.freeze({ 'all': 0, 'encounter': 1, 'turnStart': 2, 'turnEnd': 3 }),
+        'monster': Object.freeze({ 'all': 0, 'legendary': 1, 'mythic': 2, 'lair': 3 }),
+        'vehicle': Object.freeze({ 'all': 0, 'crew': 1 }),
+        'components': Object.freeze({ 'vocal': 0, 'somatic': 1, 'material': 2 }),
+        'ability': Object.freeze({ 'all': 0, 'str': 1, 'dex': 2, 'con': 3, 'int': 4, 'wis': 5, 'cha': 6 })
+    }),
+    item_type: Object.freeze({
         'savingThrow': 1,
         'abilityCheck': 2,
         'weapon': 3,
@@ -51,75 +51,77 @@ const SORT_ORDERS = {
         'backpack': 8,
         'loot': 9,
         'feat': 10
-    }
-};
+    })
+});
 
-const ICONS = {
-    item_type: {
+const ICONS = Object.freeze({
+    item_type: Object.freeze({
         'equipment': 'fas fa-shield',
         'tool': 'fas fa-hammer',
         'tools': 'fas fa-hammer',
         'backpack': 'fas fa-sack',
         'loot': 'fas fa-gem'
-    },
-    action_type: {
+    }),
+    action_type: Object.freeze({
         'economy': 'fas fa-stopwatch',
         'components': 'fas fa-magic'
-    }
-};
+    })
+});
 
-const LABEL_KEYS = {
-    item_type: {
-        'all': ['BAD.core.allItems', 'All Items'],
-        'weapon': ['DND5E.ItemTypeWeapon', 'Weapon'],
-        'equipment': ['DND5E.ItemTypeEquipment', 'Equipment'],
-        'consumable': ['DND5E.ItemTypeConsumable', 'Consumable'],
-        'tool': ['DND5E.ItemTypeToolPlural', 'Tools'],
-        'tools': ['DND5E.ItemTypeToolPlural', 'Tools'],
-        'backpack': ['DND5E.ItemTypeContainer', 'Container'],
-        'loot': ['DND5E.ItemTypeLoot', 'Loot'],
-        'feat': ['DND5E.ItemTypeFeat', 'Feature'],
-        'spell': ['DND5E.ItemTypeSpell', 'Spell'],
-        'other': ['DND5E.ActionOther', 'Other'],
-        'hidden': ['BAD.core.hidden', 'Hidden']
-    },
-    action_type: {
-        'economy': ['BAD.common.actionEconomy', 'Action Economy'],
-        'components': ['BAD.common.spellComponents', 'Spell Components']
-    },
-    action_subtab: {
-        'all': ['BAD.core.allActions', 'All Actions'],
-        'standard': ['DND5E.ActivityActivationStandard', 'Standard', 'DND5E.Standard'],
-        'time': ['DND5E.ActivityActivationTime', 'Time', 'DND5E.Time'],
-        'rest': ['DND5E.ActivityActivationRest', 'Rest', 'DND5E.Rest'],
-        'combat': ['DND5E.ActivityActivationCombat', 'Combat', 'DND5E.Combat'],
-        'monster': ['DND5E.ActivityActivationMonster', 'Monster', 'DND5E.Monster'],
-        'vehicle': ['DND5E.ActivityActivationVehicle', 'Vehicle', 'DND5E.Vehicle'],
-        'action': ['DND5E.Action', 'Action', 'DND5E.ActionAction'],
-        'bonus': ['DND5E.BonusAction', 'Bonus Action', 'DND5E.ActionBonus'],
-        'reaction': ['DND5E.Reaction', 'Reaction', 'DND5E.ActionReaction'],
-        'minute': ['DND5E.TimeMinute', 'Minute'],
-        'hour': ['DND5E.TimeHour', 'Hour'],
-        'day': ['DND5E.TimeDay', 'Day'],
-        'shortRest': ['DND5E.ActivityActivationShortRest', 'End of a Short Rest'],
-        'longRest': ['DND5E.ActivityActivationLongRest', 'End of a Long Rest'],
-        'short': ['DND5E.ActivityActivationShortRest', 'End of a Short Rest'],
-        'long': ['DND5E.ActivityActivationLongRest', 'End of a Long Rest'],
-        'encounter': ['DND5E.ActivityActivationStartEncounter', 'Start of Encounter'],
-        'turnStart': ['DND5E.ActivityActivationTurnStart', 'Start of Turn'],
-        'turnEnd': ['DND5E.ActivityActivationTurnEnd', 'End of Turn'],
-        'legendary': ['DND5E.LegendaryAction', 'Legendary Action'],
-        'mythic': ['DND5E.MythicAction', 'Mythic Action'],
-        'lair': ['DND5E.LairAction', 'Lair Action'],
-        'crew': ['DND5E.CrewAction', 'Crew Action'],
-        'special': ['DND5E.Special', 'Special'],
-        'other': ['DND5E.ActionOther', 'Other'],
-        'none': ['DND5E.None', 'None'],
-        'vocal': ['DND5E.ComponentVerbal', 'Verbal'],
-        'somatic': ['DND5E.ComponentSomatic', 'Somatic'],
-        'material': ['DND5E.ComponentMaterial', 'Material']
-    }
-};
+const LABEL_KEYS = Object.freeze({
+    item_type: Object.freeze({
+        'all': Object.freeze(['BAD.core.allItems', 'All Items']),
+        'weapon': Object.freeze(['DND5E.ItemTypeWeapon', 'Weapon']),
+        'equipment': Object.freeze(['DND5E.ItemTypeEquipment', 'Equipment']),
+        'consumable': Object.freeze(['DND5E.ItemTypeConsumable', 'Consumable']),
+        'tool': Object.freeze(['DND5E.ItemTypeToolPlural', 'Tools']),
+        'tools': Object.freeze(['DND5E.ItemTypeToolPlural', 'Tools']),
+        'backpack': Object.freeze(['DND5E.ItemTypeContainer', 'Container']),
+        'loot': Object.freeze(['DND5E.ItemTypeLoot', 'Loot']),
+        'feat': Object.freeze(['DND5E.ItemTypeFeat', 'Feature']),
+        'spell': Object.freeze(['DND5E.ItemTypeSpell', 'Spell']),
+        'other': Object.freeze(['DND5E.ActionOther', 'Other']),
+        'hidden': Object.freeze(['BAD.core.hidden', 'Hidden'])
+    }),
+    action_type: Object.freeze({
+        'economy': Object.freeze(['BAD.common.actionEconomy', 'Action Economy']),
+        'components': Object.freeze(['BAD.common.spellComponents', 'Spell Components'])
+    }),
+    action_subtab: Object.freeze({
+        'all': Object.freeze(['BAD.core.allActions', 'All Actions']),
+        'standard': Object.freeze(['DND5E.ActivityActivationStandard', 'Standard', 'DND5E.Standard']),
+        'time': Object.freeze(['DND5E.ActivityActivationTime', 'Time', 'DND5E.Time']),
+        'rest': Object.freeze(['DND5E.ActivityActivationRest', 'Rest', 'DND5E.Rest']),
+        'combat': Object.freeze(['DND5E.ActivityActivationCombat', 'Combat', 'DND5E.Combat']),
+        'monster': Object.freeze(['DND5E.ActivityActivationMonster', 'Monster', 'DND5E.Monster']),
+        'vehicle': Object.freeze(['DND5E.ActivityActivationVehicle', 'Vehicle', 'DND5E.Vehicle']),
+        'action': Object.freeze(['DND5E.Action', 'Action', 'DND5E.ActionAction']),
+        'bonus': Object.freeze(['DND5E.BonusAction', 'Bonus Action', 'DND5E.ActionBonus']),
+        'reaction': Object.freeze(['DND5E.Reaction', 'Reaction', 'DND5E.ActionReaction']),
+        'minute': Object.freeze(['DND5E.TimeMinute', 'Minute']),
+        'hour': Object.freeze(['DND5E.TimeHour', 'Hour']),
+        'day': Object.freeze(['DND5E.TimeDay', 'Day']),
+        'shortRest': Object.freeze(['DND5E.ActivityActivationShortRest', 'End of a Short Rest']),
+        'longRest': Object.freeze(['DND5E.ActivityActivationLongRest', 'End of a Long Rest']),
+        'short': Object.freeze(['DND5E.ActivityActivationShortRest', 'End of a Short Rest']),
+        'long': Object.freeze(['DND5E.ActivityActivationLongRest', 'End of a Long Rest']),
+        'encounter': Object.freeze(['DND5E.ActivityActivationStartEncounter', 'Start of Encounter']),
+        'turnStart': Object.freeze(['DND5E.ActivityActivationTurnStart', 'Start of Turn']),
+        'turnEnd': Object.freeze(['DND5E.ActivityActivationTurnEnd', 'End of Turn']),
+        'legendary': Object.freeze(['DND5E.LegendaryAction', 'Legendary Action']),
+        'mythic': Object.freeze(['DND5E.MythicAction', 'Mythic Action']),
+        'lair': Object.freeze(['DND5E.LairAction', 'Lair Action']),
+        'crew': Object.freeze(['DND5E.CrewAction', 'Crew Action']),
+        'special': Object.freeze(['DND5E.Special', 'Special']),
+        'other': Object.freeze(['DND5E.ActionOther', 'Other']),
+        'none': Object.freeze(['DND5E.None', 'None']),
+        'vocal': Object.freeze(['DND5E.ComponentVerbal', 'Verbal']),
+        'somatic': Object.freeze(['DND5E.ComponentSomatic', 'Somatic']),
+        'material': Object.freeze(['DND5E.ComponentMaterial', 'Material'])
+    })
+});
+
+const LEVEL_ORDINALS = Object.freeze({ '1': '1st', '2': '2nd', '3': '3rd' });
 
 const GEAR_TYPES = Object.freeze(['weapon', 'equipment', 'consumable', 'tool', 'backpack', 'loot']);
 const GENERIC_GEAR_TYPES = Object.freeze(['consumable', 'tool', 'backpack', 'loot']);
@@ -285,8 +287,7 @@ export class Dnd5eSystemContextModifier extends BaseSystemContextModifier {
                 const num = subId.replace('level_', '');
                 if (num === '0') return localize('DND5E.SpellCantrip', 'Cantrip');
                 const key = `DND5E.SpellLevel${num}`;
-                const ordinals = { '1': '1st', '2': '2nd', '3': '3rd' };
-                const ord = ordinals[num] ?? `${num}th`;
+                const ord = LEVEL_ORDINALS[num] ?? `${num}th`;
                 return localize(key, `${ord} Level`);
             }
         }

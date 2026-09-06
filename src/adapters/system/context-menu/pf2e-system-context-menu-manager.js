@@ -1,12 +1,18 @@
 import { BaseSystemContextMenuManager } from './base-system-context-menu-manager.js';
 import { MODULE_ID } from '../../../constants.js';
 
-const ALL_FILTER_FLAGS = [
+const ALL_FILTER_FLAGS = Object.freeze([
     'showAll',
     'showUnequipped_weapon',
     'showUnequipped_equipment',
     'showUnequipped_consumable'
-];
+]);
+
+const PF2E_TAB_FLAG_MAP = Object.freeze({
+    weapon: 'showUnequipped_weapon',
+    equipment: 'showUnequipped_equipment',
+    consumable: 'showUnequipped_consumable'
+});
 
 /**
  * Manages PF2e-specific context menu options (Equip/Unequip) and tab right-click filters.
@@ -147,11 +153,6 @@ export class Pf2eSystemContextMenuManager extends BaseSystemContextMenuManager {
      * @returns {boolean} True if handled
      */
     onTabRightClick(app, el, event) {
-        const flagMap = {
-            weapon: 'showUnequipped_weapon',
-            equipment: 'showUnequipped_equipment',
-            consumable: 'showUnequipped_consumable'
-        };
-        return this.handleFilterTabRightClick(app, el, flagMap, ALL_FILTER_FLAGS);
+        return this.handleFilterTabRightClick(app, el, PF2E_TAB_FLAG_MAP, ALL_FILTER_FLAGS);
     }
 }
