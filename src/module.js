@@ -211,7 +211,7 @@ export function handleHUDBind(token) {
 
 // Hook into Token selection to track the last selected token for hotkey toggle
 Hooks.on('controlToken', (token, controlled) => {
-    if (controlled && (token?.document?.isOwner || token?.actor?.isOwner)) {
+    if (controlled) {
         setLastSelectedToken(token);
     }
 });

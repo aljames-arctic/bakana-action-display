@@ -9,12 +9,21 @@ let lastSelectedTokenRef = null;
 let lastSelectedTokenId = null;
 
 /**
+ * Determine if the user owns a valid token document or actor.
+ * @param {Token|null} token
+ * @returns {boolean}
+ */
+export function isTokenOwned(token) {
+    if (!token || token.destroyed || token._destroyed) return false;
+    return Boolean(token.document?.isOwner || token.actor?.isOwner);
+}
+
+/**
  * Record a token as the last selected / interacted token.
  * @param {Token|null} token
  */
 export function setLastSelectedToken(token) {
-    if (!token) return;
-    if (token.document?.isOwner || token.actor?.isOwner) {
+    if (isTokenOwned(token)) {
         lastSelectedTokenRef = token;
         lastSelectedTokenId = token.id;
     }
@@ -36,11 +45,7 @@ export function getLastSelectedToken() {
         if (isPresent) token = lastSelectedTokenRef;
     }
 
-    if (token && !token.destroyed && !token._destroyed && (token.document?.isOwner || token.actor?.isOwner)) {
-        return token;
-    }
-
-    return null;
+    return isTokenOwned(token) ? token : null;
 }
 
 /**
@@ -82,7 +87,7 @@ export function toggleHUD(explicitToken = null) {
             currentApp.close();
             actionDisplay.activeApp = null;
 
-            if (controlledToken.document?.isOwner || controlledToken.actor?.isOwner) {
+            if (isTokenOwned(controlledToken)) {
                 setLastSelectedToken(controlledToken);
                 if (controlledToken.actor) {
                     syncActorFavorites(controlledToken.actor);
@@ -106,7 +111,7 @@ export function toggleHUD(explicitToken = null) {
 
     // HUD is currently closed - open for target token if valid
     if (token) {
-        if (!token.document?.isOwner && !token.actor?.isOwner) {
+        if (!isTokenOwned(token)) {
             return false;
         }
         setLastSelectedToken(token);
