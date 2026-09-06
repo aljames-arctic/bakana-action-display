@@ -1,6 +1,6 @@
 import { FantasySystemAdapter } from './genre/fantasy-system-adapter.js';
 import { BaseFoundryAdapter } from '../foundry/base-foundry-adapter.js';
-import { localize } from '../../lib/utils.js';
+import { localize, toSet } from '../../lib/utils.js';
 import { log } from '../../lib/logger.js';
 import { TabRef } from '../../ui/tab-ref.js';
 import { Action } from '../../ui/action.js';
@@ -713,8 +713,7 @@ export class BasePf2eSystemAdapter extends FantasySystemAdapter {
         const results = [];
         const langMap = cfg?.languages ?? {};
 
-        const values = Array.isArray(langData.value) ? langData.value : (langData.value instanceof Set ? Array.from(langData.value) : []);
-        for (const key of values) {
+        for (const key of toSet(langData.value)) {
             const label = langMap[key] ? localize(langMap[key], key) : (key.charAt(0).toUpperCase() + key.slice(1));
             if (label) results.push(label);
         }

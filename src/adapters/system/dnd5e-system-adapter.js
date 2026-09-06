@@ -1,6 +1,6 @@
 import { FantasySystemAdapter } from './genre/fantasy-system-adapter.js';
 import { BaseFoundryAdapter } from '../foundry/base-foundry-adapter.js';
-import { localize } from '../../lib/utils.js';
+import { localize, toSet } from '../../lib/utils.js';
 import { log } from '../../lib/logger.js';
 import { MODULE_ID } from '../../constants.js';
 import { TabRef } from '../../ui/tab-ref.js';
@@ -931,17 +931,12 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
     #extractTraitList(traitData, typeMap = CONFIG?.DND5E?.damageTypes, bypassMap = CONFIG?.DND5E?.physicalWeaponBypasses) {
         if (!traitData) return [];
         const result = [];
-        const values = Array.isArray(traitData.value)
-            ? traitData.value
-            : (traitData.value instanceof Set ? Array.from(traitData.value) : []);
-
-        const bypasses = Array.isArray(traitData.bypasses)
-            ? traitData.bypasses
-            : (traitData.bypasses instanceof Set ? Array.from(traitData.bypasses) : []);
+        const values = toSet(traitData.value);
+        const bypasses = toSet(traitData.bypasses);
 
         let bypassSuffix = '';
-        if (bypasses.length > 0) {
-            const bypassLabels = bypasses.map(b => this.#formatLabel(b, bypassMap));
+        if (bypasses.size > 0) {
+            const bypassLabels = Array.from(bypasses, b => this.#formatLabel(b, bypassMap));
             bypassSuffix = ` (non-${bypassLabels.join('/')})`;
         }
 
@@ -967,9 +962,7 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
     #extractConditionImmunities(ciData, cfg = CONFIG?.DND5E) {
         if (!ciData) return [];
         const result = [];
-        const values = Array.isArray(ciData.value)
-            ? ciData.value
-            : (ciData.value instanceof Set ? Array.from(ciData.value) : []);
+        const values = toSet(ciData.value);
 
         for (const val of values) {
             if (!val) continue;
@@ -993,9 +986,7 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
         if (!langData && !extraComm) return [];
         const result = [];
         const units = langData?.units ?? extraComm?.units ?? 'ft';
-        const values = Array.isArray(langData?.value)
-            ? langData.value
-            : (langData?.value instanceof Set ? Array.from(langData.value) : []);
+        const values = Array.from(toSet(langData?.value));
 
         const hasAll = values.some(v => v?.trim?.().toLowerCase() === 'all' || v?.trim?.().toLowerCase() === 'alllanguages');
 
@@ -1986,15 +1977,11 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
         }
 
         // 8. Physical Item Properties (e.g. Versatile, Finesse, Thrown)
-        const itemProps = (effectiveSystem.properties instanceof Set)
-            ? effectiveSystem.properties
-            : (system.properties instanceof Set ? system.properties : null);
-        if (itemProps) {
-            for (const prop of itemProps) {
-                if (['concentration', 'ritual', 'mgc'].includes(prop)) continue;
-                const propLabel = CONFIG?.DND5E?.itemProperties?.[prop]?.label ?? prop;
-                properties.push({ value: propLabel });
-            }
+        const itemProps = toSet(effectiveSystem.properties ?? system.properties);
+        for (const prop of itemProps) {
+            if (['concentration', 'ritual', 'mgc'].includes(prop)) continue;
+            const propLabel = CONFIG?.DND5E?.itemProperties?.[prop]?.label ?? prop;
+            properties.push({ value: propLabel });
         }
 
         // 9. Uses / Quantity
