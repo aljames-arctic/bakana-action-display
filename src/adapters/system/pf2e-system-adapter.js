@@ -719,12 +719,12 @@ export class BasePf2eSystemAdapter extends FantasySystemAdapter {
             if (label) results.push(label);
         }
 
-        if (langData.custom && typeof langData.custom === 'string') {
+        if (langData.custom?.trim?.()) {
             const customItems = langData.custom.split(/[;,]/).map(s => s.trim()).filter(Boolean);
             results.push(...customItems);
         }
 
-        if (langData.details && typeof langData.details === 'string') {
+        if (langData.details?.trim?.()) {
             const detailsItems = langData.details.split(/[;,]/).map(s => s.trim()).filter(Boolean);
             results.push(...detailsItems);
         }
