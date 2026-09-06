@@ -2343,7 +2343,8 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         event.preventDefault?.();
         event.stopPropagation?.();
         if (descEl.classList?.contains?.('bad-summary-overflow-x') && (event.shiftKey || event.deltaX)) {
-            descEl.scrollLeft = (descEl.scrollLeft ?? 0) + (event.deltaX || (event.shiftKey ? event.deltaY : 0));
+            const delta = Number.isFinite(event.deltaX) && event.deltaX !== 0 ? event.deltaX : (event.shiftKey ? (event.deltaY ?? 0) : 0);
+            descEl.scrollLeft = (descEl.scrollLeft ?? 0) + delta;
         } else {
             descEl.scrollTop = (descEl.scrollTop ?? 0) + (event.deltaY ?? 0);
         }

@@ -186,7 +186,8 @@ export class ContextMenuManager {
         const viewportHeight = window?.innerHeight ?? 1080;
         const spaceBelow = viewportHeight - rect.bottom - 15;
         const spaceAbove = rect.top - 15;
-        const actualCount = menuEl.querySelectorAll?.('.context-item')?.length || itemCount || 1;
+        const queriedCount = menuEl.querySelectorAll?.('.context-item')?.length;
+        const actualCount = Number.isFinite(queriedCount) && queriedCount > 0 ? queriedCount : (itemCount > 0 ? itemCount : 1);
         const neededHeight = actualCount * 36 + 15;
 
         // Prefer down: only place above if space below is critically constrained (< 80px) and space above is larger
