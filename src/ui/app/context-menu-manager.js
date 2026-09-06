@@ -143,9 +143,7 @@ export class ContextMenuManager {
                 };
 
                 scheduleReposition();
-                queueMicrotask(scheduleReposition);
                 requestAnimationFrame(scheduleReposition);
-                setTimeout(scheduleReposition, 200);
             },
             onClose: () => {
                 this.closeSubmenu();
@@ -250,54 +248,55 @@ export class ContextMenuManager {
      * @private
      */
     _bindSubmenus(target, menuItems) {
-        setTimeout(() => {
-            const contextMenuEl = document.querySelector('#context-menu, .context-menu');
-            if (!contextMenuEl) return;
+        const contextMenuEl = document.querySelector('#context-menu, .context-menu');
+        if (!contextMenuEl) return;
 
-            const action = this.app.actions?.find(a => a.id === target?.dataset?.actionId);
-            const item = action?.originalItem ?? this.app.actor?.items?.get(target?.dataset?.actionId);
+        const action = this.app.actions?.find(a => a.id === target?.dataset?.actionId);
+        const item = action?.originalItem ?? this.app.actor?.items?.get(target?.dataset?.actionId);
 
-            const itemLis = contextMenuEl.querySelectorAll('.context-item');
-            for (const li of itemLis) {
-                const text = li.textContent.trim();
-                const matchedItem = menuItems.find(m => {
-                    const localized = game.i18n.localize(m.name);
-                    return localized && text.includes(localized);
-                });
+        const itemLis = contextMenuEl.querySelectorAll('.context-item');
+        for (const li of itemLis) {
+            if (li.dataset.badSubmenuBound === 'true') continue;
+            li.dataset.badSubmenuBound = 'true';
 
-                if (matchedItem?.submenu?.length) {
-                    if (!li.querySelector('.bad-menu-submenu-arrow')) {
-                        const arrow = document.createElement('i');
-                        arrow.className = 'fas fa-chevron-right bad-menu-submenu-arrow';
-                        li.appendChild(arrow);
-                    }
+            const text = li.textContent.trim();
+            const matchedItem = menuItems.find(m => {
+                const localized = game.i18n.localize(m.name);
+                return localized && text.includes(localized);
+            });
 
-                    const openThisSubmenu = (event) => {
-                        event?.stopPropagation?.();
-                        if (this._submenuCloseTimeout) {
-                            clearTimeout(this._submenuCloseTimeout);
-                            this._submenuCloseTimeout = null;
-                        }
-                        this._openSubmenu(li, target, item, matchedItem.submenu);
-                    };
-
-                    const scheduleClose = () => {
-                        if (this._submenuCloseTimeout) clearTimeout(this._submenuCloseTimeout);
-                        this._submenuCloseTimeout = setTimeout(() => {
-                            this.closeSubmenu();
-                        }, 180);
-                    };
-
-                    li.addEventListener('mouseenter', openThisSubmenu);
-                    li.addEventListener('click', openThisSubmenu);
-                    li.addEventListener('mouseleave', scheduleClose);
-                } else {
-                    li.addEventListener('mouseenter', () => {
-                        this.closeSubmenu();
-                    });
+            if (matchedItem?.submenu?.length) {
+                if (!li.querySelector('.bad-menu-submenu-arrow')) {
+                    const arrow = document.createElement('i');
+                    arrow.className = 'fas fa-chevron-right bad-menu-submenu-arrow';
+                    li.appendChild(arrow);
                 }
+
+                const openThisSubmenu = (event) => {
+                    event?.stopPropagation?.();
+                    if (this._submenuCloseTimeout) {
+                        clearTimeout(this._submenuCloseTimeout);
+                        this._submenuCloseTimeout = null;
+                    }
+                    this._openSubmenu(li, target, item, matchedItem.submenu);
+                };
+
+                const scheduleClose = () => {
+                    if (this._submenuCloseTimeout) clearTimeout(this._submenuCloseTimeout);
+                    this._submenuCloseTimeout = setTimeout(() => {
+                        this.closeSubmenu();
+                    }, 180);
+                };
+
+                li.addEventListener('mouseenter', openThisSubmenu);
+                li.addEventListener('click', openThisSubmenu);
+                li.addEventListener('mouseleave', scheduleClose);
+            } else {
+                li.addEventListener('mouseenter', () => {
+                    this.closeSubmenu();
+                });
             }
-        }, 10);
+        }
     }
 
     /**
