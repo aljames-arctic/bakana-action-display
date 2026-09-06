@@ -175,8 +175,8 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
 
                         return new Action({
                             id: activity.id,
-                            name: activity.name?.trim() ? activity.name : (linkedAction?.name ?? activity.type.toUpperCase()),
-                            img: activity.img?.trim() ? activity.img : (linkedAction?.img ?? item.img),
+                            name: activity.name?.trim() || linkedAction?.name || activity.type.toUpperCase(),
+                            img: activity.img?.trim() || linkedAction?.img || item.img,
                             uses: this.#calculateActivityUses(activity, item),
                             right: [tabRef],
                             roll: async (event) => {
