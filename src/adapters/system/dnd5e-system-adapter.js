@@ -455,7 +455,7 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
         const compendiumId = toolId.startsWith('Compendium.')
             ? toolId
             : (cfg?.tools?.[toolId]?.id ?? cfg?.toolIds?.[toolId]);
-        if (compendiumId && typeof compendiumId === 'string' && compendiumId.startsWith('Compendium.')) {
+        if (compendiumId?.startsWith?.('Compendium.')) {
             try {
                 const doc = this.fromUuidSync(compendiumId);
                 if (doc?.name) return doc.name;
@@ -761,9 +761,9 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
     #formatLabel(key, configMap = null) {
         if (!key || typeof key !== 'string') return '';
         const config = configMap?.[key];
-        const rawLabel = config ? (config.label ?? (typeof config === 'string' ? config : null)) : null;
+        const rawLabel = config?.label ?? config;
         if (rawLabel) {
-            if (rawLabel.startsWith('DND5E.') || rawLabel.startsWith('BAD.')) {
+            if (rawLabel.startsWith?.('DND5E.') || rawLabel.startsWith?.('BAD.')) {
                 const localized = localize(rawLabel, null);
                 if (localized && localized !== rawLabel) return localized;
             } else {
@@ -780,40 +780,30 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
 
         // Size
         const rawSize = traits.size;
-        const sizeKey = typeof rawSize === 'string' ? rawSize : (rawSize?.value ?? rawSize?.label ?? rawSize?.id ?? 'med');
-        const sizeLabel = this.#formatLabel(sizeKey, cfg?.actorSizes) || 'Medium';
+        const sizeKey = rawSize?.value ?? rawSize?.label ?? rawSize?.id ?? rawSize ?? 'med';
+        const formattedSize = this.#formatLabel(sizeKey, cfg?.actorSizes);
+        const sizeLabel = formattedSize || 'Medium';
 
         // Alignment
         const alignment = details.alignment ? localize(details.alignment, details.alignment) : '';
 
         // CR or Level
         let crLabel = '';
-        if (details.cr !== undefined && details.cr !== null && details.cr !== '') {
+        if (details.cr != null && String(details.cr).length > 0) {
             crLabel = `CR ${details.cr}`;
-        } else if (details.level !== undefined && details.level !== null && details.level !== '') {
+        } else if (details.level != null && String(details.level).length > 0) {
             crLabel = `Level ${details.level}`;
         }
 
         // Check if NPC type object or PC race
         const typeData = details.type;
-        let rawType = '';
-        let subtype = '';
-        let swarm = '';
-        let custom = '';
-
-        if (typeof typeData === 'object' && typeData !== null) {
-            rawType = typeData.value ?? '';
-            subtype = typeData.subtype ?? '';
-            swarm = typeData.swarm ?? '';
-            custom = typeData.custom ?? '';
-        } else if (typeof typeData === 'string') {
-            rawType = typeData;
-        }
+        const rawType = typeData?.value ?? (typeof typeData === 'string' ? typeData : '');
+        const subtype = typeData?.subtype ?? '';
+        const swarm = typeData?.swarm ?? '';
+        const custom = typeData?.custom ?? '';
 
         const raceData = details.race;
-        const raceName = (typeof raceData === 'object' && raceData !== null)
-            ? (raceData.name ?? '')
-            : (typeof raceData === 'string' ? raceData : '');
+        const raceName = raceData?.name ?? (typeof raceData === 'string' ? raceData : '');
 
         const typeLabel = this.#formatLabel(rawType, cfg?.creatureTypes);
         const raceLabel = raceName ? (raceName.charAt(0).toUpperCase() + raceName.slice(1)) : '';
@@ -914,7 +904,7 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
             secondaries.push(`Burrow ${burrow} ${units}`);
             speeds.push({ type: 'burrow', label: 'Burrow', value: burrow, text: `${burrow} ${units}`, icon: 'fas fa-shovel' });
         }
-        if (special && typeof special === 'string') {
+        if (special?.split) {
             const specialParts = special.split(';').map(s => s.trim()).filter(Boolean);
             for (const part of specialParts) {
                 secondaries.push(part);
@@ -971,8 +961,9 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
             }
         }
 
-        if (traitData.custom && typeof traitData.custom === 'string' && traitData.custom.trim().length > 0) {
-            result.push(traitData.custom.trim());
+        const customTrait = traitData.custom?.trim?.();
+        if (customTrait) {
+            result.push(customTrait);
         }
 
         return result;
@@ -995,8 +986,9 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
             result.push(label || val);
         }
 
-        if (ciData.custom && typeof ciData.custom === 'string' && ciData.custom.trim().length > 0) {
-            result.push(ciData.custom.trim());
+        const customCI = ciData.custom?.trim?.();
+        if (customCI) {
+            result.push(customCI);
         }
 
         return result;
@@ -1010,7 +1002,7 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
             ? langData.value
             : (langData?.value instanceof Set ? Array.from(langData.value) : []);
 
-        const hasAll = values.some(v => typeof v === 'string' && (v.trim().toLowerCase() === 'all' || v.trim().toLowerCase() === 'alllanguages'));
+        const hasAll = values.some(v => v?.trim?.().toLowerCase() === 'all' || v?.trim?.().toLowerCase() === 'alllanguages');
 
         if (hasAll) {
             result.push('All');
@@ -1023,7 +1015,7 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
         }
 
         // Custom Languages (semicolon-separated)
-        if (langData?.custom && typeof langData.custom === 'string' && langData.custom.trim().length > 0) {
+        if (langData?.custom?.split) {
             const customParts = langData.custom.split(';').map(s => s.trim()).filter(Boolean);
             for (const part of customParts) {
                 const isCustomAll = part.toLowerCase() === 'all' || part.toLowerCase() === 'all languages';
@@ -1040,21 +1032,11 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
         // Special Communication (semicolon-separated)
         const specialData = langData?.special;
         if (specialData) {
-            if (typeof specialData === 'string') {
-                const specialParts = specialData.split(';').map(s => s.trim()).filter(Boolean);
-                for (const part of specialParts) {
-                    if (!result.includes(part)) {
-                        result.push(part);
-                    }
-                }
-            } else if (Array.isArray(specialData) || specialData instanceof Set) {
-                for (const item of specialData) {
-                    if (typeof item === 'string' && item.trim()) {
-                        const parts = item.split(';').map(s => s.trim()).filter(Boolean);
-                        for (const part of parts) {
-                            if (!result.includes(part)) result.push(part);
-                        }
-                    }
+            const list = Array.isArray(specialData) || specialData instanceof Set ? specialData : [specialData];
+            for (const item of list) {
+                const parts = item?.split?.(';').map(s => s.trim()).filter(Boolean) ?? [];
+                for (const part of parts) {
+                    if (!result.includes(part)) result.push(part);
                 }
             }
         }
@@ -1118,7 +1100,7 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
         const result = [];
         const units = sensesData.units ?? 'ft';
         const defaultSenseKeys = ['darkvision', 'blindsight', 'tremorsense', 'truesight'];
-        const configuredKeys = (cfg?.senses && typeof cfg.senses === 'object') ? Object.keys(cfg.senses) : [];
+        const configuredKeys = cfg?.senses ? Object.keys(cfg.senses) : [];
         const senseKeys = [...new Set([...defaultSenseKeys, ...configuredKeys])];
 
         for (const s of senseKeys) {
@@ -1128,9 +1110,9 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
                 result.push(`${label} ${val} ${units}`);
             }
         }
-        const special = sensesData.special;
-        if (special && typeof special === 'string' && special.trim().length > 0) {
-            result.push(special.trim());
+        const special = sensesData.special?.trim?.();
+        if (special) {
+            result.push(special);
         }
         return result;
     }
@@ -2525,7 +2507,7 @@ export class Dnd5eSystemAdapter_5_3 extends BaseDnd5eSystemAdapter {
         const units = sensesData.units ?? 'ft';
         const ranges = sensesData.ranges ?? {};
         const defaultSenseKeys = ['darkvision', 'blindsight', 'tremorsense', 'truesight'];
-        const configuredKeys = (cfg?.senses && typeof cfg.senses === 'object') ? Object.keys(cfg.senses) : [];
+        const configuredKeys = cfg?.senses ? Object.keys(cfg.senses) : [];
         const senseKeys = [...new Set([...defaultSenseKeys, ...configuredKeys])];
 
         for (const s of senseKeys) {
@@ -2535,9 +2517,9 @@ export class Dnd5eSystemAdapter_5_3 extends BaseDnd5eSystemAdapter {
                 result.push(`${label} ${val} ${units}`);
             }
         }
-        const special = sensesData.special;
-        if (special && typeof special === 'string' && special.trim().length > 0) {
-            result.push(special.trim());
+        const special = sensesData.special?.trim?.();
+        if (special) {
+            result.push(special);
         }
         return result;
     }

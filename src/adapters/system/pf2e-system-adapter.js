@@ -566,8 +566,7 @@ export class BasePf2eSystemAdapter extends FantasySystemAdapter {
 
         // Size
         const rawSize = traits.size;
-        const sizeKey = typeof rawSize === 'string' ? rawSize : (rawSize?.value ?? rawSize?.label ?? rawSize?.id ?? 'med');
-        const sizeStr = typeof sizeKey === 'string' ? sizeKey : 'med';
+        const sizeStr = rawSize?.value ?? rawSize?.label ?? rawSize?.id ?? rawSize ?? 'med';
         const sizeMap = {
             tiny: 'Tiny', sm: 'Small', med: 'Medium', lg: 'Large', huge: 'Huge', grg: 'Gargantuan'
         };
@@ -585,7 +584,7 @@ export class BasePf2eSystemAdapter extends FantasySystemAdapter {
         const ancestry = details.ancestry?.name ?? details.heritage?.name ?? '';
         const creatureType = details.creatureType ? localize(details.creatureType, details.creatureType) : '';
 
-        let typeStr = creatureType || ancestry || '';
+        let typeStr = creatureType || ancestry;
         if (!typeStr && traitList.length > 0) {
             typeStr = traitList.map(t => cfg?.creatureTraits?.[t] ? localize(cfg.creatureTraits[t], t) : (t.charAt(0).toUpperCase() + t.slice(1))).join(', ');
         }

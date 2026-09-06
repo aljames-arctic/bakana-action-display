@@ -525,7 +525,7 @@ export class BasePf1SystemAdapter extends FantasySystemAdapter {
 
         // Size
         const rawSize = traits.size;
-        const sizeStr = typeof rawSize === 'string' ? rawSize : (rawSize?.value ?? rawSize?.label ?? rawSize?.id ?? 'med');
+        const sizeStr = rawSize?.value ?? rawSize?.label ?? rawSize?.id ?? rawSize ?? 'med';
         const sizeMap = {
             fine: 'Fine', dim: 'Diminutive', tiny: 'Tiny', sm: 'Small',
             med: 'Medium', lg: 'Large', huge: 'Huge', grg: 'Gargantuan', col: 'Colossal'
@@ -540,15 +540,15 @@ export class BasePf1SystemAdapter extends FantasySystemAdapter {
         const race = details.race ?? '';
         const type = details.type ?? '';
         const subtype = details.subtype ?? '';
-        const raceOrType = race || [type, subtype ? `(${subtype})` : null].filter(Boolean).join(' ');
+        const raceOrType = race.length > 0 ? race : [type, subtype ? `(${subtype})` : null].filter(Boolean).join(' ');
 
         // CR or Level
         let crLabel = '';
-        if (details.cr?.total !== undefined && details.cr?.total !== null && String(details.cr.total).length > 0) {
+        if (details.cr?.total != null && String(details.cr.total).length > 0) {
             crLabel = `CR ${details.cr.total}`;
-        } else if (details.cr?.base !== undefined && details.cr?.base !== null) {
+        } else if (details.cr?.base != null) {
             crLabel = `CR ${details.cr.base}`;
-        } else if (details.level?.value !== undefined && details.level?.value !== null) {
+        } else if (details.level?.value != null) {
             crLabel = `Level ${details.level.value}`;
         } else if (actor.type === 'character' && system.attributes?.hd?.total) {
             crLabel = `Level ${system.attributes.hd.total}`;
@@ -686,7 +686,7 @@ export class BasePf1SystemAdapter extends FantasySystemAdapter {
             return sensesData.split(/[;,]/).map(s => s.trim()).filter(Boolean);
         }
 
-        if (sensesData.custom && typeof sensesData.custom === 'string') {
+        if (sensesData.custom?.split) {
             results.push(...sensesData.custom.split(/[;,]/).map(s => s.trim()).filter(Boolean));
         }
 
