@@ -16,6 +16,8 @@ import { setExplicitlyClosedTokenId } from '../module.js';
 const activeTabCache = new Map();
 let lastActiveTabState = null;
 
+const formatSummaryTag = tag => (tag?.label ? `${tag.label}: ${tag.value}` : (tag?.value ?? tag));
+
 /**
  * Modern ApplicationV2-based HUD overlay for Bakana's Action Display.
  * Uses HandlebarsApplicationMixin for rendering and the Actions API for event handling.
@@ -568,11 +570,12 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
 
         // 1. Single-pass loop: Extract unique tabs and filter actions simultaneously (O(N) vs O(3N))
         for (const action of rawActions) {
-            const categories = action.itemCategories ?? (action.left?.length ? [action.left] : []);
-            for (const cat of categories) {
-                if (cat?.length) {
-                    existingItemCombinations.add(cat.join('/'));
+            if (action.itemCategories) {
+                for (const cat of action.itemCategories) {
+                    if (cat?.length) existingItemCombinations.add(cat.join('/'));
                 }
+            } else if (action.left?.length) {
+                existingItemCombinations.add(action.left.join('/'));
             }
 
             if (action.right) {
@@ -2109,11 +2112,10 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
 
         let html = `<div class="bad-item-summary-tooltip${tableClass}"${widthStyle}>`;
         html += '<div class="bad-summary-header">';
-        const formatTag = tag => (tag?.label ? `${tag.label}: ${tag.value}` : (tag?.value ?? tag));
         const headerTags = Array.isArray(summary.headerTags) ? summary.headerTags : (summary.headerTag ? [summary.headerTag] : []);
         let headerTagsHtml = '';
         for (const tag of headerTags) {
-            const text = formatTag(tag);
+            const text = formatSummaryTag(tag);
             if (text) {
                 headerTagsHtml += `<span class="bad-summary-tag">${text}</span>`;
             }
@@ -2140,13 +2142,13 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
                         if (item?.endsWith?.(':')) {
                             html += `<span class="bad-summary-row-label">${item}</span>`;
                         } else {
-                            const text = formatTag(item);
+                            const text = formatSummaryTag(item);
                             if (text) html += `<span class="bad-summary-tag">${text}</span>`;
                         }
                     }
                     html += '</div>';
                 } else {
-                    const text = formatTag(prop);
+                    const text = formatSummaryTag(prop);
                     if (text) html += `<span class="bad-summary-tag">${text}</span>`;
                 }
             }
@@ -2258,22 +2260,26 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
             const tables = sandbox.querySelectorAll('table');
             let measuredTableWidth = normalWidth;
 
-            tables.forEach(table => {
+            for (const table of tables) {
                 table.style.setProperty('width', 'max-content', 'important');
                 table.style.setProperty('min-width', '0', 'important');
                 table.style.setProperty('max-width', 'none', 'important');
                 table.style.setProperty('display', 'table', 'important');
 
                 const ths = table.querySelectorAll('th, thead td, tr:first-child th, tr:first-child td');
-                ths.forEach(th => th.style.setProperty('white-space', 'nowrap', 'important'));
+                for (const th of ths) {
+                    th.style.setProperty('white-space', 'nowrap', 'important');
+                }
 
                 const firstColCells = table.querySelectorAll('td:first-child, th:first-child');
-                firstColCells.forEach(td => td.style.setProperty('white-space', 'nowrap', 'important'));
+                for (const td of firstColCells) {
+                    td.style.setProperty('white-space', 'nowrap', 'important');
+                }
 
                 const rect = table.getBoundingClientRect?.();
                 const w = Math.ceil(rect?.width ?? table.offsetWidth ?? table.scrollWidth ?? normalWidth);
                 if (w > measuredTableWidth) measuredTableWidth = w;
-            });
+            }
 
             sandbox.remove();
 
@@ -2807,7 +2813,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         if (room1 >= 0 && room2 >= 0) return room1 >= room2 ? side1 : side2;
         if (room1 >= 0) return side1;
         if (room2 >= 0) return side2;
-        log.error(`HUD position with grid offset ${gridOffset} exceeds screen bounds on both ${label1} and ${label2}.`);
+        log.warn(`HUD position with grid offset ${gridOffset} exceeds screen bounds on both ${label1} and ${label2}.`);
         return side2;
     }
 
