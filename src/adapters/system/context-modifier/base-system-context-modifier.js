@@ -3,11 +3,21 @@ import { localize } from '../../../lib/utils.js';
 const ICONS = {
     item_type: {
         'all': 'fas fa-border-all',
+        'weapon': 'fas fa-sword',
+        'spell': 'fas fa-wand-magic-sparkles',
+        'feat': 'fas fa-award',
+        'equipment': 'fas fa-shield-halved',
+        'consumable': 'fas fa-flask-potion',
+        'tool': 'fas fa-hammer',
+        'tools': 'fas fa-hammer',
+        'savingThrow': 'fas fa-shield-alt',
+        'abilityCheck': 'fas fa-dice-d20',
         'other': 'fas fa-ellipsis',
         'hidden': 'fas fa-eye-slash'
     },
     action_type: {
         'all': 'fas fa-border-all',
+        'ability': 'fas fa-fist-raised',
         'none': 'fas fa-ban'
     }
 };
@@ -127,19 +137,7 @@ export class BaseSystemContextModifier {
      * @returns {string}
      */
     getItemTypeIcon(parentId) {
-        if (parentId === 'savingThrow') return 'fas fa-shield-alt';
-        if (parentId === 'abilityCheck') return 'fas fa-dice-d20';
-        if (parentId === 'tool' || parentId === 'tools') return 'fas fa-hammer';
-        const typeMap = {
-            weapon: 'fas fa-sword',
-            spell: 'fas fa-wand-magic-sparkles',
-            feat: 'fas fa-award',
-            equipment: 'fas fa-shield-halved',
-            consumable: 'fas fa-flask-potion',
-            tool: 'fas fa-hammer',
-            tools: 'fas fa-hammer'
-        };
-        return ICONS.item_type[parentId] ?? typeMap[parentId] ?? 'fas fa-question';
+        return ICONS.item_type[parentId] ?? 'fas fa-question';
     }
 
     /**
@@ -172,7 +170,6 @@ export class BaseSystemContextModifier {
      * @returns {string}
      */
     getActionTypeIcon(parentId) {
-        if (parentId === 'ability') return 'fas fa-fist-raised';
         return ICONS.action_type[parentId] ?? 'fas fa-question';
     }
 
