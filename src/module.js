@@ -499,10 +499,10 @@ Hooks.on('renderApplication', (app, html) => {
     if (!appEl || appEl === hudEl || hudEl.contains?.(appEl)) return;
     if (appEl.closest?.('#context-menu, .context-menu, .bad-item-summary-tooltip')) return;
 
-    const parsedHudZ = parseInt(hudEl.style?.zIndex, 10);
-    const hudZ = Number.isNaN(parsedHudZ) ? 100 : parsedHudZ;
-    const parsedAppZ = parseInt(appEl.style?.zIndex, 10);
-    const appZ = Number.isNaN(parsedAppZ) ? 0 : parsedAppZ;
+    const parsedHudZ = Number.parseInt(hudEl.style?.zIndex, 10);
+    const hudZ = Number.isFinite(parsedHudZ) ? parsedHudZ : 100;
+    const parsedAppZ = Number.parseInt(appEl.style?.zIndex, 10);
+    const appZ = Number.isFinite(parsedAppZ) ? parsedAppZ : 0;
     if (appZ <= hudZ) {
         const newZ = hudZ + 1;
         if (appEl.style) {

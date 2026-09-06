@@ -1068,7 +1068,7 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
                             if (!result.includes(commVal.custom)) result.push(commVal.custom);
                         }
                     } else if (typeof commVal === 'string' && commVal.trim().length > 0) {
-                        const str = isNaN(Number(commVal)) ? `${commLabel}: ${commVal.trim()}` : `${commLabel} ${commVal.trim()} ${units}`;
+                        const str = !Number.isFinite(Number(commVal)) ? `${commLabel}: ${commVal.trim()}` : `${commLabel} ${commVal.trim()} ${units}`;
                         if (!result.includes(str)) result.push(str);
                     }
                 }
@@ -1428,17 +1428,19 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
         if (!uses) return null;
 
         const rawMax = Number(uses.max);
-        if (!Number.isNaN(rawMax) && rawMax > 0) {
+        if (Number.isFinite(rawMax) && rawMax > 0) {
             const max = rawMax;
             const spent = uses.spent;
-            const available = (spent !== undefined && spent !== null)
+            const available = spent != null
                 ? Math.max(0, max - spent)
                 : (uses.value ?? max);
             return { available, max };
         }
 
         if (typeof uses.value === 'number' && uses.value > 0) {
-            return { available: uses.value, max: null };
+            const available = uses.value;
+            const max = uses.max ?? null;
+            return { available, max };
         }
 
         return null;
@@ -1555,7 +1557,7 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
         const actorSpells = actor?.system?.spells;
         const isPact = level === 'pact';
         const numLevel = Number(level);
-        const lvl = isPact ? (actorSpells?.pact?.level ?? 0) : (Number.isNaN(numLevel) ? 0 : numLevel);
+        const lvl = isPact ? (actorSpells?.pact?.level ?? 0) : (Number.isFinite(numLevel) ? numLevel : 0);
 
         if (!isPact && lvl <= 0) return { available: null, max: null };
 

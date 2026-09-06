@@ -50,8 +50,8 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
      * @param {ActionDisplayApp|null} [callerInstance=null] The instance initiating the change
      */
     static setAllCachedHUDsPage(targetPage, callerInstance = null) {
-        const parsed = parseInt(targetPage, 10);
-        const page = (!isNaN(parsed) && parsed > 0) ? parsed : 1;
+        const parsed = Number.parseInt(targetPage, 10);
+        const page = (Number.isFinite(parsed) && parsed > 0) ? parsed : 1;
 
         // 0. Update internal defaultPage module setting for newly opened HUDs
         ActionDisplayApp.defaultPage = page;
@@ -133,7 +133,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         const hasActorCache = Boolean(activeTabCache.has(actorKey) || (actorKey && game.settings.get(MODULE_ID, 'persistTabState') && game.settings.get(MODULE_ID, 'hudTabStates')?.[actorKey]));
         const cached = this.retrieveActorTabCache(actorKey);
         const parsedPage = Number((hasActorCache ? cached?.activePage : null) ?? ActionDisplayApp.defaultPage);
-        this.activePage = (!isNaN(parsedPage) && parsedPage > 0) ? parsedPage : ActionDisplayApp.defaultPage;
+        this.activePage = (Number.isFinite(parsedPage) && parsedPage > 0) ? parsedPage : ActionDisplayApp.defaultPage;
         this._cachedPages = cached?.pages ?? {
             '1-left': cached?.left,
             '1-right': cached?.right
@@ -184,7 +184,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
      */
     getTabColumn(side, page = this.activePage) {
         const parsedPage = Number(page ?? 1);
-        const pageNum = (!isNaN(parsedPage) && parsedPage > 0) ? parsedPage : 1;
+        const pageNum = (Number.isFinite(parsedPage) && parsedPage > 0) ? parsedPage : 1;
         if (!this._tabColumns) this._tabColumns = {};
         const key = `${pageNum}-${side}`;
         if (!this._tabColumns[key]) {
@@ -274,7 +274,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
      */
     previousPage({ shiftKey = false } = {}) {
         const parsed = Number(this.activePage);
-        const current = (!isNaN(parsed) && parsed > 0) ? parsed : 1;
+        const current = (Number.isFinite(parsed) && parsed > 0) ? parsed : 1;
         if (this.totalPages <= 1) {
             this.activePage = 1;
         } else if (current <= 1) {
@@ -296,7 +296,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
      */
     nextPage({ shiftKey = false } = {}) {
         const parsed = Number(this.activePage);
-        const current = (!isNaN(parsed) && parsed > 0) ? parsed : 1;
+        const current = (Number.isFinite(parsed) && parsed > 0) ? parsed : 1;
         if (this.totalPages <= 1) {
             this.activePage = 1;
         } else if (current >= this.totalPages) {
@@ -319,7 +319,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
      */
     changePage(targetPage, { shiftKey = false } = {}) {
         const parsed = Number(targetPage);
-        if (!isNaN(parsed) && parsed >= 1 && parsed <= this.totalPages) {
+        if (Number.isFinite(parsed) && parsed >= 1 && parsed <= this.totalPages) {
             const pageChanged = parsed !== this.activePage;
             this.activePage = parsed;
             this._saveTabState();
@@ -931,7 +931,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         }
 
         const parsedActivePage = Number(this.activePage);
-        const currentActivePage = (!isNaN(parsedActivePage) && parsedActivePage > 0) ? parsedActivePage : 1;
+        const currentActivePage = (Number.isFinite(parsedActivePage) && parsedActivePage > 0) ? parsedActivePage : 1;
         const pages = [];
         for (let i = 1; i <= this.totalPages; i++) {
             pages.push({
@@ -1670,10 +1670,10 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
                 this.bringToFront();
             } else {
                 if (targetWindow.closest?.('#context-menu, .context-menu, .bad-item-summary-tooltip')) return;
-                const parsedHudZ = parseInt(this.element.style?.zIndex, 10);
-                const hudZ = Number.isNaN(parsedHudZ) ? 100 : parsedHudZ;
-                const parsedTargetZ = parseInt(targetWindow.style?.zIndex, 10);
-                const targetZ = Number.isNaN(parsedTargetZ) ? 0 : parsedTargetZ;
+                const parsedHudZ = Number.parseInt(this.element.style?.zIndex, 10);
+                const hudZ = Number.isFinite(parsedHudZ) ? parsedHudZ : 100;
+                const parsedTargetZ = Number.parseInt(targetWindow.style?.zIndex, 10);
+                const targetZ = Number.isFinite(parsedTargetZ) ? parsedTargetZ : 0;
                 if (targetZ <= hudZ) {
                     const newZ = hudZ + 1;
                     targetWindow.style.zIndex = `${newZ}`;
@@ -1719,15 +1719,15 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
 
         // Query open application windows in the DOM to calculate highest active z-index
         let maxZ = 100;
-        const currentZ = parseInt(this.element.style?.zIndex, 10);
-        if (!isNaN(currentZ)) maxZ = Math.max(maxZ, currentZ);
+        const currentZ = Number.parseInt(this.element.style?.zIndex, 10);
+        if (Number.isFinite(currentZ)) maxZ = Math.max(maxZ, currentZ);
 
         const windows = document.querySelectorAll?.('.window-app, .application, .app, .dialog, .sidebar-popout') ?? [];
         for (const win of windows) {
             if (win === this.element) continue;
             const rawZ = win.style?.zIndex ?? window.getComputedStyle?.(win)?.zIndex;
-            const z = parseInt(rawZ, 10);
-            if (!isNaN(z) && z < 900000) { // Keep below context menus (999999) and tooltips (1000001)
+            const z = Number.parseInt(rawZ, 10);
+            if (Number.isFinite(z) && z < 900000) { // Keep below context menus (999999) and tooltips (1000001)
                 maxZ = Math.max(maxZ, z);
             }
         }
@@ -2411,8 +2411,8 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
             // Lazy-load and cache the container's bottom padding to prevent expensive getComputedStyle calls
             if (this._containerPaddingBottom === undefined) {
                 const containerStyle = window.getComputedStyle(container);
-                const parsedPadding = parseFloat(containerStyle.paddingBottom);
-                this._containerPaddingBottom = !isNaN(parsedPadding) ? parsedPadding : 0;
+                const parsedPadding = Number.parseFloat(containerStyle.paddingBottom);
+                this._containerPaddingBottom = Number.isFinite(parsedPadding) ? parsedPadding : 0;
             }
 
             const targetMinHeight = maxTabBottom + this._containerPaddingBottom;
