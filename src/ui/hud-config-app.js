@@ -3,14 +3,14 @@ import { log } from '../lib/logger.js';
 import { adapter } from '../adapters/index.js';
 import { actionDisplay } from '../action-display.js';
 
-export const DEFAULT_HUD_CONFIG = {
+export const DEFAULT_HUD_CONFIG = Object.freeze({
     hudOpacity: 0.88,
     hudScale: 1.0,
     fontSize: 14,
     hudAnchorSide: 'vertical',
     hudGridOffset: 0.5,
     hudGridOffsetHorizontal: 0.5
-};
+});
 
 /**
  * Modern ApplicationV2 configuration menu for Action Display HUD appearance, sizing, and positioning.
