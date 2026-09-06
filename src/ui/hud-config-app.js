@@ -91,10 +91,10 @@ export class HUDConfigApp extends adapter.foundry.HandlebarsApplicationMixin(ada
      */
     _attachInputListeners() {
         if (!this.element) return;
-        const sliders = this.element.querySelectorAll?.('input[type="range"]') ?? [];
+        const sliders = this.element.querySelectorAll('input[type="range"]');
         for (const slider of sliders) {
-            const output = this.element.querySelector?.(`.bad-range-value[data-for="${slider.name}"]`);
-            slider.addEventListener?.('input', event => {
+            const output = this.element.querySelector(`.bad-range-value[data-for="${slider.name}"]`);
+            slider.addEventListener('input', event => {
                 if (output) {
                     const unit = slider.dataset?.unit ?? '';
                     output.textContent = `${event.target.value}${unit}`;
@@ -113,10 +113,10 @@ export class HUDConfigApp extends adapter.foundry.HandlebarsApplicationMixin(ada
         if (!this.element) return;
 
         for (const [key, val] of Object.entries(DEFAULT_HUD_CONFIG)) {
-            const input = this.element.querySelector?.(`[name="${key}"]`);
+            const input = this.element.querySelector(`[name="${key}"]`);
             if (input) {
                 input.value = val;
-                const output = this.element.querySelector?.(`.bad-range-value[data-for="${key}"]`);
+                const output = this.element.querySelector(`.bad-range-value[data-for="${key}"]`);
                 if (output) {
                     const unit = input.dataset?.unit ?? '';
                     output.textContent = `${val}${unit}`;
@@ -132,11 +132,11 @@ export class HUDConfigApp extends adapter.foundry.HandlebarsApplicationMixin(ada
      */
     async _onSaveConfig(event, target) {
         event?.preventDefault?.();
-        const form = this.element?.querySelector?.('form') ?? this.element;
+        const form = this.element?.querySelector('form') ?? this.element;
         if (!form) return;
 
         const getVal = (name, parser, fallback) => {
-            const el = form.querySelector?.(`[name="${name}"]`);
+            const el = form.querySelector(`[name="${name}"]`);
             if (!el) return fallback;
             const parsed = parser(el.value);
             return Number.isNaN(parsed) ? fallback : parsed;

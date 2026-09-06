@@ -151,7 +151,6 @@ export class ContextMenuManager {
                 this.app._activeContextMenuTarget = null;
                 prevContextTarget?.classList?.remove?.('bad-menu-active');
                 this.element.querySelector('.bakana-action-display-container')?.classList?.remove?.('has-context-menu');
-                document.querySelectorAll('#context-menu.bad-context-menu, .context-menu.bad-context-menu').forEach(el => el.classList?.remove?.('bad-context-menu'));
             }
         };
 
@@ -335,9 +334,7 @@ export class ContextMenuManager {
                 this.closeSubmenu();
 
                 const parentMenu = document.querySelector('#context-menu, .context-menu');
-                parentMenu?.classList?.remove?.('bad-context-menu');
                 parentMenu?.remove?.();
-                document.querySelectorAll('#context-menu.bad-context-menu, .context-menu.bad-context-menu').forEach(el => el.classList?.remove?.('bad-context-menu'));
                 if (this.app._activeContextMenuTarget) {
                     this.app._activeContextMenuTarget.classList.remove('bad-menu-active');
                     this.app._activeContextMenuTarget = null;

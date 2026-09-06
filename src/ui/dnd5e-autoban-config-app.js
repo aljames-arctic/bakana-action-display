@@ -107,8 +107,7 @@ export class Dnd5eAutoBanConfigApp extends adapter.foundry.HandlebarsApplication
         const type = target?.dataset?.type;
         if (!type || !this.config[type]) return;
 
-        const el = this.element?.querySelector ? this.element : (this.element?.[0] ?? null);
-        const select = el?.querySelector?.(`#bad-${type}-select`) ?? document.querySelector?.(`#bad-${type}-select`);
+        const select = this.element?.querySelector?.(`#bad-${type}-select`);
         const statusId = select?.value;
         if (statusId && !this.config[type].includes(statusId)) {
             this.config[type].push(statusId);
