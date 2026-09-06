@@ -2,6 +2,8 @@ import { MODULE_ID } from '../../constants.js';
 import { log } from '../../lib/logger.js';
 import { adapter } from '../../adapters/index.js';
 
+const sortByName = (a, b) => (a.name ?? '').localeCompare(b.name ?? '');
+
 /**
  * Open a context submenu for an individual subaction/activity item (e.g. right-clicking an activity in the dropdown).
  * @param {ApplicationV2} app Active HUD application
@@ -125,7 +127,7 @@ export function showActivityDropdown(app, target, subactions, event, parentActio
         }
     }
 
-    const sortedSubactions = [...(subactions ?? [])].sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''));
+    const sortedSubactions = [...(subactions ?? [])].sort(sortByName);
     const menuItems = sortedSubactions.map(sub => buildSubactionMenuItem(sub, event, app));
 
     if (app._activeLeftClickMenu) {
