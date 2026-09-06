@@ -1,4 +1,5 @@
 import { log } from '../../lib/logger.js';
+import { localize } from '../../lib/utils.js';
 
 /**
  * @typedef {Object} ControlBarButtonConfig
@@ -51,10 +52,10 @@ export class ControlBarManager {
                 isVisible: true,
                 tooltip: showTooltips
                     ? (showDepleted
-                        ? (game.i18n?.localize?.('BAD.controlButtons.filterResources.tooltipHide') ?? 'Hide Depleted Items')
-                        : (game.i18n?.localize?.('BAD.controlButtons.filterResources.tooltipShow') ?? 'Show Depleted Items'))
+                        ? localize('BAD.controlButtons.filterResources.tooltipHide', 'Hide Depleted Items')
+                        : localize('BAD.controlButtons.filterResources.tooltipShow', 'Show Depleted Items'))
                     : null,
-                ariaLabel: game.i18n?.localize?.('BAD.controlButtons.filterResources.label') ?? 'Filter Resources'
+                ariaLabel: localize('BAD.controlButtons.filterResources.label', 'Filter Resources')
             },
             {
                 id: 'combat-track',
@@ -66,10 +67,9 @@ export class ControlBarManager {
                 isSecondaryActive: autoToggleCombat,
                 isVisible: enableCombatAutoTrack,
                 tooltip: showTooltips
-                    ? (game.i18n?.localize?.('BAD.controlButtons.combatTrack.tooltip')
-                        ?? '<b>Left Click:</b> Follow Active Combatant Turn\n<b>Right Click:</b> Toggle Auto-Open / Auto-Close on Turn Change')
+                    ? localize('BAD.controlButtons.combatTrack.tooltip', '<b>Left Click:</b> Follow Active Combatant Turn\n<b>Right Click:</b> Toggle Auto-Open / Auto-Close on Turn Change')
                     : null,
-                ariaLabel: game.i18n?.localize?.('BAD.controlButtons.combatTrack.label') ?? 'Combat Turn Tracker'
+                ariaLabel: localize('BAD.controlButtons.combatTrack.label', 'Combat Turn Tracker')
             },
             {
                 id: 'summary-toggle',
@@ -82,10 +82,10 @@ export class ControlBarManager {
                 isVisible: enableItemSummaryButton,
                 tooltip: showTooltips
                     ? (showItemSummaries
-                        ? (game.i18n?.localize?.('BAD.controlButtons.itemSummary.tooltipDisable') ?? 'Disable Rich Item Summaries')
-                        : (game.i18n?.localize?.('BAD.controlButtons.itemSummary.tooltipEnable') ?? 'Enable Rich Item Summaries (without holding ?)'))
+                        ? localize('BAD.controlButtons.itemSummary.tooltipDisable', 'Disable Rich Item Summaries')
+                        : localize('BAD.controlButtons.itemSummary.tooltipEnable', 'Enable Rich Item Summaries (without holding ?)'))
                     : null,
-                ariaLabel: game.i18n?.localize?.('BAD.controlButtons.itemSummary.label') ?? 'Item Summary Tooltips'
+                ariaLabel: localize('BAD.controlButtons.itemSummary.label', 'Item Summary Tooltips')
             }
         ];
 
@@ -100,10 +100,9 @@ export class ControlBarManager {
                 isSecondaryActive: false,
                 isVisible: enableCenterOnToken,
                 tooltip: showTooltips
-                    ? (game.i18n?.localize?.('BAD.controlButtons.recenter.tooltip')
-                        ?? '<b>Left Click:</b> Recenter Canvas on Active Combatant\n<b>Right Click:</b> Toggle Auto-Centering on Turn Change')
+                    ? localize('BAD.controlButtons.recenter.tooltip', '<b>Left Click:</b> Recenter Canvas on Active Combatant\n<b>Right Click:</b> Toggle Auto-Centering on Turn Change')
                     : null,
-                ariaLabel: game.i18n?.localize?.('BAD.controlButtons.recenter.label') ?? 'Recenter View'
+                ariaLabel: localize('BAD.controlButtons.recenter.label', 'Recenter View')
             },
             {
                 id: 'pin',
@@ -116,12 +115,10 @@ export class ControlBarManager {
                 isVisible: true,
                 tooltip: showTooltips
                     ? (isAttached
-                        ? (game.i18n?.localize?.('BAD.controlButtons.anchor.tooltipAttached')
-                            ?? '<b>Left Click:</b> Detach HUD from Token\n<b>Right Click:</b> Toggle HUD Persistence on Outside Click')
-                        : (game.i18n?.localize?.('BAD.controlButtons.anchor.tooltipDetached')
-                            ?? '<b>Left Click:</b> Attach HUD to Token\n<b>Right Click:</b> Toggle HUD Persistence on Outside Click'))
+                        ? localize('BAD.controlButtons.anchor.tooltipAttached', '<b>Left Click:</b> Detach HUD from Token\n<b>Right Click:</b> Toggle HUD Persistence on Outside Click')
+                        : localize('BAD.controlButtons.anchor.tooltipDetached', '<b>Left Click:</b> Attach HUD to Token\n<b>Right Click:</b> Toggle HUD Persistence on Outside Click'))
                     : null,
-                ariaLabel: game.i18n?.localize?.('BAD.controlButtons.anchor.label') ?? 'HUD Placement & Persistence'
+                ariaLabel: localize('BAD.controlButtons.anchor.label', 'HUD Placement & Persistence')
             },
             {
                 id: 'close',
@@ -133,9 +130,9 @@ export class ControlBarManager {
                 isSecondaryActive: false,
                 isVisible: true,
                 tooltip: showTooltips
-                    ? (game.i18n?.localize?.('BAD.controlButtons.close.tooltip') ?? 'Close HUD')
+                    ? localize('BAD.controlButtons.close.tooltip', 'Close HUD')
                     : null,
-                ariaLabel: game.i18n?.localize?.('BAD.controlButtons.close.label') ?? 'Close HUD'
+                ariaLabel: localize('BAD.controlButtons.close.label', 'Close HUD')
             }
         ];
 
@@ -175,34 +172,22 @@ export class ControlBarManager {
         }
 
         // Fallback for elements/tests querying legacy class selectors without data-context-action
-        const combatTrackBtn = event?.target?.closest?.('.bad-combat-track-btn');
-        if (combatTrackBtn) {
-            event.preventDefault?.();
-            event.stopPropagation?.();
-            event.stopImmediatePropagation?.();
-            combatTrackBtn.blur?.();
-            await app._onRightClickCombatAutoTrack(event, combatTrackBtn);
-            return true;
-        }
+        const legacyFallbacks = [
+            { selector: '.bad-combat-track-btn', method: '_onRightClickCombatAutoTrack' },
+            { selector: '.bad-recenter-btn', method: '_onRightClickRecenterToken' },
+            { selector: '.bad-pin-btn', method: '_onRightClickToggleAnchor' }
+        ];
 
-        const recenterBtn = event?.target?.closest?.('.bad-recenter-btn');
-        if (recenterBtn) {
-            event.preventDefault?.();
-            event.stopPropagation?.();
-            event.stopImmediatePropagation?.();
-            recenterBtn.blur?.();
-            await app._onRightClickRecenterToken(event, recenterBtn);
-            return true;
-        }
-
-        const pinBtn = event?.target?.closest?.('.bad-pin-btn');
-        if (pinBtn) {
-            event.preventDefault?.();
-            event.stopPropagation?.();
-            event.stopImmediatePropagation?.();
-            pinBtn.blur?.();
-            await app._onRightClickToggleAnchor(event, pinBtn);
-            return true;
+        for (const { selector, method } of legacyFallbacks) {
+            const btn = event?.target?.closest?.(selector);
+            if (btn && typeof app[method] === 'function') {
+                event.preventDefault?.();
+                event.stopPropagation?.();
+                event.stopImmediatePropagation?.();
+                btn.blur?.();
+                await app[method](event, btn);
+                return true;
+            }
         }
 
         return false;
