@@ -958,14 +958,14 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
             if (combatant) {
                 const canInteract = Boolean(this.actor?.isOwner || this.token?.document?.isOwner || game.user?.isGM);
                 if (canInteract) {
-                    const needsInitiative = combatant.initiative === null || combatant.initiative === undefined;
+                    const needsInitiative = combatant.initiative == null;
                     showRollInitiativeButton = needsInitiative;
 
                     if (!needsInitiative && combat.started) {
                         const currentCombatant = combat.combatant;
                         if (currentCombatant) {
-                            const isTokenMatch = Boolean(this.token && (currentCombatant.token === this.token || currentCombatant.token?.id === this.token.id || currentCombatant.tokenId === this.token.id));
-                            const isActorMatch = Boolean(this.actor && (currentCombatant.actor === this.actor || currentCombatant.actor?.id === this.actor.id || currentCombatant.actorId === this.actor.id));
+                            const isTokenMatch = Boolean(this.token && (currentCombatant.token === this.token || (currentCombatant.token?.id ?? currentCombatant.tokenId) === this.token.id));
+                            const isActorMatch = Boolean(this.actor && (currentCombatant.actor === this.actor || (currentCombatant.actor?.id ?? currentCombatant.actorId) === this.actor.id));
                             isCurrentCombatant = isTokenMatch || isActorMatch;
                         }
                         showEndTurnButton = isCurrentCombatant;
