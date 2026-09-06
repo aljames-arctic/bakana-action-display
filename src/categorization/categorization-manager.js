@@ -67,6 +67,25 @@ export function normalizeCategorizationConfig(raw) {
     };
 }
 
+const expressionCache = new Map();
+
+/**
+ * Retrieve or compile a reusable evaluator function for a boolean expression.
+ * @param {string} expr Trimmed boolean expression string
+ * @returns {Function}
+ */
+function getCompiledExpression(expr) {
+    let fn = expressionCache.get(expr);
+    if (!fn) {
+        fn = new Function(
+            'action', 'item', 'actor', 'token', 'user',
+            `"use strict"; return Boolean(${expr});`
+        );
+        expressionCache.set(expr, fn);
+    }
+    return fn;
+}
+
 /**
  * Validate syntax of a boolean expression string.
  *
@@ -79,10 +98,7 @@ export function validateExpression(expression) {
         return { valid: false, error: 'Expression cannot be empty.' };
     }
     try {
-        new Function(
-            'action', 'item', 'actor', 'token', 'user',
-            `"use strict"; return Boolean(${expr});`
-        );
+        getCompiledExpression(expr);
         return { valid: true, error: null };
     } catch (err) {
         return { valid: false, error: err.message ?? 'Syntax error' };
@@ -107,10 +123,7 @@ export function evaluateBooleanExpression(expression, action, context = {}) {
         const token = context?.token ?? action?.token ?? null;
         const user = context?.user ?? game.user ?? null;
 
-        const evaluator = new Function(
-            'action', 'item', 'actor', 'token', 'user',
-            `"use strict"; return Boolean(${expr});`
-        );
+        const evaluator = getCompiledExpression(expr);
         return Boolean(evaluator(action, item, actor, token, user));
     } catch (err) {
         log.error(`Failed to evaluate boolean expression: "${expression}"`, err);
