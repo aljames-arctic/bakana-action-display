@@ -433,34 +433,29 @@ export class BasePf2eSystemAdapter extends FantasySystemAdapter {
 
         const showAll = Boolean(app?.actor?.getFlag?.(MODULE_ID, 'showAll'));
 
+        const unequippedTabMap = {
+            weapon: { flag: 'showUnequipped_weapon', tooltip: 'BAD.tabs.unequippedWeaponsTooltip', defaultTooltip: '<b>Right Click:</b> Toggle Show Unequipped Weapons' },
+            consumable: { flag: 'showUnequipped_consumable', tooltip: 'BAD.tabs.unequippedItemsTooltip', defaultTooltip: '<b>Right Click:</b> Toggle Show Unequipped Items' },
+            equipment: { flag: 'showUnequipped_equipment', tooltip: 'BAD.tabs.unequippedEquipmentTooltip', defaultTooltip: '<b>Right Click:</b> Toggle Show Unequipped Equipment' }
+        };
+
         const allParent = context.itemTypes?.find(g => g.id === 'all');
         if (allParent) {
             allParent.showUnprepared = showAll;
+            if (context.showTooltips) {
+                allParent.tooltip = localize('BAD.tabs.allTooltip', '<b>Right Click:</b> Toggle Show All (Equipped & Unequipped Items, Prepared & Unprepared Spells)');
+            }
         }
 
-        const weaponParent = context.itemTypes?.find(g => g.id === 'weapon');
-        if (weaponParent) {
-            const showUnequippedWeapon = Boolean(app.actor?.getFlag?.(MODULE_ID, 'showUnequipped_weapon'));
-            weaponParent.showUnprepared = Boolean(showUnequippedWeapon || showAll);
-        }
-
-        const consumableParent = context.itemTypes?.find(g => g.id === 'consumable');
-        if (consumableParent) {
-            const showUnequippedConsumable = Boolean(app.actor?.getFlag?.(MODULE_ID, 'showUnequipped_consumable'));
-            consumableParent.showUnprepared = Boolean(showUnequippedConsumable || showAll);
-        }
-
-        const equipmentParent = context.itemTypes?.find(g => g.id === 'equipment');
-        if (equipmentParent) {
-            const showUnequippedEquipment = Boolean(app.actor?.getFlag?.(MODULE_ID, 'showUnequipped_equipment'));
-            equipmentParent.showUnprepared = Boolean(showUnequippedEquipment || showAll);
-        }
-
-        if (context.showTooltips) {
-            if (allParent) allParent.tooltip = localize('BAD.tabs.allTooltip', '<b>Right Click:</b> Toggle Show All (Equipped & Unequipped Items, Prepared & Unprepared Spells)');
-            if (weaponParent) weaponParent.tooltip = localize('BAD.tabs.unequippedWeaponsTooltip', '<b>Right Click:</b> Toggle Show Unequipped Weapons');
-            if (consumableParent) consumableParent.tooltip = localize('BAD.tabs.unequippedItemsTooltip', '<b>Right Click:</b> Toggle Show Unequipped Items');
-            if (equipmentParent) equipmentParent.tooltip = localize('BAD.tabs.unequippedEquipmentTooltip', '<b>Right Click:</b> Toggle Show Unequipped Equipment');
+        for (const [type, cfg] of Object.entries(unequippedTabMap)) {
+            const parent = context.itemTypes?.find(g => g.id === type);
+            if (parent) {
+                const showFlag = Boolean(app?.actor?.getFlag?.(MODULE_ID, cfg.flag));
+                parent.showUnprepared = Boolean(showFlag || showAll);
+                if (context.showTooltips) {
+                    parent.tooltip = localize(cfg.tooltip, cfg.defaultTooltip);
+                }
+            }
         }
 
         const spellGroup = context.itemTypes?.find(g => g.id === 'spell');
