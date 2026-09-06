@@ -221,23 +221,16 @@ export class HUDTabColumn {
             const isCurrentActive = this.activeSubTypes.has(type) ||
                 (hasDescendants && Array.from(descendantIds).some(id => this.activeSubTypes.has(id)));
 
-            if (activeSubsForParent.length > 1) {
-                for (const subId of activeSubsForParent) {
-                    this.activeSubTypes.delete(subId);
-                }
-                this.activeSubTypes.add(type);
-            } else if (activeSubsForParent.length === 1 && isCurrentActive) {
-                for (const subId of activeSubsForParent) {
-                    this.activeSubTypes.delete(subId);
-                }
+            for (const subId of activeSubsForParent) {
+                this.activeSubTypes.delete(subId);
+            }
+
+            if (activeSubsForParent.length === 1 && isCurrentActive) {
                 for (const childId of descendantIds) {
                     this.activeSubTypes.delete(childId);
                 }
                 this.activeSubTypes.delete(type);
             } else {
-                for (const subId of activeSubsForParent) {
-                    this.activeSubTypes.delete(subId);
-                }
                 this.activeSubTypes.add(type);
             }
         } else {
