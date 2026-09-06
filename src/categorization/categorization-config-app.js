@@ -1,5 +1,6 @@
 import { MODULE_ID } from '../constants.js';
 import { log } from '../lib/logger.js';
+import { localize } from '../lib/utils.js';
 import {
     normalizeCategorizationConfig,
     getDefaultCategories,
@@ -72,12 +73,8 @@ export class CategorizationConfigApp extends adapter.foundry.HandlebarsApplicati
      * @returns {string} HTML string for the tooltip
      */
     _getExpressionHelpTooltip() {
-        const localize = (key, fallback = '') => {
-            const loc = game.i18n.localize(key);
-            return (loc && loc !== key) ? loc : fallback;
-        };
         const format = (key, data, fallback = '') => {
-            let str = game.i18n.localize(key);
+            let str = localize(key, fallback);
             if (!str || str === key) {
                 str = fallback;
             }

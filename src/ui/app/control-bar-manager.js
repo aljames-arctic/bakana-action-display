@@ -159,7 +159,7 @@ export class ControlBarManager {
             const handler = app.constructor?.DEFAULT_OPTIONS?.contextActions?.[actionName]
                 ?? app[actionName];
 
-            if (typeof handler === 'function') {
+            if (handler) {
                 try {
                     await handler.call(app, event, contextTarget);
                 } catch (err) {
@@ -180,7 +180,7 @@ export class ControlBarManager {
 
         for (const { selector, method } of legacyFallbacks) {
             const btn = event?.target?.closest?.(selector);
-            if (btn && typeof app[method] === 'function') {
+            if (btn && app[method]) {
                 event.preventDefault?.();
                 event.stopPropagation?.();
                 event.stopImmediatePropagation?.();

@@ -2112,7 +2112,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
 
         let html = `<div class="bad-item-summary-tooltip${tableClass}"${widthStyle}>`;
         html += '<div class="bad-summary-header">';
-        const formatTag = tag => typeof tag === 'string' ? tag : (tag?.label ? `${tag.label}: ${tag.value}` : tag?.value);
+        const formatTag = tag => (tag?.label ? `${tag.label}: ${tag.value}` : (tag?.value ?? tag));
         const headerTags = Array.isArray(summary.headerTags) ? summary.headerTags : (summary.headerTag ? [summary.headerTag] : []);
         let headerTagsHtml = '';
         for (const tag of headerTags) {
@@ -2140,7 +2140,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
                 if (Array.isArray(prop)) {
                     html += '<div class="bad-summary-tag-row">';
                     for (const item of prop) {
-                        if (typeof item === 'string' && item.endsWith(':')) {
+                        if (item?.endsWith?.(':')) {
                             html += `<span class="bad-summary-row-label">${item}</span>`;
                         } else {
                             const text = formatTag(item);
