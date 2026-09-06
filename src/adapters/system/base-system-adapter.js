@@ -14,6 +14,9 @@ const MODIFIER_KEY_MAP = {
     shiftKey: 'Shift'
 };
 
+const EXCLUDED_ECONOMY_LABELS = new Set(['economy', 'none', 'all']);
+const DEFAULT_ECONOMY_OTHER = Object.freeze({ id: 'other', defaultColor: '#64748b', defaultEnabled: false });
+
 /**
  * Base class for all system-specific adapters.
  * System adapters are responsible for modifying, filtering, and sorting
@@ -529,7 +532,7 @@ export class BaseSystemAdapter {
 
         const types = this.getEconomyTypes() ?? [];
         const found = types.find(t => t.id === type);
-        const otherDef = types.find(t => t.id === 'other') ?? { id: 'other', defaultColor: '#64748b', defaultEnabled: true };
+        const otherDef = types.find(t => t.id === 'other') ?? DEFAULT_ECONOMY_OTHER;
         const typeDef = found ?? otherDef;
 
         if (!this.isEconomyTypeEnabled(typeDef, userColors)) {
@@ -561,20 +564,20 @@ export class BaseSystemAdapter {
             for (const sub of action.subactions) {
                 const econRef = sub.right?.find(r => r?.root === 'economy');
                 const subType = econRef?.label;
-                if (subType && subType !== 'economy' && subType !== 'none' && subType !== 'all') {
+                if (subType && !EXCLUDED_ECONOMY_LABELS.has(subType)) {
                     activeTypes.add(subType);
                 }
             }
         } else if (action.right?.length) {
             const econRef = action.right.find(r => r?.root === 'economy');
             const subType = econRef?.label;
-            if (subType && subType !== 'economy' && subType !== 'none' && subType !== 'all') {
+            if (subType && !EXCLUDED_ECONOMY_LABELS.has(subType)) {
                 activeTypes.add(subType);
             }
         }
 
         // Map any unmapped active types to 'other' if 'other' is enabled
-        const otherDef = systemTypes.find(t => t.id === 'other') ?? { id: 'other', defaultColor: '#64748b', defaultEnabled: false };
+        const otherDef = systemTypes.find(t => t.id === 'other') ?? DEFAULT_ECONOMY_OTHER;
         const hasUnmapped = Array.from(activeTypes).some(t => !systemTypes.some(st => st.id === t));
         if (hasUnmapped && this.isEconomyTypeEnabled(otherDef, userColors)) {
             activeTypes.add('other');
