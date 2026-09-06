@@ -469,15 +469,10 @@ Hooks.once('init', () => {
  * @param {Application} [app] Application instance
  */
 export function injectSettingsHeaders(html, app) {
-    const root = (html instanceof HTMLElement)
-        ? html
-        : (html?.[0] instanceof HTMLElement)
-            ? html[0]
-            : (app?.element instanceof HTMLElement)
-                ? app.element
-                : (app?.element?.[0] instanceof HTMLElement)
-                    ? app.element[0]
-                    : (document.querySelector?.('#client-settings, form.categories, .settings-list') ?? null);
+    const root = (html instanceof HTMLElement ? html : html?.[0])
+        ?? (app?.element instanceof HTMLElement ? app.element : app?.element?.[0])
+        ?? document.querySelector?.('#client-settings, form.categories, .settings-list')
+        ?? null;
 
     if (!root?.querySelector) return;
 
