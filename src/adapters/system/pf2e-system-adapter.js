@@ -572,7 +572,7 @@ export class BasePf2eSystemAdapter extends FantasySystemAdapter {
         const ancestry = details.ancestry?.name ?? details.heritage?.name ?? '';
         const creatureType = details.creatureType ? localize(details.creatureType, details.creatureType) : '';
 
-        let typeStr = creatureType || ancestry;
+        let typeStr = creatureType.length > 0 ? creatureType : ancestry;
         if (!typeStr && traitList.length > 0) {
             typeStr = traitList.map(t => cfg?.creatureTraits?.[t] ? localize(cfg.creatureTraits[t], t) : (t.charAt(0).toUpperCase() + t.slice(1))).join(', ');
         }
@@ -582,7 +582,7 @@ export class BasePf2eSystemAdapter extends FantasySystemAdapter {
         return {
             size: sizeLabel,
             alignment,
-            type: creatureType || (traitList[0] ?? ''),
+            type: creatureType.length > 0 ? creatureType : (traitList[0] ?? ''),
             subtype: ancestry,
             crLabel,
             fullLabel
@@ -1108,7 +1108,7 @@ export class BasePf2eSystemAdapter extends FantasySystemAdapter {
             properties.push({ label: 'Damage', value: `${system.damage.dice}${system.damage.die} ${system.damage.damageType ?? ''}`.trim() });
         }
         if (system.range) {
-            const rangeStr = (system.range?.value || system.range?.unit) ? `${system.range.value ?? ''} ${system.range.unit ?? ''}`.trim() : String(system.range);
+            const rangeStr = (system.range?.value != null || system.range?.unit != null) ? `${system.range.value ?? ''} ${system.range.unit ?? ''}`.trim() : String(system.range);
             if (rangeStr) properties.push({ label: 'Range', value: rangeStr });
         }
         if (system.traits?.value && Array.isArray(system.traits.value)) {

@@ -181,12 +181,12 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
                         const subId = this.#getCanonicalSubTab(activationType);
                         const tabRef = TabRef.from('economy', category, subId);
 
-                        const activityName = activity.name?.trim?.();
-                        const activityImg = activity.img?.trim?.();
+                        const activityName = activity.name?.trim?.() ?? '';
+                        const activityImg = activity.img?.trim?.() ?? '';
                         return new Action({
                             id: activity.id,
-                            name: (activityName || null) ?? linkedAction?.name ?? activity.type?.toUpperCase() ?? 'Action',
-                            img: (activityImg || null) ?? linkedAction?.img ?? item.img ?? '',
+                            name: (activityName.length > 0 ? activityName : null) ?? linkedAction?.name ?? activity.type?.toUpperCase() ?? 'Action',
+                            img: (activityImg.length > 0 ? activityImg : null) ?? linkedAction?.img ?? item.img ?? '',
                             uses: this.#calculateActivityUses(activity, item),
                             right: [tabRef],
                             roll: async (event) => {
@@ -957,7 +957,7 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
                 const effect = CONFIG.statusEffects.find(e => e.id === val);
                 if (effect?.name) label = localize(effect.name, effect.name);
             }
-            result.push((label || null) ?? val);
+            result.push((label && label.length > 0 ? label : null) ?? val);
         }
 
         const customCI = ciData.custom?.trim?.();
@@ -1097,7 +1097,7 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
      */
     formatSenseLabel(key, sensesMap = CONFIG?.DND5E?.senses) {
         const formatted = this.#formatLabel(key, sensesMap);
-        return (formatted || null) ?? (key.charAt(0).toUpperCase() + key.slice(1));
+        return (formatted && formatted.length > 0 ? formatted : null) ?? (key.charAt(0).toUpperCase() + key.slice(1));
     }
 
     // #endregion
@@ -1991,7 +1991,8 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
         const resolveDescription = (desc) => {
             if (!desc) return null;
             const text = desc?.value ?? desc?.chatFlavor ?? desc?.chat ?? desc;
-            return text?.trim?.() || null;
+            const trimmed = text?.trim?.();
+            return (trimmed && trimmed.length > 0) ? trimmed : null;
         };
 
         let description = resolveDescription(activity?.description)
