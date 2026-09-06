@@ -284,14 +284,15 @@ Hooks.on('deleteItem', (item, options, userId) => {
     }
 });
 
+const METADATA_KEYS = new Set(['_id', 'id', '_stats']);
+
 /**
  * Test whether a document change object contains solely internal module flag modifications.
  * @param {Object} [changes]
  * @returns {boolean}
  */
 function isOnlyModuleFlagChanges(changes) {
-    const metadataKeys = new Set(['_id', 'id', '_stats']);
-    const nonMetaKeys = Object.keys(changes ?? {}).filter(k => !metadataKeys.has(k) && !k.startsWith('_stats.'));
+    const nonMetaKeys = Object.keys(changes ?? {}).filter(k => !METADATA_KEYS.has(k) && !k.startsWith('_stats.'));
     return nonMetaKeys.length > 0 && nonMetaKeys.every(key => {
         if (key.startsWith(`flags.${MODULE_ID}`) || key.startsWith(`actorData.flags.${MODULE_ID}`) || key.startsWith(`delta.flags.${MODULE_ID}`)) return true;
         if (key === 'flags') {
