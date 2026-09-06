@@ -8,6 +8,8 @@ const ALL_FILTER_FLAGS = [
     'showUnequipped_consumable'
 ];
 
+const EQUIPPABLE_ITEM_TYPES = new Set(['weapon', 'equipment', 'consumable', 'attack']);
+
 /**
  * Manages PF1e-specific context menu options (Equip/Unequip) and tab right-click filters.
  */
@@ -42,7 +44,7 @@ export class Pf1SystemContextMenuManager extends BaseSystemContextMenuManager {
                 icon: '<i class="fas fa-shield-halved"></i>',
                 condition: el => {
                     const item = this.#getOwnerItem(app, el);
-                    return Boolean(item && ['weapon', 'equipment', 'consumable', 'attack'].includes(item.type) && item.system?.equipped !== undefined && !this.adapter.getItemEquipped(item));
+                    return Boolean(item && EQUIPPABLE_ITEM_TYPES.has(item.type) && item.system?.equipped !== undefined && !this.adapter.getItemEquipped(item));
                 },
                 callback: async el => {
                     const item = this.#getOwnerItem(app, el);
@@ -56,7 +58,7 @@ export class Pf1SystemContextMenuManager extends BaseSystemContextMenuManager {
                 icon: '<i class="fas fa-shield-slash"></i>',
                 condition: el => {
                     const item = this.#getOwnerItem(app, el);
-                    return Boolean(item && ['weapon', 'equipment', 'consumable', 'attack'].includes(item.type) && item.system?.equipped !== undefined && this.adapter.getItemEquipped(item));
+                    return Boolean(item && EQUIPPABLE_ITEM_TYPES.has(item.type) && item.system?.equipped !== undefined && this.adapter.getItemEquipped(item));
                 },
                 callback: async el => {
                     const item = this.#getOwnerItem(app, el);

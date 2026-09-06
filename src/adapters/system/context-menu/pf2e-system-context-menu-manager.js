@@ -90,7 +90,7 @@ export class Pf2eSystemContextMenuManager extends BaseSystemContextMenuManager {
                         name: "PF2E.CarryType.held2",
                         icon: '<i class="fas fa-hands"></i>',
                         active: (item) => item?.system?.equipped?.carryType === 'held' && item?.system?.equipped?.handsHeld === 2,
-                        condition: (item) => ['weapon', 'equipment'].includes(item?.type),
+                        condition: (item) => item?.type === 'weapon' || item?.type === 'equipment',
                         callback: async (item) => {
                             await this.#safeUpdateItem(app, item, {
                                 "system.equipped.carryType": "held",

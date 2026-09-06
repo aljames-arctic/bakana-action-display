@@ -28,11 +28,11 @@ export class BaseSystemContextMenuManager {
      */
     setActorFlagOptimistic(actor, scope, key, value) {
         if (!actor) return;
-        if (!actor.flags) actor.flags = {};
-        if (!actor.flags[scope]) actor.flags[scope] = {};
+        actor.flags ??= {};
+        actor.flags[scope] ??= {};
         actor.flags[scope][key] = value;
         if (actor._source?.flags) {
-            if (!actor._source.flags[scope]) actor._source.flags[scope] = {};
+            actor._source.flags[scope] ??= {};
             actor._source.flags[scope][key] = value;
         }
         return actor.setFlag?.(scope, key, value, { badInternal: true });
@@ -47,13 +47,13 @@ export class BaseSystemContextMenuManager {
      */
     updateActorFlagsOptimistic(actor, scope, flags) {
         if (!actor) return;
-        if (!actor.flags) actor.flags = {};
-        if (!actor.flags[scope]) actor.flags[scope] = {};
+        actor.flags ??= {};
+        actor.flags[scope] ??= {};
         for (const [key, value] of Object.entries(flags)) {
             actor.flags[scope][key] = value;
         }
         if (actor._source?.flags) {
-            if (!actor._source.flags[scope]) actor._source.flags[scope] = {};
+            actor._source.flags[scope] ??= {};
             for (const [key, value] of Object.entries(flags)) {
                 actor._source.flags[scope][key] = value;
             }
