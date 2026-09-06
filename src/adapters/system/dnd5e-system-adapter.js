@@ -12,6 +12,14 @@ import { Dnd5eSystemContextModifier } from './context-modifier/dnd5e-system-cont
 import { CombatMovementTracker } from '../../combat/combat-movement-tracker.js';
 
 const ALLOWED_TYPES = new Set(['weapon', 'equipment', 'consumable', 'tool', 'backpack', 'loot', 'feat', 'spell']);
+const PASSIVE_ITEM_TYPES = new Set(['equipment', 'weapon', 'consumable', 'tool', 'backpack', 'loot']);
+const NON_PREPARED_METHODS = new Set(['innate', 'atwill', 'pact', 'always']);
+const INNATE_OR_ATWILL_METHODS = new Set(['innate', 'atwill']);
+const PHYSICAL_DAMAGE_TYPES = new Set(['bludgeoning', 'piercing', 'slashing']);
+const LIMITED_ITEM_TYPES = new Set(['feat', 'weapon', 'consumable', 'tool']);
+const CORE_CHECK_TYPES = new Set(['ability', 'abilityCheck', 'save', 'skill', 'tool']);
+const EXCLUDED_SUMMARY_PROPERTIES = new Set(['concentration', 'ritual', 'mgc']);
+const SPELL_COMPONENT_KEYS = new Set(['vocal', 'somatic', 'material']);
 
 /**
  * Base system adapter for D&D 5th Edition (v4.0+ baseline).
@@ -138,7 +146,7 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
                     const prepMode = item.system.method ?? 'prepared';
                     const isPrepared = Boolean(item.system.prepared);
                     const isCantrip = (item.system.level ?? 0) === 0;
-                    isSpellUnprepared = !isCantrip && !['innate', 'atwill', 'pact', 'always'].includes(prepMode) && !isPrepared;
+                    isSpellUnprepared = !isCantrip && !NON_PREPARED_METHODS.has(prepMode) && !isPrepared;
 
                     if (!showUnprepared && isSpellUnprepared && !isUserHidden) {
                         log.debug(`Dnd5eSystemAdapter.modifyActions | Filtering out spell "${item.name}" (ID: ${item.id}) — isPrepared === false and prepMode (${prepMode}) requires preparation; showUnprepared flag is not set`);
@@ -247,7 +255,7 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
                     });
 
                     modified.push(activityAction);
-                } else if (['equipment', 'weapon', 'consumable', 'tool', 'backpack', 'loot'].includes(type)) {
+                } else if (PASSIVE_ITEM_TYPES.has(type)) {
                     // Passive items (armor, passive shields, containers, loot, passive consumables/tools) are assigned right-side tab 'none' under 'economy'
                     const subType = item.system.type?.value;
                     const passiveAction = new Action({
@@ -921,7 +929,7 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
         for (const val of values) {
             if (!val) continue;
             const label = this.#formatLabel(val, typeMap);
-            const isPhysical = ['bludgeoning', 'piercing', 'slashing'].includes(val);
+            const isPhysical = PHYSICAL_DAMAGE_TYPES.has(val);
             if (isPhysical && bypassSuffix) {
                 result.push(`${label}${bypassSuffix}`);
             } else {
@@ -1265,7 +1273,7 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
         const hasLimited = this.#hasLimitedUses(item);
         const hasCastActivity = filteredActivities.some(act => act.originalActivity?.type === 'cast');
         const isItemCharges = (type === 'equipment' && hasLimited)
-            || (['feat', 'weapon', 'consumable', 'tool'].includes(type) && hasLimited && hasCastActivity);
+            || (LIMITED_ITEM_TYPES.has(type) && hasLimited && hasCastActivity);
 
         if (isItemCharges) {
             return ['spell', 'itemCharges'];
@@ -1464,7 +1472,7 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
                 }
 
                 // If the spell is innate or at-will without limited uses, it is unlimited / at will
-                if (['innate', 'atwill'].includes(item.system?.method)) {
+                if (INNATE_OR_ATWILL_METHODS.has(item.system?.method)) {
                     return { available: null, max: null };
                 }
 
@@ -1557,7 +1565,7 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
         
         if (prepMode === 'pact') {
             return this.#getSpellSlotUses(actor, 'pact', highestAvailableSlot);
-        } else if (!['innate', 'atwill'].includes(prepMode)) {
+        } else if (!INNATE_OR_ATWILL_METHODS.has(prepMode)) {
             return this.#getSpellSlotUses(actor, level, highestAvailableSlot);
         }
         return { available: null, max: null };
@@ -1870,8 +1878,7 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
         if (!action && !item) return null;
 
         const isPage2Check = action?.page === 2;
-        const isCoreCheck = (isPage2Check && ['ability', 'abilityCheck', 'save', 'skill', 'tool'].includes(action?.type))
-            || (!action?.originalItem && ['ability', 'abilityCheck', 'save', 'skill', 'tool'].includes(action?.type));
+        const isCoreCheck = CORE_CHECK_TYPES.has(action?.type) && (isPage2Check || !action?.originalItem);
         if (isCoreCheck) {
             return this.#getCheckSummary(action, actor);
         }
@@ -1958,7 +1965,7 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
         // 8. Physical Item Properties (e.g. Versatile, Finesse, Thrown)
         const itemProps = toSet(effectiveSystem.properties ?? system.properties);
         for (const prop of itemProps) {
-            if (['concentration', 'ritual', 'mgc'].includes(prop)) continue;
+            if (EXCLUDED_SUMMARY_PROPERTIES.has(prop)) continue;
             const propLabel = CONFIG?.DND5E?.itemProperties?.[prop]?.label ?? prop;
             properties.push({ value: propLabel });
         }
@@ -2153,7 +2160,7 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
      * @param {boolean} isActive
      */
     recordManualTabToggle(actor, parentId, subId, isActive) {
-        if (!actor || parentId !== 'components' || !['vocal', 'somatic', 'material'].includes(subId)) return;
+        if (!actor || parentId !== 'components' || !SPELL_COMPONENT_KEYS.has(subId)) return;
         const autoBanState = actor.getFlag?.(MODULE_ID, 'autoBanState') ?? {};
         const conditions = autoBanState.conditions ?? {};
         const manualUnbans = { ...(autoBanState.manualUnbans ?? {}) };
