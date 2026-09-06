@@ -98,12 +98,12 @@ export class BasePf1SystemAdapter extends FantasySystemAdapter {
 
                 let isUnequipped = false;
                 if (['weapon', 'equipment', 'consumable', 'loot', 'attack'].includes(type) && item.system?.equipped !== undefined) {
-                    if (this.getItemEquipped(item) === false) {
+                    if (!this.getItemEquipped(item)) {
                         isUnequipped = true;
-                        const showUnequipped = Boolean((actor?.getFlag?.(MODULE_ID, `showUnequipped_${type}`) ?? false) || showAll);
+                        const showUnequipped = Boolean(actor?.getFlag?.(MODULE_ID, `showUnequipped_${type}`) || showAll);
                         const isUserHidden = Boolean(actor?.getFlag?.(MODULE_ID, 'hiddenItems')?.[item.id]);
                         if (!showUnequipped && !isUserHidden) {
-                            log.debug(`Pf1SystemAdapter.modifyActions | Filtering out unequipped ${type} "${item.name}" (ID: ${item.id}) — item.system.equipped === false and showUnequipped_${type} / showAll flag is not set`);
+                            log.debug(`Pf1SystemAdapter.modifyActions | Filtering out unequipped ${type} "${item.name}" (ID: ${item.id}) — item.system.equipped is falsy and showUnequipped_${type} / showAll flag is not set`);
                             continue;
                         }
                     }

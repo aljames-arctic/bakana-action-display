@@ -38,12 +38,11 @@ export class Pf2eSystemContextMenuManager extends BaseSystemContextMenuManager {
      * @returns {boolean}
      */
     #isEquippable(item, app = null) {
-        if (!item || !item.system) return false;
+        if (!item?.system) return false;
         if (app?.actor?.items && item.id && !app.actor.items.has(item.id)) return false;
-        if (item.isEmbedded === false) return false;
-        if (item.isPhysical === false) return false;
-        if (item.category === 'unarmed' || item.system?.category?.value === 'unarmed') return false;
-        if (item.system?.traits?.value?.includes?.('unarmed')) return false;
+        if (item.isEmbedded === false || item.isPhysical === false) return false;
+        if (item.category === 'unarmed' || item.system.category?.value === 'unarmed') return false;
+        if (item.system.traits?.value?.includes?.('unarmed')) return false;
         return Boolean(item.system.equipped?.carryType);
     }
 
