@@ -139,15 +139,15 @@ export class HUDConfigApp extends adapter.foundry.HandlebarsApplicationMixin(ada
             const el = form.querySelector(`[name="${name}"]`);
             if (!el) return fallback;
             const parsed = parser(el.value);
-            return Number.isNaN(parsed) ? fallback : parsed;
+            return Number.isFinite(parsed) ? parsed : fallback;
         };
 
-        const hudOpacity = getVal('hudOpacity', parseFloat, DEFAULT_HUD_CONFIG.hudOpacity);
-        const hudScale = getVal('hudScale', parseFloat, DEFAULT_HUD_CONFIG.hudScale);
-        const fontSize = getVal('fontSize', parseInt, DEFAULT_HUD_CONFIG.fontSize);
+        const hudOpacity = getVal('hudOpacity', Number.parseFloat, DEFAULT_HUD_CONFIG.hudOpacity);
+        const hudScale = getVal('hudScale', Number.parseFloat, DEFAULT_HUD_CONFIG.hudScale);
+        const fontSize = getVal('fontSize', val => Number.parseInt(val, 10), DEFAULT_HUD_CONFIG.fontSize);
         const hudAnchorSide = form.querySelector?.('[name="hudAnchorSide"]')?.value ?? DEFAULT_HUD_CONFIG.hudAnchorSide;
-        const hudGridOffset = getVal('hudGridOffset', parseFloat, DEFAULT_HUD_CONFIG.hudGridOffset);
-        const hudGridOffsetHorizontal = getVal('hudGridOffsetHorizontal', parseFloat, DEFAULT_HUD_CONFIG.hudGridOffsetHorizontal);
+        const hudGridOffset = getVal('hudGridOffset', Number.parseFloat, DEFAULT_HUD_CONFIG.hudGridOffset);
+        const hudGridOffsetHorizontal = getVal('hudGridOffsetHorizontal', Number.parseFloat, DEFAULT_HUD_CONFIG.hudGridOffsetHorizontal);
 
         this.config = {
             hudOpacity,

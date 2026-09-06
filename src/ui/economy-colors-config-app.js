@@ -93,6 +93,47 @@ export class EconomyColorsConfigApp extends adapter.foundry.HandlebarsApplicatio
     }
 
     /**
+     * Set the enabled/disabled state for a specific economy type.
+     * @param {string} typeId
+     * @param {boolean} isEnabled
+     * @private
+     */
+    _setTypeEnabled(typeId, isEnabled) {
+        if (!typeId) return;
+        if (isEnabled) {
+            delete this.disabled[typeId];
+            this.enabledTypes[typeId] = true;
+        } else {
+            delete this.enabledTypes[typeId];
+            this.disabled[typeId] = true;
+        }
+    }
+
+    /**
+     * Update color values, enable category, and synchronize row DOM elements.
+     * @param {HTMLElement|null} row
+     * @param {string} typeId
+     * @param {string} value
+     * @private
+     */
+    _syncRowColor(row, typeId, value) {
+        this.colors[typeId] = value;
+        this._setTypeEnabled(typeId, true);
+
+        if (row) {
+            row.classList.remove('bad-row-inactive');
+            const toggle = row.querySelector('.bad-economy-type-toggle');
+            if (toggle) toggle.checked = true;
+            const textInput = row.querySelector('.bad-economy-color-input');
+            if (textInput && textInput.value !== value) textInput.value = value;
+            const colorPicker = row.querySelector('.bad-economy-color-picker');
+            if (colorPicker && colorPicker.value !== value) colorPicker.value = value;
+            const preview = row.querySelector('.bad-economy-preview');
+            if (preview) preview.style.backgroundColor = value;
+        }
+    }
+
+    /**
      * Attach input listeners to sync color pickers and text inputs in real time.
      * @private
      */
@@ -119,13 +160,7 @@ export class EconomyColorsConfigApp extends adapter.foundry.HandlebarsApplicatio
                 const typeId = typeToggle.dataset.typeId;
                 if (!typeId) return;
                 const isEnabled = Boolean(typeToggle.checked);
-                if (isEnabled) {
-                    delete this.disabled[typeId];
-                    this.enabledTypes[typeId] = true;
-                } else {
-                    delete this.enabledTypes[typeId];
-                    this.disabled[typeId] = true;
-                }
+                this._setTypeEnabled(typeId, isEnabled);
 
                 const row = this.element.querySelector(`.bad-economy-color-row[data-type-id="${typeId}"]`);
                 if (row) {
@@ -141,20 +176,8 @@ export class EconomyColorsConfigApp extends adapter.foundry.HandlebarsApplicatio
                 const typeId = picker.dataset.typeId;
                 const value = picker.value;
                 if (typeId && value) {
-                    this.colors[typeId] = value;
-                    delete this.disabled[typeId];
-                    this.enabledTypes[typeId] = true;
-
                     const row = this.element.querySelector(`.bad-economy-color-row[data-type-id="${typeId}"]`);
-                    if (row) {
-                        row.classList.remove('bad-row-inactive');
-                        const toggle = row.querySelector('.bad-economy-type-toggle');
-                        if (toggle) toggle.checked = true;
-                        const textInput = row.querySelector('.bad-economy-color-input');
-                        if (textInput) textInput.value = value;
-                        const preview = row.querySelector('.bad-economy-preview');
-                        if (preview) preview.style.backgroundColor = value;
-                    }
+                    this._syncRowColor(row, typeId, value);
                 }
                 return;
             }
@@ -164,20 +187,8 @@ export class EconomyColorsConfigApp extends adapter.foundry.HandlebarsApplicatio
                 const typeId = input.dataset.typeId;
                 const value = input.value?.trim();
                 if (typeId && /^#[0-9A-Fa-f]{6}$/.test(value)) {
-                    this.colors[typeId] = value;
-                    delete this.disabled[typeId];
-                    this.enabledTypes[typeId] = true;
-
                     const row = this.element.querySelector(`.bad-economy-color-row[data-type-id="${typeId}"]`);
-                    if (row) {
-                        row.classList.remove('bad-row-inactive');
-                        const toggle = row.querySelector('.bad-economy-type-toggle');
-                        if (toggle) toggle.checked = true;
-                        const colorPicker = row.querySelector('.bad-economy-color-picker');
-                        if (colorPicker) colorPicker.value = value;
-                        const preview = row.querySelector('.bad-economy-preview');
-                        if (preview) preview.style.backgroundColor = value;
-                    }
+                    this._syncRowColor(row, typeId, value);
                 }
             }
         });
@@ -194,15 +205,7 @@ export class EconomyColorsConfigApp extends adapter.foundry.HandlebarsApplicatio
      * Handle individual category enable checkbox toggling.
      */
     async _onToggleTypeEnabled(event, target) {
-        const typeId = target.dataset.typeId;
-        if (!typeId) return;
-        if (target.checked) {
-            delete this.disabled[typeId];
-            this.enabledTypes[typeId] = true;
-        } else {
-            delete this.enabledTypes[typeId];
-            this.disabled[typeId] = true;
-        }
+        this._setTypeEnabled(target.dataset.typeId, Boolean(target.checked));
     }
 
     /**
@@ -250,15 +253,7 @@ export class EconomyColorsConfigApp extends adapter.foundry.HandlebarsApplicatio
 
             const typeToggles = this.element.querySelectorAll('.bad-economy-type-toggle');
             for (const toggle of typeToggles) {
-                const typeId = toggle.dataset.typeId;
-                if (!typeId) continue;
-                if (toggle.checked) {
-                    this.enabledTypes[typeId] = true;
-                    delete this.disabled[typeId];
-                } else {
-                    delete this.enabledTypes[typeId];
-                    this.disabled[typeId] = true;
-                }
+                this._setTypeEnabled(toggle.dataset.typeId, Boolean(toggle.checked));
             }
 
             const colorInputs = this.element.querySelectorAll('.bad-economy-color-input');
