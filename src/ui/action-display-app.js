@@ -2336,6 +2336,22 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
     }
 
     /**
+     * Scroll the description container of an item summary tooltip according to wheel event deltas.
+     * @param {HTMLElement} descEl Description element
+     * @param {WheelEvent} event Wheel event
+     * @protected
+     */
+    _scrollTooltipDescription(descEl, event) {
+        event.preventDefault?.();
+        event.stopPropagation?.();
+        if (descEl.classList?.contains?.('bad-summary-overflow-x') && (event.shiftKey || event.deltaX)) {
+            descEl.scrollLeft = (descEl.scrollLeft ?? 0) + (event.deltaX || (event.shiftKey ? event.deltaY : 0));
+        } else {
+            descEl.scrollTop = (descEl.scrollTop ?? 0) + (event.deltaY ?? 0);
+        }
+    }
+
+    /**
      * Handle wheel events occurring inside the HUD element.
      * When a rich item summary tooltip is focused/locked via middle-click, forward wheel scrolling
      * directly to the tooltip's description container instead of scrolling the action display tab content.
@@ -2347,13 +2363,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         if (this.isTooltipFocused) {
             const descEl = document.querySelector?.('#tooltip .bad-summary-desc, .bad-item-summary-tooltip .bad-summary-desc');
             if (descEl) {
-                event.preventDefault?.();
-                event.stopPropagation?.();
-                if (descEl.classList?.contains?.('bad-summary-overflow-x') && (event.shiftKey || event.deltaX)) {
-                    descEl.scrollLeft = (descEl.scrollLeft ?? 0) + (event.deltaX || (event.shiftKey ? event.deltaY : 0));
-                } else {
-                    descEl.scrollTop = (descEl.scrollTop ?? 0) + (event.deltaY ?? 0);
-                }
+                this._scrollTooltipDescription(descEl, event);
             }
         }
     }
@@ -2371,13 +2381,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         if (tooltipEl) {
             const descEl = tooltipEl.querySelector?.('.bad-summary-desc') ?? (event.target?.classList?.contains?.('bad-summary-desc') ? event.target : null);
             if (descEl) {
-                event.preventDefault?.();
-                event.stopPropagation?.();
-                if (descEl.classList?.contains?.('bad-summary-overflow-x') && (event.shiftKey || event.deltaX)) {
-                    descEl.scrollLeft = (descEl.scrollLeft ?? 0) + (event.deltaX || (event.shiftKey ? event.deltaY : 0));
-                } else {
-                    descEl.scrollTop = (descEl.scrollTop ?? 0) + (event.deltaY ?? 0);
-                }
+                this._scrollTooltipDescription(descEl, event);
             }
         }
     }

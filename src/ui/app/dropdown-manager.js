@@ -262,8 +262,8 @@ export function showActivityDropdown(app, target, subactions, event, parentActio
 
     const isTooltipFocused = () => {
         if (Boolean(game.tooltip?.locked)) return true;
-        const lockedEl = document.querySelector?.('#tooltip.locked, .locked-tooltip');
-        return Boolean(lockedEl?.classList?.contains?.('locked'));
+        const lockedEl = document.querySelector?.('#tooltip.locked, .locked-tooltip, [data-tooltip-locked="true"]');
+        return Boolean(lockedEl?.classList?.contains?.('locked') || lockedEl?.classList?.contains?.('locked-tooltip') || lockedEl?.dataset?.tooltipLocked === 'true');
     };
 
     const options = {
