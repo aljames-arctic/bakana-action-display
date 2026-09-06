@@ -46,7 +46,7 @@ export function buildSubactionMenuItem(sub, event, app = null) {
         : '<div class="bad-action-icon-placeholder"><i class="fas fa-dice-d20"></i></div>';
 
     let usesHtml = "";
-    if (uses && uses.available !== null && uses.available !== undefined) {
+    if (uses?.available != null) {
         const usesText = `${uses.available}${uses.max ? ' / ' + uses.max : ''}`;
         const depletedClass = uses.available === 0 ? " depleted" : "";
         const upcastClass = uses.isUpcast ? " upcast" : "";
