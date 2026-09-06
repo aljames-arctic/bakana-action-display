@@ -1943,7 +1943,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         if (event.button !== 1) return;
 
         // Check if middle-click is on or inside an already-locked tooltip
-        const isInsideLockedTooltip = Boolean(event.target?.closest?.('.locked-tooltip, #tooltip.locked, aside#tooltip.locked, div#tooltip.locked, [data-tooltip-locked="true"]'));
+        const isInsideLockedTooltip = Boolean(event.target?.closest?.('.locked-tooltip, #tooltip.locked, [data-tooltip-locked="true"]'));
         if (isInsideLockedTooltip) {
             this._closeLockedTooltips();
             game.tooltip?.deactivate?.();
@@ -1976,7 +1976,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         }
 
         // 5. Verify that Foundry TooltipManager is active or #tooltip has content
-        const tooltipEl = document.querySelector?.('#tooltip, aside#tooltip, div#tooltip');
+        const tooltipEl = document.querySelector?.('#tooltip');
         const hasTooltipContent = Boolean(tooltipEl?.textContent?.trim() || tooltipEl?.children?.length);
         if (!game.tooltip?.active && !hasTooltipContent) {
             return;
@@ -2024,15 +2024,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
             game.tooltip.locked = false;
         }
 
-        const lockedSelectors = [
-            '.locked-tooltip',
-            'aside.locked-tooltip',
-            'div.locked-tooltip',
-            '.locked:not(#tooltip)',
-            '[data-tooltip-locked="true"]:not(#tooltip)'
-        ].join(', ');
-
-        const lockedElements = document.querySelectorAll?.(lockedSelectors) ?? [];
+        const lockedElements = document.querySelectorAll?.('.locked-tooltip, .locked:not(#tooltip), [data-tooltip-locked="true"]:not(#tooltip)') ?? [];
         for (const el of lockedElements) {
             if (except && (el === except || el.contains?.(except))) continue;
             try {
@@ -2047,7 +2039,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
             }
         }
 
-        const primaryTooltip = document.querySelector?.('#tooltip, aside#tooltip, div#tooltip');
+        const primaryTooltip = document.querySelector?.('#tooltip');
         if (primaryTooltip && primaryTooltip !== except) {
             primaryTooltip.classList?.remove?.('locked');
             if (primaryTooltip.dataset) {
@@ -2057,22 +2049,10 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
 
         try {
             if (game.tooltip?.lockedTooltips) {
-                if (game.tooltip.lockedTooltips instanceof Map) {
-                    for (const [id, tooltip] of game.tooltip.lockedTooltips.entries()) {
-                        if (except && tooltip === except) continue;
-                        tooltip?.remove?.();
-                        game.tooltip.lockedTooltips.delete(id);
-                    }
-                } else if (Array.isArray(game.tooltip.lockedTooltips) || game.tooltip.lockedTooltips instanceof Set) {
-                    for (const tooltip of Array.from(game.tooltip.lockedTooltips)) {
-                        if (except && tooltip === except) continue;
-                        tooltip?.remove?.();
-                    }
-                    if (Array.isArray(game.tooltip.lockedTooltips)) {
-                        game.tooltip.lockedTooltips.length = 0;
-                    } else {
-                        game.tooltip.lockedTooltips.clear?.();
-                    }
+                for (const [id, tooltip] of game.tooltip.lockedTooltips.entries?.() ?? []) {
+                    if (except && tooltip === except) continue;
+                    tooltip?.remove?.();
+                    game.tooltip.lockedTooltips.delete(id);
                 }
             }
         } catch (_) {}
@@ -2193,7 +2173,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
     get isTooltipFocused() {
         if (Boolean(this._lockedTooltipTarget)) return true;
         if (Boolean(game.tooltip?.locked)) return true;
-        const lockedEl = document.querySelector?.('#tooltip.locked, aside#tooltip.locked, div#tooltip.locked, .tooltip.locked, .locked-tooltip, [data-tooltip-locked="true"]');
+        const lockedEl = document.querySelector?.('#tooltip.locked, .locked-tooltip, [data-tooltip-locked="true"]');
         return Boolean(lockedEl?.classList?.contains?.('locked') || lockedEl?.classList?.contains?.('locked-tooltip') || lockedEl?.dataset?.tooltipLocked === 'true');
     }
 
@@ -2205,7 +2185,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
      */
     _isInsideTooltip(target) {
         if (!target?.closest) return false;
-        return Boolean(target.closest('#tooltip, aside#tooltip, div#tooltip, .tooltip, .bad-item-summary-tooltip, .bad-item-summary-tooltip-wrapper'));
+        return Boolean(target.closest('#tooltip, .bad-item-summary-tooltip, .bad-item-summary-tooltip-wrapper'));
     }
 
     /**

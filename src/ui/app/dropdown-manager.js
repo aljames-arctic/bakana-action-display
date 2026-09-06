@@ -82,7 +82,7 @@ export function buildSubactionMenuItem(sub, event, app = null) {
         callback: async () => {
             if (game.tooltip?.locked) {
                 game.tooltip.locked = false;
-                document.querySelector?.('#tooltip.locked, aside#tooltip.locked, div#tooltip.locked, .tooltip.locked')?.classList?.remove?.('locked');
+                document.querySelector?.('#tooltip.locked')?.classList?.remove?.('locked');
             }
             app?._hideItemSummaryTooltip?.();
             await app?._activeLeftClickMenu?.close?.({ force: true });
@@ -200,7 +200,7 @@ export function showActivityDropdown(app, target, subactions, event, parentActio
                         ev.stopImmediatePropagation();
                         if (game.tooltip?.locked) {
                             game.tooltip.locked = false;
-                            document.querySelector?.('#tooltip.locked, aside#tooltip.locked, div#tooltip.locked, .tooltip.locked')?.classList?.remove?.('locked');
+                            document.querySelector?.('#tooltip.locked')?.classList?.remove?.('locked');
                         }
                         app._hideItemSummaryTooltip();
                         try {
@@ -262,7 +262,7 @@ export function showActivityDropdown(app, target, subactions, event, parentActio
 
     const isTooltipFocused = () => {
         if (Boolean(game.tooltip?.locked)) return true;
-        const lockedEl = document.querySelector?.('#tooltip.locked, aside#tooltip.locked, div#tooltip.locked, .tooltip.locked');
+        const lockedEl = document.querySelector?.('#tooltip.locked, .locked-tooltip');
         return Boolean(lockedEl?.classList?.contains?.('locked'));
     };
 
