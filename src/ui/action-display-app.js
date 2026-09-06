@@ -1599,7 +1599,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         const searchInput = this.element.querySelector('.bad-search-input');
         if (searchInput) {
             searchInput.focus();
-            if (this._searchSelectionStart !== null && this._searchSelectionEnd !== null) {
+            if (this._searchSelectionStart != null && this._searchSelectionEnd != null) {
                 searchInput.setSelectionRange(this._searchSelectionStart, this._searchSelectionEnd);
             }
         }

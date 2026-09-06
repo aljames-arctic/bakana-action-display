@@ -965,7 +965,7 @@ export class BasePf2eSystemAdapter extends FantasySystemAdapter {
             return { available: uses.value ?? 0, max: uses.max };
         }
         const quantity = item.system.quantity;
-        if (quantity !== undefined && quantity !== null) {
+        if (quantity != null) {
             return { available: quantity, max: null };
         }
         return { available: null, max: null };

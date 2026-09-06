@@ -574,8 +574,8 @@ export class BasePf1SystemAdapter extends FantasySystemAdapter {
         const flatFooted = ac?.flatFooted?.total;
 
         const subParts = [];
-        if (touch !== undefined && touch !== null) subParts.push(`Touch: ${touch}`);
-        if (flatFooted !== undefined && flatFooted !== null) subParts.push(`Flat-Footed: ${flatFooted}`);
+        if (touch != null) subParts.push(`Touch: ${touch}`);
+        if (flatFooted != null) subParts.push(`Flat-Footed: ${flatFooted}`);
 
         return {
             value: normal,
