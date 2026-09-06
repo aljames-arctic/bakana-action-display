@@ -173,10 +173,12 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
                         const subId = this.#getCanonicalSubTab(activationType);
                         const tabRef = TabRef.from('economy', category, subId);
 
+                        const activityName = activity.name?.trim?.();
+                        const activityImg = activity.img?.trim?.();
                         return new Action({
                             id: activity.id,
-                            name: activity.name?.trim() || linkedAction?.name || activity.type.toUpperCase(),
-                            img: activity.img?.trim() || linkedAction?.img || item.img,
+                            name: (activityName || null) ?? linkedAction?.name ?? activity.type?.toUpperCase() ?? 'Action',
+                            img: (activityImg || null) ?? linkedAction?.img ?? item.img ?? '',
                             uses: this.#calculateActivityUses(activity, item),
                             right: [tabRef],
                             roll: async (event) => {
@@ -947,7 +949,7 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
                 const effect = CONFIG.statusEffects.find(e => e.id === val);
                 if (effect?.name) label = localize(effect.name, effect.name);
             }
-            result.push(label || val);
+            result.push((label || null) ?? val);
         }
 
         const customCI = ciData.custom?.trim?.();
@@ -1086,7 +1088,8 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
      * @returns {string}
      */
     formatSenseLabel(key, sensesMap = CONFIG?.DND5E?.senses) {
-        return this.#formatLabel(key, sensesMap) || (key.charAt(0).toUpperCase() + key.slice(1));
+        const formatted = this.#formatLabel(key, sensesMap);
+        return (formatted || null) ?? (key.charAt(0).toUpperCase() + key.slice(1));
     }
 
     // #endregion
