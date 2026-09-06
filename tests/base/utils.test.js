@@ -22,7 +22,10 @@ test('localize helper safely translates keys and respects fallbacks', () => {
         };
 
         assert.equal(localize('BAD.testKey'), 'Localized Value');
+        assert.equal(localize('BAD.testKey', null), 'Localized Value');
         assert.equal(localize('BAD.missingKey', 'Custom Fallback'), 'Custom Fallback');
+        assert.equal(localize('BAD.missingKey', null), null);
+        assert.equal(localize('BAD.missingKey', ''), '');
         assert.equal(localize('BAD.missingKey'), 'BAD.missingKey');
     } finally {
         globalThis.game.i18n = origI18n;
@@ -33,6 +36,7 @@ test('localize helper safely translates keys and respects fallbacks', () => {
     try {
         delete globalThis.game.i18n;
         assert.equal(localize('BAD.noI18nKey', 'Fallback Value'), 'Fallback Value');
+        assert.equal(localize('BAD.noI18nKey', null), null);
         assert.equal(localize('BAD.noI18nKey'), 'BAD.noI18nKey');
     } finally {
         globalThis.game.i18n = savedI18n;

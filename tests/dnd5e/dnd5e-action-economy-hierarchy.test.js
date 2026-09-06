@@ -109,12 +109,12 @@ test('Dnd5eSystemAdapter localizations for right-side action economy tabs', () =
     const origHas = game.i18n.has;
     const dictionary = {
         'BAD.common.actionEconomy': 'Action Economy',
-        'DND5E.ActivityActivationStandard': 'Standard Act',
-        'DND5E.ActivityActivationTime': 'Time Act',
-        'DND5E.ActivityActivationRest': 'Rest Act',
-        'DND5E.ActivityActivationCombat': 'Combat Act',
-        'DND5E.ActivityActivationMonster': 'Monster Act',
-        'DND5E.ActivityActivationVehicle': 'Vehicle Act',
+        'DND5E.ACTIVATION.Category.Standard': 'Standard Act',
+        'DND5E.ACTIVATION.Category.Time': 'Time Act',
+        'DND5E.ACTIVATION.Category.Rest': 'Rest Act',
+        'DND5E.ACTIVATION.Category.Combat': 'Combat Act',
+        'DND5E.ACTIVATION.Category.Monster': 'Monster Act',
+        'DND5E.ACTIVATION.Category.Vehicle': 'Vehicle Act',
         'DND5E.Action': 'Action',
         'DND5E.BonusAction': 'Bonus Action',
         'DND5E.Reaction': 'Reaction',
@@ -137,7 +137,7 @@ test('Dnd5eSystemAdapter localizations for right-side action economy tabs', () =
     try {
         const adapter = new Dnd5eSystemAdapter();
 
-        // Top-level / Category tabs (resolves via DND5E.ActivityActivation*)
+        // Top-level / Category tabs (resolves via DND5E.ACTIVATION.Category.*)
         assert.equal(adapter.getActionTypeLabel('economy'), 'Action Economy');
         assert.equal(adapter.getActionSubTabLabel('standard'), 'Standard Act');
         assert.equal(adapter.getActionSubTabLabel('time'), 'Time Act');
@@ -174,6 +174,30 @@ test('Dnd5eSystemAdapter localizations for right-side action economy tabs', () =
 
         // Vehicle subtabs
         assert.equal(adapter.getActionSubTabLabel('crew'), 'Crew Action');
+
+        // Fallback when dictionary has no keys
+        delete dictionary['DND5E.ACTIVATION.Category.Standard'];
+        delete dictionary['DND5E.Standard'];
+        assert.equal(adapter.getActionSubTabLabel('standard'), 'Standard');
+
+        // Alt key fallback when only DND5E.Standard is present
+        dictionary['DND5E.Standard'] = 'Alt Standard';
+        assert.equal(adapter.getActionSubTabLabel('standard'), 'Alt Standard');
+
+        // CONFIG.DND5E.activityActivationCategories override
+        const origConfig = globalThis.CONFIG.DND5E;
+        try {
+            globalThis.CONFIG.DND5E = {
+                ...origConfig,
+                activityActivationCategories: {
+                    standard: { label: 'CONFIG Standard' }
+                }
+            };
+            dictionary['CONFIG Standard'] = 'Configured Standard';
+            assert.equal(adapter.getActionSubTabLabel('standard'), 'Configured Standard');
+        } finally {
+            globalThis.CONFIG.DND5E = origConfig;
+        }
     } finally {
         game.i18n.localize = origLocalize;
         game.i18n.has = origHas;

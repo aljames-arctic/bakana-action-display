@@ -89,22 +89,22 @@ const LABEL_KEYS = deepFreeze({
     },
     action_subtab: {
         'all': { key: 'BAD.core.allActions', fallback: 'All Actions' },
-        'standard': { key: 'DND5E.ActivityActivationStandard', fallback: 'Standard', altKey: 'DND5E.Standard' },
-        'time': { key: 'DND5E.ActivityActivationTime', fallback: 'Time', altKey: 'DND5E.Time' },
-        'rest': { key: 'DND5E.ActivityActivationRest', fallback: 'Rest', altKey: 'DND5E.Rest' },
-        'combat': { key: 'DND5E.ActivityActivationCombat', fallback: 'Combat', altKey: 'DND5E.Combat' },
-        'monster': { key: 'DND5E.ActivityActivationMonster', fallback: 'Monster', altKey: 'DND5E.Monster' },
-        'vehicle': { key: 'DND5E.ActivityActivationVehicle', fallback: 'Vehicle', altKey: 'DND5E.Vehicle' },
+        'standard': { key: 'DND5E.ACTIVATION.Category.Standard', fallback: 'Standard', altKey: 'DND5E.Standard' },
+        'time': { key: 'DND5E.ACTIVATION.Category.Time', fallback: 'Time', altKey: 'DND5E.Time' },
+        'rest': { key: 'DND5E.ACTIVATION.Category.Rest', fallback: 'Rest', altKey: 'DND5E.Rest' },
+        'combat': { key: 'DND5E.ACTIVATION.Category.Combat', fallback: 'Combat', altKey: 'DND5E.Combat' },
+        'monster': { key: 'DND5E.ACTIVATION.Category.Monster', fallback: 'Monster', altKey: 'DND5E.Monster' },
+        'vehicle': { key: 'DND5E.ACTIVATION.Category.Vehicle', fallback: 'Vehicle', altKey: 'DND5E.Vehicle' },
         'action': { key: 'DND5E.Action', fallback: 'Action', altKey: 'DND5E.ActionAction' },
         'bonus': { key: 'DND5E.BonusAction', fallback: 'Bonus Action', altKey: 'DND5E.ActionBonus' },
         'reaction': { key: 'DND5E.Reaction', fallback: 'Reaction', altKey: 'DND5E.ActionReaction' },
         'minute': { key: 'DND5E.TimeMinute', fallback: 'Minute' },
         'hour': { key: 'DND5E.TimeHour', fallback: 'Hour' },
         'day': { key: 'DND5E.TimeDay', fallback: 'Day' },
-        'shortRest': { key: 'DND5E.ActivityActivationShortRest', fallback: 'End of a Short Rest' },
-        'longRest': { key: 'DND5E.ActivityActivationLongRest', fallback: 'End of a Long Rest' },
-        'short': { key: 'DND5E.ActivityActivationShortRest', fallback: 'End of a Short Rest' },
-        'long': { key: 'DND5E.ActivityActivationLongRest', fallback: 'End of a Long Rest' },
+        'shortRest': { key: 'DND5E.ActivityActivationShortRest', fallback: 'End of a Short Rest', altKey: 'DND5E.ShortRest' },
+        'longRest': { key: 'DND5E.ActivityActivationLongRest', fallback: 'End of a Long Rest', altKey: 'DND5E.LongRest' },
+        'short': { key: 'DND5E.ActivityActivationShortRest', fallback: 'End of a Short Rest', altKey: 'DND5E.ShortRest' },
+        'long': { key: 'DND5E.ActivityActivationLongRest', fallback: 'End of a Long Rest', altKey: 'DND5E.LongRest' },
         'encounter': { key: 'DND5E.ActivityActivationStartEncounter', fallback: 'Start of Encounter' },
         'turnStart': { key: 'DND5E.ActivityActivationTurnStart', fallback: 'Start of Turn' },
         'turnEnd': { key: 'DND5E.ActivityActivationTurnEnd', fallback: 'End of Turn' },
@@ -112,7 +112,7 @@ const LABEL_KEYS = deepFreeze({
         'mythic': { key: 'DND5E.MythicAction', fallback: 'Mythic Action' },
         'lair': { key: 'DND5E.LairAction', fallback: 'Lair Action' },
         'crew': { key: 'DND5E.CrewAction', fallback: 'Crew Action' },
-        'special': { key: 'DND5E.Special', fallback: 'Special' },
+        'special': { key: 'DND5E.ACTIVATION.Category.Special', fallback: 'Special', altKey: 'DND5E.Special' },
         'other': { key: 'DND5E.ActionOther', fallback: 'Other' },
         'none': { key: 'DND5E.None', fallback: 'None' },
         'vocal': { key: 'DND5E.ComponentVerbal', fallback: 'Verbal' },
@@ -338,7 +338,8 @@ export class Dnd5eSystemContextModifier extends BaseSystemContextModifier {
             ?? cfg?.activityActivationTypes?.[subId];
         if (configLabel) {
             const label = configLabel.label ?? configLabel.name ?? configLabel;
-            return localize(label, fallback);
+            const localized = localize(label, null);
+            if (localized) return localized;
         }
 
         if (config) {

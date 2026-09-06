@@ -80,12 +80,12 @@ globalThis.CONFIG.DND5E = globalThis.CONFIG.DND5E ?? {
         special: 'DND5E.Special'
     },
     activityActivationCategories: {
-        standard: 'DND5E.ActivityActivationStandard',
-        time: 'DND5E.ActivityActivationTime',
-        rest: 'DND5E.ActivityActivationRest',
-        combat: 'DND5E.ActivityActivationCombat',
-        monster: 'DND5E.ActivityActivationMonster',
-        vehicle: 'DND5E.ActivityActivationVehicle'
+        standard: 'DND5E.ACTIVATION.Category.Standard',
+        time: 'DND5E.ACTIVATION.Category.Time',
+        rest: 'DND5E.ACTIVATION.Category.Rest',
+        combat: 'DND5E.ACTIVATION.Category.Combat',
+        monster: 'DND5E.ACTIVATION.Category.Monster',
+        vehicle: 'DND5E.ACTIVATION.Category.Vehicle'
     },
     actorSizes: {
         tiny: { label: 'Tiny' },

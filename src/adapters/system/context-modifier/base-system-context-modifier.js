@@ -133,7 +133,7 @@ export class BaseSystemContextModifier {
             default: {
                 const configLabel = CONFIG.Item?.typeLabels?.[parentId];
                 if (configLabel) {
-                    const localized = localize(configLabel, '');
+                    const localized = localize(configLabel, null);
                     if (localized) return localized;
                 }
                 return parentId.charAt(0).toUpperCase() + parentId.slice(1);
