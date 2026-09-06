@@ -57,14 +57,14 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         ActionDisplayApp.defaultPage = page;
 
         // 1. Update in-memory active tab cache entries
-        for (const [key, state] of activeTabCache.entries()) {
-            if (state && typeof state === 'object') {
+        for (const state of activeTabCache.values()) {
+            if (state) {
                 state.activePage = page;
             }
         }
 
         // 2. Update the lastActiveTabState fallback
-        if (lastActiveTabState && typeof lastActiveTabState === 'object') {
+        if (lastActiveTabState) {
             lastActiveTabState.activePage = page;
         }
 
@@ -88,11 +88,9 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         if (persistEnabled) {
             try {
                 const rawStates = game.settings.get(MODULE_ID, 'hudTabStates');
-                const allStates = (rawStates && typeof rawStates === 'object')
-                    ? adapter.foundry.duplicate(rawStates)
-                    : {};
+                const allStates = rawStates ? adapter.foundry.duplicate(rawStates) : {};
                 for (const state of Object.values(allStates)) {
-                    if (state && typeof state === 'object') {
+                    if (state) {
                         state.activePage = page;
                     }
                 }
@@ -388,9 +386,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
             try {
                 const MAX_PERSISTED_ACTORS = 25;
                 const rawStates = game.settings.get(MODULE_ID, 'hudTabStates');
-                const allStates = (rawStates && typeof rawStates === 'object')
-                    ? adapter.foundry.duplicate(rawStates)
-                    : {};
+                const allStates = rawStates ? adapter.foundry.duplicate(rawStates) : {};
 
                 // Re-insert key to refresh its LRU position (most recent at end)
                 delete allStates[actorKey];
@@ -419,7 +415,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         let cached = activeTabCache.get(actorKey);
         if (!cached && game.settings.get(MODULE_ID, 'persistTabState')) {
             const rawStates = game.settings.get(MODULE_ID, 'hudTabStates');
-            const allStates = (rawStates && typeof rawStates === 'object') ? rawStates : {};
+            const allStates = rawStates ?? {};
             cached = (actorKey ? allStates[actorKey] : null) ?? (lastActiveTabState ? { ...lastActiveTabState } : null);
             if (cached && actorKey) {
                 activeTabCache.set(actorKey, cached);
@@ -2204,7 +2200,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         const showSummaries = this._isQuestionMarkHeld || Boolean(game.settings.get(MODULE_ID, 'showItemSummaries'));
         if (this._hoveredActionItem !== itemEl || !showSummaries) return;
 
-        const rawDesc = typeof summary === 'string' ? summary : (summary.description ?? '');
+        const rawDesc = summary.description ?? '';
         const hasTable = Boolean(rawDesc && /<table[\s>]/i.test(rawDesc));
 
         let tableMetrics = { targetWidth: null, needsHorizontalScroll: false };
@@ -2212,7 +2208,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
             tableMetrics = this._calculateTableTooltipWidth(rawDesc);
         }
 
-        const html = typeof summary === 'string' ? summary : this._formatItemSummaryHtml(summary, tableMetrics.targetWidth, tableMetrics.needsHorizontalScroll);
+        const html = this._formatItemSummaryHtml(summary, tableMetrics.targetWidth, tableMetrics.needsHorizontalScroll);
         this._activeSummaryTooltip = { element: itemEl, actionId: action.id, summary, html, targetWidth: tableMetrics.targetWidth };
 
         let cssClass = 'bad-item-summary-tooltip-wrapper';
