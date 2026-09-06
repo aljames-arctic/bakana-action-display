@@ -1,6 +1,7 @@
 import { log } from '../../lib/logger.js';
 import { adapter } from '../../adapters/index.js';
 import { isActorItemFavorite, setActorItemFavorite } from '../../favorites/favorites-manager.js';
+import { positionFloatingMenu } from './menu-utils.js';
 
 /**
  * Manages UI context menus for action items inside ActionDisplayApp.
@@ -175,46 +176,7 @@ export class ContextMenuManager {
         const targetBody = this.app?.element?.ownerDocument?.body ?? document.body;
         const menuEl = document.querySelector('#context-menu, .context-menu:not(.bad-sub-context-menu)');
         if (!menuEl) return;
-
-        menuEl.classList?.add?.('bad-context-menu');
-
-        if (menuEl.parentElement !== targetBody) {
-            targetBody.appendChild(menuEl);
-        }
-
-        const rect = target.getBoundingClientRect?.() ?? { left: 0, top: 0, right: 100, bottom: 30, width: 100, height: 30 };
-        const viewportHeight = window?.innerHeight ?? 1080;
-        const spaceBelow = viewportHeight - rect.bottom - 15;
-        const spaceAbove = rect.top - 15;
-        const queriedCount = menuEl.querySelectorAll?.('.context-item')?.length;
-        const actualCount = Number.isFinite(queriedCount) && queriedCount > 0 ? queriedCount : (itemCount > 0 ? itemCount : 1);
-        const neededHeight = actualCount * 36 + 15;
-
-        // Prefer down: only place above if space below is critically constrained (< 80px) and space above is larger
-        const placeAbove = spaceBelow < Math.min(neededHeight, 80) && spaceAbove > spaceBelow;
-        const availableSpace = placeAbove ? spaceAbove : spaceBelow;
-        const maxHeight = Math.max(60, Math.min(neededHeight, availableSpace));
-
-        const styles = {
-            position: 'fixed',
-            left: `${rect.left}px`,
-            top: placeAbove ? 'auto' : `${rect.bottom}px`,
-            bottom: placeAbove ? `${viewportHeight - rect.top}px` : 'auto',
-            width: `${rect.width}px`,
-            'min-width': `${rect.width}px`,
-            'box-sizing': 'border-box',
-            'z-index': '999999',
-            display: 'block',
-            visibility: 'visible',
-            opacity: '1',
-            height: 'auto',
-            'min-height': '0',
-            'max-height': `${maxHeight}px`
-        };
-
-        for (const [prop, val] of Object.entries(styles)) {
-            menuEl.style?.setProperty?.(prop, val, 'important');
-        }
+        positionFloatingMenu(menuEl, target, itemCount, targetBody);
     }
 
     /**
