@@ -81,7 +81,7 @@ export class Action {
      * @returns {boolean}
      */
     get isDepleted() {
-        if (!this.uses || this.uses.available === null) return false;
+        if (this.uses?.available == null) return false;
         return this.uses.available <= 0 && !this.uses.isUpcast;
     }
 }
