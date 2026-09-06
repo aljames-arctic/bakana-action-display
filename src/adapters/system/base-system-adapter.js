@@ -216,7 +216,6 @@ export class BaseSystemAdapter {
             page: 3,
             uses: { available: null, max: null }
         });
-        infoAction.page = 3;
         return [infoAction];
     }
 

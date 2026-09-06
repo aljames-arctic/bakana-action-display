@@ -405,25 +405,6 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
         return checkActions;
     }
 
-    /**
-     * Extract token information showcase action for Page 3.
-     * @param {Actor} actor
-     * @returns {Action[]}
-     */
-    extractInfoActions(actor) {
-        if (!actor) return [];
-        const infoAction = new Action({
-            id: `token-info-${actor.id ?? 'actor'}`,
-            name: actor.name ?? localize('BAD.page3.tokenInfo', 'Token Info'),
-            type: 'info',
-            img: actor.img ?? 'icons/svg/mystery-man.svg',
-            available: true,
-            page: 3,
-            uses: { available: null, max: null }
-        });
-        infoAction.page = 3;
-        return [infoAction];
-    }
 
     /**
      * Resolve a human-readable display label for a tool proficiency ID in D&D 5e.
