@@ -248,19 +248,22 @@ export class BaseFoundryAdapter {
      */
     getUserPermissionTier(user) {
         if (!user) return null;
-        const isGM = Boolean(user.isGM);
-        const userRole = user.role ?? null;
+        if (user.isGM) return USER_PERMISSION_TIERS.GM;
+
+        const userRole = user.role;
+        if (userRole === 0) return null;
+
         const assistantRole = CONST?.USER_ROLES?.ASSISTANT ?? 3;
         const trustedRole = CONST?.USER_ROLES?.TRUSTED ?? 2;
         const playerRole = CONST?.USER_ROLES?.PLAYER ?? 1;
 
-        if (isGM || (userRole !== null && userRole >= assistantRole)) {
+        if (userRole != null && userRole >= assistantRole) {
             return USER_PERMISSION_TIERS.GM;
         }
-        if ((userRole !== null && userRole === trustedRole) || (Boolean(user.isTrusted) && !isGM)) {
+        if (userRole === trustedRole || Boolean(user.isTrusted)) {
             return USER_PERMISSION_TIERS.TRUSTED;
         }
-        if ((userRole !== null && userRole === playerRole) || (!isGM && !user.isTrusted && userRole !== 0)) {
+        if (userRole === playerRole || !user.isTrusted) {
             return USER_PERMISSION_TIERS.PLAYER;
         }
         return null;
