@@ -1,13 +1,6 @@
 import { log } from '../lib/logger.js';
 import { adapter } from '../adapters/index.js';
-
-function hasIntersection(setA, setB) {
-    if (!setA || !setB) return false;
-    for (const elem of setA) {
-        if (setB.has(elem)) return true;
-    }
-    return false;
-}
+import { hasIntersection } from '../lib/utils.js';
 
 /**
  * Encapsulates tab column state management and interaction rules for a single HUD column (left or right).
@@ -228,7 +221,10 @@ export class HUDTabColumn {
 
         if (group) {
             const validSubIds = group.getAllSubTabIds?.() ?? new Set();
-            const activeSubsForParent = Array.from(this.activeSubTypes).filter(id => validSubIds.has(id));
+            const activeSubsForParent = [];
+            for (const id of this.activeSubTypes) {
+                if (validSubIds.has(id)) activeSubsForParent.push(id);
+            }
 
             const isCurrentActive = this.activeSubTypes.has(type) ||
                 (hasDescendants && hasIntersection(descendantIds, this.activeSubTypes));

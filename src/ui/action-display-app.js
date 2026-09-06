@@ -2,6 +2,7 @@ import { adapter } from '../adapters/index.js';
 import { actionDisplay } from '../action-display.js';
 import { log } from '../lib/logger.js';
 import { MODULE_ID } from '../constants.js';
+import { hasIntersection } from '../lib/utils.js';
 import { HUDTabColumn } from './hud-tab-column.js';
 import { HUDTab } from './hud-tab.js';
 import { createActionContextMenu } from './app/context-menu-manager.js';
@@ -640,13 +641,13 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         // Post-process leftGroups to set active, expanded, and activeParent, and sort sub-tabs
         for (const parent of itemTypes) {
             const validSubIds = parent.getAllSubTabIds();
-            const activeSubsForParent = Array.from(this.leftTabs.activeSubTypes).filter(id => validSubIds.has(id));
+            const hasActiveSubs = hasIntersection(this.leftTabs.activeSubTypes, validSubIds);
 
             parent.active = this.leftTabs.activeParents.has(parent.id);
-            if (parent.subTabs.length > 0 && parent.active && activeSubsForParent.length > 0) {
+            if (parent.subTabs.length > 0 && parent.active && hasActiveSubs) {
                 parent.activeParent = true;
             }
-            parent.expanded = parent.id === this.leftTabs.focusedParent || activeSubsForParent.length > 0;
+            parent.expanded = parent.id === this.leftTabs.focusedParent || hasActiveSubs;
 
             if (parent.subTabs.length > 0) {
                 parent.subTabs.sort((a, b) => adapter.getItemSubTabSortOrder(parent.id, a.id) - adapter.getItemSubTabSortOrder(parent.id, b.id));
@@ -801,12 +802,12 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
                 if (!skipAll) {
                     const isActive = parent.id === this.rightTabs.focusedParent;
                     const validSubIds = parent.getAllSubTabIds();
-                    const activeSubsForParent = Array.from(this.rightTabs.activeSubTypes).filter(id => validSubIds.has(id));
+                    const hasActiveSubs = hasIntersection(this.rightTabs.activeSubTypes, validSubIds);
 
                     parent.addSubTab({
                         id: 'all',
                         label: adapter.getActionSubTabLabel('all'),
-                        active: isActive && activeSubsForParent.length === 0
+                        active: isActive && !hasActiveSubs
                     });
                 }
 
@@ -824,13 +825,13 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         for (const parent of actionTypes) {
             const isExclusion = adapter.isExclusionTab(parent.id);
             const validSubIds = parent.getAllSubTabIds();
-            const activeSubsForParent = Array.from(this.rightTabs.activeSubTypes).filter(id => validSubIds.has(id));
+            const hasActiveSubs = hasIntersection(this.rightTabs.activeSubTypes, validSubIds);
 
             parent.active = this.rightTabs.activeParents.has(parent.id);
-            if (!isExclusion && parent.subTabs.length > 0 && parent.active && activeSubsForParent.length > 0) {
+            if (!isExclusion && parent.subTabs.length > 0 && parent.active && hasActiveSubs) {
                 parent.activeParent = true;
             }
-            parent.expanded = parent.id === this.rightTabs.focusedParent || activeSubsForParent.length > 0;
+            parent.expanded = parent.id === this.rightTabs.focusedParent || hasActiveSubs;
         }
 
         // Cache parentGroups on the instance for use in event handlers/action rolling
@@ -1026,9 +1027,9 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
                 if (this.leftTabs.activeParents.has(type)) {
                     const parentGroup = this.leftGroups?.[type];
                     const validSubIds = parentGroup?.getAllSubTabIds?.() ?? new Set();
-                    const activeSubsForParent = Array.from(this.leftTabs.activeSubTypes).filter(id => validSubIds.has(id));
+                    const hasActiveSubs = hasIntersection(this.leftTabs.activeSubTypes, validSubIds);
 
-                    if (activeSubsForParent.length === 0 || activeSubsForParent.includes('all')) {
+                    if (!hasActiveSubs || this.leftTabs.activeSubTypes.has('all')) {
                         return true;
                     } else {
                         const actionSubId = leftSub[1];
@@ -1043,8 +1044,8 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
                     } else {
                         const parentGroup = this.leftGroups?.[type];
                         const validSubIds = parentGroup?.getAllSubTabIds?.() ?? new Set();
-                        const activeSubsForParent = Array.from(this.leftTabs.activeSubTypes).filter(id => validSubIds.has(id));
-                        if (activeSubsForParent.length === 0 || activeSubsForParent.includes('all')) {
+                        const hasActiveSubs = hasIntersection(this.leftTabs.activeSubTypes, validSubIds);
+                        if (!hasActiveSubs || this.leftTabs.activeSubTypes.has('all')) {
                             return true;
                         }
                     }

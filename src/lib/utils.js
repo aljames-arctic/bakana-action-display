@@ -34,3 +34,25 @@ export function toSet(input, mapFn = null) {
     }
     return set;
 }
+
+/**
+ * Efficiently determine if two Sets (or iterables) share at least one common element.
+ * Iterates through the smaller set when both are Sets.
+ * @param {Set|Iterable|null|undefined} setA
+ * @param {Set|Iterable|null|undefined} setB
+ * @returns {boolean}
+ */
+export function hasIntersection(setA, setB) {
+    if (!setA || !setB) return false;
+    if (setA instanceof Set && setB instanceof Set) {
+        const [smaller, larger] = setA.size <= setB.size ? [setA, setB] : [setB, setA];
+        for (const elem of smaller) {
+            if (larger.has(elem)) return true;
+        }
+        return false;
+    }
+    for (const elem of setA) {
+        if (setB.has?.(elem)) return true;
+    }
+    return false;
+}
