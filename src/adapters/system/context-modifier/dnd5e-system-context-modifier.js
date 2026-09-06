@@ -142,41 +142,17 @@ export class Dnd5eSystemContextModifier extends BaseSystemContextModifier {
             spellParent.showUnprepared = Boolean(showUnprepared || showAll);
         }
 
+        const gearTypes = ['weapon', 'equipment', 'consumable', 'tool', 'backpack', 'loot'];
+        for (const type of gearTypes) {
+            const parent = findParent(type);
+            if (parent) {
+                const showUnequipped = Boolean(app?.actor?.getFlag?.(MODULE_ID, `showUnequipped_${type}`));
+                parent.showUnprepared = Boolean(showUnequipped || showAll);
+            }
+        }
+
         const weaponParent = findParent('weapon');
-        if (weaponParent) {
-            const showUnequippedWeapon = app?.actor?.getFlag?.(MODULE_ID, 'showUnequipped_weapon') ?? false;
-            weaponParent.showUnprepared = Boolean(showUnequippedWeapon || showAll);
-        }
-
         const equipmentParent = findParent('equipment');
-        if (equipmentParent) {
-            const showUnequippedEquipment = app?.actor?.getFlag?.(MODULE_ID, 'showUnequipped_equipment') ?? false;
-            equipmentParent.showUnprepared = Boolean(showUnequippedEquipment || showAll);
-        }
-
-        const consumableParent = findParent('consumable');
-        if (consumableParent) {
-            const showUnequippedConsumable = app?.actor?.getFlag?.(MODULE_ID, 'showUnequipped_consumable') ?? false;
-            consumableParent.showUnprepared = Boolean(showUnequippedConsumable || showAll);
-        }
-
-        const toolParent = findParent('tool');
-        if (toolParent) {
-            const showUnequippedTool = app?.actor?.getFlag?.(MODULE_ID, 'showUnequipped_tool') ?? false;
-            toolParent.showUnprepared = Boolean(showUnequippedTool || showAll);
-        }
-
-        const backpackParent = findParent('backpack');
-        if (backpackParent) {
-            const showUnequippedBackpack = app?.actor?.getFlag?.(MODULE_ID, 'showUnequipped_backpack') ?? false;
-            backpackParent.showUnprepared = Boolean(showUnequippedBackpack || showAll);
-        }
-
-        const lootParent = findParent('loot');
-        if (lootParent) {
-            const showUnequippedLoot = app?.actor?.getFlag?.(MODULE_ID, 'showUnequipped_loot') ?? false;
-            lootParent.showUnprepared = Boolean(showUnequippedLoot || showAll);
-        }
 
         const showTooltips = Boolean(context.showTooltips);
         if (showTooltips) {
@@ -201,7 +177,7 @@ export class Dnd5eSystemContextModifier extends BaseSystemContextModifier {
         }
 
         this.#ensureAllSubTab(
-            findParent('spell'),
+            spellParent,
             app,
             localize('BAD.common.allSpells', 'All Spells'),
             'showUnprepared',
@@ -210,7 +186,7 @@ export class Dnd5eSystemContextModifier extends BaseSystemContextModifier {
             showTooltips ? localize('BAD.tabs.unpreparedSpellsTooltip', '<b>Right Click:</b> Toggle Show Unprepared Spells') : ''
         );
         this.#ensureAllSubTab(
-            findParent('weapon'),
+            weaponParent,
             app,
             localize('BAD.common.allWeapons', 'All Weapons'),
             'showUnequipped_weapon',
@@ -219,7 +195,7 @@ export class Dnd5eSystemContextModifier extends BaseSystemContextModifier {
             showTooltips ? localize('BAD.tabs.unequippedWeaponsTooltip', '<b>Right Click:</b> Toggle Show Unequipped Weapons') : ''
         );
         this.#ensureAllSubTab(
-            findParent('equipment'),
+            equipmentParent,
             app,
             localize('BAD.common.allEquipment', 'All Equipment'),
             'showUnequipped_equipment',
