@@ -136,7 +136,7 @@ export class CombatMovementTracker {
         if (canvas?.grid?.measurePath) {
             try {
                 const result = canvas.grid.measurePath([p0, p1]);
-                if (typeof result?.distance === 'number') {
+                if (Number.isFinite(result?.distance)) {
                     return result.distance;
                 }
             } catch (_) {}
@@ -190,7 +190,7 @@ export class CombatMovementTracker {
             if (canvas?.grid?.measurePath) {
                 try {
                     const result = canvas.grid.measurePath(tokenDoc.movementHistory);
-                    if (typeof result?.distance === 'number') {
+                    if (Number.isFinite(result?.distance)) {
                         return { inCombat: true, distance: Math.round(result.distance * 10) / 10, units };
                     }
                 } catch (_) {}
