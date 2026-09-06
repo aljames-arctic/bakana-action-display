@@ -260,6 +260,33 @@ export function categorizeActions(actions, config, catchAllLabel, context = {}) 
     return categorizedSections;
 }
 
+export const DEFAULT_CATEGORIES = Object.freeze([
+    Object.freeze({
+        id: 'cat_favorites',
+        name: 'Favorites',
+        expression: `actor.getFlag('bakana-action-display', 'favorites')?.[item.id]`,
+        subcategories: Object.freeze([])
+    }),
+    Object.freeze({
+        id: 'cat_weapons',
+        name: 'Weapons',
+        expression: `item.type === 'weapon'`,
+        subcategories: Object.freeze([])
+    }),
+    Object.freeze({
+        id: 'cat_spells',
+        name: 'Spells',
+        expression: `item.type === 'spell'`,
+        subcategories: Object.freeze([])
+    }),
+    Object.freeze({
+        id: 'cat_features',
+        name: 'Features',
+        expression: `item.type === 'feat'`,
+        subcategories: Object.freeze([])
+    })
+]);
+
 /**
  * Returns default preset categories, delegating to a custom system adapter if provided.
  *
@@ -267,32 +294,5 @@ export function categorizeActions(actions, config, catchAllLabel, context = {}) 
  * @returns {Category[]} Default category list
  */
 export function getDefaultCategories(customAdapter = null) {
-    const defaults = customAdapter?.getDefaultCategories?.();
-    if (defaults) return defaults;
-    return [
-        {
-            id: 'cat_favorites',
-            name: 'Favorites',
-            expression: `actor.getFlag('bakana-action-display', 'favorites')?.[item.id]`,
-            subcategories: []
-        },
-        {
-            id: 'cat_weapons',
-            name: 'Weapons',
-            expression: `item.type === 'weapon'`,
-            subcategories: []
-        },
-        {
-            id: 'cat_spells',
-            name: 'Spells',
-            expression: `item.type === 'spell'`,
-            subcategories: []
-        },
-        {
-            id: 'cat_features',
-            name: 'Features',
-            expression: `item.type === 'feat'`,
-            subcategories: []
-        }
-    ];
+    return customAdapter?.getDefaultCategories?.() ?? DEFAULT_CATEGORIES;
 }

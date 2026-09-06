@@ -284,7 +284,10 @@ Hooks.on('deleteItem', (item, options, userId) => {
     }
 });
 
-const METADATA_KEYS = new Set(['_id', 'id', '_stats']);
+const METADATA_KEYS = Object.freeze(new Set(['_id', 'id', '_stats']));
+const MODULE_FLAG_PREFIX = `flags.${MODULE_ID}`;
+const ACTOR_DATA_FLAG_PREFIX = `actorData.flags.${MODULE_ID}`;
+const DELTA_FLAG_PREFIX = `delta.flags.${MODULE_ID}`;
 
 /**
  * Test whether a document change object contains solely internal module flag modifications.
@@ -294,7 +297,7 @@ const METADATA_KEYS = new Set(['_id', 'id', '_stats']);
 function isOnlyModuleFlagChanges(changes) {
     const nonMetaKeys = Object.keys(changes ?? {}).filter(k => !METADATA_KEYS.has(k) && !k.startsWith('_stats.'));
     return nonMetaKeys.length > 0 && nonMetaKeys.every(key => {
-        if (key.startsWith(`flags.${MODULE_ID}`) || key.startsWith(`actorData.flags.${MODULE_ID}`) || key.startsWith(`delta.flags.${MODULE_ID}`)) return true;
+        if (key.startsWith(MODULE_FLAG_PREFIX) || key.startsWith(ACTOR_DATA_FLAG_PREFIX) || key.startsWith(DELTA_FLAG_PREFIX)) return true;
         if (key === 'flags') {
             const flagKeys = Object.keys(changes.flags ?? {});
             return flagKeys.length === 1 && flagKeys[0] === MODULE_ID;

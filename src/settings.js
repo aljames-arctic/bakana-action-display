@@ -462,6 +462,48 @@ Hooks.once('init', () => {
     document.documentElement.style.setProperty('--bad-hud-font-size', `${initialFontSize}px`);
 });
 
+const USER_SETTING_KEYS = Object.freeze([
+    'persistTabState',
+    'toggleTabSelection',
+    'showTooltips',
+    'hudOpacity',
+    'hudScale',
+    'fontSize'
+]);
+
+const USER_MENU_KEYS = Object.freeze([
+    'economyColorsMenu',
+    'hudConfigMenu'
+]);
+
+const SETTINGS_SECTIONS = Object.freeze([
+    Object.freeze({
+        keys: Object.freeze(['categorizationMenu', 'dnd5eAutoBanMenu', 'moduleIntegrationsMenu', 'enableCenterOnToken', 'enableItemSummaryButton', 'enableToggleHotkey', 'enableCombatButtons', 'enableCombatAutoTrackButton']),
+        scope: 'world',
+        titleKey: 'BAD.settingsSections.world',
+        defaultTitle: 'World Settings',
+        icon: 'fas fa-globe'
+    }),
+    Object.freeze({
+        keys: Object.freeze(['economyColorsMenu', 'hudConfigMenu', 'persistTabState', 'toggleTabSelection', 'showTooltips', 'hudOpacity', 'hudScale', 'fontSize', 'hudAnchorSide', 'hudGridOffset', 'hudGridOffsetHorizontal']),
+        scope: 'user',
+        titleKey: 'BAD.settingsSections.user',
+        defaultTitle: 'User Settings',
+        icon: 'fas fa-user'
+    }),
+    Object.freeze({
+        keys: Object.freeze(['logVerbosity']),
+        scope: 'client',
+        titleKey: 'BAD.settingsSections.client',
+        defaultTitle: 'Client Settings',
+        icon: 'fas fa-desktop'
+    })
+]);
+
+function getSettingSelector(key) {
+    return `[data-setting-id="${MODULE_ID}.${key}"], [data-entry-id="${MODULE_ID}.${key}"], [name="${MODULE_ID}.${key}"], [data-key="${MODULE_ID}.${key}"], [data-action="${MODULE_ID}.${key}"], [data-setting-id="${key}"], [data-entry-id="${key}"], [name="${key}"], [data-key="${key}"], [data-action="${key}"]`;
+}
+
 /**
  * Injects styled subsection headers for World, User, and Client settings into the SettingsConfig dialog.
  * Moves user-scoped menus (like economyColorsMenu) to the User Settings section so they appear under User Settings.
@@ -477,40 +519,18 @@ export function injectSettingsHeaders(html, app) {
     if (!root?.querySelector) return;
 
     // 1. Move user-scoped menus (economyColorsMenu, hudConfigMenu) into the User Settings section before the first regular user setting
-    const userSettingKeys = ['persistTabState', 'toggleTabSelection', 'showTooltips', 'hudOpacity', 'hudScale', 'fontSize'];
     let firstUserSettingEl = null;
-    for (const key of userSettingKeys) {
-        const selector = [
-            `[data-setting-id="${MODULE_ID}.${key}"]`,
-            `[data-entry-id="${MODULE_ID}.${key}"]`,
-            `[name="${MODULE_ID}.${key}"]`,
-            `[data-key="${MODULE_ID}.${key}"]`,
-            `[data-action="${MODULE_ID}.${key}"]`,
-            `[data-setting-id="${key}"]`,
-            `[data-entry-id="${key}"]`,
-            `[name="${key}"]`,
-            `[data-key="${key}"]`,
-            `[data-action="${key}"]`
-        ].join(', ');
-        firstUserSettingEl = root.querySelector(selector);
+    for (const key of USER_SETTING_KEYS) {
+        firstUserSettingEl = root.querySelector(getSettingSelector(key));
         if (firstUserSettingEl) break;
     }
 
-    const userMenuKeys = ['economyColorsMenu', 'hudConfigMenu'];
     if (firstUserSettingEl) {
         const userSettingFg = firstUserSettingEl.closest('.form-group') ?? firstUserSettingEl;
         const parent = userSettingFg.parentNode;
         if (parent) {
-            for (const menuKey of userMenuKeys) {
-                const menuSelector = [
-                    `[data-key="${MODULE_ID}.${menuKey}"]`,
-                    `[data-action="${MODULE_ID}.${menuKey}"]`,
-                    `[data-setting-id="${MODULE_ID}.${menuKey}"]`,
-                    `[data-entry-id="${MODULE_ID}.${menuKey}"]`,
-                    `[data-key="${menuKey}"]`,
-                    `[data-action="${menuKey}"]`
-                ].join(', ');
-                const menuEl = root.querySelector(menuSelector);
+            for (const menuKey of USER_MENU_KEYS) {
+                const menuEl = root.querySelector(getSettingSelector(menuKey));
                 if (menuEl) {
                     const menuFg = menuEl.closest('.form-group') ?? menuEl;
                     if (menuFg && menuFg.parentNode === parent && menuFg !== userSettingFg) {
@@ -524,43 +544,10 @@ export function injectSettingsHeaders(html, app) {
     }
 
     // 2. Insert section headers before the respective first setting in each scope
-    const sections = [
-        {
-            keys: ['categorizationMenu', 'dnd5eAutoBanMenu', 'moduleIntegrationsMenu', 'enableCenterOnToken', 'enableItemSummaryButton', 'enableToggleHotkey', 'enableCombatButtons', 'enableCombatAutoTrackButton'],
-            scope: 'world',
-            title: game.i18n.localize('BAD.settingsSections.world') ?? 'World Settings',
-            icon: 'fas fa-globe'
-        },
-        {
-            keys: ['economyColorsMenu', 'hudConfigMenu', 'persistTabState', 'toggleTabSelection', 'showTooltips', 'hudOpacity', 'hudScale', 'fontSize', 'hudAnchorSide', 'hudGridOffset', 'hudGridOffsetHorizontal'],
-            scope: 'user',
-            title: game.i18n.localize('BAD.settingsSections.user') ?? 'User Settings',
-            icon: 'fas fa-user'
-        },
-        {
-            keys: ['logVerbosity'],
-            scope: 'client',
-            title: game.i18n.localize('BAD.settingsSections.client') ?? 'Client Settings',
-            icon: 'fas fa-desktop'
-        }
-    ];
-
-    for (const section of sections) {
+    for (const section of SETTINGS_SECTIONS) {
         let targetEl = null;
         for (const key of section.keys) {
-            const selector = [
-                `[data-setting-id="${MODULE_ID}.${key}"]`,
-                `[data-entry-id="${MODULE_ID}.${key}"]`,
-                `[name="${MODULE_ID}.${key}"]`,
-                `[data-key="${MODULE_ID}.${key}"]`,
-                `[data-action="${MODULE_ID}.${key}"]`,
-                `[data-setting-id="${key}"]`,
-                `[data-entry-id="${key}"]`,
-                `[name="${key}"]`,
-                `[data-key="${key}"]`,
-                `[data-action="${key}"]`
-            ].join(', ');
-            targetEl = root.querySelector(selector);
+            targetEl = root.querySelector(getSettingSelector(key));
             if (targetEl) break;
         }
 
@@ -579,10 +566,11 @@ export function injectSettingsHeaders(html, app) {
             continue;
         }
 
+        const title = game.i18n.localize(section.titleKey) ?? section.defaultTitle;
         const header = document.createElement('div');
         header.className = 'bad-settings-section-header';
         header.dataset.scope = section.scope;
-        header.innerHTML = `<i class="${section.icon}"></i><span>${section.title}</span>`;
+        header.innerHTML = `<i class="${section.icon}"></i><span>${title}</span>`;
         parent.insertBefore(header, formGroup);
     }
 }

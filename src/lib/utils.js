@@ -23,7 +23,7 @@ export function localize(key, fallback) {
 export function toSet(input, mapFn = null) {
     if (!input) return new Set();
     if (!mapFn) {
-        return input instanceof Set ? input : new Set(input);
+        return Boolean(input?.add && input?.has) ? input : new Set(input);
     }
     const set = new Set();
     for (const item of input) {
@@ -44,7 +44,7 @@ export function toSet(input, mapFn = null) {
  */
 export function hasIntersection(setA, setB) {
     if (!setA || !setB) return false;
-    if (setA instanceof Set && setB instanceof Set) {
+    if (Number.isFinite(setA?.size) && Number.isFinite(setB?.size)) {
         const [smaller, larger] = setA.size <= setB.size ? [setA, setB] : [setB, setA];
         for (const elem of smaller) {
             if (larger.has(elem)) return true;
