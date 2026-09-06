@@ -233,7 +233,7 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
                         ...action,
                         name: item.name, // Keep the clean item name
                         img: item.img, // Use the parent item's icon
-                        available: !(isSpellUnprepared || isUnequipped),
+                        available: !isSpellUnprepared && !isUnequipped,
                         subactions: filteredActivities,
                         right: this.#collectUniqueTabs(filteredActivities),
                         left,
@@ -252,17 +252,11 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
                         ...action,
                         name: item.name,
                         img: item.img,
-                        available: !(isSpellUnprepared || isUnequipped),
+                        available: !isUnequipped,
                         right: [TabRef.from('economy', 'none')],
                         left: subType ? [type, subType] : [type],
                         uses: this.#calculateUses(item),
-                        roll: async (event) => {
-                            if (activities[0]?.use) {
-                                const proxiedEvent = this._createRollEvent(event);
-                                return activities[0].use({ event: proxiedEvent }, { event: proxiedEvent });
-                            }
-                            return action.roll?.(event);
-                        }
+                        roll: async (event) => action.roll?.(event)
                     });
                     modified.push(passiveAction);
                 }
