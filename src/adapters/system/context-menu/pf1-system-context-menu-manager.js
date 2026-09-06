@@ -76,42 +76,11 @@ export class Pf1SystemContextMenuManager extends BaseSystemContextMenuManager {
      * @returns {boolean} True if handled
      */
     onTabRightClick(app, el, event) {
-        if (!app.actor?.isOwner) return false;
-
-        const isParentTab = el.classList?.contains?.('bad-left-tab');
-        const isSubTab = el.classList?.contains?.('bad-left-sub-tab');
-        const parentType = isParentTab
-            ? el.dataset?.type
-            : (isSubTab && el.dataset?.type === 'all'
-                ? el.closest?.('.bad-left-tab-group')?.querySelector?.('.bad-left-tab')?.dataset?.type
-                : null);
-
-        if (!parentType) return false;
-
-        if (parentType === 'all') {
-            const current = app.actor.getFlag(MODULE_ID, 'showAll') ?? false;
-            const nextState = !current;
-            const flagUpdates = {};
-            for (const key of ALL_FILTER_FLAGS) {
-                flagUpdates[key] = nextState;
-            }
-            this.updateActorFlagsOptimistic(app.actor, MODULE_ID, flagUpdates);
-            return true;
-        }
-
         const flagMap = {
             weapon: 'showUnequipped_weapon',
             equipment: 'showUnequipped_equipment',
             consumable: 'showUnequipped_consumable'
         };
-
-        const flagKey = flagMap[parentType];
-        if (flagKey) {
-            const current = app.actor.getFlag(MODULE_ID, flagKey) ?? false;
-            this.setActorFlagOptimistic(app.actor, MODULE_ID, flagKey, !current);
-            return true;
-        }
-
-        return false;
+        return this.handleFilterTabRightClick(app, el, flagMap, ALL_FILTER_FLAGS);
     }
 }

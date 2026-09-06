@@ -91,7 +91,7 @@ export async function syncActorFavorites(actor, customAdapter = null) {
         const currentFlags = getActorFavorites(actor);
         const updatedFlags = {};
 
-        const items = Array.from(actor.items?.values?.() ?? actor.items ?? []);
+        const items = actor.items?.values?.() ?? actor.items ?? [];
         for (const item of items) {
             if (item?.id && sys.isFavorite(actor, item)) {
                 updatedFlags[item.id] = true;
