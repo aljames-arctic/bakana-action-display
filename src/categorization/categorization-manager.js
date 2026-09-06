@@ -1,5 +1,7 @@
 import { log } from '../lib/logger.js';
 
+const sortByName = (a, b) => (a.name ?? '').localeCompare(b.name ?? '');
+
 /**
  * @typedef {Object} SubCategory
  * @property {string} id Unique identifier for the subcategory
@@ -198,16 +200,18 @@ export function categorizeActions(actions, config, catchAllLabel, context = {}) 
     const categorizedSections = [];
 
     for (const [catId, bucket] of categoryMap.entries()) {
-        const totalItemsInCat = bucket.directItems.length
-            + bucket.othersItems.length
-            + Array.from(bucket.subBuckets.values()).reduce((sum, s) => sum + s.items.length, 0);
+        let subItemsCount = 0;
+        for (const s of bucket.subBuckets.values()) {
+            subItemsCount += s.items.length;
+        }
+        const totalItemsInCat = bucket.directItems.length + bucket.othersItems.length + subItemsCount;
 
         if (totalItemsInCat === 0) continue;
 
         const subsections = [];
         for (const [subId, subEntry] of bucket.subBuckets.entries()) {
             if (subEntry.items.length > 0) {
-                subEntry.items.sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''));
+                subEntry.items.sort(sortByName);
                 subsections.push({
                     name: subEntry.subcategory.name,
                     items: subEntry.items
@@ -216,14 +220,14 @@ export function categorizeActions(actions, config, catchAllLabel, context = {}) 
         }
 
         if (bucket.othersItems.length > 0) {
-            bucket.othersItems.sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''));
+            bucket.othersItems.sort(sortByName);
             subsections.push({
                 name: othersLabel,
                 items: bucket.othersItems
             });
         }
 
-        bucket.directItems.sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''));
+        bucket.directItems.sort(sortByName);
         categorizedSections.push({
             name: bucket.category.name,
             items: bucket.directItems,
@@ -232,7 +236,7 @@ export function categorizeActions(actions, config, catchAllLabel, context = {}) 
     }
 
     if (topLevelOthers.length > 0) {
-        topLevelOthers.sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''));
+        topLevelOthers.sort(sortByName);
         categorizedSections.push({
             name: othersLabel,
             items: topLevelOthers,
