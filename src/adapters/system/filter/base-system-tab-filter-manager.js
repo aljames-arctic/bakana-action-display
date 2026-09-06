@@ -1,4 +1,5 @@
 import { log } from "../../../lib/logger.js";
+import { hasIntersection } from "../../../lib/utils.js";
 
 /**
  * Helper to check if a tab or any of its ancestors under a root tab matches a predicate.
@@ -106,8 +107,17 @@ export class BaseSystemTabFilterManager {
         }
 
         // 2. Evaluate UNION / INTERSECTION (category) parent groups
-        const showAllCategory = activeParents.has('all') ||
-            Array.from(activeParents).every(p => p === 'all' || this.isExclusionTab(p));
+        let showAllCategory = activeParents.has('all');
+        if (!showAllCategory) {
+            let onlyExclusionsOrAll = true;
+            for (const p of activeParents) {
+                if (p !== 'all' && !this.isExclusionTab(p)) {
+                    onlyExclusionsOrAll = false;
+                    break;
+                }
+            }
+            showAllCategory = onlyExclusionsOrAll;
+        }
 
         if (showAllCategory) return true;
 
@@ -118,15 +128,19 @@ export class BaseSystemTabFilterManager {
 
             const parentGroup = parentGroups?.[actionParentId];
             const validSubIds = parentGroup?.getAllSubTabIds?.() ?? new Set();
-            const activeSubsForParent = Array.from(activeSubs).filter(id => validSubIds.has(id));
-
-            if (activeSubsForParent.length === 0) return true;
 
             if (this.isIntersectionTab(actionParentId)) {
+                const activeSubsForParent = [];
+                for (const id of activeSubs) {
+                    if (validSubIds.has(id)) activeSubsForParent.push(id);
+                }
+                if (activeSubsForParent.length === 0) return true;
                 return activeSubsForParent.every(subId =>
                     right.some(t => hasTabInPath(t, actionParentId, label => label === subId))
                 );
             }
+
+            if (!hasIntersection(activeSubs, validSubIds)) return true;
 
             return right.some(t => hasTabInPath(t, actionParentId, label => activeSubs.has(label)));
         });
