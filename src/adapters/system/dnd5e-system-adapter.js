@@ -175,8 +175,8 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
 
                         return new Action({
                             id: activity.id,
-                            name: (activity.name && activity.name.trim().length > 0) ? activity.name : (linkedAction?.name ?? activity.type.toUpperCase()),
-                            img: (activity.img && activity.img.trim().length > 0) ? activity.img : (linkedAction?.img ?? item.img),
+                            name: activity.name?.trim() ? activity.name : (linkedAction?.name ?? activity.type.toUpperCase()),
+                            img: activity.img?.trim() ? activity.img : (linkedAction?.img ?? item.img),
                             uses: this.#calculateActivityUses(activity, item),
                             right: [tabRef],
                             roll: async (event) => {
@@ -1504,34 +1504,24 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
                 // Otherwise, consumes actor spell slots
                 const level = target.target ?? item.system?.level; // Fallback to spell's base level if target is empty (dynamic slots)
                 return this.#getSpellSlotUses(actor, level, highestAvailableSlot);
-            } else if (target.type === 'item') {
-                // Consumes quantity of another item (e.g. ammunition) or charges of another item
+            } else if (target.type === 'item' || target.type === 'material') {
+                // Consumes quantity of another item (e.g. ammunition / components) or charges of another item
                 const targetItem = this.#resolveTargetItem(target.target, item, actor);
 
                 if (targetItem) {
                     const consumed = target.value ?? 1;
-                    // If the target item has its own limited uses (like a wand), use those
-                    const uses = this.#calculateUses(targetItem);
-                    if (uses.available !== null) {
-                        return {
-                            available: Math.floor(uses.available / consumed),
-                            max: uses.max !== null ? Math.floor(uses.max / consumed) : null
-                        };
+                    if (target.type === 'item') {
+                        // If the target item has its own limited uses (like a wand), use those
+                        const uses = this.#calculateUses(targetItem);
+                        if (uses.available !== null) {
+                            return {
+                                available: Math.floor(uses.available / consumed),
+                                max: uses.max !== null ? Math.floor(uses.max / consumed) : null
+                            };
+                        }
                     }
-                    // Otherwise, use its quantity (standard ammo/consumable)
+                    // Otherwise, use its quantity (standard ammo/consumable/material)
                     const qty = targetItem.system?.quantity ?? 0;
-                    return {
-                        available: Math.floor(qty / consumed),
-                        max: null
-                    };
-                }
-            } else if (target.type === 'material') {
-                // Consumes quantity of another item (specifically spell components)
-                const targetItem = this.#resolveTargetItem(target.target, item, actor);
-
-                if (targetItem) {
-                    const qty = targetItem.system?.quantity ?? 0;
-                    const consumed = target.value ?? 1;
                     return {
                         available: Math.floor(qty / consumed),
                         max: null
