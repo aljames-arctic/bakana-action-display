@@ -289,7 +289,7 @@ export function showActivityDropdown(app, target, subactions, event, parentActio
 
     const menu = new ContextMenuClass(targetBody, ".bad-action-item", menuItems, options);
     menu._setPosition = (html) => {
-        const menuEl = html instanceof HTMLElement ? html : html?.[0] ?? document.querySelector('#context-menu, .context-menu');
+        const menuEl = html?.querySelector ? html : html?.[0] ?? document.querySelector('#context-menu, .context-menu');
         if (menuEl) applyPositioning(menuEl);
     };
     menu.setPosition = menu._setPosition;
