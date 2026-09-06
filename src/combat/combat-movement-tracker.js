@@ -54,9 +54,8 @@ export class CombatMovementTracker {
     static #initializeCombatantPositions(combat) {
         if (!combat?.combatants) return;
         for (const combatant of combat.combatants) {
-            const token = combatant.token?.object ?? canvas?.tokens?.get?.(combatant.tokenId) ?? combatant.token;
-            if (token) {
-                const tokenDoc = token.document ?? token;
+            const tokenDoc = combatant.token ?? canvas?.tokens?.get?.(combatant.tokenId)?.document;
+            if (tokenDoc) {
                 this.#lastPositions.set(combatant.tokenId, {
                     x: tokenDoc.x,
                     y: tokenDoc.y,
@@ -173,10 +172,10 @@ export class CombatMovementTracker {
             return { inCombat: false, distance: 0, units };
         }
 
+        const tokenId = typeof token === 'string' ? token : (token?.id ?? token?.document?.id);
         const tokenDoc = typeof token === 'string'
             ? (canvas?.tokens?.get?.(token)?.document ?? null)
             : (token?.document ?? token ?? null);
-        const tokenId = typeof token === 'string' ? token : (tokenDoc?.id ?? token?.id);
 
         const isCombatant = Boolean(
             combat.combatants?.some(c => c.tokenId === tokenId || (actor && c.actorId === actor.id))

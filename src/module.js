@@ -97,7 +97,7 @@ function handleHUDClose(closingToken = null) {
     const currentApp = actionDisplay.activeApp;
     if (currentApp) {
         if (closingToken) {
-            const matchesActiveToken = currentApp.token === closingToken || currentApp.token?.id === closingToken.id || currentApp.token?.id === closingToken;
+            const matchesActiveToken = currentApp.token === closingToken || currentApp.token?.id === (closingToken?.id ?? closingToken);
             if (!matchesActiveToken) {
                 return;
             }
@@ -133,18 +133,13 @@ function isMatchingActor(docActor, docParent) {
 
     // Check direct actor ID or UUID match
     if (docActor) {
-        if (docActor.id && activeActor.id && docActor.id === activeActor.id) return true;
-        if (docActor.uuid && activeActor.uuid && docActor.uuid === activeActor.uuid) return true;
+        if ((docActor.id && docActor.id === activeActor.id) || (docActor.uuid && docActor.uuid === activeActor.uuid)) return true;
     }
 
     // Check parent document match (for embedded items/activities)
     if (docParent) {
-        if (docParent.id && activeActor.id && docParent.id === activeActor.id) return true;
-        if (docParent.uuid && activeActor.uuid && docParent.uuid === activeActor.uuid) return true;
-        if (activeToken && docParent.token) {
-            if (docParent.token.id && activeToken.id && docParent.token.id === activeToken.id) return true;
-            if (docParent.token.uuid && activeToken.uuid && docParent.token.uuid === activeToken.uuid) return true;
-        }
+        if ((docParent.id && docParent.id === activeActor.id) || (docParent.uuid && docParent.uuid === activeActor.uuid)) return true;
+        if (activeToken && ((docParent.token?.id && docParent.token.id === activeToken.id) || (docParent.token?.uuid && docParent.token.uuid === activeToken.uuid))) return true;
     }
 
     return false;
@@ -253,7 +248,7 @@ Hooks.on('closeTokenHUD', (tokenHUD, html) => {
     // Close activeApp if the closing event specifically targeted activeApp's token,
     // or if TokenHUD has closed completely with no active object.
     if (closingToken) {
-        const matchesActiveToken = currentApp.token === closingToken || currentApp.token?.id === closingToken.id || currentApp.token?.id === closingToken;
+        const matchesActiveToken = currentApp.token === closingToken || currentApp.token?.id === (closingToken?.id ?? closingToken);
         if (matchesActiveToken) {
             handleHUDClose(closingToken);
         }
