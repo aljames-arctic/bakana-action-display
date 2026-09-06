@@ -74,7 +74,7 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
      * @returns {string|null}
      */
     #normalizeCachedForKey(cachedFor) {
-        if (!cachedFor || typeof cachedFor !== 'string') return null;
+        if (!cachedFor?.match) return null;
         const match = cachedFor.match(/(?:Item\.)?([^.]+)\.(?:Activity\.)?([^.]+)$/);
         if (match) {
             return `${match[1]}.${match[2]}`;
@@ -446,7 +446,7 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
 
         // 3. Try standard D&D 5e CONFIG tables
         const toolConfig = cfg?.tools?.[toolId];
-        const configLabel = toolConfig?.label ?? (typeof toolConfig === 'string' ? toolConfig : null)
+        const configLabel = toolConfig?.label ?? (toolConfig?.charAt ? toolConfig : null)
             ?? cfg?.toolProficiencies?.[toolId]
             ?? cfg?.toolTypes?.[toolId]
             ?? cfg?.vehicleTypes?.[toolId];
@@ -739,7 +739,7 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
     }
 
     #formatLabel(key, configMap = null) {
-        if (!key || typeof key !== 'string') return '';
+        if (!key?.split) return '';
         const config = configMap?.[key];
         const rawLabel = config?.label ?? config;
         if (rawLabel) {
@@ -777,13 +777,13 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
 
         // Check if NPC type object or PC race
         const typeData = details.type;
-        const rawType = typeData?.value ?? (typeof typeData === 'string' ? typeData : '');
+        const rawType = typeData?.value ?? (typeData?.charAt ? typeData : '');
         const subtype = typeData?.subtype ?? '';
         const swarm = typeData?.swarm ?? '';
         const custom = typeData?.custom ?? '';
 
         const raceData = details.race;
-        const raceName = raceData?.name ?? (typeof raceData === 'string' ? raceData : '');
+        const raceName = raceData?.name ?? (raceData?.charAt ? raceData : '');
 
         const typeLabel = this.#formatLabel(rawType, cfg?.creatureTypes);
         const raceLabel = raceName ? (raceName.charAt(0).toUpperCase() + raceName.slice(1)) : '';
@@ -1004,7 +1004,7 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
         // Special Communication (semicolon-separated)
         const specialData = langData?.special;
         if (specialData) {
-            const list = Array.isArray(specialData) || specialData instanceof Set ? specialData : [specialData];
+            const list = Array.isArray(specialData) || specialData?.forEach ? specialData : [specialData];
             for (const item of list) {
                 const parts = item?.split?.(';').map(s => s.trim()).filter(Boolean) ?? [];
                 for (const part of parts) {
@@ -1016,21 +1016,21 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
         // Communication / Ranged Communication (from langData.communication or extraComm)
         const commSources = [langData?.communication, extraComm].filter(Boolean);
         for (const commData of commSources) {
-            if (typeof commData === 'string' && commData.trim().length > 0) {
+            if (commData?.split) {
                 const commParts = commData.split(';').map(s => s.trim()).filter(Boolean);
                 for (const part of commParts) {
                     if (!result.includes(part)) {
                         result.push(part);
                     }
                 }
-            } else if (typeof commData === 'object' && commData !== null) {
+            } else if (commData) {
                 for (const [commKey, commVal] of Object.entries(commData)) {
-                    if (commKey === 'units' || commVal === null || commVal === undefined || commVal === false) continue;
+                    if (commKey === 'units' || commVal == null || commVal === false) continue;
                     const commLabel = this.#formatLabel(commKey, cfg?.communication ?? cfg?.languages);
                     if (Number.isFinite(commVal) && commVal > 0) {
                         const str = `${commLabel} ${commVal} ${units}`;
                         if (!result.includes(str)) result.push(str);
-                    } else if (typeof commVal === 'object' && commVal !== null) {
+                    } else if (commVal?.value != null || commVal?.range != null || commVal?.distance != null || commVal?.custom != null) {
                         const dist = commVal.value ?? commVal.range ?? commVal.distance;
                         const distUnits = commVal.units ?? units;
                         if (dist && Number(dist) > 0) {
@@ -1039,7 +1039,7 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
                         } else if (commVal.custom) {
                             if (!result.includes(commVal.custom)) result.push(commVal.custom);
                         }
-                    } else if (typeof commVal === 'string' && commVal.trim().length > 0) {
+                    } else if (commVal?.trim?.()?.length > 0) {
                         const str = !Number.isFinite(Number(commVal)) ? `${commLabel}: ${commVal.trim()}` : `${commLabel} ${commVal.trim()} ${units}`;
                         if (!result.includes(str)) result.push(str);
                     }
@@ -1048,7 +1048,7 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
         }
 
         // Ranged Communication from langData.ranges if present
-        if (langData?.ranges && typeof langData.ranges === 'object') {
+        if (langData?.ranges) {
             for (const [rangeKey, rangeVal] of Object.entries(langData.ranges)) {
                 if (Number.isFinite(rangeVal) && rangeVal > 0) {
                     const rangeLabel = this.#formatLabel(rangeKey, cfg?.communication ?? cfg?.languages);
@@ -1990,7 +1990,7 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
         // 11. Description: prioritize activity-specific description, then linked spell/item description, then parent item description fallback
         const resolveDescription = (desc) => {
             if (!desc) return null;
-            const text = typeof desc === 'string' ? desc : (desc.value ?? desc.chatFlavor ?? desc.chat);
+            const text = desc?.value ?? desc?.chatFlavor ?? desc?.chat ?? desc;
             return text?.trim?.() || null;
         };
 
