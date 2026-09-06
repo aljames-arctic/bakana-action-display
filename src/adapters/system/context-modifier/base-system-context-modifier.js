@@ -45,14 +45,14 @@ const SORT_ORDERS = Object.freeze({
     })
 });
 
-const ABILITY_LABEL_KEYS = Object.freeze({
-    all: Object.freeze(['BAD.core.allActions', 'All']),
-    str: Object.freeze(['DND5E.AbilityStr', 'Strength']),
-    dex: Object.freeze(['DND5E.AbilityDex', 'Dexterity']),
-    con: Object.freeze(['DND5E.AbilityCon', 'Constitution']),
-    int: Object.freeze(['DND5E.AbilityInt', 'Intelligence']),
-    wis: Object.freeze(['DND5E.AbilityWis', 'Wisdom']),
-    cha: Object.freeze(['DND5E.AbilityCha', 'Charisma'])
+const ABILITY_LABEL_CONFIGS = Object.freeze({
+    all: Object.freeze({ key: 'BAD.core.allActions', fallback: 'All' }),
+    str: Object.freeze({ key: 'DND5E.AbilityStr', fallback: 'Strength' }),
+    dex: Object.freeze({ key: 'DND5E.AbilityDex', fallback: 'Dexterity' }),
+    con: Object.freeze({ key: 'DND5E.AbilityCon', fallback: 'Constitution' }),
+    int: Object.freeze({ key: 'DND5E.AbilityInt', fallback: 'Intelligence' }),
+    wis: Object.freeze({ key: 'DND5E.AbilityWis', fallback: 'Wisdom' }),
+    cha: Object.freeze({ key: 'DND5E.AbilityCha', fallback: 'Charisma' })
 });
 
 /**
@@ -189,7 +189,7 @@ export class BaseSystemContextModifier {
      * @returns {string}
      */
     getActionSubTabLabel(subId) {
-        const config = ABILITY_LABEL_KEYS[subId];
-        return config ? localize(config[0], config[1]) : subId.toUpperCase();
+        const config = ABILITY_LABEL_CONFIGS[subId];
+        return config ? localize(config.key, config.fallback) : subId.toUpperCase();
     }
 }
