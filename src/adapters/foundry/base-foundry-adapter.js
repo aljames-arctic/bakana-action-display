@@ -216,11 +216,7 @@ export class BaseFoundryAdapter {
      * @returns {Combatant|null}
      */
     getCombatantByToken(combat, token) {
-        if (!combat) return null;
-        const tokenId = typeof token === 'string' ? token : (token?.id ?? token?.document?.id);
-        if (!tokenId) return null;
-
-        return combat.getCombatantByToken?.(tokenId) ?? null;
+        return this.getCombatantsByToken(combat, token)[0] ?? null;
     }
 
     /**
