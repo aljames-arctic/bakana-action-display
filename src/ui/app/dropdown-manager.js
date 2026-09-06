@@ -253,7 +253,7 @@ export function showActivityDropdown(app, target, subactions, event, parentActio
 
     const menu = new ContextMenuClass(targetBody, ".bad-action-item", menuItems, options);
     menu._setPosition = (html) => {
-        const menuEl = html?.querySelector ? html : html?.[0] ?? document.querySelector('#context-menu, .context-menu');
+        const menuEl = (html instanceof HTMLElement ? html : html?.[0]) ?? document.querySelector('#context-menu, .context-menu');
         if (menuEl) applyPositioning(menuEl);
     };
     menu.setPosition = menu._setPosition;
@@ -280,12 +280,20 @@ export function showActivityDropdown(app, target, subactions, event, parentActio
 
     app._activeLeftClickMenu = menu;
 
-    return menu.render(target)?.then?.(() => {
-        const menuEl = document.querySelector('#context-menu, .context-menu');
-        if (menuEl) {
-            applyPositioning(menuEl);
-        }
-    })?.catch?.(e => {
-        log.error(`showActivityDropdown | menu.render error:`, e);
-    });
+    const renderResult = menu.render(target);
+    if (renderResult instanceof Promise) {
+        return renderResult.then(() => {
+            const menuEl = document.querySelector('#context-menu, .context-menu');
+            if (menuEl) {
+                applyPositioning(menuEl);
+            }
+        }).catch(e => {
+            log.error(`showActivityDropdown | menu.render error:`, e);
+        });
+    }
+
+    const menuEl = document.querySelector('#context-menu, .context-menu');
+    if (menuEl) {
+        applyPositioning(menuEl);
+    }
 }

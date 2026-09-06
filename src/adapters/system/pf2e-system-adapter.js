@@ -113,7 +113,7 @@ export class BasePf2eSystemAdapter extends FantasySystemAdapter {
         if (item.category === 'unarmed' || item.system.category?.value === 'unarmed') return true;
 
         const traits = item.system.traits?.value;
-        const hasTrait = (trait) => Boolean(traits?.includes?.(trait) || traits?.has?.(trait));
+        const hasTrait = (trait) => Boolean(traits instanceof Set ? traits.has(trait) : traits?.includes?.(trait));
         if (hasTrait('unarmed') || hasTrait('natural')) {
             return true;
         }
@@ -290,7 +290,7 @@ export class BasePf2eSystemAdapter extends FantasySystemAdapter {
 
         // 2. Skills
         const actorSkills = actor.skills ?? actor.system?.skills ?? {};
-        const skillEntries = actorSkills?.entries ? Array.from(actorSkills.entries()) : Object.entries(actorSkills);
+        const skillEntries = actorSkills instanceof Map ? Array.from(actorSkills.entries()) : Object.entries(actorSkills);
 
         for (const [key, skill] of skillEntries) {
             const slug = skill.slug ?? key;
@@ -456,7 +456,7 @@ export class BasePf2eSystemAdapter extends FantasySystemAdapter {
             );
         }
 
-        return (result?.then) ? result.then(() => context) : (result ?? context);
+        return result instanceof Promise ? result.then(() => context) : (result ?? context);
     }
 
     /**
@@ -706,12 +706,12 @@ export class BasePf2eSystemAdapter extends FantasySystemAdapter {
             if (label) results.push(label);
         }
 
-        if (langData.custom?.trim?.()) {
+        if (typeof langData.custom === 'string' && langData.custom.trim()) {
             const customItems = langData.custom.split(/[;,]/).map(s => s.trim()).filter(Boolean);
             results.push(...customItems);
         }
 
-        if (langData.details?.trim?.()) {
+        if (typeof langData.details === 'string' && langData.details.trim()) {
             const detailsItems = langData.details.split(/[;,]/).map(s => s.trim()).filter(Boolean);
             results.push(...detailsItems);
         }

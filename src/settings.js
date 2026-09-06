@@ -512,12 +512,13 @@ function getSettingSelector(key) {
  * @param {Application} [app] Application instance
  */
 export function injectSettingsHeaders(html, app) {
-    const root = (html?.querySelector ? html : html?.[0])
-        ?? (app?.element?.querySelector ? app.element : app?.element?.[0])
+    const rawRoot = (html instanceof HTMLElement ? html : html?.[0])
+        ?? (app?.element instanceof HTMLElement ? app.element : app?.element?.[0])
         ?? document.querySelector?.('#client-settings, form.categories, .settings-list')
         ?? null;
+    const root = rawRoot instanceof HTMLElement ? rawRoot : null;
 
-    if (!root?.querySelector) return;
+    if (!root) return;
 
     // 1. Move user-scoped menus (economyColorsMenu, hudConfigMenu) into the User Settings section before the first regular user setting
     let firstUserSettingEl = null;

@@ -94,7 +94,7 @@ function getCompiledExpression(expr) {
  * @returns {{ valid: boolean, error: string|null }} Validation result
  */
 export function validateExpression(expression) {
-    const expr = expression?.trim?.();
+    const expr = typeof expression === 'string' ? expression.trim() : '';
     if (!expr) {
         return { valid: false, error: 'Expression cannot be empty.' };
     }
@@ -115,7 +115,7 @@ export function validateExpression(expression) {
  * @returns {boolean} True if expression evaluates to truthy
  */
 export function evaluateBooleanExpression(expression, action, context = {}) {
-    const expr = expression?.trim?.();
+    const expr = typeof expression === 'string' ? expression.trim() : '';
     if (!expr) return false;
 
     try {
@@ -147,7 +147,7 @@ export function categorizeActions(actions, config, catchAllLabel, context = {}) 
         return null;
     }
 
-    const trimmed = catchAllLabel?.trim?.();
+    const trimmed = typeof catchAllLabel === 'string' ? catchAllLabel.trim() : '';
     const othersLabel = (trimmed && trimmed.length > 0) ? trimmed : 'Other Actions';
 
     // Map each category to an internal bucket structure

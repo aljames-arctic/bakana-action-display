@@ -53,7 +53,7 @@ class ActionDisplay {
      * @param {BaseSystemAdapter} sysAdapter
      */
     registerSystemAdapter(sysAdapter) {
-        if (!sysAdapter?.systemId || !sysAdapter?.modifyActions) {
+        if (!(sysAdapter instanceof BaseSystemAdapter)) {
             throw new Error("System adapter must be an instance of BaseSystemAdapter");
         }
         adapter.system = sysAdapter;
@@ -65,7 +65,7 @@ class ActionDisplay {
      * @param {BaseModuleAdapter} modAdapter
      */
     registerModuleAdapter(modAdapter) {
-        if (!modAdapter?.moduleId || !modAdapter?.modifyActions) {
+        if (!(modAdapter instanceof BaseModuleAdapter)) {
             throw new Error("Module adapter must be an instance of BaseModuleAdapter");
         }
         adapter.modules.set(modAdapter.moduleId, modAdapter);

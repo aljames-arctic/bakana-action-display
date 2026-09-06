@@ -145,7 +145,7 @@ export class BaseSystemAdapter {
                     return Boolean(event[prop] || game.keyboard?.isModifierActive(MODIFIER_KEY_MAP[prop]));
                 }
                 const val = Reflect.get(target, prop);
-                return val?.bind ? val.bind(target) : val;
+                return typeof val === 'function' ? val.bind(target) : val;
             }
         });
     }
@@ -513,10 +513,10 @@ export class BaseSystemAdapter {
         if (!type?.id || type.id === 'none' || type.id === 'all') return false;
 
         const disabled = userColors.disabled;
-        if (disabled?.[type.id] || disabled?.includes?.(type.id)) return false;
+        if (disabled instanceof Set ? disabled.has(type.id) : (Array.isArray(disabled) ? disabled.includes(type.id) : Boolean(disabled?.[type.id]))) return false;
 
         const enabled = userColors.enabled;
-        if (enabled?.[type.id] || enabled?.includes?.(type.id)) return true;
+        if (enabled instanceof Set ? enabled.has(type.id) : (Array.isArray(enabled) ? enabled.includes(type.id) : Boolean(enabled?.[type.id]))) return true;
 
         return Boolean(type.defaultEnabled);
     }

@@ -47,9 +47,8 @@ export class Pf2eSystemContextMenuManager extends BaseSystemContextMenuManager {
     #isEquippable(item, app = null) {
         if (!item?.system) return false;
         if (app?.actor?.items && item.id && !app.actor.items.has(item.id)) return false;
-        if (item.isEmbedded === false || item.isPhysical === false) return false;
-        if (item.category === 'unarmed' || item.system.category?.value === 'unarmed') return false;
-        if (item.system.traits?.value?.includes?.('unarmed')) return false;
+        const traits = item.system.traits?.value;
+        if (traits instanceof Set ? traits.has('unarmed') : (Array.isArray(traits) ? traits.includes('unarmed') : false)) return false;
         return Boolean(item.system.equipped?.carryType);
     }
 

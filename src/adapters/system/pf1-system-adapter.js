@@ -424,7 +424,7 @@ export class BasePf1SystemAdapter extends FantasySystemAdapter {
             );
         }
 
-        return (result?.then) ? result.then(() => context) : (result ?? context);
+        return result instanceof Promise ? result.then(() => context) : (result ?? context);
     }
 
     /**
@@ -684,11 +684,11 @@ export class BasePf1SystemAdapter extends FantasySystemAdapter {
         if (!sensesData) return [];
 
         const results = [];
-        if (sensesData?.split) {
+        if (typeof sensesData === 'string') {
             return sensesData.split(/[;,]/).map(s => s.trim()).filter(Boolean);
         }
 
-        if (sensesData.custom?.split) {
+        if (typeof sensesData.custom === 'string') {
             results.push(...sensesData.custom.split(/[;,]/).map(s => s.trim()).filter(Boolean));
         }
 

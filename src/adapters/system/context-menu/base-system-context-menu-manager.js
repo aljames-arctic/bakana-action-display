@@ -81,10 +81,10 @@ export class BaseSystemContextMenuManager {
      * @returns {boolean} True if handled
      */
     handleFilterTabRightClick(app, el, flagMap, allFilterFlags) {
-        if (!app.actor?.isOwner) return false;
+        if (!app.actor?.isOwner || !el) return false;
 
-        const isParentTab = el.classList?.contains?.('bad-left-tab');
-        const isSubTab = el.classList?.contains?.('bad-left-sub-tab');
+        const isParentTab = Boolean(el.classList?.contains?.('bad-left-tab'));
+        const isSubTab = Boolean(el.classList?.contains?.('bad-left-sub-tab'));
         const parentType = isParentTab
             ? el.dataset?.type
             : (isSubTab && el.dataset?.type === 'all'

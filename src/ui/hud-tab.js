@@ -119,7 +119,7 @@ export class HUDTab {
      * @returns {HUDTab} The created or added child HUDTab instance
      */
     addSubTab(subTabConfig) {
-        const subTab = subTabConfig?.addSubTab 
+        const subTab = subTabConfig instanceof HUDTab 
             ? subTabConfig 
             : new HUDTab(subTabConfig);
         subTab.parent = this;
