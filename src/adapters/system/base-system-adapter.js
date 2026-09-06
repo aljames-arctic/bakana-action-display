@@ -145,7 +145,7 @@ export class BaseSystemAdapter {
                     return Boolean(event[prop] || game.keyboard?.isModifierActive(MODIFIER_KEY_MAP[prop]));
                 }
                 const val = Reflect.get(target, prop);
-                return typeof val === 'function' ? val.bind(target) : val;
+                return val?.bind ? val.bind(target) : val;
             }
         });
     }
@@ -578,7 +578,13 @@ export class BaseSystemAdapter {
 
         // Map any unmapped active types to 'other' if 'other' is enabled
         const otherDef = systemTypes.find(t => t.id === 'other') ?? DEFAULT_ECONOMY_OTHER;
-        const hasUnmapped = Array.from(activeTypes).some(t => !systemTypes.some(st => st.id === t));
+        let hasUnmapped = false;
+        for (const t of activeTypes) {
+            if (!systemTypes.some(st => st.id === t)) {
+                hasUnmapped = true;
+                break;
+            }
+        }
         if (hasUnmapped && this.isEconomyTypeEnabled(otherDef, userColors)) {
             activeTypes.add('other');
         }

@@ -202,7 +202,7 @@ export class BaseFoundryAdapter {
      */
     getCombatantsByToken(combat, token) {
         if (!combat) return [];
-        const tokenId = typeof token === 'string' ? token : (token?.id ?? token?.document?.id);
+        const tokenId = token?.id ?? token?.document?.id ?? token;
         if (!tokenId) return [];
 
         const single = combat.getCombatantByToken?.(tokenId);
@@ -331,9 +331,7 @@ export class BaseFoundryAdapter {
         }
 
         const usersCollection = game.users;
-        const allUsers = usersCollection?.contents
-            ?? (usersCollection?.values ? Array.from(usersCollection.values()) : null)
-            ?? (usersCollection ? Array.from(usersCollection) : [user]);
+        const allUsers = usersCollection?.contents ?? [user];
 
         // Filter to only currently connected (active) other users
         const activeOtherUsers = allUsers.filter(otherUser => {

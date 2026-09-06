@@ -172,10 +172,8 @@ export class CombatMovementTracker {
             return { inCombat: false, distance: 0, units };
         }
 
-        const tokenId = typeof token === 'string' ? token : (token?.id ?? token?.document?.id);
-        const tokenDoc = typeof token === 'string'
-            ? (canvas?.tokens?.get?.(token)?.document ?? null)
-            : (token?.document ?? token ?? null);
+        const tokenId = token?.id ?? token?.document?.id ?? token;
+        const tokenDoc = token?.document ?? (token?.id ? token : (canvas?.tokens?.get?.(tokenId)?.document ?? null));
 
         const isCombatant = Boolean(
             combat.combatants?.some(c => c.tokenId === tokenId || (actor && c.actorId === actor.id))

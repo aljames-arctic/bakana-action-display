@@ -324,7 +324,8 @@ Hooks.on('updateActor', (actor, changes, options, userId) => {
 
 // Hook into ActiveEffect updates (status conditions gained/lost) on actors
 function handleActiveEffectChange(effect) {
-    const actor = (effect?.parent instanceof Actor) ? effect.parent : (effect?.target instanceof Actor) ? effect.target : null;
+    const candidate = effect?.parent ?? effect?.target;
+    const actor = candidate?.documentName === 'Actor' ? candidate : (candidate?.actor ?? null);
     if (!actor) return;
     const currentApp = actionDisplay.activeApp;
     const isCurrent = isMatchingActor(actor, null);
