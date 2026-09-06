@@ -318,7 +318,7 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
                 roll: async (event) => {
                     const rollEvent = this._createRollEvent(event);
                     return actor.rollSavingThrow?.({ ability: abl, event: rollEvent })
-                        ?? actor.rollAbilitySave?.(abl, { event: rollEvent });
+                        ?? actor.rollAbilitySave?.({ ability: abl, event: rollEvent });
                 }
             });
 
@@ -333,9 +333,7 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
                 roll: async (event) => {
                     const rollEvent = this._createRollEvent(event);
                     return actor.rollAbilityTest?.({ ability: abl, event: rollEvent })
-                        ?? actor.rollAbilityCheck?.({ ability: abl, event: rollEvent })
-                        ?? actor.rollAbilityTest?.(abl, { event: rollEvent })
-                        ?? actor.rollAbilityCheck?.(abl, { event: rollEvent });
+                        ?? actor.rollAbilityCheck?.({ ability: abl, event: rollEvent });
                 }
             });
 
@@ -376,8 +374,7 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
                 uses: { available: null, max: null },
                 roll: async (event) => {
                     const rollEvent = this._createRollEvent(event);
-                    return actor.rollSkill?.({ skill: skillId, event: rollEvent })
-                        ?? actor.rollSkill?.(skillId, { event: rollEvent });
+                    return actor.rollSkill?.({ skill: skillId, event: rollEvent });
                 },
                 extra: { ability: abl }
             });
@@ -404,9 +401,7 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
                 roll: async (event) => {
                     const rollEvent = this._createRollEvent(event);
                     return actor.rollToolCheck?.({ tool: toolId, event: rollEvent })
-                        ?? actor.rollToolCheck?.(toolId, { event: rollEvent })
-                        ?? actor.rollTool?.({ tool: toolId, event: rollEvent })
-                        ?? actor.rollTool?.(toolId, { event: rollEvent });
+                        ?? actor.rollTool?.({ tool: toolId, event: rollEvent });
                 },
                 extra: { ability: abl, toolId }
             });
