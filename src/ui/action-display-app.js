@@ -1720,15 +1720,13 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         const currentZ = parseInt(this.element.style?.zIndex, 10);
         if (!isNaN(currentZ)) maxZ = Math.max(maxZ, currentZ);
 
-        if (typeof document !== 'undefined' && document.querySelectorAll) {
-            const windows = document.querySelectorAll('.window-app, .application, .app, .dialog, .sidebar-popout');
-            for (const win of windows) {
-                if (win === this.element) continue;
-                const rawZ = win.style?.zIndex ?? (typeof window !== 'undefined' && window.getComputedStyle ? window.getComputedStyle(win)?.zIndex : null);
-                const z = parseInt(rawZ, 10);
-                if (!isNaN(z) && z < 900000) { // Keep below context menus (999999) and tooltips (1000001)
-                    maxZ = Math.max(maxZ, z);
-                }
+        const windows = document.querySelectorAll?.('.window-app, .application, .app, .dialog, .sidebar-popout') ?? [];
+        for (const win of windows) {
+            if (win === this.element) continue;
+            const rawZ = win.style?.zIndex ?? window.getComputedStyle?.(win)?.zIndex;
+            const z = parseInt(rawZ, 10);
+            if (!isNaN(z) && z < 900000) { // Keep below context menus (999999) and tooltips (1000001)
+                maxZ = Math.max(maxZ, z);
             }
         }
 
@@ -2071,7 +2069,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         try {
             const rect = element.getBoundingClientRect?.();
             if (rect) {
-                const windowWidth = typeof window !== 'undefined' ? (window.innerWidth ?? 1920) : 1920;
+                const windowWidth = window.innerWidth ?? 1920;
                 const neededSpace = hasTable ? Math.max(targetWidth + 20, 400) : 360;
                 const spaceRight = windowWidth - rect.right;
                 const spaceLeft = rect.left;
@@ -2246,9 +2244,9 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
      */
     _calculateTableTooltipWidth(descriptionHtml) {
         const normalWidth = 340;
-        const maxAllowedWidth = Math.min(680, Math.floor((typeof window !== 'undefined' ? (window.innerWidth ?? 1920) : 1920) * 0.92));
+        const maxAllowedWidth = Math.min(680, Math.floor((window.innerWidth ?? 1920) * 0.92));
 
-        if (!descriptionHtml || typeof document === 'undefined' || !document.body) {
+        if (!descriptionHtml || !document.body) {
             return { targetWidth: normalWidth, needsHorizontalScroll: false };
         }
 
@@ -2300,7 +2298,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
      */
     _applyTooltipWidth(targetWidth) {
         const apply = () => {
-            const tooltipEl = document.querySelector?.('#tooltip, aside#tooltip, div#tooltip');
+            const tooltipEl = document.querySelector?.('#tooltip');
             if (tooltipEl) {
                 tooltipEl.style?.setProperty?.('--bad-tooltip-width', `${targetWidth}px`);
                 tooltipEl.style?.setProperty?.('--bad-tooltip-max-width', `${targetWidth}px`);
@@ -2324,7 +2322,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         if (this.isTooltipFocused) return;
 
         this._activeSummaryTooltip = null;
-        const tooltipEl = document.querySelector?.('#tooltip, aside#tooltip, div#tooltip');
+        const tooltipEl = document.querySelector?.('#tooltip');
         if (tooltipEl) {
             tooltipEl.style?.removeProperty?.('--bad-tooltip-width');
             tooltipEl.style?.removeProperty?.('--bad-tooltip-max-width');
@@ -2348,7 +2346,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
     _onWheel(event) {
         if (!event) return;
         if (this.isTooltipFocused) {
-            const descEl = document.querySelector?.('#tooltip.locked .bad-summary-desc, aside#tooltip.locked .bad-summary-desc, #tooltip .bad-summary-desc, aside#tooltip .bad-summary-desc, .bad-item-summary-tooltip .bad-summary-desc');
+            const descEl = document.querySelector?.('#tooltip .bad-summary-desc, .bad-item-summary-tooltip .bad-summary-desc');
             if (descEl) {
                 event.preventDefault?.();
                 event.stopPropagation?.();
@@ -2370,7 +2368,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
      */
     _onWindowWheel(event) {
         if (!event) return;
-        const tooltipEl = event.target?.closest?.('#tooltip, aside#tooltip, .bad-item-summary-tooltip, .bad-item-summary-tooltip-wrapper');
+        const tooltipEl = event.target?.closest?.('#tooltip, .bad-item-summary-tooltip, .bad-item-summary-tooltip-wrapper');
         if (tooltipEl) {
             const descEl = tooltipEl.querySelector?.('.bad-summary-desc') ?? (event.target?.classList?.contains?.('bad-summary-desc') ? event.target : null);
             if (descEl) {
