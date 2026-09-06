@@ -83,3 +83,26 @@ export function hasIntersection(setA, setB) {
     }
     return false;
 }
+
+/**
+ * Recursively freezes an object, its nested objects, and arrays.
+ * Handles circular references safely via WeakSet.
+ * @template T
+ * @param {T} obj The object or array to recursively freeze
+ * @param {WeakSet<object>} [seen=new WeakSet()] Visited object tracking
+ * @returns {Readonly<T>} The deeply frozen object
+ */
+export function deepFreeze(obj, seen = new WeakSet()) {
+    if (obj === null || typeof obj !== 'object' || seen.has(obj)) {
+        return obj;
+    }
+    seen.add(obj);
+    Object.freeze(obj);
+    for (const key of Reflect.ownKeys(obj)) {
+        const val = obj[key];
+        if (val !== null && typeof val === 'object' && !Object.isFrozen(val)) {
+            deepFreeze(val, seen);
+        }
+    }
+    return obj;
+}

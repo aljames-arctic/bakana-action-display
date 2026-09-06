@@ -1,4 +1,5 @@
 import { log } from '../lib/logger.js';
+import { deepFreeze } from '../lib/utils.js';
 
 const sortByName = (a, b) => (a.name ?? '').localeCompare(b.name ?? '');
 
@@ -260,31 +261,31 @@ export function categorizeActions(actions, config, catchAllLabel, context = {}) 
     return categorizedSections;
 }
 
-export const DEFAULT_CATEGORIES = Object.freeze([
-    Object.freeze({
+export const DEFAULT_CATEGORIES = deepFreeze([
+    {
         id: 'cat_favorites',
         name: 'Favorites',
         expression: `actor.getFlag('bakana-action-display', 'favorites')?.[item.id]`,
-        subcategories: Object.freeze([])
-    }),
-    Object.freeze({
+        subcategories: []
+    },
+    {
         id: 'cat_weapons',
         name: 'Weapons',
         expression: `item.type === 'weapon'`,
-        subcategories: Object.freeze([])
-    }),
-    Object.freeze({
+        subcategories: []
+    },
+    {
         id: 'cat_spells',
         name: 'Spells',
         expression: `item.type === 'spell'`,
-        subcategories: Object.freeze([])
-    }),
-    Object.freeze({
+        subcategories: []
+    },
+    {
         id: 'cat_features',
         name: 'Features',
         expression: `item.type === 'feat'`,
-        subcategories: Object.freeze([])
-    })
+        subcategories: []
+    }
 ]);
 
 /**

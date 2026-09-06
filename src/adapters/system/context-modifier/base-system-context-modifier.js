@@ -1,7 +1,7 @@
-import { localize } from '../../../lib/utils.js';
+import { localize, deepFreeze } from '../../../lib/utils.js';
 
-const ICONS = Object.freeze({
-    item_type: Object.freeze({
+const ICONS = deepFreeze({
+    item_type: {
         'all': 'fas fa-border-all',
         'weapon': 'fas fa-sword',
         'spell': 'fas fa-wand-magic-sparkles',
@@ -14,16 +14,16 @@ const ICONS = Object.freeze({
         'abilityCheck': 'fas fa-dice-d20',
         'other': 'fas fa-ellipsis',
         'hidden': 'fas fa-eye-slash'
-    }),
-    action_type: Object.freeze({
+    },
+    action_type: {
         'all': 'fas fa-border-all',
         'ability': 'fas fa-fist-raised',
         'none': 'fas fa-ban'
-    })
+    }
 });
 
-const SORT_ORDERS = Object.freeze({
-    item_type: Object.freeze({
+const SORT_ORDERS = deepFreeze({
+    item_type: {
         'all': 0,
         'weapon': 1,
         'spell': 2,
@@ -37,22 +37,22 @@ const SORT_ORDERS = Object.freeze({
         'loot': 9,
         'other': 10,
         'hidden': 11
-    }),
-    action_type: Object.freeze({
+    },
+    action_type: {
         'all': 0,
         'economy': 1,
         'none': 2
-    })
+    }
 });
 
-const ABILITY_LABEL_CONFIGS = Object.freeze({
-    all: Object.freeze({ key: 'BAD.core.allActions', fallback: 'All' }),
-    str: Object.freeze({ key: 'DND5E.AbilityStr', fallback: 'Strength' }),
-    dex: Object.freeze({ key: 'DND5E.AbilityDex', fallback: 'Dexterity' }),
-    con: Object.freeze({ key: 'DND5E.AbilityCon', fallback: 'Constitution' }),
-    int: Object.freeze({ key: 'DND5E.AbilityInt', fallback: 'Intelligence' }),
-    wis: Object.freeze({ key: 'DND5E.AbilityWis', fallback: 'Wisdom' }),
-    cha: Object.freeze({ key: 'DND5E.AbilityCha', fallback: 'Charisma' })
+const ABILITY_LABEL_CONFIGS = deepFreeze({
+    all: { key: 'BAD.core.allActions', fallback: 'All' },
+    str: { key: 'DND5E.AbilityStr', fallback: 'Strength' },
+    dex: { key: 'DND5E.AbilityDex', fallback: 'Dexterity' },
+    con: { key: 'DND5E.AbilityCon', fallback: 'Constitution' },
+    int: { key: 'DND5E.AbilityInt', fallback: 'Intelligence' },
+    wis: { key: 'DND5E.AbilityWis', fallback: 'Wisdom' },
+    cha: { key: 'DND5E.AbilityCha', fallback: 'Charisma' }
 });
 
 /**

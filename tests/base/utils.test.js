@@ -1,7 +1,7 @@
 import '../setup.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { localize, format, toSet, hasIntersection } from '../../src/lib/utils.js';
+import { localize, format, toSet, hasIntersection, deepFreeze } from '../../src/lib/utils.js';
 
 test('localize helper safely translates keys and respects fallbacks', () => {
     // 1. Empty or missing key
@@ -102,4 +102,51 @@ test('hasIntersection checks for common elements efficiently', () => {
     assert.equal(hasIntersection(new Set([1, 2]), new Set([2, 3])), true);
     assert.equal(hasIntersection(new Set([1, 2]), new Set([3, 4])), false);
     assert.equal(hasIntersection([1, 2], new Set([2])), true);
+});
+
+test('deepFreeze recursively freezes objects, nested objects, and arrays', () => {
+    // 1. Primitives & nullish
+    assert.equal(deepFreeze(null), null);
+    assert.equal(deepFreeze(undefined), undefined);
+    assert.equal(deepFreeze(42), 42);
+    assert.equal(deepFreeze('str'), 'str');
+
+    // 2. Nested objects and arrays
+    const complexObj = {
+        name: 'test',
+        nested: {
+            count: 10,
+            tags: ['a', 'b'],
+            deep: {
+                flag: true
+            }
+        }
+    };
+
+    const frozen = deepFreeze(complexObj);
+    assert.equal(frozen, complexObj);
+    assert.equal(Object.isFrozen(frozen), true);
+    assert.equal(Object.isFrozen(frozen.nested), true);
+    assert.equal(Object.isFrozen(frozen.nested.tags), true);
+    assert.equal(Object.isFrozen(frozen.nested.deep), true);
+
+    assert.throws(() => {
+        frozen.nested.count = 20;
+    }, TypeError);
+
+    assert.throws(() => {
+        frozen.nested.tags.push('c');
+    }, TypeError);
+
+    assert.throws(() => {
+        frozen.nested.deep.flag = false;
+    }, TypeError);
+
+    // 3. Circular reference resilience
+    const circularObj = { a: 1 };
+    circularObj.self = circularObj;
+    assert.doesNotThrow(() => {
+        deepFreeze(circularObj);
+    });
+    assert.equal(Object.isFrozen(circularObj), true);
 });

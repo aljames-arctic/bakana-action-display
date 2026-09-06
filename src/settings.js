@@ -1,6 +1,6 @@
 import { MODULE_ID } from "./constants.js";
 import { log } from "./lib/logger.js";
-import { localize } from "./lib/utils.js";
+import { localize, deepFreeze } from "./lib/utils.js";
 import { actionDisplay } from "./action-display.js";
 import { CategorizationConfigApp } from "./categorization/categorization-config-app.js";
 import { EconomyColorsConfigApp } from "./ui/economy-colors-config-app.js";
@@ -477,28 +477,28 @@ const USER_MENU_KEYS = Object.freeze([
     'hudConfigMenu'
 ]);
 
-const SETTINGS_SECTIONS = Object.freeze([
-    Object.freeze({
-        keys: Object.freeze(['categorizationMenu', 'dnd5eAutoBanMenu', 'moduleIntegrationsMenu', 'enableCenterOnToken', 'enableItemSummaryButton', 'enableToggleHotkey', 'enableCombatButtons', 'enableCombatAutoTrackButton']),
+const SETTINGS_SECTIONS = deepFreeze([
+    {
+        keys: ['categorizationMenu', 'dnd5eAutoBanMenu', 'moduleIntegrationsMenu', 'enableCenterOnToken', 'enableItemSummaryButton', 'enableToggleHotkey', 'enableCombatButtons', 'enableCombatAutoTrackButton'],
         scope: 'world',
         titleKey: 'BAD.settingsSections.world',
         defaultTitle: 'World Settings',
         icon: 'fas fa-globe'
-    }),
-    Object.freeze({
-        keys: Object.freeze(['economyColorsMenu', 'hudConfigMenu', 'persistTabState', 'toggleTabSelection', 'showTooltips', 'hudOpacity', 'hudScale', 'fontSize', 'hudAnchorSide', 'hudGridOffset', 'hudGridOffsetHorizontal']),
+    },
+    {
+        keys: ['economyColorsMenu', 'hudConfigMenu', 'persistTabState', 'toggleTabSelection', 'showTooltips', 'hudOpacity', 'hudScale', 'fontSize', 'hudAnchorSide', 'hudGridOffset', 'hudGridOffsetHorizontal'],
         scope: 'user',
         titleKey: 'BAD.settingsSections.user',
         defaultTitle: 'User Settings',
         icon: 'fas fa-user'
-    }),
-    Object.freeze({
-        keys: Object.freeze(['logVerbosity']),
+    },
+    {
+        keys: ['logVerbosity'],
         scope: 'client',
         titleKey: 'BAD.settingsSections.client',
         defaultTitle: 'Client Settings',
         icon: 'fas fa-desktop'
-    })
+    }
 ]);
 
 function getSettingSelector(key) {

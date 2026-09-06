@@ -1,11 +1,13 @@
+import { deepFreeze } from '../lib/utils.js';
+
 /**
  * Color preset palettes for Action Economy indicators, including colorblind accessibility modes.
  */
-export const ECONOMY_COLOR_PRESETS = Object.freeze({
-    default: Object.freeze({
+export const ECONOMY_COLOR_PRESETS = deepFreeze({
+    default: {
         id: 'default',
         label: 'BAD.economyColors.presets.default',
-        colors: Object.freeze({
+        colors: {
             action: '#3b82f6',
             bonus: '#14b8a6',
             reaction: '#ef4444',
@@ -21,12 +23,12 @@ export const ECONOMY_COLOR_PRESETS = Object.freeze({
             immediate: '#f97316',
             full: '#8b5cf6',
             other: '#64748b'
-        })
-    }),
-    protanopia: Object.freeze({
+        }
+    },
+    protanopia: {
         id: 'protanopia',
         label: 'BAD.economyColors.presets.protanopia',
-        colors: Object.freeze({
+        colors: {
             action: '#0072b2',
             bonus: '#56b4e9',
             reaction: '#d55e00',
@@ -42,12 +44,12 @@ export const ECONOMY_COLOR_PRESETS = Object.freeze({
             immediate: '#d55e00',
             full: '#cc79a7',
             other: '#7f7f7f'
-        })
-    }),
-    tritanopia: Object.freeze({
+        }
+    },
+    tritanopia: {
         id: 'tritanopia',
         label: 'BAD.economyColors.presets.tritanopia',
-        colors: Object.freeze({
+        colors: {
             action: '#e63946',
             bonus: '#1d3557',
             reaction: '#457b9d',
@@ -63,12 +65,12 @@ export const ECONOMY_COLOR_PRESETS = Object.freeze({
             immediate: '#ff758f',
             full: '#6a0572',
             other: '#8d99ae'
-        })
-    }),
-    highContrast: Object.freeze({
+        }
+    },
+    highContrast: {
         id: 'highContrast',
         label: 'BAD.economyColors.presets.highContrast',
-        colors: Object.freeze({
+        colors: {
             action: '#2563eb',
             bonus: '#059669',
             reaction: '#dc2626',
@@ -84,12 +86,12 @@ export const ECONOMY_COLOR_PRESETS = Object.freeze({
             immediate: '#ea580c',
             full: '#7c3aed',
             other: '#4b5563'
-        })
-    }),
-    pastel: Object.freeze({
+        }
+    },
+    pastel: {
         id: 'pastel',
         label: 'BAD.economyColors.presets.pastel',
-        colors: Object.freeze({
+        colors: {
             action: '#60a5fa',
             bonus: '#34d399',
             reaction: '#f87171',
@@ -105,6 +107,6 @@ export const ECONOMY_COLOR_PRESETS = Object.freeze({
             immediate: '#fb923c',
             full: '#c084fc',
             other: '#94a3b8'
-        })
-    })
+        }
+    }
 });

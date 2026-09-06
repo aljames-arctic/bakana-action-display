@@ -1,10 +1,10 @@
 import { MODULE_ID } from '../constants.js';
 import { log } from '../lib/logger.js';
-import { localize } from '../lib/utils.js';
+import { localize, deepFreeze } from '../lib/utils.js';
 import { adapter } from '../adapters/index.js';
 import { actionDisplay } from '../action-display.js';
 
-export const DEFAULT_DND5E_AUTOBAN_CONFIG = Object.freeze({
+export const DEFAULT_DND5E_AUTOBAN_CONFIG = deepFreeze({
     enabled: true,
     vocal: ['silenced', 'incapacitated', 'paralyzed', 'petrified', 'stunned', 'unconscious'],
     somatic: ['restrained', 'incapacitated', 'paralyzed', 'petrified', 'stunned', 'unconscious', 'grappled']

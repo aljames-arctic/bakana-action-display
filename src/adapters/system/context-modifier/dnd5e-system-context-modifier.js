@@ -1,24 +1,24 @@
 import { BaseSystemContextModifier } from './base-system-context-modifier.js';
-import { localize } from '../../../lib/utils.js';
+import { localize, deepFreeze } from '../../../lib/utils.js';
 import { MODULE_ID } from '../../../constants.js';
 
-const SORT_ORDERS = Object.freeze({
-    tabs: Object.freeze({
-        'spell': Object.freeze({
+const SORT_ORDERS = deepFreeze({
+    tabs: {
+        'spell': {
             'all': 0, 'level_0': 1, 'level_1': 2, 'level_2': 3, 'level_3': 4,
             'level_4': 5, 'level_5': 6, 'level_6': 7, 'level_7': 8, 'level_8': 9,
             'level_9': 10, 'itemCharges': 99
-        }),
-        'weapon': Object.freeze({
+        },
+        'weapon': {
             'all': 0, 'simpleM': 1, 'martialM': 2, 'simpleR': 3, 'martialR': 4,
             'natural': 5, 'improv': 6, 'siege': 7
-        }),
-        'equipment': Object.freeze({
+        },
+        'equipment': {
             'all': 0, 'light': 1, 'medium': 2, 'heavy': 3, 'shield': 4,
             'clothing': 5, 'trinket': 6, 'ring': 7, 'rod': 8, 'wand': 9,
             'wondrous': 10, 'vehicle': 11, 'natural': 12
-        }),
-        'economy': Object.freeze({
+        },
+        'economy': {
             'all': 0,
             'standard': 1,
             'time': 2,
@@ -29,17 +29,17 @@ const SORT_ORDERS = Object.freeze({
             'special': 7,
             'other': 8,
             'none': 9
-        }),
-        'standard': Object.freeze({ 'all': 0, 'action': 1, 'bonus': 2, 'reaction': 3 }),
-        'time': Object.freeze({ 'all': 0, 'minute': 1, 'hour': 2, 'day': 3 }),
-        'rest': Object.freeze({ 'all': 0, 'longRest': 1, 'shortRest': 2, 'long': 1, 'short': 2 }),
-        'combat': Object.freeze({ 'all': 0, 'encounter': 1, 'turnStart': 2, 'turnEnd': 3 }),
-        'monster': Object.freeze({ 'all': 0, 'legendary': 1, 'mythic': 2, 'lair': 3 }),
-        'vehicle': Object.freeze({ 'all': 0, 'crew': 1 }),
-        'components': Object.freeze({ 'vocal': 0, 'somatic': 1, 'material': 2 }),
-        'ability': Object.freeze({ 'all': 0, 'str': 1, 'dex': 2, 'con': 3, 'int': 4, 'wis': 5, 'cha': 6 })
-    }),
-    item_type: Object.freeze({
+        },
+        'standard': { 'all': 0, 'action': 1, 'bonus': 2, 'reaction': 3 },
+        'time': { 'all': 0, 'minute': 1, 'hour': 2, 'day': 3 },
+        'rest': { 'all': 0, 'longRest': 1, 'shortRest': 2, 'long': 1, 'short': 2 },
+        'combat': { 'all': 0, 'encounter': 1, 'turnStart': 2, 'turnEnd': 3 },
+        'monster': { 'all': 0, 'legendary': 1, 'mythic': 2, 'lair': 3 },
+        'vehicle': { 'all': 0, 'crew': 1 },
+        'components': { 'vocal': 0, 'somatic': 1, 'material': 2 },
+        'ability': { 'all': 0, 'str': 1, 'dex': 2, 'con': 3, 'int': 4, 'wis': 5, 'cha': 6 }
+    },
+    item_type: {
         'savingThrow': 1,
         'abilityCheck': 2,
         'weapon': 3,
@@ -51,74 +51,74 @@ const SORT_ORDERS = Object.freeze({
         'backpack': 8,
         'loot': 9,
         'feat': 10
-    })
+    }
 });
 
-const ICONS = Object.freeze({
-    item_type: Object.freeze({
+const ICONS = deepFreeze({
+    item_type: {
         'equipment': 'fas fa-shield',
         'tool': 'fas fa-hammer',
         'tools': 'fas fa-hammer',
         'backpack': 'fas fa-sack',
         'loot': 'fas fa-gem'
-    }),
-    action_type: Object.freeze({
+    },
+    action_type: {
         'economy': 'fas fa-stopwatch',
         'components': 'fas fa-magic'
-    })
+    }
 });
 
-const LABEL_KEYS = Object.freeze({
-    item_type: Object.freeze({
-        'all': Object.freeze({ key: 'BAD.core.allItems', fallback: 'All Items' }),
-        'weapon': Object.freeze({ key: 'DND5E.ItemTypeWeapon', fallback: 'Weapon' }),
-        'equipment': Object.freeze({ key: 'DND5E.ItemTypeEquipment', fallback: 'Equipment' }),
-        'consumable': Object.freeze({ key: 'DND5E.ItemTypeConsumable', fallback: 'Consumable' }),
-        'tool': Object.freeze({ key: 'DND5E.ItemTypeToolPlural', fallback: 'Tools' }),
-        'tools': Object.freeze({ key: 'DND5E.ItemTypeToolPlural', fallback: 'Tools' }),
-        'backpack': Object.freeze({ key: 'DND5E.ItemTypeContainer', fallback: 'Container' }),
-        'loot': Object.freeze({ key: 'DND5E.ItemTypeLoot', fallback: 'Loot' }),
-        'feat': Object.freeze({ key: 'DND5E.ItemTypeFeat', fallback: 'Feature' }),
-        'spell': Object.freeze({ key: 'DND5E.ItemTypeSpell', fallback: 'Spell' }),
-        'other': Object.freeze({ key: 'DND5E.ActionOther', fallback: 'Other' }),
-        'hidden': Object.freeze({ key: 'BAD.core.hidden', fallback: 'Hidden' })
-    }),
-    action_type: Object.freeze({
-        'economy': Object.freeze({ key: 'BAD.common.actionEconomy', fallback: 'Action Economy' }),
-        'components': Object.freeze({ key: 'BAD.common.spellComponents', fallback: 'Spell Components' })
-    }),
-    action_subtab: Object.freeze({
-        'all': Object.freeze({ key: 'BAD.core.allActions', fallback: 'All Actions' }),
-        'standard': Object.freeze({ key: 'DND5E.ActivityActivationStandard', fallback: 'Standard', altKey: 'DND5E.Standard' }),
-        'time': Object.freeze({ key: 'DND5E.ActivityActivationTime', fallback: 'Time', altKey: 'DND5E.Time' }),
-        'rest': Object.freeze({ key: 'DND5E.ActivityActivationRest', fallback: 'Rest', altKey: 'DND5E.Rest' }),
-        'combat': Object.freeze({ key: 'DND5E.ActivityActivationCombat', fallback: 'Combat', altKey: 'DND5E.Combat' }),
-        'monster': Object.freeze({ key: 'DND5E.ActivityActivationMonster', fallback: 'Monster', altKey: 'DND5E.Monster' }),
-        'vehicle': Object.freeze({ key: 'DND5E.ActivityActivationVehicle', fallback: 'Vehicle', altKey: 'DND5E.Vehicle' }),
-        'action': Object.freeze({ key: 'DND5E.Action', fallback: 'Action', altKey: 'DND5E.ActionAction' }),
-        'bonus': Object.freeze({ key: 'DND5E.BonusAction', fallback: 'Bonus Action', altKey: 'DND5E.ActionBonus' }),
-        'reaction': Object.freeze({ key: 'DND5E.Reaction', fallback: 'Reaction', altKey: 'DND5E.ActionReaction' }),
-        'minute': Object.freeze({ key: 'DND5E.TimeMinute', fallback: 'Minute' }),
-        'hour': Object.freeze({ key: 'DND5E.TimeHour', fallback: 'Hour' }),
-        'day': Object.freeze({ key: 'DND5E.TimeDay', fallback: 'Day' }),
-        'shortRest': Object.freeze({ key: 'DND5E.ActivityActivationShortRest', fallback: 'End of a Short Rest' }),
-        'longRest': Object.freeze({ key: 'DND5E.ActivityActivationLongRest', fallback: 'End of a Long Rest' }),
-        'short': Object.freeze({ key: 'DND5E.ActivityActivationShortRest', fallback: 'End of a Short Rest' }),
-        'long': Object.freeze({ key: 'DND5E.ActivityActivationLongRest', fallback: 'End of a Long Rest' }),
-        'encounter': Object.freeze({ key: 'DND5E.ActivityActivationStartEncounter', fallback: 'Start of Encounter' }),
-        'turnStart': Object.freeze({ key: 'DND5E.ActivityActivationTurnStart', fallback: 'Start of Turn' }),
-        'turnEnd': Object.freeze({ key: 'DND5E.ActivityActivationTurnEnd', fallback: 'End of Turn' }),
-        'legendary': Object.freeze({ key: 'DND5E.LegendaryAction', fallback: 'Legendary Action' }),
-        'mythic': Object.freeze({ key: 'DND5E.MythicAction', fallback: 'Mythic Action' }),
-        'lair': Object.freeze({ key: 'DND5E.LairAction', fallback: 'Lair Action' }),
-        'crew': Object.freeze({ key: 'DND5E.CrewAction', fallback: 'Crew Action' }),
-        'special': Object.freeze({ key: 'DND5E.Special', fallback: 'Special' }),
-        'other': Object.freeze({ key: 'DND5E.ActionOther', fallback: 'Other' }),
-        'none': Object.freeze({ key: 'DND5E.None', fallback: 'None' }),
-        'vocal': Object.freeze({ key: 'DND5E.ComponentVerbal', fallback: 'Verbal' }),
-        'somatic': Object.freeze({ key: 'DND5E.ComponentSomatic', fallback: 'Somatic' }),
-        'material': Object.freeze({ key: 'DND5E.ComponentMaterial', fallback: 'Material' })
-    })
+const LABEL_KEYS = deepFreeze({
+    item_type: {
+        'all': { key: 'BAD.core.allItems', fallback: 'All Items' },
+        'weapon': { key: 'DND5E.ItemTypeWeapon', fallback: 'Weapon' },
+        'equipment': { key: 'DND5E.ItemTypeEquipment', fallback: 'Equipment' },
+        'consumable': { key: 'DND5E.ItemTypeConsumable', fallback: 'Consumable' },
+        'tool': { key: 'DND5E.ItemTypeToolPlural', fallback: 'Tools' },
+        'tools': { key: 'DND5E.ItemTypeToolPlural', fallback: 'Tools' },
+        'backpack': { key: 'DND5E.ItemTypeContainer', fallback: 'Container' },
+        'loot': { key: 'DND5E.ItemTypeLoot', fallback: 'Loot' },
+        'feat': { key: 'DND5E.ItemTypeFeat', fallback: 'Feature' },
+        'spell': { key: 'DND5E.ItemTypeSpell', fallback: 'Spell' },
+        'other': { key: 'DND5E.ActionOther', fallback: 'Other' },
+        'hidden': { key: 'BAD.core.hidden', fallback: 'Hidden' }
+    },
+    action_type: {
+        'economy': { key: 'BAD.common.actionEconomy', fallback: 'Action Economy' },
+        'components': { key: 'BAD.common.spellComponents', fallback: 'Spell Components' }
+    },
+    action_subtab: {
+        'all': { key: 'BAD.core.allActions', fallback: 'All Actions' },
+        'standard': { key: 'DND5E.ActivityActivationStandard', fallback: 'Standard', altKey: 'DND5E.Standard' },
+        'time': { key: 'DND5E.ActivityActivationTime', fallback: 'Time', altKey: 'DND5E.Time' },
+        'rest': { key: 'DND5E.ActivityActivationRest', fallback: 'Rest', altKey: 'DND5E.Rest' },
+        'combat': { key: 'DND5E.ActivityActivationCombat', fallback: 'Combat', altKey: 'DND5E.Combat' },
+        'monster': { key: 'DND5E.ActivityActivationMonster', fallback: 'Monster', altKey: 'DND5E.Monster' },
+        'vehicle': { key: 'DND5E.ActivityActivationVehicle', fallback: 'Vehicle', altKey: 'DND5E.Vehicle' },
+        'action': { key: 'DND5E.Action', fallback: 'Action', altKey: 'DND5E.ActionAction' },
+        'bonus': { key: 'DND5E.BonusAction', fallback: 'Bonus Action', altKey: 'DND5E.ActionBonus' },
+        'reaction': { key: 'DND5E.Reaction', fallback: 'Reaction', altKey: 'DND5E.ActionReaction' },
+        'minute': { key: 'DND5E.TimeMinute', fallback: 'Minute' },
+        'hour': { key: 'DND5E.TimeHour', fallback: 'Hour' },
+        'day': { key: 'DND5E.TimeDay', fallback: 'Day' },
+        'shortRest': { key: 'DND5E.ActivityActivationShortRest', fallback: 'End of a Short Rest' },
+        'longRest': { key: 'DND5E.ActivityActivationLongRest', fallback: 'End of a Long Rest' },
+        'short': { key: 'DND5E.ActivityActivationShortRest', fallback: 'End of a Short Rest' },
+        'long': { key: 'DND5E.ActivityActivationLongRest', fallback: 'End of a Long Rest' },
+        'encounter': { key: 'DND5E.ActivityActivationStartEncounter', fallback: 'Start of Encounter' },
+        'turnStart': { key: 'DND5E.ActivityActivationTurnStart', fallback: 'Start of Turn' },
+        'turnEnd': { key: 'DND5E.ActivityActivationTurnEnd', fallback: 'End of Turn' },
+        'legendary': { key: 'DND5E.LegendaryAction', fallback: 'Legendary Action' },
+        'mythic': { key: 'DND5E.MythicAction', fallback: 'Mythic Action' },
+        'lair': { key: 'DND5E.LairAction', fallback: 'Lair Action' },
+        'crew': { key: 'DND5E.CrewAction', fallback: 'Crew Action' },
+        'special': { key: 'DND5E.Special', fallback: 'Special' },
+        'other': { key: 'DND5E.ActionOther', fallback: 'Other' },
+        'none': { key: 'DND5E.None', fallback: 'None' },
+        'vocal': { key: 'DND5E.ComponentVerbal', fallback: 'Verbal' },
+        'somatic': { key: 'DND5E.ComponentSomatic', fallback: 'Somatic' },
+        'material': { key: 'DND5E.ComponentMaterial', fallback: 'Material' }
+    }
 });
 
 const LEVEL_ORDINALS = Object.freeze({ '1': '1st', '2': '2nd', '3': '3rd' });

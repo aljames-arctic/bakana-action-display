@@ -1,11 +1,12 @@
 import { BaseSystemTabFilterManager } from './base-system-tab-filter-manager.js';
 import { TabRef } from '../../../ui/tab-ref.js';
 import { log } from '../../../lib/logger.js';
+import { deepFreeze } from '../../../lib/utils.js';
 
-const COMPONENT_NAMES = Object.freeze({
-    'vocal': Object.freeze(['vocal', 'verbal']),
-    'somatic': Object.freeze(['somatic']),
-    'material': Object.freeze(['material'])
+const COMPONENT_NAMES = deepFreeze({
+    'vocal': ['vocal', 'verbal'],
+    'somatic': ['somatic'],
+    'material': ['material']
 });
 
 const COMPONENT_SHORT_KEYS = Object.freeze({
