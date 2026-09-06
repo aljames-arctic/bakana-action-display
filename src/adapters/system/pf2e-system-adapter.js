@@ -190,11 +190,7 @@ export class BasePf2eSystemAdapter extends FantasySystemAdapter {
             uses: { available: null, max: null },
             roll: async (event) => {
                 const rollEvent = this._createRollEvent(event);
-                if (actor.saves?.fortitude?.roll) {
-                    return actor.saves.fortitude.roll({ event: rollEvent });
-                } else if (actor.system?.saves?.fortitude?.roll) {
-                    return actor.system.saves.fortitude.roll({ event: rollEvent });
-                }
+                return (actor.saves?.fortitude ?? actor.system?.saves?.fortitude)?.roll?.({ event: rollEvent });
             },
             extra: { ability: 'con' }
         });
@@ -212,11 +208,7 @@ export class BasePf2eSystemAdapter extends FantasySystemAdapter {
             uses: { available: null, max: null },
             roll: async (event) => {
                 const rollEvent = this._createRollEvent(event);
-                if (actor.saves?.reflex?.roll) {
-                    return actor.saves.reflex.roll({ event: rollEvent });
-                } else if (actor.system?.saves?.reflex?.roll) {
-                    return actor.system.saves.reflex.roll({ event: rollEvent });
-                }
+                return (actor.saves?.reflex ?? actor.system?.saves?.reflex)?.roll?.({ event: rollEvent });
             },
             extra: { ability: 'dex' }
         });
@@ -234,11 +226,7 @@ export class BasePf2eSystemAdapter extends FantasySystemAdapter {
             uses: { available: null, max: null },
             roll: async (event) => {
                 const rollEvent = this._createRollEvent(event);
-                if (actor.saves?.will?.roll) {
-                    return actor.saves.will.roll({ event: rollEvent });
-                } else if (actor.system?.saves?.will?.roll) {
-                    return actor.system.saves.will.roll({ event: rollEvent });
-                }
+                return (actor.saves?.will ?? actor.system?.saves?.will)?.roll?.({ event: rollEvent });
             },
             extra: { ability: 'wis' }
         });
@@ -256,8 +244,7 @@ export class BasePf2eSystemAdapter extends FantasySystemAdapter {
             uses: { available: null, max: null },
             roll: async (event) => {
                 const rollEvent = this._createRollEvent(event);
-                return actor.perception?.roll?.({ event: rollEvent }) ??
-                    actor.system?.attributes?.perception?.roll?.({ event: rollEvent });
+                return (actor.perception ?? actor.system?.attributes?.perception)?.roll?.({ event: rollEvent });
             },
             extra: { ability: 'wis' }
         });
@@ -825,48 +812,41 @@ export class BasePf2eSystemAdapter extends FantasySystemAdapter {
     #executeFeatRoll(item, event) {
         const proxiedEvent = this._createRollEvent(event);
         if (item.toMessage) {
-            item.toMessage();
-        } else if (item.use) {
-            item.use({ event: proxiedEvent });
+            return item.toMessage();
         }
+        return item.use?.({ event: proxiedEvent });
     }
 
     #executeSpellRoll(entry, item, event) {
         const proxiedEvent = this._createRollEvent(event);
         if (entry?.cast) {
-            entry.cast(item, { event: proxiedEvent });
-        } else if (item.toMessage) {
-            item.toMessage();
+            return entry.cast(item, { event: proxiedEvent });
         }
+        return item.toMessage?.();
     }
 
     #executeStrikeRoll(strike, event) {
         const proxiedEvent = this._createRollEvent(event);
-        if (strike.variants?.[0]?.roll) {
-            strike.variants[0].roll({ event: proxiedEvent });
-        } else if (strike.roll) {
-            strike.roll({ event: proxiedEvent });
-        }
+        return (strike.variants?.[0] ?? strike)?.roll?.({ event: proxiedEvent });
     }
 
     #executeConsumableRoll(item, event) {
         const proxiedEvent = this._createRollEvent(event);
         if (item.consume) {
-            item.consume();
-        } else if (item.toMessage) {
-            item.toMessage();
-        } else if (item.use) {
-            item.use({ event: proxiedEvent });
+            return item.consume();
         }
+        if (item.toMessage) {
+            return item.toMessage();
+        }
+        return item.use?.({ event: proxiedEvent });
     }
 
     #executeEquipmentRoll(item, event) {
         const proxiedEvent = this._createRollEvent(event);
         if (item.toMessage) {
-            item.toMessage();
-        } else if (item.use) {
-            item.use({ event: proxiedEvent });
+            return item.toMessage();
         }
+        return item.use?.({ event: proxiedEvent });
     }
 
     #createStrikeAction(strike, ammoQuantities) {
