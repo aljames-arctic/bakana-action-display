@@ -229,6 +229,7 @@ export function showActivityDropdown(app, target, subactions, event, parentActio
         const rect = target.getBoundingClientRect?.() ?? { left: 0, top: 0, right: 100, bottom: 30, width: 100, height: 30 };
         const viewportHeight = window?.innerHeight ?? 1080;
         const spaceBelow = viewportHeight - rect.bottom - 15;
+        const spaceAbove = rect.top - 15;
         const queriedCount = menuEl.querySelectorAll?.('.context-item')?.length;
         const actualCount = Number.isFinite(queriedCount) && queriedCount > 0 ? queriedCount : (sortedSubactions.length > 0 ? sortedSubactions.length : 1);
         const neededHeight = actualCount * 36 + 15;

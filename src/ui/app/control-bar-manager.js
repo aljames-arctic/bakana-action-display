@@ -21,6 +21,12 @@ import { localize } from '../../lib/utils.js';
  * @property {ControlBarButtonConfig[]} right Right-aligned control buttons
  */
 
+const LEGACY_FALLBACKS = Object.freeze([
+    { selector: '.bad-combat-track-btn', method: '_onRightClickCombatAutoTrack' },
+    { selector: '.bad-recenter-btn', method: '_onRightClickRecenterToken' },
+    { selector: '.bad-pin-btn', method: '_onRightClickToggleAnchor' }
+]);
+
 export class ControlBarManager {
     /**
      * Prepares structured control button view models for template rendering.
@@ -172,13 +178,7 @@ export class ControlBarManager {
         }
 
         // Fallback for elements/tests querying legacy class selectors without data-context-action
-        const legacyFallbacks = [
-            { selector: '.bad-combat-track-btn', method: '_onRightClickCombatAutoTrack' },
-            { selector: '.bad-recenter-btn', method: '_onRightClickRecenterToken' },
-            { selector: '.bad-pin-btn', method: '_onRightClickToggleAnchor' }
-        ];
-
-        for (const { selector, method } of legacyFallbacks) {
+        for (const { selector, method } of LEGACY_FALLBACKS) {
             const btn = event?.target?.closest?.(selector);
             if (btn && app[method]) {
                 event.preventDefault?.();
