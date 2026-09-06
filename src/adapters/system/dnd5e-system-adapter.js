@@ -682,7 +682,7 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
         // 11. Biography
         const rawBio = system.details?.biography?.value ?? system.details?.biography?.public ?? '';
         let biographyHTML = '';
-        if (rawBio && typeof rawBio === 'string' && rawBio.trim().length > 0) {
+        if (rawBio.trim()) {
             biographyHTML = await this.enrichHTML(rawBio, {
                 relativeTo: actor,
                 rollData: actor.getRollData?.() ?? {},
@@ -717,7 +717,7 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
             hasSenses: senses.length > 0,
             biography: rawBio,
             biographyHTML,
-            hasBiography: Boolean(biographyHTML || rawBio)
+            hasBiography: Boolean(biographyHTML || rawBio.trim())
         };
     }
 

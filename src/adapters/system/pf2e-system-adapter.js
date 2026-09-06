@@ -512,7 +512,7 @@ export class BasePf2eSystemAdapter extends FantasySystemAdapter {
         // 10. Biography / Description
         const rawBio = system.details?.biography?.value ?? system.details?.biography?.public ?? system.details?.publicNotes ?? system.details?.description?.value ?? '';
         let biographyHTML = '';
-        if (rawBio && typeof rawBio === 'string' && rawBio.trim().length > 0) {
+        if (rawBio.trim()) {
             biographyHTML = await this.enrichHTML(rawBio, {
                 relativeTo: actor,
                 rollData: actor.getRollData?.() ?? {},
@@ -545,7 +545,7 @@ export class BasePf2eSystemAdapter extends FantasySystemAdapter {
             hasSenses: senses.length > 0,
             biography: rawBio,
             biographyHTML,
-            hasBiography: Boolean(biographyHTML || rawBio)
+            hasBiography: Boolean(biographyHTML || rawBio.trim())
         };
     }
 
