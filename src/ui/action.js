@@ -50,7 +50,8 @@ export class Action {
         this.name = name;
         this.type = type;
         this.img = img;
-        this.page = Number(page) || 1;
+        const parsedPage = Number(page);
+        this.page = Number.isFinite(parsedPage) && parsedPage > 0 ? parsedPage : 1;
         this.left = left;
         this.right = right;
         this.itemCategories = itemCategories;

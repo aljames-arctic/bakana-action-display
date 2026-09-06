@@ -106,7 +106,8 @@ export class FantasySystemAdapter extends BaseSystemAdapter {
      * @returns {{ page: number, defaultLayout: string, categories: Object[]|null }}
      */
     getPageConfig(page = 1, actor = null) {
-        const pageNum = Number(page) || 1;
+        const parsed = Number(page);
+        const pageNum = Number.isFinite(parsed) && parsed > 0 ? parsed : 1;
         switch (pageNum) {
             case 1:
                 return {

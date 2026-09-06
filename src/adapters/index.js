@@ -406,7 +406,9 @@ class Adapter {
      * @returns {{ page: number, defaultLayout: string, categories: Object[]|null }}
      */
     getPageConfig(page = 1, actor = null) {
-        return this.system?.getPageConfig?.(page, actor) ?? { page: Number(page) || 1, defaultLayout: 'flat', categories: null };
+        const parsed = Number(page);
+        const pageNum = Number.isFinite(parsed) && parsed > 0 ? parsed : 1;
+        return this.system?.getPageConfig?.(page, actor) ?? { page: pageNum, defaultLayout: 'flat', categories: null };
     }
 
     /**
