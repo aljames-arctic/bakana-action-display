@@ -1948,14 +1948,14 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
         const effectiveSystem = effectiveItem?.system ?? {};
         const system = targetItem?.system ?? {};
 
-        const title = action?.name ?? effectiveItem?.name ?? targetItem?.name ?? '';
-        const img = (action?.img && action.img.length > 0) ? action.img : (effectiveItem?.img ?? targetItem?.img ?? '');
+        const title = action?.name ?? effectiveItem?.name ?? '';
+        const img = (action?.img && action.img.length > 0) ? action.img : (effectiveItem?.img ?? '');
         const properties = [];
 
         // 1. Subtitle & Classification
         let subtitle = '';
-        const type = effectiveItem?.type ?? targetItem?.type ?? '';
-        const activation = activity?.labels?.activation ?? effectiveItem?.labels?.activation ?? targetItem?.labels?.activation ?? '';
+        const type = effectiveItem?.type ?? '';
+        const activation = activity?.labels?.activation ?? effectiveItem?.labels?.activation ?? '';
 
         if (type === 'weapon') {
             const weaponType = effectiveSystem.type?.label ?? CONFIG?.DND5E?.weaponTypes?.[effectiveSystem.type?.value] ?? 'Weapon';
@@ -1976,31 +1976,31 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
         }
 
         // 2. Attack / To-Hit Modifier
-        const toHit = activity?.labels?.toHit ?? effectiveItem?.labels?.toHit ?? targetItem?.labels?.toHit;
+        const toHit = activity?.labels?.toHit ?? effectiveItem?.labels?.toHit;
         if (toHit) {
             properties.push({ label: 'Attack', value: toHit });
         }
 
         // 3. Damage / Healing Formula
-        const damage = activity?.labels?.damage ?? effectiveItem?.labels?.damage ?? targetItem?.labels?.damage;
+        const damage = activity?.labels?.damage ?? effectiveItem?.labels?.damage;
         if (damage) {
             properties.push({ label: 'Damage', value: damage });
         }
 
         // 4. Range / Area
-        const range = activity?.labels?.range ?? effectiveItem?.labels?.range ?? targetItem?.labels?.range;
+        const range = activity?.labels?.range ?? effectiveItem?.labels?.range;
         if (range) {
             properties.push({ label: 'Range', value: range });
         }
 
         // 5. Saving Throw DC
-        const save = activity?.labels?.save ?? effectiveItem?.labels?.save ?? targetItem?.labels?.save;
+        const save = activity?.labels?.save ?? effectiveItem?.labels?.save;
         if (save) {
             properties.push({ label: 'Save', value: save });
         }
 
         // 6. Duration & Concentration
-        const duration = activity?.labels?.duration ?? effectiveItem?.labels?.duration ?? targetItem?.labels?.duration;
+        const duration = activity?.labels?.duration ?? effectiveItem?.labels?.duration;
         if (duration) {
             properties.push({ label: 'Duration', value: duration });
         }
@@ -2012,7 +2012,7 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
         if (effectiveSystem.properties?.has?.('ritual') || system.properties?.has?.('ritual')) {
             properties.push({ value: 'Ritual' });
         }
-        const components = effectiveItem?.labels?.components?.vsm ?? effectiveItem?.labels?.components?.all ?? targetItem?.labels?.components?.vsm ?? targetItem?.labels?.components?.all;
+        const components = effectiveItem?.labels?.components?.vsm ?? effectiveItem?.labels?.components?.all;
         if (components) {
             properties.push({ label: 'Components', value: components });
         }
@@ -2040,7 +2040,7 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
         }
 
         // 10. Recharge
-        const recharge = activity?.labels?.recharge ?? effectiveItem?.labels?.recharge ?? targetItem?.labels?.recharge;
+        const recharge = activity?.labels?.recharge ?? effectiveItem?.labels?.recharge;
         if (recharge) {
             properties.push({ label: 'Recharge', value: recharge });
         }
