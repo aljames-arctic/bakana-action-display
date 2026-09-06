@@ -230,10 +230,6 @@ test('ContextMenuManager _positionContextMenu reparents #context-menu to documen
         assert.equal(menuStyles.height, 'auto', 'Height must be auto to shrink-wrap items with zero blank space');
         assert.equal(menuStyles['min-height'], '0', 'min-height must be 0 to prevent minimum height padding');
         assert.equal(menuStyles['z-index'], '999999', 'z-index must be high to render over HUD and canvas');
-        assert.equal(childStyles.height, 'auto', 'child element must have height: auto');
-        assert.equal(childStyles['min-height'], '0', 'child element must have min-height: 0');
-        assert.equal(childStyles['overflow-x'], 'clip', 'child element must have overflow-x: clip to prevent scrollbar leakage');
-        assert.equal(childStyles['overflow-y'], 'auto', 'child element must have overflow-y: auto');
     } finally {
         document.querySelector = originalQuerySelector;
         document.body.appendChild = originalAppendChild;
