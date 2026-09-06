@@ -738,7 +738,7 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
     async toggleInspiration(actor, force) {
         if (!actor) return false;
         const current = Boolean(actor.system?.attributes?.inspiration);
-        const next = typeof force === 'boolean' ? force : !current;
+        const next = force ?? !current;
         await actor.update({ 'system.attributes.inspiration': next });
         return next;
     }
@@ -1050,7 +1050,7 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
                 for (const [commKey, commVal] of Object.entries(commData)) {
                     if (commKey === 'units' || commVal === null || commVal === undefined || commVal === false) continue;
                     const commLabel = this.#formatLabel(commKey, cfg?.communication ?? cfg?.languages);
-                    if (typeof commVal === 'number' && commVal > 0) {
+                    if (Number.isFinite(commVal) && commVal > 0) {
                         const str = `${commLabel} ${commVal} ${units}`;
                         if (!result.includes(str)) result.push(str);
                     } else if (typeof commVal === 'object' && commVal !== null) {
@@ -1073,7 +1073,7 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
         // Ranged Communication from langData.ranges if present
         if (langData?.ranges && typeof langData.ranges === 'object') {
             for (const [rangeKey, rangeVal] of Object.entries(langData.ranges)) {
-                if (typeof rangeVal === 'number' && rangeVal > 0) {
+                if (Number.isFinite(rangeVal) && rangeVal > 0) {
                     const rangeLabel = this.#formatLabel(rangeKey, cfg?.communication ?? cfg?.languages);
                     const str = `${rangeLabel} ${rangeVal} ${units}`;
                     if (!result.includes(str)) result.push(str);
@@ -1432,7 +1432,7 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
             return { available, max };
         }
 
-        if (typeof uses.value === 'number' && uses.value > 0) {
+        if (Number.isFinite(uses.value) && uses.value > 0) {
             const available = uses.value;
             const max = uses.max ?? null;
             return { available, max };
@@ -2067,7 +2067,7 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
             if (ablData) {
                 const mod = ablData.mod ?? 0;
                 const rawSave = ablData.save;
-                const saveMod = typeof rawSave === 'number' ? rawSave : (rawSave?.value ?? rawSave?.total ?? ablData.mod ?? 0);
+                const saveMod = Number.isFinite(rawSave) ? rawSave : (rawSave?.value ?? rawSave?.total ?? ablData.mod ?? 0);
 
                 const checkRow = ['Check:', { label: 'Modifier', value: mod >= 0 ? `+${mod}` : `${mod}` }];
                 const isCheckProficient = Boolean(ablData.checkProf?.hasProficiency || ablData.check?.proficient);
@@ -2085,7 +2085,7 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
             subtitle = 'Saving Throw';
             if (ablData) {
                 const rawSave = ablData.save;
-                const saveMod = typeof rawSave === 'number' ? rawSave : (rawSave?.value ?? rawSave?.total ?? ablData.mod ?? 0);
+                const saveMod = Number.isFinite(rawSave) ? rawSave : (rawSave?.value ?? rawSave?.total ?? ablData.mod ?? 0);
                 properties.push({ label: 'Modifier', value: saveMod >= 0 ? `+${saveMod}` : `${saveMod}` });
                 const isProficient = Boolean(ablData.saveProf?.hasProficiency || rawSave?.proficient || ablData.proficient);
                 if (isProficient) properties.push({ value: 'Proficient' });
@@ -2110,7 +2110,7 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
             if (toolData) {
                 const total = toolData.total ?? toolData.mod ?? 0;
                 properties.push({ label: 'Modifier', value: total >= 0 ? `+${total}` : `${total}` });
-                if (toolData.prof?.hasProficiency || (typeof toolData.value === 'number' && toolData.value > 0)) {
+                if (toolData.prof?.hasProficiency || (Number.isFinite(toolData.value) && toolData.value > 0)) {
                     properties.push({ value: 'Proficient' });
                 }
             }
