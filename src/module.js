@@ -284,6 +284,24 @@ Hooks.on('deleteItem', (item, options, userId) => {
     }
 });
 
+/**
+ * Test whether a document change object contains solely internal module flag modifications.
+ * @param {Object} [changes]
+ * @returns {boolean}
+ */
+function isOnlyModuleFlagChanges(changes) {
+    const metadataKeys = new Set(['_id', 'id', '_stats']);
+    const nonMetaKeys = Object.keys(changes ?? {}).filter(k => !metadataKeys.has(k) && !k.startsWith('_stats.'));
+    return nonMetaKeys.length > 0 && nonMetaKeys.every(key => {
+        if (key.startsWith(`flags.${MODULE_ID}`) || key.startsWith(`actorData.flags.${MODULE_ID}`) || key.startsWith(`delta.flags.${MODULE_ID}`)) return true;
+        if (key === 'flags') {
+            const flagKeys = Object.keys(changes.flags ?? {});
+            return flagKeys.length === 1 && flagKeys[0] === MODULE_ID;
+        }
+        return false;
+    });
+}
+
 // Hook into Actor updates (spell slots, resources, hp, flags, status conditions)
 Hooks.on('updateActor', (actor, changes, options, userId) => {
     if (!actor) return;
@@ -291,18 +309,7 @@ Hooks.on('updateActor', (actor, changes, options, userId) => {
 
     // If the change only affects internal bakana-action-display flags (e.g. autoBanState, favorites, hiddenItems),
     // the UI interaction has already rendered or handled it locally; do not trigger a second HUD render.
-    const metadataKeys = new Set(['_id', 'id', '_stats']);
-    const nonMetaKeys = Object.keys(changes ?? {}).filter(k => !metadataKeys.has(k) && !k.startsWith('_stats.'));
-    const isOnlyModuleFlags = nonMetaKeys.length > 0 && nonMetaKeys.every(key => {
-        if (key.startsWith(`flags.${MODULE_ID}`)) return true;
-        if (key === 'flags') {
-            const flagKeys = Object.keys(changes.flags ?? {});
-            return flagKeys.length === 1 && flagKeys[0] === MODULE_ID;
-        }
-        return false;
-    });
-
-    if (isOnlyModuleFlags) {
+    if (isOnlyModuleFlagChanges(changes)) {
         return;
     }
 
@@ -475,18 +482,7 @@ Hooks.on('preUpdateToken', (tokenDoc, changes, options, userId) => {
 Hooks.on('updateToken', (tokenDoc, changes, options, userId) => {
     if (options?.badInternal) return;
     CombatMovementTracker.recordTokenMovement(tokenDoc, changes, options);
-    const metadataKeys = new Set(['_id', 'id', '_stats']);
-    const nonMetaKeys = Object.keys(changes ?? {}).filter(k => !metadataKeys.has(k) && !k.startsWith('_stats.'));
-    const isOnlyModuleFlags = nonMetaKeys.length > 0 && nonMetaKeys.every(key => {
-        if (key.startsWith(`flags.${MODULE_ID}`) || key.startsWith(`actorData.flags.${MODULE_ID}`) || key.startsWith(`delta.flags.${MODULE_ID}`)) return true;
-        if (key === 'flags') {
-            const flagKeys = Object.keys(changes.flags ?? {});
-            return flagKeys.length === 1 && flagKeys[0] === MODULE_ID;
-        }
-        return false;
-    });
-
-    if (isOnlyModuleFlags) return;
+    if (isOnlyModuleFlagChanges(changes)) return;
 
     const currentApp = actionDisplay.activeApp;
     if (currentApp?.rendered && (tokenDoc?.id === currentApp.token?.id || tokenDoc?.actor?.id === currentApp.actor?.id)) {
@@ -503,8 +499,10 @@ Hooks.on('renderApplication', (app, html) => {
     if (!appEl || appEl === hudEl || hudEl.contains?.(appEl)) return;
     if (appEl.closest?.('#context-menu, .context-menu, .bad-item-summary-tooltip')) return;
 
-    const hudZ = parseInt(hudEl.style?.zIndex, 10) || 100;
-    const appZ = parseInt(appEl.style?.zIndex, 10) || 0;
+    const parsedHudZ = parseInt(hudEl.style?.zIndex, 10);
+    const hudZ = Number.isNaN(parsedHudZ) ? 100 : parsedHudZ;
+    const parsedAppZ = parseInt(appEl.style?.zIndex, 10);
+    const appZ = Number.isNaN(parsedAppZ) ? 0 : parsedAppZ;
     if (appZ <= hudZ) {
         const newZ = hudZ + 1;
         if (appEl.style) {

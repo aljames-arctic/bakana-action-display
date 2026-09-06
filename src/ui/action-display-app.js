@@ -1670,8 +1670,10 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
                 this.bringToFront();
             } else {
                 if (targetWindow.closest?.('#context-menu, .context-menu, .bad-item-summary-tooltip')) return;
-                const hudZ = parseInt(this.element.style?.zIndex, 10) || 100;
-                const targetZ = parseInt(targetWindow.style?.zIndex, 10) || 0;
+                const parsedHudZ = parseInt(this.element.style?.zIndex, 10);
+                const hudZ = Number.isNaN(parsedHudZ) ? 100 : parsedHudZ;
+                const parsedTargetZ = parseInt(targetWindow.style?.zIndex, 10);
+                const targetZ = Number.isNaN(parsedTargetZ) ? 0 : parsedTargetZ;
                 if (targetZ <= hudZ) {
                     const newZ = hudZ + 1;
                     targetWindow.style.zIndex = `${newZ}`;
