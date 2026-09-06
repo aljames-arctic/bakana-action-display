@@ -73,7 +73,7 @@ export class BaseSystemContextModifier {
         if (subId === 'all') return 0;
         if (subId === 'itemCharges') return 99;
         const num = Number.parseInt(subId, 10);
-        return Number.isNaN(num) ? 999 : num + 1;
+        return Number.isFinite(num) ? num + 1 : 999;
     }
 
     /**

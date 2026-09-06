@@ -28,7 +28,7 @@ export function toSet(input, mapFn = null) {
     const set = new Set();
     for (const item of input) {
         const val = mapFn(item);
-        if (val !== null && val !== undefined) {
+        if (val != null) {
             set.add(val);
         }
     }
