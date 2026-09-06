@@ -14,7 +14,7 @@ let lastSelectedTokenId = null;
  * @returns {boolean}
  */
 export function isTokenOwned(token) {
-    if (!token || token.destroyed || token._destroyed) return false;
+    if (!token || token.destroyed) return false;
     return Boolean(token.document?.isOwner || token.actor?.isOwner);
 }
 

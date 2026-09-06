@@ -12,6 +12,8 @@ import { CombatMovementTracker } from './combat/combat-movement-tracker.js';
 let closePersistentHUD = false;
 let explicitlyClosedTokenId = null;
 let renderDebounceTimer = null;
+const wrappedHUDClasses = new WeakSet();
+const closingTokens = new WeakMap();
 
 export function setExplicitlyClosedTokenId(tokenId) {
     explicitlyClosedTokenId = tokenId;
@@ -59,8 +61,8 @@ Hooks.once('init', async () => {
  */
 function wrapTokenHUD() {
     const hudClass = canvas?.hud?.token?.constructor;
-    if (!hudClass?.prototype || hudClass._badWrapped) return;
-    hudClass._badWrapped = true;
+    if (!hudClass?.prototype || wrappedHUDClasses.has(hudClass)) return;
+    wrappedHUDClasses.add(hudClass);
     log.info(`Wrapping ${hudClass.name}.prototype.bind, clear, and close`);
 
     const originalBind = hudClass.prototype.bind;
@@ -73,7 +75,7 @@ function wrapTokenHUD() {
     const originalClear = hudClass.prototype.clear;
     hudClass.prototype.clear = function (...args) {
         const closingToken = this.object;
-        if (closingToken) this._badClosingToken = closingToken;
+        if (closingToken) closingTokens.set(this, closingToken);
         handleHUDClose(closingToken);
         return originalClear.apply(this, args);
     };
@@ -81,7 +83,7 @@ function wrapTokenHUD() {
     const originalClose = hudClass.prototype.close;
     hudClass.prototype.close = function (...args) {
         const closingToken = this.object;
-        if (closingToken) this._badClosingToken = closingToken;
+        if (closingToken) closingTokens.set(this, closingToken);
         handleHUDClose(closingToken);
         return originalClose.apply(this, args);
     };
@@ -236,13 +238,13 @@ Hooks.on('closeTokenHUD', (tokenHUD, html) => {
 
     // If TokenHUD is currently associated with activeApp's token, ignore this close event
     if (tokenHUD?.object && (tokenHUD.object === currentApp.token || tokenHUD.object?.id === currentApp.token?.id)) {
-        if (tokenHUD) tokenHUD._badClosingToken = null;
+        if (tokenHUD) closingTokens.delete(tokenHUD);
         return;
     }
 
-    const closingToken = tokenHUD?._badClosingToken;
+    const closingToken = tokenHUD ? closingTokens.get(tokenHUD) : null;
     if (tokenHUD) {
-        tokenHUD._badClosingToken = null;
+        closingTokens.delete(tokenHUD);
     }
 
     // Close activeApp if the closing event specifically targeted activeApp's token,

@@ -31,10 +31,6 @@ export class BaseSystemContextMenuManager {
         actor.flags ??= {};
         actor.flags[scope] ??= {};
         actor.flags[scope][key] = value;
-        if (actor._source?.flags) {
-            actor._source.flags[scope] ??= {};
-            actor._source.flags[scope][key] = value;
-        }
         return actor.setFlag?.(scope, key, value, { badInternal: true });
     }
 
@@ -51,12 +47,6 @@ export class BaseSystemContextMenuManager {
         actor.flags[scope] ??= {};
         for (const [key, value] of Object.entries(flags)) {
             actor.flags[scope][key] = value;
-        }
-        if (actor._source?.flags) {
-            actor._source.flags[scope] ??= {};
-            for (const [key, value] of Object.entries(flags)) {
-                actor._source.flags[scope][key] = value;
-            }
         }
         if (actor.update) {
             const updates = {};

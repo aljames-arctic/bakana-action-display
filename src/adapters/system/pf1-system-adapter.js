@@ -848,13 +848,13 @@ export class BasePf1SystemAdapter extends FantasySystemAdapter {
             if (!activationType) continue;
 
             subactions.push({
-                id: itemAction._id,
+                id: itemAction.id,
                 name: itemAction.name ?? item.name,
                 img: item.img,
                 activationType,
                 right: [TabRef.from('economy', activationType)],
                 uses,
-                roll: (event) => this.#executeItemRoll(item, itemAction._id, event)
+                roll: (event) => this.#executeItemRoll(item, itemAction.id, event)
             });
         }
         return subactions;
@@ -872,13 +872,13 @@ export class BasePf1SystemAdapter extends FantasySystemAdapter {
                     : (itemAction.name ?? attackItem.name);
 
                 subactions.push({
-                    id: itemAction._id,
+                    id: itemAction.id,
                     name,
                     img: attackItem.img ?? weapon.img,
                     activationType,
                     right: [TabRef.from('economy', activationType)],
                     uses,
-                    roll: (event) => this.#executeItemRoll(attackItem, itemAction._id, event)
+                    roll: (event) => this.#executeItemRoll(attackItem, itemAction.id, event)
                 });
             }
         }

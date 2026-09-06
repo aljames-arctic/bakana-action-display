@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import '../setup.js';
 import { Action } from '../../src/ui/action.js';
 import { ActionDisplayApp } from '../../src/ui/action-display-app.js';
-import { showActivityDropdown } from '../../src/ui/app/dropdown-manager.js';
+import { showActivityDropdown, dropdownSubactionMap } from '../../src/ui/app/dropdown-manager.js';
 import { BaseSystemAdapter } from '../../src/adapters/system/base-system-adapter.js';
 import { Dnd5eSystemAdapter } from '../../src/adapters/system/dnd5e-system-adapter.js';
 import { Pf1SystemAdapter } from '../../src/adapters/system/pf1-system-adapter.js';
@@ -415,8 +415,8 @@ test('ActionDisplayApp triggers rich tooltip for activities in dropdown menus wh
         await showActivityDropdown(app, targetCard, [sub1, sub2], { preventDefault() {}, stopPropagation() {} });
 
         // Verify subaction attached to LI
-        assert.equal(sub1Li._badSubaction, sub1);
-        assert.equal(sub2Li._badSubaction, sub2);
+        assert.equal(dropdownSubactionMap.get(sub1Li), sub1);
+        assert.equal(dropdownSubactionMap.get(sub2Li), sub2);
 
         // 1. Hover over first activity while holding '?'
         await app._onKeyDown({ key: '?', shiftKey: true, target: { tagName: 'DIV' } });
@@ -982,7 +982,7 @@ test('ActionDisplayApp renders linked spell description when hovering over activ
         await showActivityDropdown(app, targetCard, [teleportSubAction], { preventDefault() {}, stopPropagation() {} });
 
         // Verify subaction attached to LI
-        assert.equal(teleportLi._badSubaction, teleportSubAction);
+        assert.equal(dropdownSubactionMap.get(teleportLi), teleportSubAction);
 
         // Hover over teleport in dropdown while holding '?'
         await app._onKeyDown({ key: '?', shiftKey: true, target: { tagName: 'DIV' } });

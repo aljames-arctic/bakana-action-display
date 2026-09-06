@@ -1137,7 +1137,7 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
         let doc = sub.linkedAction;
         const activity = sub.originalActivity;
         if (!doc && activity && activity.type === 'cast') {
-            const actId = activity.id ?? activity._id;
+            const actId = activity.id;
             const parentItemId = activity.item?.id ?? sub.originalItem?.id ?? parentItem?.id;
             const fullKey = parentItemId && actId ? `${parentItemId}.${actId}` : null;
             if (fullKey) {
@@ -1199,7 +1199,7 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
             return null;
         }
 
-        const actId = activity.id ?? activity._id;
+        const actId = activity.id;
         const parentItemId = activity.item?.id ?? item?.id;
         const fullKey = parentItemId && actId ? `${parentItemId}.${actId}` : null;
 
@@ -1303,19 +1303,13 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
         const activities = item.system?.activities;
         if (!activities) return [];
         if (activities.values) {
-            return Array.from(activities.values()).map(act => {
-                if (act && !act.id && act._id) act.id = act._id;
-                return act;
-            });
+            return Array.from(activities.values());
         }
         if (Array.isArray(activities)) {
-            return activities.map(act => {
-                if (act && !act.id && act._id) act.id = act._id;
-                return act;
-            });
+            return activities;
         }
         return Object.entries(activities).map(([id, act]) => {
-            if (act) act.id = act.id ?? act._id ?? id;
+            if (act && !act.id) act.id = id;
             return act;
         });
     }
@@ -2203,7 +2197,7 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
         const updatedConditions = { ...previousConditionsMap };
         const updatedManualUnbans = { ...previousManualUnbans };
 
-        const isInitialTabSync = Boolean(tabColumn && !tabColumn._autoBanInitialized);
+        const isInitialTabSync = Boolean(tabColumn && !tabColumn.autoBanInitialized);
         let changed = false;
 
         for (const comp of ['vocal', 'somatic']) {
@@ -2254,7 +2248,7 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
         }
 
         if (tabColumn) {
-            tabColumn._autoBanInitialized = true;
+            tabColumn.autoBanInitialized = true;
         }
 
         if (changed && actor.isOwner && actor.setFlag) {

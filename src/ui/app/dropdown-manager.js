@@ -3,6 +3,9 @@ import { log } from '../../lib/logger.js';
 import { adapter } from '../../adapters/index.js';
 import { positionFloatingMenu } from './menu-utils.js';
 
+export const dropdownSubactionMap = new WeakMap();
+const attachedDropdownItems = new WeakSet();
+
 const sortByName = (a, b) => (a.name ?? '').localeCompare(b.name ?? '');
 
 /**
@@ -170,7 +173,7 @@ export function showActivityDropdown(app, target, subactions, event, parentActio
             const itemData = menuItems[idx];
             if (sub) {
                 li.dataset.actionId = sub.id;
-                li._badSubaction = sub;
+                dropdownSubactionMap.set(li, sub);
 
                 const iconWrap = itemData?.icon ?? `<span class="bad-menu-icon-wrap">${itemData?.iconHtml ?? ''}</span>`;
                 const nameHtml = `<span class="bad-action-name bad-menu-name">${sub.name ?? "Action"}</span>`;
@@ -179,8 +182,8 @@ export function showActivityDropdown(app, target, subactions, event, parentActio
 
                 li.innerHTML = `${iconWrap}${nameHtml}${econHtml}${usesHtml}`;
 
-                if (!li._badListenersAttached) {
-                    li._badListenersAttached = true;
+                if (!attachedDropdownItems.has(li)) {
+                    attachedDropdownItems.add(li);
                     li.addEventListener('pointerover', () => {
                         app._hoveredActionItem = li;
                         const showSummaries = app._isQuestionMarkHeld || Boolean(game.settings.get(MODULE_ID, 'showItemSummaries'));
@@ -252,11 +255,10 @@ export function showActivityDropdown(app, target, subactions, event, parentActio
     };
 
     const menu = new ContextMenuClass(targetBody, ".bad-action-item", menuItems, options);
-    menu._setPosition = (html) => {
+    menu.setPosition = (html) => {
         const menuEl = (html instanceof HTMLElement ? html : html?.[0]) ?? document.querySelector('#context-menu, .context-menu');
         if (menuEl) applyPositioning(menuEl);
     };
-    menu.setPosition = menu._setPosition;
 
     const origClose = menu.close?.bind(menu);
     menu.close = async (closeOptions = {}) => {

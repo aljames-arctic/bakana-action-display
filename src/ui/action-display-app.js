@@ -6,7 +6,7 @@ import { hasIntersection, localize } from '../lib/utils.js';
 import { HUDTabColumn } from './hud-tab-column.js';
 import { HUDTab } from './hud-tab.js';
 import { createActionContextMenu } from './app/context-menu-manager.js';
-import { showActivityDropdown } from './app/dropdown-manager.js';
+import { showActivityDropdown, dropdownSubactionMap } from './app/dropdown-manager.js';
 import { ControlBarManager } from './app/control-bar-manager.js';
 import { categorizeActions } from '../categorization/categorization-manager.js';
 import { syncActorFavorites } from '../favorites/favorites-manager.js';
@@ -2194,7 +2194,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
     async _showItemSummaryTooltip(itemEl) {
         if (!itemEl) return;
         const actionId = itemEl.dataset?.actionId;
-        const action = itemEl._badSubaction ?? this.actions.find(a => a.id === actionId);
+        const action = dropdownSubactionMap.get(itemEl) ?? this.actions.find(a => a.id === actionId);
         if (!action) return;
 
         const summary = await adapter.getItemSummary(action, action.originalItem, this.actor);

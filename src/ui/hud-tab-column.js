@@ -34,6 +34,8 @@ export class HUDTabColumn {
                 this.activeSubTypes.add(sub);
             }
         }
+
+        this.autoBanInitialized = false;
     }
 
     /**
