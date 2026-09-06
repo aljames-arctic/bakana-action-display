@@ -1,6 +1,14 @@
 import { log } from '../lib/logger.js';
 import { adapter } from '../adapters/index.js';
 
+function hasIntersection(setA, setB) {
+    if (!setA || !setB) return false;
+    for (const elem of setA) {
+        if (setB.has(elem)) return true;
+    }
+    return false;
+}
+
 /**
  * Encapsulates tab column state management and interaction rules for a single HUD column (left or right).
  * Handles parent focus, multi-select toggles, sub-tab isolation/toggling, and system default resets.
@@ -41,11 +49,12 @@ export class HUDTabColumn {
      * @param {Object} [groups] Tab groups dictionary
      */
     resetToDefault(groups = null) {
-        const exclusionParents = Array.from(this.activeParents).filter(p => adapter.isExclusionTab(p));
+        const exclusionParents = [];
         const exclusionSubIds = new Set();
-        if (groups) {
-            for (const p of exclusionParents) {
-                const g = groups[p];
+        for (const p of this.activeParents) {
+            if (adapter.isExclusionTab(p)) {
+                exclusionParents.push(p);
+                const g = groups?.[p];
                 if (g) {
                     for (const sId of g.getAllSubTabIds?.() ?? []) {
                         exclusionSubIds.add(sId);
@@ -91,7 +100,7 @@ export class HUDTabColumn {
 
         const group = groups?.[parentId];
         const validSubIds = group?.getAllSubTabIds?.() ?? new Set();
-        const hasActiveSubs = Array.from(this.activeSubTypes).some(id => validSubIds.has(id));
+        const hasActiveSubs = hasIntersection(this.activeSubTypes, validSubIds);
 
         const isSoleActive = this.activeParents.size === 1 && this.activeParents.has(parentId);
         const isParentExclusion = adapter.isExclusionTab(parentId);
@@ -99,13 +108,16 @@ export class HUDTabColumn {
         if (!isSoleActive) {
             // Deselect other category parent tabs and clear their sub-tabs,
             // while preserving exclusion parent tabs (e.g. 'components') and their active sub-tabs
-            const exclusionParents = Array.from(this.activeParents).filter(p => adapter.isExclusionTab(p));
+            const exclusionParents = [];
             const exclusionSubIds = new Set();
-            for (const p of exclusionParents) {
-                const g = groups?.[p];
-                if (g) {
-                    for (const sId of g.getAllSubTabIds?.() ?? []) {
-                        exclusionSubIds.add(sId);
+            for (const p of this.activeParents) {
+                if (adapter.isExclusionTab(p)) {
+                    exclusionParents.push(p);
+                    const g = groups?.[p];
+                    if (g) {
+                        for (const sId of g.getAllSubTabIds?.() ?? []) {
+                            exclusionSubIds.add(sId);
+                        }
                     }
                 }
             }
@@ -219,7 +231,7 @@ export class HUDTabColumn {
             const activeSubsForParent = Array.from(this.activeSubTypes).filter(id => validSubIds.has(id));
 
             const isCurrentActive = this.activeSubTypes.has(type) ||
-                (hasDescendants && Array.from(descendantIds).some(id => this.activeSubTypes.has(id)));
+                (hasDescendants && hasIntersection(descendantIds, this.activeSubTypes));
 
             for (const subId of activeSubsForParent) {
                 this.activeSubTypes.delete(subId);
@@ -326,7 +338,7 @@ export class HUDTabColumn {
 
         if (isExclusion && group) {
             const validSubIds = group.getAllSubTabIds?.() ?? new Set();
-            const hasRemainingSubs = Array.from(this.activeSubTypes).some(id => validSubIds.has(id));
+            const hasRemainingSubs = hasIntersection(this.activeSubTypes, validSubIds);
             if (!hasRemainingSubs) {
                 this.activeParents.delete(parentId);
             }
