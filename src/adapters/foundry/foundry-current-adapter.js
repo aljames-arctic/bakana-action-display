@@ -53,14 +53,4 @@ export class FoundryCurrentAdapter extends BaseFoundryAdapter {
 
         return combat.getCombatantsByToken?.(tokenId) ?? [];
     }
-
-    /**
-     * Retrieve the primary combatant associated with a token in combat using v14+ Combat#getCombatantsByToken.
-     * @param {Combat} combat Target combat encounter
-     * @param {string|TokenDocument|Token} token Token ID or Document or Placeable
-     * @returns {Combatant|null}
-     */
-    getCombatantByToken(combat, token) {
-        return this.getCombatantsByToken(combat, token)[0] ?? null;
-    }
 }
