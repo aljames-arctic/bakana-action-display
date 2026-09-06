@@ -16,6 +16,19 @@ export class ContextMenuManager {
     }
 
     /**
+     * Resolve the action and original item from an element dataset.
+     * @param {HTMLElement} el
+     * @returns {{ action: Action|null, item: Item|null }}
+     * @private
+     */
+    _resolveActionAndItem(el) {
+        const actionId = el?.dataset?.actionId;
+        const action = this.app.actions?.find(a => a.id === actionId) ?? null;
+        const item = action?.originalItem ?? this.app.actor?.items?.get(actionId) ?? null;
+        return { action, item };
+    }
+
+    /**
      * Build and bind the Foundry ContextMenu instance for action cards.
      * @returns {ContextMenu} The created ContextMenu instance
      */
@@ -26,16 +39,14 @@ export class ContextMenuManager {
                 icon: '<i class="fas fa-edit"></i>',
                 condition: el => {
                     if (!this.app.actor?.isOwner) return false;
-                    const action = this.app.actions?.find(a => a.id === el.dataset.actionId);
-                    const item = action?.originalItem ?? this.app.actor?.items?.get(el.dataset.actionId);
+                    const { item } = this._resolveActionAndItem(el);
                     return Boolean(item?.sheet?.render);
                 },
                 callback: el => {
-                    const action = this.app.actions?.find(a => a.id === el.dataset.actionId);
+                    const { action, item } = this._resolveActionAndItem(el);
                     if (action) {
                         adapter.openEditSheet(action);
                     } else {
-                        const item = this.app.actor?.items?.get(el.dataset.actionId);
                         item?.sheet?.render(true);
                     }
                 }
@@ -45,13 +56,11 @@ export class ContextMenuManager {
                 icon: '<i class="fas fa-star"></i>',
                 condition: el => {
                     if (!this.app.actor?.isOwner) return false;
-                    const action = this.app.actions?.find(a => a.id === el.dataset.actionId);
-                    const item = action?.originalItem ?? this.app.actor?.items?.get(el.dataset.actionId);
+                    const { item } = this._resolveActionAndItem(el);
                     return Boolean(item && !isActorItemFavorite(this.app.actor, item));
                 },
                 callback: async el => {
-                    const action = this.app.actions?.find(a => a.id === el.dataset.actionId);
-                    const item = action?.originalItem ?? this.app.actor?.items?.get(el.dataset.actionId);
+                    const { item } = this._resolveActionAndItem(el);
                     if (item) {
                         await setActorItemFavorite(this.app.actor, item, true);
                         this.app.render();
@@ -63,13 +72,11 @@ export class ContextMenuManager {
                 icon: '<i class="far fa-star"></i>',
                 condition: el => {
                     if (!this.app.actor?.isOwner) return false;
-                    const action = this.app.actions?.find(a => a.id === el.dataset.actionId);
-                    const item = action?.originalItem ?? this.app.actor?.items?.get(el.dataset.actionId);
+                    const { item } = this._resolveActionAndItem(el);
                     return Boolean(item && isActorItemFavorite(this.app.actor, item));
                 },
                 callback: async el => {
-                    const action = this.app.actions?.find(a => a.id === el.dataset.actionId);
-                    const item = action?.originalItem ?? this.app.actor?.items?.get(el.dataset.actionId);
+                    const { item } = this._resolveActionAndItem(el);
                     if (item) {
                         await setActorItemFavorite(this.app.actor, item, false);
                         this.app.render();
@@ -81,7 +88,7 @@ export class ContextMenuManager {
                 icon: '<i class="fas fa-eye-slash"></i>',
                 condition: el => {
                     if (!this.app.actor?.isOwner) return false;
-                    const action = this.app.actions?.find(a => a.id === el.dataset.actionId);
+                    const { action } = this._resolveActionAndItem(el);
                     return Boolean(action && !action.isHidden);
                 },
                 callback: el => {
@@ -93,7 +100,7 @@ export class ContextMenuManager {
                 icon: '<i class="fas fa-eye"></i>',
                 condition: el => {
                     if (!this.app.actor?.isOwner) return false;
-                    const action = this.app.actions?.find(a => a.id === el.dataset.actionId);
+                    const { action } = this._resolveActionAndItem(el);
                     return Boolean(action && action.isHidden);
                 },
                 callback: el => {
@@ -233,8 +240,7 @@ export class ContextMenuManager {
         const contextMenuEl = document.querySelector('#context-menu, .context-menu');
         if (!contextMenuEl) return;
 
-        const action = this.app.actions?.find(a => a.id === target?.dataset?.actionId);
-        const item = action?.originalItem ?? this.app.actor?.items?.get(target?.dataset?.actionId);
+        const { item } = this._resolveActionAndItem(target);
 
         const itemLis = contextMenuEl.querySelectorAll('.context-item');
         for (const li of itemLis) {
