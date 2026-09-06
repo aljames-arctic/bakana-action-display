@@ -161,16 +161,13 @@ export class HUDTab {
 
     /**
      * Recursively collect all descendant sub-tab IDs under this tab.
+     * @param {Set<string>} [ids=new Set()] Accumulator set for recursive collection
      * @returns {Set<string>} Set of all sub-tab and nested sub-tab IDs
      */
-    getAllSubTabIds() {
-        const ids = new Set();
+    getAllSubTabIds(ids = new Set()) {
         for (const st of this.subTabs) {
             ids.add(st.id);
-            const childIds = st.getAllSubTabIds();
-            for (const childId of childIds) {
-                ids.add(childId);
-            }
+            st.getAllSubTabIds(ids);
         }
         return ids;
     }
