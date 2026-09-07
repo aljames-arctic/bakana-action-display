@@ -76,7 +76,7 @@ export class ModuleIntegrationsConfigApp extends adapter.foundry.HandlebarsAppli
         await game.settings.set(MODULE_ID, 'midiQolFilterAutomationOnly', filterVal);
         log.info(`Saved module integration settings [Midi-QOL Filter Automation-Only: ${filterVal}]`);
 
-        ui?.notifications?.info?.(localize('BAD.moduleIntegrations.saved'));
+        ui.notifications.info(localize('BAD.moduleIntegrations.saved'));
 
         if (actionDisplay.activeApp?.rendered) {
             actionDisplay.activeApp.render();

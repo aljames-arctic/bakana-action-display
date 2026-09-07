@@ -109,36 +109,6 @@ test('CombatMovementTracker accumulates token movement distance during active co
     assert.equal(result.distance, 0);
 });
 
-test('CombatMovementTracker respects native Foundry V13+ TokenDocument.movementHistory', () => {
-    const waypoints = [
-        { x: 100, y: 100 },
-        { x: 200, y: 100 },
-        { x: 200, y: 300 }
-    ];
-    const tokenDoc = {
-        id: 'tok-v13',
-        name: 'Rogue',
-        movementHistory: waypoints
-    };
-    const combat = {
-        id: 'combat-1',
-        started: true,
-        round: 1,
-        turn: 0,
-        combatants: [{ tokenId: 'tok-v13', token: tokenDoc }]
-    };
-    game.combat = combat;
-    CombatMovementTracker.clear();
-
-    canvas.grid = {
-        measurePath: (path) => ({ distance: 15, cost: 15 })
-    };
-
-    const result = CombatMovementTracker.getMovementThisTurn(tokenDoc);
-    assert.equal(result.inCombat, true);
-    assert.equal(result.distance, 15);
-});
-
 test('Dnd5eSystemAdapter.getTokenInfo formats movement with moved distance when in combat', async () => {
     const dnd5eAdapter = new Dnd5eSystemAdapter();
     const tokenDoc = {

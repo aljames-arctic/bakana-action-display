@@ -156,7 +156,7 @@ export class Dnd5eAutoBanConfigApp extends adapter.foundry.HandlebarsApplication
         await game.settings.set(MODULE_ID, 'dnd5eAutoBanConditions', this.config);
         log.info('Saved D&D 5e auto-ban spell components configuration:', this.config);
 
-        ui?.notifications?.info?.(localize('BAD.dnd5eAutoBan.saved'));
+        ui.notifications.info(localize('BAD.dnd5eAutoBan.saved'));
 
         if (actionDisplay.activeApp?.rendered && actionDisplay.activeApp.actor) {
             adapter.updateTabs(actionDisplay.activeApp.actor, actionDisplay.activeApp.rightTabs);

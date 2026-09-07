@@ -175,7 +175,7 @@ export class HUDConfigApp extends adapter.foundry.HandlebarsApplicationMixin(ada
             actionDisplay.activeApp.render?.();
         }
 
-        ui?.notifications?.info?.(localize('BAD.hudConfig.saved', 'HUD configuration saved successfully.'));
+        ui.notifications.info(localize('BAD.hudConfig.saved', 'HUD configuration saved successfully.'));
         log.info('Saved HUD configuration settings');
 
         this.close();

@@ -274,7 +274,7 @@ export class EconomyColorsConfigApp extends adapter.foundry.HandlebarsApplicatio
         };
         await game.settings.set(MODULE_ID, 'enableEconomyIndicators', Boolean(this.enabled));
         await game.settings.set(MODULE_ID, 'economyColors', payload);
-        ui?.notifications?.info?.(localize('BAD.economyColors.saved'));
+        ui.notifications.info(localize('BAD.economyColors.saved'));
         if (actionDisplay.activeApp?.rendered) {
             actionDisplay.activeApp.render();
         }
