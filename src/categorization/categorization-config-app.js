@@ -441,7 +441,7 @@ export class CategorizationConfigApp extends adapter.foundry.HandlebarsApplicati
             if (cat.expression) {
                 const check = validateExpression(cat.expression);
                 if (!check.valid) {
-                    ui?.notifications?.warn?.(
+                    ui.notifications.warn(
                         format('BAD.categorization.invalidExpressionWarning', { expr: cat.expression })
                     );
                     return;
@@ -452,7 +452,7 @@ export class CategorizationConfigApp extends adapter.foundry.HandlebarsApplicati
                 if (sub.expression) {
                     const check = validateExpression(sub.expression);
                     if (!check.valid) {
-                        ui?.notifications?.warn?.(
+                        ui.notifications.warn(
                             format('BAD.categorization.invalidExpressionWarning', { expr: sub.expression })
                         );
                         return;
@@ -465,7 +465,7 @@ export class CategorizationConfigApp extends adapter.foundry.HandlebarsApplicati
         await game.settings.set(MODULE_ID, 'categorizationConfig', normalized);
         log.info("Categorization configuration saved successfully");
 
-        ui?.notifications?.info?.(localize('BAD.categorization.saved'));
+        ui.notifications.info(localize('BAD.categorization.saved'));
 
         if (actionDisplay.activeApp?.rendered) {
             actionDisplay.activeApp.render();

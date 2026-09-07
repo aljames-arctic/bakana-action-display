@@ -54,7 +54,7 @@ export class CombatMovementTracker {
     static #initializeCombatantPositions(combat) {
         if (!combat?.combatants) return;
         for (const combatant of combat.combatants) {
-            const tokenDoc = combatant.token ?? canvas?.tokens?.get?.(combatant.tokenId)?.document;
+            const tokenDoc = combatant.token ?? canvas.tokens.get(combatant.tokenId)?.document;
             if (tokenDoc) {
                 this.#lastPositions.set(combatant.tokenId, {
                     x: tokenDoc.x,
@@ -173,7 +173,7 @@ export class CombatMovementTracker {
         }
 
         const tokenId = token?.id ?? token?.document?.id ?? token;
-        const tokenDoc = token?.document ?? (token?.id ? token : (canvas?.tokens?.get?.(tokenId)?.document ?? null));
+        const tokenDoc = token?.document ?? (token?.id ? token : (canvas.tokens.get(tokenId)?.document ?? null));
 
         const isCombatant = Boolean(
             combat.combatants?.some(c => c.tokenId === tokenId || (actor && c.actorId === actor.id))
@@ -183,19 +183,7 @@ export class CombatMovementTracker {
             return { inCombat: false, distance: 0, units };
         }
 
-        // 1. Check native Foundry V13+ TokenDocument.movementHistory
-        if (Array.isArray(tokenDoc?.movementHistory) && tokenDoc.movementHistory.length > 1) {
-            if (canvas?.grid?.measurePath) {
-                try {
-                    const result = canvas.grid.measurePath(tokenDoc.movementHistory);
-                    if (Number.isFinite(result?.distance)) {
-                        return { inCombat: true, distance: Math.round(result.distance * 10) / 10, units };
-                    }
-                } catch (_) {}
-            }
-        }
-
-        // 2. Check internal tracker
+        // Retrieve distance from internal turn movement tracker
         const tracked = this.#movedDistances.get(tokenId) ?? 0;
         return { inCombat: true, distance: Math.round(tracked * 10) / 10, units };
     }

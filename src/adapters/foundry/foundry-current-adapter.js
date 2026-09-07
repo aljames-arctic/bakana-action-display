@@ -51,6 +51,6 @@ export class FoundryCurrentAdapter extends BaseFoundryAdapter {
         const tokenId = token?.id ?? token?.document?.id ?? token;
         if (!tokenId) return [];
 
-        return combat.getCombatantsByToken?.(tokenId) ?? [];
+        return combat.getCombatantsByToken(tokenId) ?? [];
     }
 }

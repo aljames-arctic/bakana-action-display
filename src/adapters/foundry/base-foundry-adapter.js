@@ -230,7 +230,7 @@ export class BaseFoundryAdapter {
         if (!combatant) return null;
         return combatant.token?.object
             ?? canvas?.tokens?.get?.(combatant.tokenId)
-            ?? combatant.actor?.getActiveTokens?.()?.[0]
+            ?? combatant.actor?.getActiveTokens()[0]
             ?? combatant.token
             ?? null;
     }
@@ -255,9 +255,9 @@ export class BaseFoundryAdapter {
         const userRole = user.role;
         if (userRole === 0) return null;
 
-        const assistantRole = CONST?.USER_ROLES?.ASSISTANT ?? 3;
-        const trustedRole = CONST?.USER_ROLES?.TRUSTED ?? 2;
-        const playerRole = CONST?.USER_ROLES?.PLAYER ?? 1;
+        const assistantRole = CONST.USER_ROLES.ASSISTANT;
+        const trustedRole = CONST.USER_ROLES.TRUSTED;
+        const playerRole = CONST.USER_ROLES.PLAYER;
 
         if (userRole != null && userRole >= assistantRole) {
             return USER_PERMISSION_TIERS.GM;
@@ -286,7 +286,7 @@ export class BaseFoundryAdapter {
             return true;
         }
 
-        const ownerLevel = CONST?.DOCUMENT_OWNERSHIP_LEVELS?.OWNER ?? 3;
+        const ownerLevel = CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER;
         const testDocOwnership = (doc) => {
             if (!doc) return false;
             if (doc.testUserPermission?.(user, 'OWNER')) return true;
@@ -384,7 +384,7 @@ export class BaseFoundryAdapter {
      */
     selectToken(token) {
         if (!token) return;
-        const placeable = token.object ?? (token.control ? token : canvas?.tokens?.get?.(token.id));
+        const placeable = token.object ?? (token.control ? token : canvas.tokens.get(token.id));
         placeable?.control?.({ releaseOthers: true });
     }
 

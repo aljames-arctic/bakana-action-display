@@ -172,7 +172,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         this._boundOnWheel = this._onWheel.bind(this);
         this._boundOnWindowWheel = this._onWindowWheel.bind(this);
         this._boundOnAutobanPointerOverCapture = this._onAutobanPointerOverCapture.bind(this);
-        this._lockedTooltipTarget = null;
+                        this._lockedTooltipTarget = null;
         this._boundOnMiddleClickCapture = this._onMiddleClickCapture.bind(this);
         this._boundOnAuxClickCapture = this._onAuxClickCapture.bind(this);
     }
@@ -1861,7 +1861,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         const relatedTabEl = event.relatedTarget?.closest?.('.bad-right-tab, .bad-right-sub-tab, .bad-tab');
         if (tabEl && tabEl !== relatedTabEl) {
             if (!this.isTooltipFocused) {
-                game.tooltip?.deactivate?.();
+                game.tooltip?.deactivate();
             }
         }
     }
@@ -1945,7 +1945,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         const isInsideLockedTooltip = Boolean(event.target?.closest?.('.locked-tooltip, #tooltip.locked, [data-tooltip-locked="true"]'));
         if (isInsideLockedTooltip) {
             this._closeLockedTooltips();
-            game.tooltip?.deactivate?.();
+            game.tooltip?.deactivate();
             this._lockedTooltipTarget = null;
             event.stopImmediatePropagation?.();
             event.preventDefault?.();
@@ -1963,7 +1963,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         // 3. If this same tab is already the locked target, middle-clicking it toggles/dismisses the lock
         if (this.isTooltipFocused && this._lockedTooltipTarget === tabTarget) {
             this._closeLockedTooltips();
-            game.tooltip?.deactivate?.();
+            game.tooltip?.deactivate();
             this._lockedTooltipTarget = null;
             return;
         }
@@ -1991,9 +1991,6 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
             try {
                 game.tooltip.lockTooltip();
             } catch (_) {}
-        } else if (game.tooltip) {
-            game.tooltip.locked = true;
-            document.querySelector?.('#tooltip')?.classList?.add?.('locked');
         }
 
         this._lockedTooltipTarget = tabTarget;
@@ -2046,17 +2043,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
             }
         }
 
-        try {
-            if (game.tooltip?.lockedTooltips) {
-                for (const [id, tooltip] of game.tooltip.lockedTooltips.entries?.() ?? []) {
-                    if (except && tooltip === except) continue;
-                    tooltip?.remove?.();
-                    game.tooltip.lockedTooltips.delete(id);
-                }
-            }
-        } catch (_) {}
-
-        this._lockedTooltipTarget = null;
+this._lockedTooltipTarget = null;
     }
 
     /**
@@ -2222,7 +2209,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
             }
         }
 
-        if (game.tooltip?.activate) {
+        if (game.tooltip) {
             game.tooltip.activate(itemEl, {
                 html,
                 direction: this._chooseTooltipDirection(itemEl, hasTable, tableMetrics.targetWidth ?? 360),
@@ -2335,7 +2322,7 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
             tooltipEl.style?.removeProperty?.('min-width');
             tooltipEl.style?.removeProperty?.('box-sizing');
         }
-        if (game.tooltip?.deactivate) {
+        if (game.tooltip) {
             game.tooltip.deactivate();
         }
     }
@@ -2711,8 +2698,8 @@ export class ActionDisplayApp extends adapter.foundry.HandlebarsApplicationMixin
         if (this.isAttached && this.token) {
             // --- ATTACHED MODE (Dynamic Token Placement) ---
             const tokenTransform = this.token.worldTransform ?? { tx: this.token.x ?? 0, ty: this.token.y ?? 0 };
-            const canvasScale = game.canvas.stage?.scale?.x ?? 1;
-            const gridSize = game.canvas.grid?.size ?? 100;
+            const canvasScale = game.canvas.stage.scale.x;
+            const gridSize = game.canvas.grid.size;
             const anchorSide = game.settings.get(MODULE_ID, 'hudAnchorSide') ?? 'vertical';
 
             const tokenWidth = (this.token.w ?? 100) * canvasScale;

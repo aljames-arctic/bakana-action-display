@@ -8,7 +8,7 @@ export function localize(key, fallback = undefined) {
     const defaultStr = fallback !== undefined ? fallback : key;
     if (!key) return defaultStr ?? '';
     if (!game.i18n) return defaultStr;
-    if (game.i18n.has?.(key)) {
+    if (game.i18n.has(key)) {
         return game.i18n.localize(key) ?? defaultStr;
     }
     const val = game.i18n.localize?.(key);
@@ -26,7 +26,7 @@ export function format(key, data = {}, fallback = undefined) {
     const defaultStr = fallback !== undefined ? fallback : key;
     if (!key) return defaultStr ?? '';
     if (game.i18n?.format) {
-        if (game.i18n.has?.(key)) {
+        if (game.i18n.has(key)) {
             return game.i18n.format(key, data);
         }
         const val = game.i18n.format(key, data);
