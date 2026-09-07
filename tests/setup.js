@@ -353,7 +353,9 @@ globalThis.foundry = {
             }
         },
         ux: {
-            ContextMenu: globalThis.ContextMenu,
+            ContextMenu: {
+                implementation: globalThis.ContextMenu
+            },
             TextEditor: {
                 implementation: globalThis.TextEditor
             }

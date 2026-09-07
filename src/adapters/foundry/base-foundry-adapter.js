@@ -30,21 +30,21 @@ export class BaseFoundryAdapter {
      * The active ContextMenu constructor.
      */
     get ContextMenu() {
-        return ContextMenu;
+        throw new Error('BaseFoundryAdapter.ContextMenu must be implemented by version subclass');
     }
 
     /**
      * The active KeyboardManager constructor.
      */
     get KeyboardManager() {
-        return KeyboardManager;
+        throw new Error('BaseFoundryAdapter.KeyboardManager must be implemented by version subclass');
     }
 
     /**
      * The active Token placeable constructor.
      */
     get Token() {
-        return Token;
+        throw new Error('BaseFoundryAdapter.Token must be implemented by version subclass');
     }
 
     /**
@@ -65,14 +65,14 @@ export class BaseFoundryAdapter {
      * The active FilePicker constructor / implementation.
      */
     get FilePicker() {
-        return FilePicker;
+        throw new Error('BaseFoundryAdapter.FilePicker must be implemented by version subclass');
     }
 
     /**
      * The active TextEditor constructor / implementation.
      */
     get TextEditor() {
-        return TextEditor;
+        throw new Error('BaseFoundryAdapter.TextEditor must be implemented by version subclass');
     }
 
     /**

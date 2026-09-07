@@ -6,6 +6,40 @@ import { BaseFoundryAdapter } from './base-foundry-adapter.js';
  */
 export class FoundryV12Adapter extends BaseFoundryAdapter {
     /**
+     * The active ContextMenu constructor in v12.
+     */
+    get ContextMenu() {
+        return ContextMenu;
+    }
+
+    /**
+     * The active KeyboardManager constructor in v12.
+     */
+    get KeyboardManager() {
+        return KeyboardManager;
+    }
+
+    /**
+     * The active Token placeable constructor in v12.
+     */
+    get Token() {
+        return Token;
+    }
+
+    /**
+     * The active FilePicker constructor / implementation in v12.
+     */
+    get FilePicker() {
+        return FilePicker;
+    }
+
+    /**
+     * The active TextEditor constructor / implementation in v12.
+     */
+    get TextEditor() {
+        return TextEditor;
+    }
+    /**
      * Safely resolve a document from UUID synchronously in Foundry V12.
      * @param {string} uuid Document UUID
      * @param {Object} [options={}] Resolution options

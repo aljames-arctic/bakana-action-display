@@ -91,9 +91,18 @@ test('FoundryV12Adapter (v12), FoundryV13Adapter (v13), and FoundryV14Adapter (v
     assert.equal(v12.FilePicker, globalThis.FilePicker);
     assert.equal(v12.TextEditor, globalThis.TextEditor);
 
-    // 2. FoundryV14Adapter (v14 modern) resolves modern namespaced constructors
+    // 2. FoundryV13Adapter (v13 platform) and FoundryV14Adapter (v14 modern) resolve modern namespaced constructors
+    const v13 = new FoundryV13Adapter();
+    assert.equal(v13.ContextMenu, globalThis.foundry.applications.ux.ContextMenu.implementation);
+    assert.equal(v13.KeyboardManager, globalThis.foundry.helpers.interaction.KeyboardManager);
+    assert.equal(v13.Token, globalThis.foundry.canvas.placeables.Token);
+    assert.equal(v13.ApplicationV2, globalThis.foundry.applications.api.ApplicationV2);
+    assert.equal(v13.HandlebarsApplicationMixin, globalThis.foundry.applications.api.HandlebarsApplicationMixin);
+    assert.equal(v13.FilePicker, globalThis.foundry.applications.apps.FilePicker.implementation);
+    assert.equal(v13.TextEditor, globalThis.foundry.applications.ux.TextEditor.implementation);
+
     const v14 = new FoundryV14Adapter();
-    assert.equal(v14.ContextMenu, globalThis.foundry.applications.ux.ContextMenu);
+    assert.equal(v14.ContextMenu, globalThis.foundry.applications.ux.ContextMenu.implementation);
     assert.equal(v14.KeyboardManager, globalThis.foundry.helpers.interaction.KeyboardManager);
     assert.equal(v14.Token, globalThis.foundry.canvas.placeables.Token);
     assert.equal(v14.ApplicationV2, globalThis.foundry.applications.api.ApplicationV2);
