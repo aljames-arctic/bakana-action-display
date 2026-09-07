@@ -278,6 +278,9 @@ class TokenHUD {
     }
 }
 
+globalThis.TokenHUD = TokenHUD;
+globalThis.CONFIG.Token = globalThis.CONFIG.Token ?? { hudClass: TokenHUD };
+
 globalThis.canvas = {
     hud: {
         token: new TokenHUD()

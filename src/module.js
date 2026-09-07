@@ -34,7 +34,7 @@ Hooks.once('init', async () => {
     const originalRightClick = TokenClass?.prototype?._onClickRight;
     if (originalRightClick) {
         TokenClass.prototype._onClickRight = function (event) {
-            const isTokenHUDOpen = Boolean(canvas.hud.token.rendered && (canvas.hud.token.object === this || canvas.hud.token.object?.id === this.id));
+            const isTokenHUDOpen = Boolean(canvas?.hud?.token?.rendered && (canvas.hud.token.object === this || canvas.hud.token.object?.id === this.id));
             const currentApp = actionDisplay.activeApp;
             if (isTokenHUDOpen && (currentApp?.token === this || currentApp?.token?.id === this.id)) {
                 const persist = Boolean(game.settings.get(MODULE_ID, 'persistHUD'));
@@ -60,7 +60,7 @@ Hooks.once('init', async () => {
  * Wrap TokenHUD prototype methods (bind, clear, close) to coordinate HUD lifecycle.
  */
 function wrapTokenHUD() {
-    const hudClass = canvas.hud.token.constructor;
+    const hudClass = adapter.foundry.TokenHUD;
     if (!hudClass?.prototype || wrappedHUDClasses.has(hudClass)) return;
     wrappedHUDClasses.add(hudClass);
     log.info(`Wrapping ${hudClass.name}.prototype.bind, clear, and close`);
