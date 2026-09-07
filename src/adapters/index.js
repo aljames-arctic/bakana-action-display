@@ -1,4 +1,4 @@
-import { initializeFoundryAdapter, FoundryV12Adapter, BaseFoundryAdapter, FoundryV13Adapter, FoundryV14Adapter } from './foundry/index.js';
+import { initializeFoundryAdapter, FoundryV12Adapter, BaseFoundryAdapter, FoundryV13Adapter } from './foundry/index.js';
 import { initializeSystemAdapter, BaseSystemAdapter } from './system/index.js';
 import { initializeModuleAdapters, BaseModuleAdapter } from './module/index.js';
 import { MODULE_ID } from '../constants.js';
@@ -607,4 +607,4 @@ class Adapter {
 }
 
 export const adapter = new Adapter();
-export { Adapter, FoundryV12Adapter, BaseFoundryAdapter, FoundryV13Adapter, FoundryV14Adapter, BaseSystemAdapter, BaseModuleAdapter };
+export { Adapter, FoundryV12Adapter, BaseFoundryAdapter, FoundryV13Adapter, BaseSystemAdapter, BaseModuleAdapter };

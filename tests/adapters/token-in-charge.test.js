@@ -1,7 +1,7 @@
 import '../setup.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { FoundryV12Adapter, BaseFoundryAdapter, FoundryV13Adapter, FoundryV14Adapter, USER_PERMISSION_TIERS } from '../../src/adapters/foundry/index.js';
+import { FoundryV12Adapter, BaseFoundryAdapter, FoundryV13Adapter, USER_PERMISSION_TIERS } from '../../src/adapters/foundry/index.js';
 import { handleCombatTurnChange } from '../../src/module.js';
 import { actionDisplay } from '../../src/action-display.js';
 import { ActionDisplayApp } from '../../src/ui/action-display-app.js';
@@ -527,20 +527,20 @@ test('isUserInCharge considers only currently connected (active: true) users', (
     assert.equal(adapter.isUserInCharge(tokenPC, userGM), false, 'GM is not in-charge when Player 1 is connected');
 });
 
-test('FoundryV14Adapter inherits isUserInCharge and permission tier evaluation', () => {
-    const v14Adapter = new FoundryV14Adapter();
-    const userPlayer = { id: 'p14', role: 1, isGM: false, active: true };
-    const userGM = { id: 'gm14', role: 4, isGM: true, active: true };
+test('FoundryV13Adapter inherits isUserInCharge and permission tier evaluation', () => {
+    const v13Adapter = new FoundryV13Adapter();
+    const userPlayer = { id: 'p13', role: 1, isGM: false, active: true };
+    const userGM = { id: 'gm13', role: 4, isGM: true, active: true };
     globalThis.game.users = new foundry.utils.Collection([userPlayer, userGM]);
 
     const tokenPC = {
-        id: 'token-v14-pc',
-        document: { ownership: { default: 0, 'p14': 3 } },
-        actor: { ownership: { default: 0, 'p14': 3 } }
+        id: 'token-v13-pc',
+        document: { ownership: { default: 0, 'p13': 3 } },
+        actor: { ownership: { default: 0, 'p13': 3 } }
     };
 
-    assert.equal(v14Adapter.getUserPermissionTier(userPlayer), USER_PERMISSION_TIERS.PLAYER);
-    assert.equal(v14Adapter.getUserPermissionTier(userGM), USER_PERMISSION_TIERS.GM);
-    assert.equal(v14Adapter.isUserInCharge(tokenPC, userPlayer), true);
-    assert.equal(v14Adapter.isUserInCharge(tokenPC, userGM), false);
+    assert.equal(v13Adapter.getUserPermissionTier(userPlayer), USER_PERMISSION_TIERS.PLAYER);
+    assert.equal(v13Adapter.getUserPermissionTier(userGM), USER_PERMISSION_TIERS.GM);
+    assert.equal(v13Adapter.isUserInCharge(tokenPC, userPlayer), true);
+    assert.equal(v13Adapter.isUserInCharge(tokenPC, userGM), false);
 });

@@ -1,14 +1,14 @@
 import '../setup.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { adapter, Adapter, FoundryV12Adapter, BaseFoundryAdapter, FoundryV13Adapter, FoundryV14Adapter, BaseSystemAdapter } from '../../src/adapters/index.js';
+import { adapter, Adapter, FoundryV12Adapter, BaseFoundryAdapter, FoundryV13Adapter, BaseSystemAdapter } from '../../src/adapters/index.js';
 import { initializeFoundryAdapter } from '../../src/adapters/foundry/index.js';
 import { initializeSystemAdapter } from '../../src/adapters/system/index.js';
 import { initializeModuleAdapters } from '../../src/adapters/module/index.js';
 import { MODULE_ID } from '../../src/constants.js';
 import { log } from '../../src/lib/logger.js';
 
-test('initializeFoundryAdapter returns FoundryV12Adapter on v12, FoundryV13Adapter on v13, FoundryV14Adapter on v14+, and throws for < 12', () => {
+test('initializeFoundryAdapter returns FoundryV12Adapter on v12, FoundryV13Adapter on v13+, and throws for < 12', () => {
     // Unsupported legacy generation (< 12)
     game.release = { generation: 11 };
     game.version = '11.315';
@@ -30,17 +30,16 @@ test('initializeFoundryAdapter returns FoundryV12Adapter on v12, FoundryV13Adapt
     assert.ok(v13 instanceof FoundryV12Adapter);
     assert.equal(v13.generation, 13);
 
-    // V14 modern
+    // V14+ returns FoundryV13Adapter
     game.release = { generation: 14 };
     game.version = '14.364';
     const v14 = initializeFoundryAdapter();
-    assert.ok(v14 instanceof FoundryV14Adapter);
     assert.ok(v14 instanceof FoundryV13Adapter);
     assert.ok(v14 instanceof FoundryV12Adapter);
     assert.equal(v14.generation, 14);
 });
 
-test('FoundryV12Adapter, FoundryV13Adapter, and FoundryV14Adapter getCombatantByToken and getCombatantsByToken contracts', () => {
+test('FoundryV12Adapter and FoundryV13Adapter getCombatantByToken and getCombatantsByToken contracts', () => {
     const mockCombatant = { id: 'c1', tokenId: 't1' };
 
     // BaseFoundryAdapter defines abstract contracts
@@ -57,7 +56,7 @@ test('FoundryV12Adapter, FoundryV13Adapter, and FoundryV14Adapter getCombatantBy
     assert.deepEqual(v12.getCombatantsByToken(mockCombatV12, 't1'), [mockCombatant]);
     assert.equal(v12.getCombatantByToken(mockCombatV12, { id: 't1' }), mockCombatant);
 
-    // FoundryV13Adapter (v13 platform) uses Combat#getCombatantsByToken
+    // FoundryV13Adapter (v13+ platform) uses Combat#getCombatantsByToken
     const v13 = new FoundryV13Adapter();
     const mockCombatV13 = {
         getCombatantsByToken: (id) => id === 't1' ? [mockCombatant] : []
@@ -65,12 +64,6 @@ test('FoundryV12Adapter, FoundryV13Adapter, and FoundryV14Adapter getCombatantBy
     assert.equal(v13.getCombatantByToken(mockCombatV13, 't1'), mockCombatant);
     assert.deepEqual(v13.getCombatantsByToken(mockCombatV13, 't1'), [mockCombatant]);
     assert.equal(v13.getCombatantByToken(mockCombatV13, { id: 't1' }), mockCombatant);
-
-    // FoundryV14Adapter (v14 modern) inherits Combat#getCombatantsByToken
-    const v14 = new FoundryV14Adapter();
-    assert.equal(v14.getCombatantByToken(mockCombatV13, 't1'), mockCombatant);
-    assert.deepEqual(v14.getCombatantsByToken(mockCombatV13, 't1'), [mockCombatant]);
-    assert.equal(v14.getCombatantByToken(mockCombatV13, { id: 't1' }), mockCombatant);
 
     // getTokenFromCombatant resolves token placeables from various combatant structures
     const mockToken = { id: 't1', center: { x: 100, y: 100 } };
@@ -80,7 +73,7 @@ test('FoundryV12Adapter, FoundryV13Adapter, and FoundryV14Adapter getCombatantBy
     assert.equal(v12.getTokenFromCombatant({ actor: { getActiveTokens: () => [mockToken] } }), mockToken);
 });
 
-test('FoundryV12Adapter (v12), FoundryV13Adapter (v13), and FoundryV14Adapter (v14) constructor getters contract', () => {
+test('FoundryV12Adapter (v12) and FoundryV13Adapter (v13+) constructor getters contract', () => {
     // 1. FoundryV12Adapter (v12 baseline) resolves globals even when foundry.applications.ux is undefined
     const v12 = new FoundryV12Adapter();
     assert.equal(v12.ContextMenu, globalThis.ContextMenu);
@@ -91,7 +84,7 @@ test('FoundryV12Adapter (v12), FoundryV13Adapter (v13), and FoundryV14Adapter (v
     assert.equal(v12.FilePicker, globalThis.FilePicker);
     assert.equal(v12.TextEditor, globalThis.TextEditor);
 
-    // 2. FoundryV13Adapter (v13 platform) and FoundryV14Adapter (v14 modern) resolve modern namespaced constructors
+    // 2. FoundryV13Adapter (v13+ platform) resolves modern namespaced constructors
     const v13 = new FoundryV13Adapter();
     assert.equal(v13.ContextMenu, globalThis.foundry.applications.ux.ContextMenu.implementation);
     assert.equal(v13.KeyboardManager, globalThis.foundry.helpers.interaction.KeyboardManager);
@@ -100,15 +93,6 @@ test('FoundryV12Adapter (v12), FoundryV13Adapter (v13), and FoundryV14Adapter (v
     assert.equal(v13.HandlebarsApplicationMixin, globalThis.foundry.applications.api.HandlebarsApplicationMixin);
     assert.equal(v13.FilePicker, globalThis.foundry.applications.apps.FilePicker.implementation);
     assert.equal(v13.TextEditor, globalThis.foundry.applications.ux.TextEditor.implementation);
-
-    const v14 = new FoundryV14Adapter();
-    assert.equal(v14.ContextMenu, globalThis.foundry.applications.ux.ContextMenu.implementation);
-    assert.equal(v14.KeyboardManager, globalThis.foundry.helpers.interaction.KeyboardManager);
-    assert.equal(v14.Token, globalThis.foundry.canvas.placeables.Token);
-    assert.equal(v14.ApplicationV2, globalThis.foundry.applications.api.ApplicationV2);
-    assert.equal(v14.HandlebarsApplicationMixin, globalThis.foundry.applications.api.HandlebarsApplicationMixin);
-    assert.equal(v14.FilePicker, globalThis.foundry.applications.apps.FilePicker.implementation);
-    assert.equal(v14.TextEditor, globalThis.foundry.applications.ux.TextEditor.implementation);
 });
 
 test('isNewerVersion contract across BaseFoundryAdapter and BaseSystemAdapter', () => {
