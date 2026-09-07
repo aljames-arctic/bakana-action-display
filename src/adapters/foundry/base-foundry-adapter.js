@@ -308,16 +308,15 @@ export class BaseFoundryAdapter {
      * Ownership priority tiers (among currently connected users):
      * Players who own -> Trusted Players who own -> GM / Co-GM who own.
      *
-     * @param {Token|TokenDocument} token Token placeable or TokenDocument
+     * @param {Token} token Token placeable
      * @param {User} [user=game.user] Target user to evaluate (defaults to active client user)
      * @returns {boolean} True if the user is in-charge of the token
      */
     isUserInCharge(token, user = game.user) {
         if (!token || !user) return false;
 
-        // Entry-boundary normalization: resolve concrete TokenDocument and Actor
-        const tokenDoc = token.document ?? token;
-        const actor = tokenDoc.actor ?? null;
+        const tokenDoc = token.document;
+        const actor = token.actor;
 
         const isOwner = (u) => this.isUserDocumentOwner(u, actor) || this.isUserDocumentOwner(u, tokenDoc);
 
@@ -366,7 +365,7 @@ export class BaseFoundryAdapter {
 
     /**
      * Determine if a token is currently visible to the specified user.
-     * @param {Token|PlaceableObject} token Target token to evaluate
+     * @param {Token} token Target token placeable to evaluate
      * @param {User} [user=game.user] Target user to evaluate (defaults to active client user)
      * @returns {boolean} True if the token is visible to the user
      */
@@ -374,24 +373,23 @@ export class BaseFoundryAdapter {
         if (!token || !user) return false;
         if (user.isGM) return true;
         if (token.visible !== undefined) return Boolean(token.visible);
-        const tokenDoc = token.document ?? token;
+        const tokenDoc = token.document;
         return !tokenDoc?.hidden;
     }
 
     /**
      * Exclusively select/control the specified token on canvas.
-     * @param {Token|PlaceableObject} token Target token to select
+     * @param {Token} token Target token placeable to select
      * @returns {void}
      */
     selectToken(token) {
         if (!token) return;
-        const placeable = token.object ?? token;
-        placeable.control?.({ releaseOthers: true });
+        token.control?.({ releaseOthers: true });
     }
 
     /**
      * Recenter the canvas view on the token's center coordinates.
-     * @param {Token|PlaceableObject} token Target token to center on
+     * @param {Token} token Target token to center on
      * @returns {Promise<void>}
      */
     async centerCanvasOnToken(token) {
