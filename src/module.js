@@ -51,6 +51,16 @@ Hooks.once('init', async () => {
 
     // Expose the official API for other modules and macros
     game.modules.get(MODULE_ID).api = actionDisplay;
+
+    // Preload Handlebars templates
+    await adapter.loadTemplates([
+        'modules/bakanas-action-display/templates/action-display.html',
+        'modules/bakanas-action-display/templates/hud-config.html',
+        'modules/bakanas-action-display/templates/economy-colors-config.html',
+        'modules/bakanas-action-display/templates/categorization-config.html',
+        'modules/bakanas-action-display/templates/module-integrations-config.html',
+        'modules/bakanas-action-display/templates/dnd5e-autoban-config.html'
+    ]);
 });
 
 /**

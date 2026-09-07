@@ -606,6 +606,15 @@ class Adapter {
     isEmpty(obj) {
         return this.foundry.isEmpty(obj);
     }
+
+    /**
+     * Preload Handlebars templates via the active Foundry platform adapter.
+     * @param {string[]} paths Array of template paths
+     * @returns {Promise<Function[]>}
+     */
+    async loadTemplates(paths) {
+        return this.foundry.loadTemplates(paths);
+    }
 }
 
 export const adapter = new Adapter();
