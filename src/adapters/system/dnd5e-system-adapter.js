@@ -1,5 +1,4 @@
 import { FantasySystemAdapter } from './genre/fantasy-system-adapter.js';
-import { FoundryV12Adapter } from '../foundry/foundry-v12-adapter.js';
 import { localize, toSet } from '../../lib/utils.js';
 import { log } from '../../lib/logger.js';
 import { MODULE_ID } from '../../constants.js';

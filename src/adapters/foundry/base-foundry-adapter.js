@@ -230,11 +230,21 @@ export class BaseFoundryAdapter {
      */
     getTokenFromCombatant(combatant) {
         if (!combatant) return null;
-        return combatant.token?.object
-            ?? combatant.token
-            ?? canvas.tokens?.get?.(combatant.tokenId)
-            ?? combatant.actor?.getActiveTokens?.()[0]
-            ?? null;
+        if (combatant.token?.object) {
+            return combatant.token.object;
+        }
+        if (combatant.tokenId && canvas.tokens?.get) {
+            const canvasToken = canvas.tokens.get(combatant.tokenId);
+            if (canvasToken) return canvasToken;
+        }
+        if (combatant.actor?.getActiveTokens) {
+            const activeTokens = combatant.actor.getActiveTokens();
+            if (activeTokens?.length) return activeTokens[0];
+        }
+        if (combatant.token) {
+            return combatant.token;
+        }
+        return null;
     }
 
     /**

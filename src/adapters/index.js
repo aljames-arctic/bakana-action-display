@@ -349,7 +349,7 @@ class Adapter {
      * @returns {boolean}
      */
     matchesEconomyTabs(action, filterContext) {
-        return this.system?.matchesEconomyTabs(action, filterContext) ?? true;
+        return this.system?.matchesEconomyTabs?.(action, filterContext) ?? true;
     }
 
     /**

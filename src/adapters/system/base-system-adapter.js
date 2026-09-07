@@ -741,4 +741,40 @@ export class BaseSystemAdapter {
     }
 
     // #endregion
+
+    // #region AutoBan Contracts (Default NOP)
+
+    /**
+     * Retrieve active status effects causing automatic verbal/somatic spell component bans.
+     * Legacy NOP contract: Non-5e systems return empty vocal/somatic arrays.
+     * @param {Actor} actor
+     * @returns {Record<'vocal'|'somatic', Array<*>>}
+     */
+    getAutoBanEffectReasons(actor) {
+        return { vocal: [], somatic: [] };
+    }
+
+    /**
+     * Get the enriched HTML content-link for a status condition ID.
+     * Legacy NOP contract: Non-5e systems return empty string.
+     * @param {string} condId
+     * @param {string} [customLabel]
+     * @returns {Promise<string>}
+     */
+    async enrichCondition(condId, customLabel = null) {
+        return '';
+    }
+
+    /**
+     * Format a stylized HTML tooltip for automatically added verbal/somatic bans.
+     * Legacy NOP contract: Non-5e systems return empty string.
+     * @param {string} comp
+     * @param {Array<Object|string>|Record<string, Array<Object|string>>} reasons
+     * @returns {Promise<string>}
+     */
+    async formatAutoBanTooltip(comp, reasons) {
+        return '';
+    }
+
+    // #endregion
 }
