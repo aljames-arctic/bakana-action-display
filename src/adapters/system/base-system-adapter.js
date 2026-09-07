@@ -2,7 +2,7 @@ import { MODULE_ID } from '../../constants.js';
 import { log } from '../../lib/logger.js';
 import { localize, deepFreeze } from '../../lib/utils.js';
 import { Action } from '../../ui/action.js';
-import { FoundryV12Adapter } from '../foundry/foundry-v12-adapter.js';
+import { BaseFoundryAdapter } from '../foundry/base-foundry-adapter.js';
 import { BaseSystemContextMenuManager } from './context-menu/base-system-context-menu-manager.js';
 import { BaseSystemTabFilterManager } from './filter/base-system-tab-filter-manager.js';
 import { BaseSystemContextModifier } from './context-modifier/base-system-context-modifier.js';
@@ -27,11 +27,11 @@ export class BaseSystemAdapter {
     /**
      * @param {string} systemId
      * @param {boolean} [isSupported=false]
-     * @param {FoundryV12Adapter|FoundryV13Adapter|FoundryV14Adapter} foundry
+     * @param {BaseFoundryAdapter} foundry
      */
     constructor(systemId, isSupported = false, foundry) {
-        if (!foundry) {
-            throw new Error(`BaseSystemAdapter requires a valid Foundry adapter instance, received: ${foundry}`);
+        if (!(foundry instanceof BaseFoundryAdapter)) {
+            throw new Error(`BaseSystemAdapter requires a valid BaseFoundryAdapter instance, received: ${foundry}`);
         }
         this.systemId = systemId;
         this.isSupported = Boolean(isSupported);

@@ -1,9 +1,10 @@
-import { FoundryV12Adapter, BaseFoundryAdapter, USER_PERMISSION_TIERS } from './foundry-v12-adapter.js';
+import { BaseFoundryAdapter, USER_PERMISSION_TIERS } from './base-foundry-adapter.js';
+import { FoundryV12Adapter } from './foundry-v12-adapter.js';
 import { FoundryV13Adapter } from './foundry-v13-adapter.js';
 import { FoundryV14Adapter } from './foundry-v14-adapter.js';
 import { log } from '../../lib/logger.js';
 
-export { FoundryV12Adapter, BaseFoundryAdapter, FoundryV13Adapter, FoundryV14Adapter, USER_PERMISSION_TIERS };
+export { BaseFoundryAdapter, FoundryV12Adapter, FoundryV13Adapter, FoundryV14Adapter, USER_PERMISSION_TIERS };
 
 /**
  * Initialize and return the active Foundry VTT platform adapter.

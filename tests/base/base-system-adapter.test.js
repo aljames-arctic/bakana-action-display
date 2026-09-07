@@ -7,6 +7,9 @@ import { TabRef } from '../../src/ui/tab-ref.js';
 import { MODULE_ID } from '../../src/constants.js';
 
 test('BaseSystemAdapter initialization and metadata', () => {
+    assert.throws(() => new BaseSystemAdapter('test-system', false, null), /BaseSystemAdapter requires a valid BaseFoundryAdapter instance/);
+    assert.throws(() => new BaseSystemAdapter('test-system', false, {}), /BaseSystemAdapter requires a valid BaseFoundryAdapter instance/);
+
     const adapter = new BaseSystemAdapter('test-system', false, new FoundryV12Adapter());
     assert.equal(adapter.systemId, 'test-system');
     assert.equal(adapter.shouldExtractItem({ type: 'any' }), true);

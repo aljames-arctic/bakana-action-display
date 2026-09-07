@@ -151,10 +151,14 @@ test('fromUuid and fromUuidSync resolve cleanly across FoundryAdapter, SystemAda
 test('initializeSystemAdapter loads matching system adapter or falls back to BaseSystemAdapter with isSupported flag', async () => {
     const foundry = new FoundryV12Adapter();
 
-    // Throws if foundry adapter is missing
+    // Throws if foundry adapter is missing or invalid
     await assert.rejects(
         () => initializeSystemAdapter('dnd5e'),
-        /initializeSystemAdapter requires a valid Foundry adapter instance/
+        /initializeSystemAdapter requires a valid BaseFoundryAdapter instance/
+    );
+    await assert.rejects(
+        () => initializeSystemAdapter('dnd5e', {}),
+        /initializeSystemAdapter requires a valid BaseFoundryAdapter instance/
     );
 
     // Known system: dnd5e

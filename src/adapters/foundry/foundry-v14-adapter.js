@@ -5,13 +5,6 @@ import { FoundryV13Adapter } from './foundry-v13-adapter.js';
  * Extends FoundryV13Adapter and encapsulates modern namespaced constructors and API changes introduced in Foundry V14.
  */
 export class FoundryV14Adapter extends FoundryV13Adapter {
-    /**
-     * The major generation version of Foundry VTT.
-     * @returns {number}
-     */
-    get generation() {
-        return 14;
-    }
 
     /**
      * The active ContextMenu constructor in v14+.

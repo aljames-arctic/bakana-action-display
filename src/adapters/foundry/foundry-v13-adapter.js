@@ -5,13 +5,6 @@ import { FoundryV12Adapter } from './foundry-v12-adapter.js';
  * Extends FoundryV12Adapter and encapsulates capabilities and API changes introduced in Foundry V13.
  */
 export class FoundryV13Adapter extends FoundryV12Adapter {
-    /**
-     * The major generation version of Foundry VTT.
-     * @returns {number}
-     */
-    get generation() {
-        return 13;
-    }
 
     /**
      * Safely resolve a document from UUID synchronously using standard V13+ foundry.utils.fromUuidSync.
