@@ -51,7 +51,7 @@ export class BaseFoundryAdapter {
      * The active TokenHUD constructor / class.
      */
     get TokenHUD() {
-        return CONFIG.Token?.hudClass ?? canvas?.hud?.token?.constructor ?? globalThis.TokenHUD ?? null;
+        return CONFIG.Token.hudClass;
     }
 
     /**

@@ -31,7 +31,7 @@ Hooks.once('init', async () => {
     const originalRightClick = TokenClass?.prototype?._onClickRight;
     if (originalRightClick) {
         TokenClass.prototype._onClickRight = function (event) {
-            const isTokenHUDOpen = Boolean(canvas?.hud?.token?.rendered && (canvas.hud.token.object === this || canvas.hud.token.object?.id === this.id));
+            const isTokenHUDOpen = Boolean(canvas.hud.token.rendered && (canvas.hud.token.object === this || canvas.hud.token.object?.id === this.id));
             const currentApp = actionDisplay.activeApp;
             if (isTokenHUDOpen && (currentApp?.token === this || currentApp?.token?.id === this.id)) {
                 const persist = Boolean(game.settings.get(MODULE_ID, 'persistHUD'));
