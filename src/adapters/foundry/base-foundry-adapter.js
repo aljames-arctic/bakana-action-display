@@ -94,6 +94,16 @@ export class BaseFoundryAdapter {
     }
 
     /**
+     * Preload Handlebars templates across Foundry generations.
+     * @abstract
+     * @param {string[]} paths Array of template paths
+     * @returns {Promise<Function[]>}
+     */
+    async loadTemplates(paths) {
+        throw new Error('BaseFoundryAdapter.loadTemplates must be implemented by version subclass');
+    }
+
+    /**
      * Safely resolve a document from UUID synchronously.
      * @param {string} uuid Document UUID
      * @param {Object} [options={}] Resolution options

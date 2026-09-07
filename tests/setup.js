@@ -58,6 +58,7 @@ globalThis.FilePicker = class FilePicker {
         return { target, files: [], dirs: [] };
     }
 };
+globalThis.loadTemplates = (paths) => Promise.resolve(paths);
 globalThis.fromUuidSync = (uuid, options = {}) => {
     if (options.relative?.items) {
         return options.relative.items.find(i => i.uuid === uuid || i.id === uuid) ?? null;
@@ -306,6 +307,9 @@ globalThis.foundry = {
         }
     },
     applications: {
+        handlebars: {
+            loadTemplates: (paths) => Promise.resolve(paths)
+        },
         apps: {
             FilePicker: {
                 implementation: class FilePicker {

@@ -83,4 +83,14 @@ export class FoundryV13Adapter extends FoundryV12Adapter {
 
         return combat.getCombatantsByToken(tokenId) ?? [];
     }
+
+    /**
+     * Preload Handlebars templates in Foundry V13+ using namespaced foundry.applications.handlebars.loadTemplates.
+     * @override
+     * @param {string[]} paths Array of template paths
+     * @returns {Promise<Function[]>}
+     */
+    async loadTemplates(paths) {
+        return foundry.applications.handlebars.loadTemplates(paths);
+    }
 }

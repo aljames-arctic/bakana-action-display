@@ -83,4 +83,14 @@ export class FoundryV12Adapter extends BaseFoundryAdapter {
         const single = combat.getCombatantByToken(tokenId);
         return single ? [single] : [];
     }
+
+    /**
+     * Preload Handlebars templates in Foundry V12 using global loadTemplates.
+     * @override
+     * @param {string[]} paths Array of template paths
+     * @returns {Promise<Function[]>}
+     */
+    async loadTemplates(paths) {
+        return loadTemplates(paths);
+    }
 }

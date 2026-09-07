@@ -95,6 +95,19 @@ test('FoundryV12Adapter (v12) and FoundryV13Adapter (v13+) constructor getters c
     assert.equal(v13.TextEditor, globalThis.foundry.applications.ux.TextEditor.implementation);
 });
 
+test('loadTemplates contract across BaseFoundryAdapter, FoundryV12Adapter, and FoundryV13Adapter', async () => {
+    const base = new BaseFoundryAdapter();
+    await assert.rejects(async () => base.loadTemplates([]), /BaseFoundryAdapter\.loadTemplates must be implemented/);
+
+    const v12 = new FoundryV12Adapter();
+    const resultV12 = await v12.loadTemplates(['templates/test.html']);
+    assert.deepEqual(resultV12, ['templates/test.html']);
+
+    const v13 = new FoundryV13Adapter();
+    const resultV13 = await v13.loadTemplates(['templates/test.html']);
+    assert.deepEqual(resultV13, ['templates/test.html']);
+});
+
 test('isNewerVersion contract across BaseFoundryAdapter and BaseSystemAdapter', () => {
     const foundry = new BaseFoundryAdapter();
     const system = new BaseSystemAdapter('pf1', true, foundry);
