@@ -65,14 +65,14 @@ export class BaseFoundryAdapter {
      * The active FilePicker constructor / implementation.
      */
     get FilePicker() {
-        return FilePicker.implementation ?? FilePicker;
+        return FilePicker;
     }
 
     /**
      * The active TextEditor constructor / implementation.
      */
     get TextEditor() {
-        return TextEditor.implementation ?? TextEditor;
+        return TextEditor;
     }
 
     /**
@@ -229,9 +229,9 @@ export class BaseFoundryAdapter {
     getTokenFromCombatant(combatant) {
         if (!combatant) return null;
         return combatant.token?.object
-            ?? canvas?.tokens?.get?.(combatant.tokenId)
-            ?? combatant.actor?.getActiveTokens()[0]
             ?? combatant.token
+            ?? canvas.tokens?.get?.(combatant.tokenId)
+            ?? combatant.actor?.getActiveTokens?.()[0]
             ?? null;
     }
 
@@ -384,8 +384,8 @@ export class BaseFoundryAdapter {
      */
     selectToken(token) {
         if (!token) return;
-        const placeable = token.object ?? (token.control ? token : canvas.tokens.get(token.id));
-        placeable?.control?.({ releaseOthers: true });
+        const placeable = token.object ?? token;
+        placeable.control?.({ releaseOthers: true });
     }
 
     /**
@@ -396,13 +396,9 @@ export class BaseFoundryAdapter {
     async centerCanvasOnToken(token) {
         if (!token) return;
         const center = token.center ?? {
-            x: (token.x ?? 0) + ((token.w ?? 0) / 2),
-            y: (token.y ?? 0) + ((token.h ?? 0) / 2)
+            x: token.x + (token.w / 2),
+            y: token.y + (token.h / 2)
         };
-        if (canvas?.animatePan) {
-            await canvas.animatePan({ x: center.x, y: center.y });
-        } else if (canvas?.pan) {
-            canvas.pan({ x: center.x, y: center.y });
-        }
+        await canvas.animatePan({ x: center.x, y: center.y });
     }
 }

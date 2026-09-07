@@ -6,55 +6,6 @@ import { BaseFoundryAdapter } from './base-foundry-adapter.js';
  */
 export class FoundryV12Adapter extends BaseFoundryAdapter {
     /**
-     * The active ContextMenu constructor (global in v12/v13 baseline).
-     */
-    get ContextMenu() {
-        return ContextMenu;
-    }
-
-    /**
-     * The active KeyboardManager constructor (global in v12/v13 baseline).
-     */
-    get KeyboardManager() {
-        return KeyboardManager;
-    }
-
-    /**
-     * The active Token placeable constructor (global in v12/v13 baseline).
-     */
-    get Token() {
-        return Token;
-    }
-
-    /**
-     * The active ApplicationV2 constructor (introduced in v12 under foundry.applications.api).
-     */
-    get ApplicationV2() {
-        return foundry.applications.api.ApplicationV2;
-    }
-
-    /**
-     * The active HandlebarsApplicationMixin wrapper (introduced in v12 under foundry.applications.api).
-     */
-    get HandlebarsApplicationMixin() {
-        return foundry.applications.api.HandlebarsApplicationMixin;
-    }
-
-    /**
-     * The active FilePicker constructor / implementation (global in v12/v13 baseline).
-     */
-    get FilePicker() {
-        return FilePicker.implementation ?? FilePicker;
-    }
-
-    /**
-     * The active TextEditor constructor / implementation (global in v12/v13 baseline).
-     */
-    get TextEditor() {
-        return TextEditor.implementation ?? TextEditor;
-    }
-
-    /**
      * Safely resolve a document from UUID synchronously in Foundry V12.
      * @param {string} uuid Document UUID
      * @param {Object} [options={}] Resolution options
@@ -95,7 +46,7 @@ export class FoundryV12Adapter extends BaseFoundryAdapter {
         const tokenId = token?.id ?? token?.document?.id ?? token;
         if (!tokenId) return [];
 
-        const single = combat.getCombatantByToken?.(tokenId);
+        const single = combat.getCombatantByToken(tokenId);
         return single ? [single] : [];
     }
 
