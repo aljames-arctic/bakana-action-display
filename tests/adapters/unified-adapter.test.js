@@ -44,33 +44,32 @@ test('FoundryV12Adapter and FoundryV13Adapter getCombatantByToken and getCombata
 
     // BaseFoundryAdapter defines abstract contracts
     const base = new BaseFoundryAdapter();
+    const mockToken = { id: 't1' };
     assert.throws(() => base.fromUuidSync('item-1'), /BaseFoundryAdapter\.fromUuidSync must be implemented/);
-    assert.throws(() => base.getCombatantsByToken({}, 't1'), /BaseFoundryAdapter\.getCombatantsByToken must be implemented/);
+    assert.throws(() => base.getCombatantsByToken({}, mockToken), /BaseFoundryAdapter\.getCombatantsByToken must be implemented/);
 
     // FoundryV12Adapter (v12 baseline) uses Combat#getCombatantByToken
     const v12 = new FoundryV12Adapter();
     const mockCombatV12 = {
         getCombatantByToken: (id) => id === 't1' ? mockCombatant : null
     };
-    assert.equal(v12.getCombatantByToken(mockCombatV12, 't1'), mockCombatant);
-    assert.deepEqual(v12.getCombatantsByToken(mockCombatV12, 't1'), [mockCombatant]);
-    assert.equal(v12.getCombatantByToken(mockCombatV12, { id: 't1' }), mockCombatant);
+    assert.equal(v12.getCombatantByToken(mockCombatV12, mockToken), mockCombatant);
+    assert.deepEqual(v12.getCombatantsByToken(mockCombatV12, mockToken), [mockCombatant]);
 
     // FoundryV13Adapter (v13+ platform) uses Combat#getCombatantsByToken
     const v13 = new FoundryV13Adapter();
     const mockCombatV13 = {
-        getCombatantsByToken: (id) => id === 't1' ? [mockCombatant] : []
+        getCombatantsByToken: (token) => token === mockToken ? [mockCombatant] : []
     };
-    assert.equal(v13.getCombatantByToken(mockCombatV13, 't1'), mockCombatant);
-    assert.deepEqual(v13.getCombatantsByToken(mockCombatV13, 't1'), [mockCombatant]);
-    assert.equal(v13.getCombatantByToken(mockCombatV13, { id: 't1' }), mockCombatant);
+    assert.equal(v13.getCombatantByToken(mockCombatV13, mockToken), mockCombatant);
+    assert.deepEqual(v13.getCombatantsByToken(mockCombatV13, mockToken), [mockCombatant]);
 
     // getTokenFromCombatant resolves token placeables from various combatant structures
-    const mockToken = { id: 't1', center: { x: 100, y: 100 } };
+    const mockPlaceableToken = { id: 't1', center: { x: 100, y: 100 } };
     assert.equal(v12.getTokenFromCombatant(null), null);
-    assert.equal(v12.getTokenFromCombatant({ token: { object: mockToken } }), mockToken);
-    assert.equal(v12.getTokenFromCombatant({ token: mockToken }), mockToken);
-    assert.equal(v12.getTokenFromCombatant({ actor: { getActiveTokens: () => [mockToken] } }), mockToken);
+    assert.equal(v12.getTokenFromCombatant({ token: { object: mockPlaceableToken } }), mockPlaceableToken);
+    assert.equal(v12.getTokenFromCombatant({ token: mockPlaceableToken }), mockPlaceableToken);
+    assert.equal(v12.getTokenFromCombatant({ actor: { getActiveTokens: () => [mockPlaceableToken] } }), mockPlaceableToken);
 });
 
 test('FoundryV12Adapter (v12) and FoundryV13Adapter (v13+) constructor getters contract', () => {
