@@ -272,14 +272,13 @@ export class BaseFoundryAdapter {
     }
 
     /**
-     * Determine if a user has ownership level permissions over a document (actor or token).
+     * Determine if a user has ownership level permissions over a document (actor or token document).
      * @param {User} user Target user
-     * @param {Actor} [actor] Actor document
-     * @param {TokenDocument} [tokenDoc] TokenDocument
+     * @param {Document} doc Concrete Document (Actor or TokenDocument)
      * @returns {boolean} True if the user has an ownership role
      */
-    isUserDocumentOwner(user, actor, tokenDoc) {
-        if (!user) return false;
+    isUserDocumentOwner(user, doc) {
+        if (!user || !doc) return false;
 
         // GM / Co-GM always has ownership over all documents in Foundry
         if (this.getUserPermissionTier(user) === USER_PERMISSION_TIERS.GM) {
@@ -287,18 +286,17 @@ export class BaseFoundryAdapter {
         }
 
         const ownerLevel = CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER;
-        const testDocOwnership = (doc) => {
-            if (!doc) return false;
-            if (doc.testUserPermission?.(user, 'OWNER')) return true;
-            if (doc.getUserLevel?.(user) >= ownerLevel) return true;
-            if (doc.ownership) {
-                const level = doc.ownership[user.id] ?? doc.ownership.default ?? 0;
-                if (level >= ownerLevel) return true;
-            }
-            return (user.id === game.user?.id || user === game.user) && Boolean(doc.isOwner);
-        };
-
-        return testDocOwnership(actor) || testDocOwnership(tokenDoc);
+        if (doc.testUserPermission) {
+            return Boolean(doc.testUserPermission(user, 'OWNER'));
+        }
+        if (doc.getUserLevel) {
+            return doc.getUserLevel(user) >= ownerLevel;
+        }
+        if (doc.ownership) {
+            const level = doc.ownership[user.id] ?? doc.ownership.default ?? 0;
+            return level >= ownerLevel;
+        }
+        return (user.id === game.user?.id || user === game.user) && Boolean(doc.isOwner);
     }
 
     /**
@@ -317,10 +315,13 @@ export class BaseFoundryAdapter {
     isUserInCharge(token, user = game.user) {
         if (!token || !user) return false;
 
+        // Entry-boundary normalization: resolve concrete TokenDocument and Actor
         const tokenDoc = token.document ?? token;
-        const actor = token.actor ?? tokenDoc?.actor ?? null;
+        const actor = tokenDoc.actor ?? null;
 
-        if (!this.isUserDocumentOwner(user, actor, tokenDoc)) {
+        const isOwner = (u) => this.isUserDocumentOwner(u, actor) || this.isUserDocumentOwner(u, tokenDoc);
+
+        if (!isOwner(user)) {
             return false;
         }
 
@@ -345,7 +346,7 @@ export class BaseFoundryAdapter {
         if (userTier === USER_PERMISSION_TIERS.TRUSTED) {
             const hasConnectedPlayerOwner = activeOtherUsers.some(otherUser => {
                 return this.getUserPermissionTier(otherUser) === USER_PERMISSION_TIERS.PLAYER
-                    && this.isUserDocumentOwner(otherUser, actor, tokenDoc);
+                    && isOwner(otherUser);
             });
             return !hasConnectedPlayerOwner;
         }
@@ -355,7 +356,7 @@ export class BaseFoundryAdapter {
             const hasConnectedLowerTierOwner = activeOtherUsers.some(otherUser => {
                 const otherTier = this.getUserPermissionTier(otherUser);
                 return (otherTier === USER_PERMISSION_TIERS.PLAYER || otherTier === USER_PERMISSION_TIERS.TRUSTED)
-                    && this.isUserDocumentOwner(otherUser, actor, tokenDoc);
+                    && isOwner(otherUser);
             });
             return !hasConnectedLowerTierOwner;
         }

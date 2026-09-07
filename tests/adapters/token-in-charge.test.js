@@ -45,40 +45,40 @@ test('isUserDocumentOwner evaluates ownership across testUserPermission, ownersh
 
     // 1. GM always owns everything
     const unownedActor = { id: 'actor-unowned', ownership: { default: 0 } };
-    assert.equal(adapter.isUserDocumentOwner(userGM, unownedActor, null), true);
+    assert.equal(adapter.isUserDocumentOwner(userGM, unownedActor), true);
 
     // 2. Ownership via actor.testUserPermission
     const actorWithFn = {
         id: 'actor-fn',
         testUserPermission: (u, perm) => u.id === 'player-1' && perm === 'OWNER'
     };
-    assert.equal(adapter.isUserDocumentOwner(userPlayer1, actorWithFn, null), true);
-    assert.equal(adapter.isUserDocumentOwner(userPlayer2, actorWithFn, null), false);
+    assert.equal(adapter.isUserDocumentOwner(userPlayer1, actorWithFn), true);
+    assert.equal(adapter.isUserDocumentOwner(userPlayer2, actorWithFn), false);
 
     // 3. Ownership via actor.ownership map
     const actorWithMap = {
         id: 'actor-map',
         ownership: { default: 0, 'player-1': 3, 'trusted-1': 3, 'player-2': 2 }
     };
-    assert.equal(adapter.isUserDocumentOwner(userPlayer1, actorWithMap, null), true);
-    assert.equal(adapter.isUserDocumentOwner(userTrusted, actorWithMap, null), true);
-    assert.equal(adapter.isUserDocumentOwner(userPlayer2, actorWithMap, null), false); // 2 is OBSERVER, not OWNER
+    assert.equal(adapter.isUserDocumentOwner(userPlayer1, actorWithMap), true);
+    assert.equal(adapter.isUserDocumentOwner(userTrusted, actorWithMap), true);
+    assert.equal(adapter.isUserDocumentOwner(userPlayer2, actorWithMap), false); // 2 is OBSERVER, not OWNER
 
     // 4. Ownership via tokenDoc.ownership map
     const tokenDocWithMap = {
         id: 'token-doc-map',
         ownership: { default: 0, 'player-2': 3 }
     };
-    assert.equal(adapter.isUserDocumentOwner(userPlayer2, null, tokenDocWithMap), true);
-    assert.equal(adapter.isUserDocumentOwner(userPlayer1, null, tokenDocWithMap), false);
+    assert.equal(adapter.isUserDocumentOwner(userPlayer2, tokenDocWithMap), true);
+    assert.equal(adapter.isUserDocumentOwner(userPlayer1, tokenDocWithMap), false);
 
     // 5. Ownership via actor.getUserLevel
     const actorWithLevel = {
         id: 'actor-lvl',
         getUserLevel: (u) => u.id === 'trusted-1' ? 3 : 1
     };
-    assert.equal(adapter.isUserDocumentOwner(userTrusted, actorWithLevel, null), true);
-    assert.equal(adapter.isUserDocumentOwner(userPlayer1, actorWithLevel, null), false);
+    assert.equal(adapter.isUserDocumentOwner(userTrusted, actorWithLevel), true);
+    assert.equal(adapter.isUserDocumentOwner(userPlayer1, actorWithLevel), false);
 });
 
 test('isUserInCharge enforces ownership priority (Players > Trusted Players > GM/Co-GM)', () => {
