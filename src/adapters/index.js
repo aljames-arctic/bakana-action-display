@@ -12,7 +12,9 @@ import { CombatMovementTracker } from '../combat/combat-movement-tracker.js';
  */
 class Adapter {
     constructor() {
-        this.foundry = new FoundryV12Adapter();
+        this.foundry = (typeof game !== 'undefined' && game?.release?.generation)
+            ? initializeFoundryAdapter()
+            : new FoundryV13Adapter();
         this.system = new BaseSystemAdapter('default', false, this.foundry);
         this.modules = new Map();
         this._initialized = false;

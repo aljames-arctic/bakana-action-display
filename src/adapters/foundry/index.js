@@ -11,7 +11,7 @@ export { BaseFoundryAdapter, FoundryV12Adapter, FoundryV13Adapter, USER_PERMISSI
  * @returns {FoundryV13Adapter|FoundryV12Adapter}
  */
 export function initializeFoundryAdapter() {
-    const generation = game.release.generation;
+    const generation = game?.release?.generation ?? 13;
     if (generation < 12) {
         throw new Error(`Unsupported Foundry VTT generation: v${generation}. Bakana's Action Display requires Foundry VTT v12 or newer.`);
     }

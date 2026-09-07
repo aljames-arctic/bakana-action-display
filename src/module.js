@@ -23,6 +23,9 @@ export function setExplicitlyClosedTokenId(tokenId) {
 Hooks.once('init', async () => {
     log.info("Initializing Bakana's Action Display");
 
+    // Initialize the unified adapter (Foundry, System, Module layers)
+    await adapter.init();
+
     // Register module keybindings (Shift+Space toggle)
     registerKeybindings();
 
@@ -42,9 +45,6 @@ Hooks.once('init', async () => {
             return originalRightClick.call(this, event);
         };
     }
-
-    // Initialize the unified adapter (Foundry, System, Module layers)
-    await adapter.init();
 
     // Initialize the core coordinator
     actionDisplay.init();

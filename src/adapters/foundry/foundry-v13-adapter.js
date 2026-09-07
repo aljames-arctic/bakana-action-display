@@ -9,35 +9,35 @@ export class FoundryV13Adapter extends FoundryV12Adapter {
      * The active ContextMenu constructor in v13+.
      */
     get ContextMenu() {
-        return foundry.applications.ux.ContextMenu.implementation;
+        return foundry.applications?.ux?.ContextMenu?.implementation ?? foundry.applications?.ux?.ContextMenu;
     }
 
     /**
      * The active KeyboardManager constructor in v13+.
      */
     get KeyboardManager() {
-        return foundry.helpers.interaction.KeyboardManager;
+        return foundry.helpers?.interaction?.KeyboardManager?.implementation ?? foundry.helpers?.interaction?.KeyboardManager;
     }
 
     /**
      * The active Token placeable constructor in v13+.
      */
     get Token() {
-        return foundry.canvas.placeables.Token;
+        return foundry.canvas?.placeables?.Token?.implementation ?? foundry.canvas?.placeables?.Token;
     }
 
     /**
      * The active FilePicker constructor / implementation in v13+.
      */
     get FilePicker() {
-        return foundry.applications.apps.FilePicker.implementation;
+        return foundry.applications?.apps?.FilePicker?.implementation ?? foundry.applications?.apps?.FilePicker;
     }
 
     /**
      * The active TextEditor constructor / implementation in v13+.
      */
     get TextEditor() {
-        return foundry.applications.ux.TextEditor.implementation;
+        return foundry.applications?.ux?.TextEditor?.implementation ?? foundry.applications?.ux?.TextEditor;
     }
 
     /**
