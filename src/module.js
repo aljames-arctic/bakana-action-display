@@ -26,9 +26,6 @@ Hooks.once('init', async () => {
     // Register module keybindings (Shift+Space toggle)
     registerKeybindings();
 
-    // Wrap TokenHUD prototype methods (clear, close)
-    wrapTokenHUD();
-
     // Wrap Token.prototype._onClickRight during init so it is bound correctly by all tokens' InteractionManagers
     const TokenClass = adapter.foundry.Token;
     const originalRightClick = TokenClass?.prototype?._onClickRight;
@@ -168,6 +165,11 @@ Hooks.once('ready', async () => {
     log.info("Ready");
 
     // Wrap TokenHUD prototype methods on ready if not already wrapped
+    wrapTokenHUD();
+});
+
+// Canvas ready hook to wrap TokenHUD if canvas was initialized or scene changed
+Hooks.on('canvasReady', () => {
     wrapTokenHUD();
 });
 
