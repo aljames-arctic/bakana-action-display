@@ -40,11 +40,16 @@ test('initializeFoundryAdapter returns FoundryV12Adapter on v12, FoundryV13Adapt
     assert.equal(v14.generation, 14);
 });
 
-test('BaseFoundryAdapter, FoundryV13Adapter, and FoundryV14Adapter getCombatantByToken and getCombatantsByToken contracts', () => {
+test('FoundryV12Adapter, FoundryV13Adapter, and FoundryV14Adapter getCombatantByToken and getCombatantsByToken contracts', () => {
     const mockCombatant = { id: 'c1', tokenId: 't1' };
 
-    // BaseFoundryAdapter (v12 baseline) uses Combat#getCombatantByToken
-    const v12 = new BaseFoundryAdapter();
+    // BaseFoundryAdapter defines abstract contracts
+    const base = new BaseFoundryAdapter();
+    assert.throws(() => base.fromUuidSync('item-1'), /BaseFoundryAdapter\.fromUuidSync must be implemented/);
+    assert.throws(() => base.getCombatantsByToken({}, 't1'), /BaseFoundryAdapter\.getCombatantsByToken must be implemented/);
+
+    // FoundryV12Adapter (v12 baseline) uses Combat#getCombatantByToken
+    const v12 = new FoundryV12Adapter();
     const mockCombatV12 = {
         getCombatantByToken: (id) => id === 't1' ? mockCombatant : null
     };
@@ -75,9 +80,9 @@ test('BaseFoundryAdapter, FoundryV13Adapter, and FoundryV14Adapter getCombatantB
     assert.equal(v12.getTokenFromCombatant({ actor: { getActiveTokens: () => [mockToken] } }), mockToken);
 });
 
-test('BaseFoundryAdapter (v12), FoundryV13Adapter (v13), and FoundryV14Adapter (v14) constructor getters contract', () => {
-    // 1. BaseFoundryAdapter (v12 baseline) resolves globals even when foundry.applications.ux is undefined
-    const v12 = new BaseFoundryAdapter();
+test('FoundryV12Adapter (v12), FoundryV13Adapter (v13), and FoundryV14Adapter (v14) constructor getters contract', () => {
+    // 1. FoundryV12Adapter (v12 baseline) resolves globals even when foundry.applications.ux is undefined
+    const v12 = new FoundryV12Adapter();
     assert.equal(v12.ContextMenu, globalThis.ContextMenu);
     assert.equal(v12.KeyboardManager, globalThis.KeyboardManager);
     assert.equal(v12.Token, globalThis.Token);

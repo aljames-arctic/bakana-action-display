@@ -93,12 +93,7 @@ export class BaseFoundryAdapter {
      * @returns {Document|null}
      */
     fromUuidSync(uuid, options = {}) {
-        if (!uuid) return null;
-        try {
-            return fromUuidSync(uuid, options) ?? null;
-        } catch (_) {
-            return null;
-        }
+        throw new Error('BaseFoundryAdapter.fromUuidSync must be implemented by version subclass');
     }
 
     /**
@@ -108,12 +103,7 @@ export class BaseFoundryAdapter {
      * @returns {Promise<Document|null>}
      */
     async fromUuid(uuid, options = {}) {
-        if (!uuid) return null;
-        try {
-            return (await fromUuid(uuid, options)) ?? null;
-        } catch (_) {
-            return null;
-        }
+        throw new Error('BaseFoundryAdapter.fromUuid must be implemented by version subclass');
     }
 
     /**
@@ -203,12 +193,7 @@ export class BaseFoundryAdapter {
      * @returns {Combatant[]}
      */
     getCombatantsByToken(combat, token) {
-        if (!combat) return [];
-        const tokenId = token?.id ?? token?.document?.id ?? token;
-        if (!tokenId) return [];
-
-        const single = combat.getCombatantByToken?.(tokenId);
-        return single ? [single] : [];
+        throw new Error('BaseFoundryAdapter.getCombatantsByToken must be implemented by version subclass');
     }
 
     /**

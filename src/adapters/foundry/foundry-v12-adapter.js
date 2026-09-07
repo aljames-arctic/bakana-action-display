@@ -49,14 +49,4 @@ export class FoundryV12Adapter extends BaseFoundryAdapter {
         const single = combat.getCombatantByToken(tokenId);
         return single ? [single] : [];
     }
-
-    /**
-     * Retrieve the primary combatant associated with a token in combat for baseline v12/v13.
-     * @param {Combat} combat Target combat encounter
-     * @param {string|TokenDocument|Token} token Token ID or Document or Placeable
-     * @returns {Combatant|null}
-     */
-    getCombatantByToken(combat, token) {
-        return this.getCombatantsByToken(combat, token)[0] ?? null;
-    }
 }
