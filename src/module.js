@@ -54,12 +54,12 @@ Hooks.once('init', async () => {
 
     // Preload Handlebars templates
     await adapter.loadTemplates([
-        'modules/bakanas-action-display/templates/action-display.html',
-        'modules/bakanas-action-display/templates/hud-config.html',
-        'modules/bakanas-action-display/templates/economy-colors-config.html',
-        'modules/bakanas-action-display/templates/categorization-config.html',
-        'modules/bakanas-action-display/templates/module-integrations-config.html',
-        'modules/bakanas-action-display/templates/dnd5e-autoban-config.html'
+        `modules/${MODULE_ID}/templates/action-display.html`,
+        `modules/${MODULE_ID}/templates/hud-config.html`,
+        `modules/${MODULE_ID}/templates/economy-colors-config.html`,
+        `modules/${MODULE_ID}/templates/categorization-config.html`,
+        `modules/${MODULE_ID}/templates/module-integrations-config.html`,
+        `modules/${MODULE_ID}/templates/dnd5e-autoban-config.html`
     ]);
 });
 
