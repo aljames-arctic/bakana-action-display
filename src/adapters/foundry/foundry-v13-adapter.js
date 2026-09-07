@@ -47,12 +47,7 @@ export class FoundryV13Adapter extends FoundryV12Adapter {
      * @returns {Document|null}
      */
     fromUuidSync(uuid, options = {}) {
-        if (!uuid) return null;
-        try {
-            return foundry.utils.fromUuidSync(uuid, options) ?? null;
-        } catch (_) {
-            return null;
-        }
+        return foundry.utils.fromUuidSync(uuid, options);
     }
 
     /**
@@ -62,12 +57,7 @@ export class FoundryV13Adapter extends FoundryV12Adapter {
      * @returns {Promise<Document|null>}
      */
     async fromUuid(uuid, options = {}) {
-        if (!uuid) return null;
-        try {
-            return (await foundry.utils.fromUuid(uuid, options)) ?? null;
-        } catch (_) {
-            return null;
-        }
+        return foundry.utils.fromUuid(uuid, options);
     }
 
     /**
