@@ -78,7 +78,7 @@ export class FoundryV13Adapter extends FoundryV12Adapter {
      */
     getCombatantsByToken(combat, token) {
         if (!combat || !token) return [];
-        return combat.getCombatantsByToken(token) ?? [];
+        return combat.getCombatantsByToken(token);
     }
 
     /**
