@@ -90,13 +90,13 @@ function wrapTokenHUD() {
  * Shared helper to close the HUD if it is attached, if persistence is disabled,
  * or if a close was explicitly triggered by right-clicking the token.
  * If closingToken is provided, only closes if it matches the current activeApp token.
- * @param {Token|string|null} [closingToken=null]
+ * @param {Token|null} [closingToken=null]
  */
 function handleHUDClose(closingToken = null) {
     const currentApp = actionDisplay.activeApp;
     if (currentApp) {
         if (closingToken) {
-            const matchesActiveToken = currentApp.token === closingToken || currentApp.token?.id === (closingToken?.id ?? closingToken);
+            const matchesActiveToken = currentApp.token === closingToken || (closingToken.id && currentApp.token?.id === closingToken.id);
             if (!matchesActiveToken) {
                 return;
             }
@@ -252,7 +252,7 @@ Hooks.on('closeTokenHUD', (tokenHUD, html) => {
     // Close activeApp if the closing event specifically targeted activeApp's token,
     // or if TokenHUD has closed completely with no active object.
     if (closingToken) {
-        const matchesActiveToken = currentApp.token === closingToken || currentApp.token?.id === (closingToken?.id ?? closingToken);
+        const matchesActiveToken = currentApp.token === closingToken || (closingToken.id && currentApp.token?.id === closingToken.id);
         if (matchesActiveToken) {
             handleHUDClose(closingToken);
         }

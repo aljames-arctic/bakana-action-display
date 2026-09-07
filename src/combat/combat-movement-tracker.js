@@ -159,7 +159,7 @@ export class CombatMovementTracker {
 
     /**
      * Retrieve the distance the token has moved in the current combat turn.
-     * @param {Token|TokenDocument|string|null} token Target token, TokenDocument, or tokenId
+     * @param {Token|null} [token=null] Target token placeable
      * @param {Actor|null} [actor=null] Associated actor document
      * @returns {{ inCombat: boolean, distance: number, units: string }}
      */
@@ -172,8 +172,10 @@ export class CombatMovementTracker {
             return { inCombat: false, distance: 0, units };
         }
 
-        const tokenId = token?.id ?? token?.document?.id ?? token;
-        const tokenDoc = token?.document ?? (token?.id ? token : (canvas.tokens.get(tokenId)?.document ?? null));
+        const tokenId = token?.id ?? null;
+        if (!tokenId) {
+            return { inCombat: false, distance: 0, units };
+        }
 
         const isCombatant = Boolean(
             combat.combatants?.some(c => c.tokenId === tokenId || (actor && c.actorId === actor.id))

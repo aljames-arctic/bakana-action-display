@@ -206,7 +206,7 @@ export class BaseFoundryAdapter {
     /**
      * Retrieve all combatants associated with a token in combat.
      * @param {Combat} combat Target combat encounter
-     * @param {string|TokenDocument|Token} token Token ID or Document or Placeable
+     * @param {Token} token Target Token placeable
      * @returns {Combatant[]}
      */
     getCombatantsByToken(combat, token) {
@@ -216,7 +216,7 @@ export class BaseFoundryAdapter {
     /**
      * Retrieve the primary combatant associated with a token in combat.
      * @param {Combat} combat Target combat encounter
-     * @param {string|TokenDocument|Token} token Token ID or Document or Placeable
+     * @param {Token} token Target Token placeable
      * @returns {Combatant|null}
      */
     getCombatantByToken(combat, token) {

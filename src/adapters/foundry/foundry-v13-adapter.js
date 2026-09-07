@@ -73,7 +73,7 @@ export class FoundryV13Adapter extends FoundryV12Adapter {
     /**
      * Retrieve all combatants associated with a token in combat using native V13+ Combat#getCombatantsByToken.
      * @param {Combat} combat Target combat encounter
-     * @param {Token|TokenDocument} token Token Placeable or Document
+     * @param {Token} token Target Token placeable
      * @returns {Combatant[]}
      */
     getCombatantsByToken(combat, token) {
