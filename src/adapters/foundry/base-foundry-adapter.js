@@ -23,7 +23,7 @@ export class BaseFoundryAdapter {
      * @returns {number}
      */
     get generation() {
-        return Number(game.release?.generation ?? 12);
+        return game.release.generation;
     }
 
     /**
