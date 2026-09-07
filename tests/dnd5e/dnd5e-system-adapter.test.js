@@ -1,3 +1,4 @@
+import { FoundryV12Adapter } from "../../src/adapters/foundry/foundry-v12-adapter.js";
 import '../setup.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -5,7 +6,7 @@ import { BaseDnd5eSystemAdapter, Dnd5eSystemAdapter_5_3, Dnd5eSystemAdapter } fr
 import { categorizeActions } from '../../src/categorization/categorization-manager.js';
 
 test('Dnd5eSystemAdapter initialization and labels', () => {
-    const adapter = new Dnd5eSystemAdapter();
+    const adapter = new Dnd5eSystemAdapter(new FoundryV12Adapter());
     assert.equal(adapter.systemId, 'dnd5e');
     assert.equal(adapter.getItemTypeIcon('weapon'), 'fas fa-sword');
     assert.equal(adapter.getItemTypeIcon('equipment'), 'fas fa-shield');
@@ -42,7 +43,7 @@ test('Dnd5eSystemAdapter initialization and labels', () => {
 });
 
 test('Dnd5eSystemAdapter shouldExtractItem filtering', () => {
-    const adapter = new Dnd5eSystemAdapter();
+    const adapter = new Dnd5eSystemAdapter(new FoundryV12Adapter());
     assert.equal(adapter.shouldExtractItem({ type: 'weapon' }), true);
     assert.equal(adapter.shouldExtractItem({ type: 'spell' }), true);
     assert.equal(adapter.shouldExtractItem({ type: 'feat' }), true);
@@ -50,7 +51,7 @@ test('Dnd5eSystemAdapter shouldExtractItem filtering', () => {
 });
 
 test('Dnd5eSystemAdapter spell slot calculation', () => {
-    const adapter = new Dnd5eSystemAdapter();
+    const adapter = new Dnd5eSystemAdapter(new FoundryV12Adapter());
 
     const actor = {
         system: {
@@ -97,7 +98,7 @@ test('Dnd5eSystemAdapter spell slot calculation', () => {
 });
 
 test('Dnd5eSystemAdapter modifyActions full transformation pipeline', async () => {
-    const adapter = new Dnd5eSystemAdapter();
+    const adapter = new Dnd5eSystemAdapter(new FoundryV12Adapter());
 
     const weaponItem = {
         id: 'weapon-1',
@@ -199,7 +200,7 @@ test('Dnd5eSystemAdapter modifyActions full transformation pipeline', async () =
 });
 
 test('Dnd5eSystemAdapter extractCheckActions generates core saves, core checks, skills, and tool proficiency checks', async () => {
-    const adapter = new Dnd5eSystemAdapter();
+    const adapter = new Dnd5eSystemAdapter(new FoundryV12Adapter());
     let rolledTool = null;
     const mockActor = {
         system: {
@@ -256,7 +257,7 @@ test('Dnd5eSystemAdapter extractCheckActions generates core saves, core checks, 
 });
 
 test('Dnd5eSystemAdapter resolves clean names for vehicle, jeweler, leatherworker, and Compendium UUIDs', () => {
-    const adapter = new Dnd5eSystemAdapter();
+    const adapter = new Dnd5eSystemAdapter(new FoundryV12Adapter());
 
     // Setup globalThis.dnd5e with Trait.keyLabel mock
     globalThis.dnd5e = {
@@ -320,7 +321,7 @@ test('Dnd5eSystemAdapter resolves clean names for vehicle, jeweler, leatherworke
 });
 
 test('Dnd5eSystemAdapter modifyContext triggers categorized checks layout on Page 2', async () => {
-    const adapter = new Dnd5eSystemAdapter();
+    const adapter = new Dnd5eSystemAdapter(new FoundryV12Adapter());
     const items = [
         { id: 'b', name: 'B-Skill', type: 'skill', right: [{ path: 'all', label: 'dex' }] },
         { id: 'a', name: 'A-Core', type: 'ability', right: [{ path: 'all', label: 'str' }] }
@@ -340,7 +341,7 @@ test('Dnd5eSystemAdapter modifyContext triggers categorized checks layout on Pag
 });
 
 test('Dnd5eSystemAdapter favorites integration (hasFavorites, isFavorite, setFavorite)', async () => {
-    const adapter = new Dnd5eSystemAdapter();
+    const adapter = new Dnd5eSystemAdapter(new FoundryV12Adapter());
     assert.equal(adapter.hasFavorites(), true);
 
     // 1. Direct system.favorite
@@ -387,7 +388,7 @@ test('Dnd5eSystemAdapter favorites integration (hasFavorites, isFavorite, setFav
 });
 
 test('Dnd5eSystemAdapter default categorization presets categorize ability and skill actions', () => {
-    const adapter = new Dnd5eSystemAdapter();
+    const adapter = new Dnd5eSystemAdapter(new FoundryV12Adapter());
     const actor = {
         getFlag: () => null,
         system: {
@@ -432,7 +433,7 @@ test('Dnd5eSystemAdapter default categorization presets categorize ability and s
 });
 
 test('Dnd5eSystemAdapter onTabRightClick toggles actor flags', async () => {
-    const adapter = new Dnd5eSystemAdapter();
+    const adapter = new Dnd5eSystemAdapter(new FoundryV12Adapter());
     const flags = {};
     const mockActor = {
         isOwner: true,
@@ -515,7 +516,7 @@ test('Dnd5eSystemAdapter onTabRightClick toggles actor flags', async () => {
 });
 
 test('Dnd5eSystemAdapter modifyActions showAll behavior', async () => {
-    const adapter = new Dnd5eSystemAdapter();
+    const adapter = new Dnd5eSystemAdapter(new FoundryV12Adapter());
 
     const preparedSpell = {
         id: 'spell-prep',
@@ -635,7 +636,7 @@ test('Dnd5eSystemAdapter modifyActions showAll behavior', async () => {
 });
 
 test('Dnd5eSystemAdapter modifyContext orange indicators for All Items and Spells tabs', () => {
-    const adapter = new Dnd5eSystemAdapter();
+    const adapter = new Dnd5eSystemAdapter(new FoundryV12Adapter());
 
     const makeContext = () => ({
         itemTypes: [
@@ -704,7 +705,7 @@ test('Dnd5eSystemAdapter modifyContext orange indicators for All Items and Spell
 });
 
 test('Dnd5eSystemAdapter extracts spell component tabs for NPC Spellcasting feats with linked cast activities', async () => {
-    const adapter = new Dnd5eSystemAdapter();
+    const adapter = new Dnd5eSystemAdapter(new FoundryV12Adapter());
 
     const fireballSpell = {
         id: 'spell-fireball',
@@ -762,7 +763,7 @@ test('Dnd5eSystemAdapter extracts spell component tabs for NPC Spellcasting feat
 });
 
 test('Dnd5eSystemAdapter resolves cached helper spells for NPC Spellcasting feats and extracts components', async () => {
-    const adapter = new Dnd5eSystemAdapter();
+    const adapter = new Dnd5eSystemAdapter(new FoundryV12Adapter());
 
     const cachedDetectMagic = {
         id: 'spell-detect-magic',
@@ -819,7 +820,7 @@ test('Dnd5eSystemAdapter resolves cached helper spells for NPC Spellcasting feat
 });
 
 test('Dnd5eSystemAdapter modifyActions evaluates spell preparation using SpellData#method and SpellData#prepared strictly', async () => {
-    const adapter = new Dnd5eSystemAdapter();
+    const adapter = new Dnd5eSystemAdapter(new FoundryV12Adapter());
 
     let preparationAccessed = false;
     const modernPreparedSpell = {
@@ -913,7 +914,7 @@ test('Dnd5eSystemAdapter modifyActions evaluates spell preparation using SpellDa
 });
 
 test('Dnd5eSystemAdapter modifyActions handles consumable items with quantity > 1 and itemUses without error', async () => {
-    const adapter = new Dnd5eSystemAdapter();
+    const adapter = new Dnd5eSystemAdapter(new FoundryV12Adapter());
     const potion = {
         id: 'potion-healing',
         name: 'Potion of Healing',
@@ -954,7 +955,7 @@ test('Dnd5eSystemAdapter modifyActions handles consumable items with quantity > 
 });
 
 test('Dnd5eSystemAdapter calculates limited uses correctly for monster/innate spells and recharge abilities', async () => {
-    const adapter = new Dnd5eSystemAdapter();
+    const adapter = new Dnd5eSystemAdapter(new FoundryV12Adapter());
 
     // 1. Yeenoghu's Invisibility: 3/day (innate, 1 use spent)
     const invisibility = {
@@ -1075,7 +1076,7 @@ test('Dnd5eSystemAdapter calculates limited uses correctly for monster/innate sp
 });
 
 test('Dnd5eSystemAdapter extractInfoActions generates a valid token info action for Page 3', () => {
-    const adapter = new Dnd5eSystemAdapter();
+    const adapter = new Dnd5eSystemAdapter(new FoundryV12Adapter());
     const actor = {
         id: 'actor-123',
         name: 'Red Dragon',
@@ -1095,7 +1096,7 @@ test('Dnd5eSystemAdapter extractInfoActions generates a valid token info action 
 });
 
 test('Dnd5eSystemAdapter getTokenInfo extracts complete token statistics and details for Page 3 showcase', async () => {
-    const adapter = new Dnd5eSystemAdapter();
+    const adapter = new Dnd5eSystemAdapter(new FoundryV12Adapter());
 
     // 1. Monster / NPC Token with complex defenses, movement, and biography
     const adultRedDragon = {
@@ -1224,7 +1225,7 @@ test('Dnd5eSystemAdapter getTokenInfo extracts complete token statistics and det
 });
 
 test('Dnd5eSystemAdapter getTokenInfo handles Player Character actor schema and fallback defaults', async () => {
-    const adapter = new Dnd5eSystemAdapter();
+    const adapter = new Dnd5eSystemAdapter(new FoundryV12Adapter());
 
     const pcActor = {
         id: 'hero-1',
@@ -1282,7 +1283,7 @@ test('Dnd5eSystemAdapter getTokenInfo handles Player Character actor schema and 
 });
 
 test('Dnd5eSystemAdapter modifyContext triggers tokenInfo layout on Page 3', async () => {
-    const adapter = new Dnd5eSystemAdapter();
+    const adapter = new Dnd5eSystemAdapter(new FoundryV12Adapter());
     const actor = {
         id: 'test-pc',
         name: 'Elven Ranger',
@@ -1329,7 +1330,7 @@ test('Dnd5eSystemAdapter modifyContext triggers tokenInfo layout on Page 3', asy
 });
 
 test('Dnd5eSystemAdapter getTokenInfo collapses languages to All when all is selected', async () => {
-    const adapter = new Dnd5eSystemAdapter();
+    const adapter = new Dnd5eSystemAdapter(new FoundryV12Adapter());
 
     // 1. Array containing 'all' alongside specific languages
     const actorWithAll = {
@@ -1374,7 +1375,7 @@ test('Dnd5eSystemAdapter getTokenInfo collapses languages to All when all is sel
 test('Dnd5eSystemAdapter getTokenInfo extracts senses from modern D&D5e 5.3+ senses.ranges and legacy senses schema', async () => {
     // 1. Modern D&D5e 5.3+ schema with senses.ranges (with throwing legacy getters to ensure zero access)
     game.system = { id: 'dnd5e', version: '5.3.0' };
-    const modernAdapter = new Dnd5eSystemAdapter();
+    const modernAdapter = new Dnd5eSystemAdapter(new FoundryV12Adapter());
     assert.ok(modernAdapter instanceof Dnd5eSystemAdapter_5_3);
 
     const modernActor = {
@@ -1414,7 +1415,7 @@ test('Dnd5eSystemAdapter getTokenInfo extracts senses from modern D&D5e 5.3+ sen
 
     // 2. Legacy pre-5.3 schema with direct top-level senses
     game.system = { id: 'dnd5e', version: '4.3.0' };
-    const legacyAdapter = new Dnd5eSystemAdapter();
+    const legacyAdapter = new Dnd5eSystemAdapter(new FoundryV12Adapter());
     assert.ok(legacyAdapter instanceof BaseDnd5eSystemAdapter);
 
     const legacyActor = {
@@ -1448,7 +1449,7 @@ test('Dnd5eSystemAdapter getTokenInfo extracts senses from modern D&D5e 5.3+ sen
 });
 
 test('Dnd5eSystemAdapter getTokenInfo extracts Special (; separated) and Ranged Communication correctly', async () => {
-    const adapter = new Dnd5eSystemAdapter();
+    const adapter = new Dnd5eSystemAdapter(new FoundryV12Adapter());
 
     // 1. Semicolon-separated special languages and communication
     const actorSpecial = {
@@ -1527,7 +1528,7 @@ test('Dnd5eSystemAdapter getTokenInfo extracts Special (; separated) and Ranged 
 });
 
 test('Dnd5eSystemAdapter and Dnd5eSystemTabFilterManager do not match spell components on non-spell items (weapons, feats, attacks)', async () => {
-    const adapter = new Dnd5eSystemAdapter();
+    const adapter = new Dnd5eSystemAdapter(new FoundryV12Adapter());
     const filterManager = adapter.filterManager;
 
     const flail = {
@@ -1705,7 +1706,7 @@ test('Dnd5eSystemAdapter and Dnd5eSystemTabFilterManager do not match spell comp
 });
 
 test('Dnd5eSystemContextModifier sorts components sub-tabs strictly in order: vocal -> somatic -> material', () => {
-    const adapter = new Dnd5eSystemAdapter();
+    const adapter = new Dnd5eSystemAdapter(new FoundryV12Adapter());
     const orderVocal = adapter.getActionSubTabSortOrder('components', 'vocal');
     const orderSomatic = adapter.getActionSubTabSortOrder('components', 'somatic');
     const orderMaterial = adapter.getActionSubTabSortOrder('components', 'material');
@@ -1715,7 +1716,7 @@ test('Dnd5eSystemContextModifier sorts components sub-tabs strictly in order: vo
 });
 
 test('Dnd5eSystemTabFilterManager recognizes material components across standard properties and components', () => {
-    const adapter = new Dnd5eSystemAdapter();
+    const adapter = new Dnd5eSystemAdapter(new FoundryV12Adapter());
     const filterManager = adapter.filterManager;
 
     // 1. properties Set with 'material'
@@ -1736,7 +1737,7 @@ test('Dnd5eSystemTabFilterManager recognizes material components across standard
 });
 
 test('Dnd5eSystemAdapter recordManualTabToggle handles vocal, somatic, and material toggles', () => {
-    const adapter = new Dnd5eSystemAdapter();
+    const adapter = new Dnd5eSystemAdapter(new FoundryV12Adapter());
     let flagWritten = null;
     const actor = {
         isOwner: true,
@@ -1761,7 +1762,7 @@ test('Dnd5eSystemAdapter recordManualTabToggle handles vocal, somatic, and mater
 });
 
 test('Dnd5eSystemAdapter and ActionDisplayApp populate all canonical spell components (vocal, somatic, material) under components tab', async () => {
-    const adapter = new Dnd5eSystemAdapter();
+    const adapter = new Dnd5eSystemAdapter(new FoundryV12Adapter());
     assert.deepEqual(adapter.getExclusionSubTabs('components'), ['vocal', 'somatic', 'material']);
 
     const actor = {
@@ -1849,7 +1850,7 @@ test('Dnd5eSystemAdapter and ActionDisplayApp populate all canonical spell compo
 });
 
 test('Dnd5eSystemAdapter getInspiration and toggleInspiration contracts', async () => {
-    const adapter = new Dnd5eSystemAdapter();
+    const adapter = new Dnd5eSystemAdapter(new FoundryV12Adapter());
 
     // 1. Character actor with inspiration: true
     const pcInspired = {
@@ -1905,7 +1906,7 @@ test('Dnd5eSystemAdapter getInspiration and toggleInspiration contracts', async 
 });
 
 test('Dnd5eSystemAdapter getTokenInfo extracts inspiration and showInspiration properties', async () => {
-    const adapter = new Dnd5eSystemAdapter();
+    const adapter = new Dnd5eSystemAdapter(new FoundryV12Adapter());
 
     const pcActor = {
         id: 'hero-insp',

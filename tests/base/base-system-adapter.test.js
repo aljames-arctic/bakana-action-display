@@ -2,11 +2,12 @@ import '../setup.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { BaseSystemAdapter } from '../../src/adapters/system/base-system-adapter.js';
+import { FoundryV12Adapter } from '../../src/adapters/foundry/foundry-v12-adapter.js';
 import { TabRef } from '../../src/ui/tab-ref.js';
 import { MODULE_ID } from '../../src/constants.js';
 
 test('BaseSystemAdapter initialization and metadata', () => {
-    const adapter = new BaseSystemAdapter('test-system');
+    const adapter = new BaseSystemAdapter('test-system', false, new FoundryV12Adapter());
     assert.equal(adapter.systemId, 'test-system');
     assert.equal(adapter.shouldExtractItem({ type: 'any' }), true);
     const defaultCategories = adapter.getDefaultCategories();
@@ -20,14 +21,14 @@ test('BaseSystemAdapter initialization and metadata', () => {
 });
 
 test('BaseSystemAdapter favorites default NOP and values', async () => {
-    const adapter = new BaseSystemAdapter('test-system');
+    const adapter = new BaseSystemAdapter('test-system', false, new FoundryV12Adapter());
     assert.equal(adapter.hasFavorites(), false);
     assert.equal(adapter.isFavorite({}, {}), false);
     assert.equal(await adapter.setFavorite({}, {}, true), null);
 });
 
 test('BaseSystemAdapter label and icon getters', () => {
-    const adapter = new BaseSystemAdapter('test-system');
+    const adapter = new BaseSystemAdapter('test-system', false, new FoundryV12Adapter());
 
     assert.equal(adapter.getItemTypeIcon('all'), 'fas fa-border-all');
     assert.equal(adapter.getItemTypeIcon('unknown'), 'fas fa-question');
@@ -42,7 +43,7 @@ test('BaseSystemAdapter label and icon getters', () => {
 });
 
 test('BaseSystemAdapter sort order lookups', () => {
-    const adapter = new BaseSystemAdapter('test-system');
+    const adapter = new BaseSystemAdapter('test-system', false, new FoundryV12Adapter());
 
     assert.equal(adapter.getItemTypeSortOrder('all'), 0);
     assert.equal(adapter.getItemTypeSortOrder('weapon'), 1);
@@ -58,7 +59,7 @@ test('BaseSystemAdapter sort order lookups', () => {
 });
 
 test('BaseSystemAdapter matchesEconomyTabs matching logic', () => {
-    const adapter = new BaseSystemAdapter('test-system');
+    const adapter = new BaseSystemAdapter('test-system', false, new FoundryV12Adapter());
 
     const action = {
         right: [TabRef.from('economy', 'action')],
@@ -81,7 +82,7 @@ test('BaseSystemAdapter matchesEconomyTabs matching logic', () => {
 });
 
 test('BaseSystemAdapter resource depletion check', () => {
-    const adapter = new BaseSystemAdapter('test-system');
+    const adapter = new BaseSystemAdapter('test-system', false, new FoundryV12Adapter());
 
     assert.equal(adapter._isResourceDepleted({ uses: { available: 0 } }), true);
     assert.equal(adapter._isResourceDepleted({ uses: { available: 1 } }), false);
@@ -89,7 +90,7 @@ test('BaseSystemAdapter resource depletion check', () => {
 });
 
 test('BaseSystemAdapter modifyActions filters depleted actions when showDepleted is false (default) and includes when true', async () => {
-    const adapter = new BaseSystemAdapter('test-system');
+    const adapter = new BaseSystemAdapter('test-system', false, new FoundryV12Adapter());
     const actions = [
         { id: '1', name: 'Infinite Cantrip', uses: null, originalItem: { type: 'spell' } },
         { id: '2', name: 'Depleted Spell', uses: { available: 0, max: 1 }, originalItem: { type: 'spell' } },
@@ -113,7 +114,7 @@ test('BaseSystemAdapter modifyActions filters depleted actions when showDepleted
 });
 
 test('BaseSystemAdapter filterSubactions filtering and sorting', () => {
-    const adapter = new BaseSystemAdapter('test-system');
+    const adapter = new BaseSystemAdapter('test-system', false, new FoundryV12Adapter());
 
     const subactions = [
         { id: 'sub-2', name: 'Second Strike', activationType: 'action', sort: 2, right: [TabRef.from('economy', 'action')] },
@@ -131,7 +132,7 @@ test('BaseSystemAdapter filterSubactions filtering and sorting', () => {
 import { HUDTabColumn } from '../../src/ui/hud-tab-column.js';
 
 test('BaseSystemAdapter default active sub-types and HUDTabColumn initialization', () => {
-    const adapter = new BaseSystemAdapter('test-system');
+    const adapter = new BaseSystemAdapter('test-system', false, new FoundryV12Adapter());
     assert.deepEqual(adapter.getDefaultActiveLeftSubTypes(), []);
     assert.deepEqual(adapter.getDefaultActiveSubTypes(), []);
 
@@ -154,7 +155,7 @@ test('BaseSystemAdapter default active sub-types and HUDTabColumn initialization
 });
 
 test('BaseSystemAdapter formatFlatLayout template', () => {
-    const adapter = new BaseSystemAdapter('test-system');
+    const adapter = new BaseSystemAdapter('test-system', false, new FoundryV12Adapter());
     const items = [
         { id: 'b', name: 'B-Skill' },
         { id: 'a', name: 'A-Core' },
@@ -167,7 +168,7 @@ test('BaseSystemAdapter formatFlatLayout template', () => {
 });
 
 test('BaseSystemAdapter getPageConfig defaults to flat layout for all pages', async () => {
-    const adapter = new BaseSystemAdapter('test-system');
+    const adapter = new BaseSystemAdapter('test-system', false, new FoundryV12Adapter());
     
     // Default is flat for all pages in BaseSystemAdapter
     assert.deepEqual(adapter.getPageConfig(1), { page: 1, defaultLayout: 'flat', categories: null });
@@ -192,7 +193,7 @@ test('BaseSystemAdapter getPageConfig defaults to flat layout for all pages', as
 
 test('FantasySystemAdapter getPageConfig defines Page 1 flat, Page 2 categorized, and Page 3 tokenInfo', async () => {
     const { FantasySystemAdapter } = await import('../../src/adapters/system/genre/fantasy-system-adapter.js');
-    const adapter = new FantasySystemAdapter('dnd5e');
+    const adapter = new FantasySystemAdapter('dnd5e', false, new FoundryV12Adapter());
 
     assert.deepEqual(adapter.getPageConfig(1), { page: 1, defaultLayout: 'flat', categories: null });
     assert.deepEqual(adapter.getPageConfig(2), { page: 2, defaultLayout: 'categorized', categories: null });
@@ -305,7 +306,7 @@ test('ActionDisplayApp _onRollAction preserves dropdown on regular items when co
 });
 
 test('BaseSystemAdapter getInspiration and toggleInspiration return legacy NOP contracts', async () => {
-    const adapter = new BaseSystemAdapter('test-system');
+    const adapter = new BaseSystemAdapter('test-system', false, new FoundryV12Adapter());
     assert.deepEqual(adapter.getInspiration({}), { supported: false, value: false });
     assert.equal(await adapter.toggleInspiration({}, true), false);
 });

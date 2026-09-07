@@ -1,10 +1,11 @@
+import { FoundryV12Adapter } from "../../src/adapters/foundry/foundry-v12-adapter.js";
 import '../setup.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { BasePf1SystemAdapter, Pf1SystemAdapter_11_0, Pf1SystemAdapter } from '../../src/adapters/system/pf1-system-adapter.js';
 
 test('Pf1SystemAdapter initialization and extractable item types', () => {
-    const adapter = new Pf1SystemAdapter();
+    const adapter = new Pf1SystemAdapter(new FoundryV12Adapter());
     assert.equal(adapter.systemId, 'pf1');
     assert.equal(adapter.shouldExtractItem({ type: 'spell' }), true);
     assert.equal(adapter.shouldExtractItem({ type: 'attack' }), true);
@@ -24,7 +25,7 @@ test('Pf1SystemAdapter initialization and extractable item types', () => {
 });
 
 test('Pf1SystemAdapter label lookups and spell sub-tab labels', () => {
-    const adapter = new Pf1SystemAdapter();
+    const adapter = new Pf1SystemAdapter(new FoundryV12Adapter());
 
     assert.equal(adapter.getItemTypeLabel('weapon'), 'PF1.InventoryWeapons');
     assert.equal(adapter.getItemTypeLabel('equipment'), 'PF1.InventoryEquipment');
@@ -41,7 +42,7 @@ test('Pf1SystemAdapter label lookups and spell sub-tab labels', () => {
 });
 
 test('Pf1SystemAdapter sort orders', () => {
-    const adapter = new Pf1SystemAdapter();
+    const adapter = new Pf1SystemAdapter(new FoundryV12Adapter());
 
     assert.equal(adapter.getItemTypeSortOrder('savingThrow'), 1);
     assert.equal(adapter.getItemTypeSortOrder('abilityCheck'), 2);
@@ -54,7 +55,7 @@ test('Pf1SystemAdapter sort orders', () => {
 });
 
 test('Pf1SystemAdapter modifyActions full transformation pipeline', async () => {
-    const adapter = new Pf1SystemAdapter();
+    const adapter = new Pf1SystemAdapter(new FoundryV12Adapter());
 
     const spellItem = {
         id: 'spell-1',
@@ -120,7 +121,7 @@ test('Pf1SystemAdapter modifyActions full transformation pipeline', async () => 
 });
 
 test('Pf1SystemAdapter filters unequipped items unless showUnequipped or showAll is enabled', async () => {
-    const adapter = new Pf1SystemAdapter();
+    const adapter = new Pf1SystemAdapter(new FoundryV12Adapter());
 
     const equippedWeapon = {
         id: 'wpn-1',
@@ -175,7 +176,7 @@ test('Pf1SystemAdapter filters unequipped items unless showUnequipped or showAll
 });
 
 test('Pf1SystemAdapter context menu manager provides equip/unequip options and tab right-click handling', async () => {
-    const adapter = new Pf1SystemAdapter();
+    const adapter = new Pf1SystemAdapter(new FoundryV12Adapter());
 
     let updatedEquipped = null;
     const testItem = {
@@ -252,7 +253,7 @@ test('Pf1SystemAdapter context menu manager provides equip/unequip options and t
 });
 
 test('Pf1SystemAdapter extractCheckActions generates abilities, saves, and skills for Page 2', async () => {
-    const adapter = new Pf1SystemAdapter();
+    const adapter = new Pf1SystemAdapter(new FoundryV12Adapter());
 
     let rolledSave = null;
     let rolledAbility = null;
@@ -322,7 +323,7 @@ test('Pf1SystemAdapter extractCheckActions generates abilities, saves, and skill
 
 test('Pf1SystemAdapter getTokenInfo extracts complete token statistics and details for Page 3 showcase', async () => {
     game.system = { id: 'pf1', version: '10.5.0' };
-    const adapter = new Pf1SystemAdapter();
+    const adapter = new Pf1SystemAdapter(new FoundryV12Adapter());
     assert.ok(adapter instanceof BasePf1SystemAdapter);
 
     const pf1Actor = {
@@ -422,7 +423,7 @@ test('Pf1SystemAdapter getTokenInfo extracts complete token statistics and detai
 
 test('Pf1SystemAdapter getTokenInfo supports modern PF1 v11+ traits.di, ci, dv, dr, eres with throwing legacy value getters', async () => {
     game.system = { id: 'pf1', version: '11.0.0' };
-    const adapter = new Pf1SystemAdapter();
+    const adapter = new Pf1SystemAdapter(new FoundryV12Adapter());
     assert.ok(adapter instanceof Pf1SystemAdapter_11_0);
 
     const pf1ModernActor = {
@@ -540,7 +541,7 @@ test('Pf1SystemAdapter getTokenInfo supports modern PF1 v11+ traits.di, ci, dv, 
 });
 
 test('Pf1SystemAdapter getInspiration and toggleInspiration return legacy NOP contracts', async () => {
-    const adapter = new Pf1SystemAdapter();
+    const adapter = new Pf1SystemAdapter(new FoundryV12Adapter());
     assert.deepEqual(adapter.getInspiration({}), { supported: false, value: false });
     assert.equal(await adapter.toggleInspiration({}, true), false);
 });

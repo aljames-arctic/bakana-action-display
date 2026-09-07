@@ -58,6 +58,15 @@ globalThis.FilePicker = class FilePicker {
         return { target, files: [], dirs: [] };
     }
 };
+globalThis.fromUuidSync = (uuid, options = {}) => {
+    if (options.relative?.items) {
+        return options.relative.items.find(i => i.uuid === uuid || i.id === uuid) ?? null;
+    }
+    return globalThis.foundry?.utils?.fromUuidSync?.(uuid, options) ?? null;
+};
+globalThis.fromUuid = async (uuid, options = {}) => {
+    return (await globalThis.foundry?.utils?.fromUuid?.(uuid, options)) ?? globalThis.fromUuidSync(uuid, options);
+};
 Math.clamp = Math.clamp ?? ((num, min, max) => Math.min(Math.max(num, min), max));
 globalThis.CONFIG = globalThis.CONFIG ?? {};
 globalThis.CONFIG.DND5E = globalThis.CONFIG.DND5E ?? {

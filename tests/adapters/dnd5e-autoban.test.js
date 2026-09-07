@@ -1,3 +1,4 @@
+import { FoundryV12Adapter } from "../../src/adapters/foundry/foundry-v12-adapter.js";
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import '../setup.js';
@@ -12,7 +13,7 @@ import { log } from '../../src/lib/logger.js';
 
 test('Dnd5eAutoBanConfigApp prepares context, adds/removes conditions, resets defaults, and saves config', async () => {
     game.system = { id: 'dnd5e' };
-    adapter.system = new Dnd5eSystemAdapter();
+    adapter.system = new Dnd5eSystemAdapter(new FoundryV12Adapter());
     const app = new Dnd5eAutoBanConfigApp();
 
     const context = await app._prepareContext({});
@@ -52,7 +53,7 @@ test('Dnd5eAutoBanConfigApp prepares context, adds/removes conditions, resets de
 });
 
 test('Dnd5eSystemAdapter getActorStatuses extracts statuses from actor.statuses and active effects', () => {
-    const dndAdapter = new Dnd5eSystemAdapter();
+    const dndAdapter = new Dnd5eSystemAdapter(new FoundryV12Adapter());
 
     const actor = {
         statuses: new Set(['silenced']),
@@ -71,7 +72,7 @@ test('Dnd5eSystemAdapter getActorStatuses extracts statuses from actor.statuses 
 });
 
 test('Dnd5eSystemAdapter syncActorAutoBans applies auto-bans on condition gain and removes on condition loss', () => {
-    const dndAdapter = new Dnd5eSystemAdapter();
+    const dndAdapter = new Dnd5eSystemAdapter(new FoundryV12Adapter());
     game.system = { id: 'dnd5e' };
 
     const flags = {};
@@ -126,7 +127,7 @@ test('Dnd5eSystemAdapter syncActorAutoBans applies auto-bans on condition gain a
 });
 
 test('Dnd5eSystemAdapter re-bans spell component when gaining a new condition after manual unban', () => {
-    const dndAdapter = new Dnd5eSystemAdapter();
+    const dndAdapter = new Dnd5eSystemAdapter(new FoundryV12Adapter());
     adapter.system = dndAdapter;
     game.system = { id: 'dnd5e' };
 
@@ -192,7 +193,7 @@ test('Dnd5eSystemAdapter re-bans spell component when gaining a new condition af
 
 test('HUDTabColumn preserves banned components when selecting action economy or all actions tabs', () => {
     game.system = { id: 'dnd5e' };
-    adapter.system = new Dnd5eSystemAdapter();
+    adapter.system = new Dnd5eSystemAdapter(new FoundryV12Adapter());
     const tabColumn = new HUDTabColumn({
         side: 'right',
         defaultParent: 'all'
@@ -227,7 +228,7 @@ test('HUDTabColumn preserves banned components when selecting action economy or 
 });
 
 test('Dnd5eSystemTabFilterManager filters spells matching auto-banned components', () => {
-    const dndAdapter = new Dnd5eSystemAdapter();
+    const dndAdapter = new Dnd5eSystemAdapter(new FoundryV12Adapter());
     const filterManager = dndAdapter.filterManager;
 
     const vocalSpell = {
@@ -281,7 +282,7 @@ test('Dnd5eSystemTabFilterManager filters spells matching auto-banned components
 });
 
 test('Status condition change while HUD is closed updates banned options without opening the HUD', () => {
-    const dndAdapter = new Dnd5eSystemAdapter();
+    const dndAdapter = new Dnd5eSystemAdapter(new FoundryV12Adapter());
     adapter.system = dndAdapter;
     game.system = { id: 'dnd5e' };
 
@@ -318,7 +319,7 @@ test('Status condition change while HUD is closed updates banned options without
 });
 
 test('Manual component toggles when no conditions active alternate cleanly on every click', () => {
-    const dndAdapter = new Dnd5eSystemAdapter();
+    const dndAdapter = new Dnd5eSystemAdapter(new FoundryV12Adapter());
     adapter.system = dndAdapter;
     game.system = { id: 'dnd5e' };
 
@@ -371,7 +372,7 @@ test('Manual component toggles when no conditions active alternate cleanly on ev
 });
 
 test('Manual unban while grappled unselects somatic on the very first click without reversion', () => {
-    const dndAdapter = new Dnd5eSystemAdapter();
+    const dndAdapter = new Dnd5eSystemAdapter(new FoundryV12Adapter());
     adapter.system = dndAdapter;
     game.system = { id: 'dnd5e' };
 
@@ -410,7 +411,7 @@ test('Manual unban while grappled unselects somatic on the very first click with
 });
 
 test('Dnd5eSystemAdapter getAutoBanEffectReasons extracts causing active effect names, status subcomponents, and condition labels', () => {
-    const dndAdapter = new Dnd5eSystemAdapter();
+    const dndAdapter = new Dnd5eSystemAdapter(new FoundryV12Adapter());
     game.system = { id: 'dnd5e' };
 
     const actor = {
@@ -464,7 +465,7 @@ test('Dnd5eSystemAdapter getAutoBanEffectReasons extracts causing active effect 
 });
 
 test('Dnd5eSystemAdapter formatAutoBanTooltip builds stylized HTML tooltips with enriched content-links', async () => {
-    const dndAdapter = new Dnd5eSystemAdapter();
+    const dndAdapter = new Dnd5eSystemAdapter(new FoundryV12Adapter());
 
     // 1. Sub-tab tooltip for vocal with active effect
     const vocalTooltip = await dndAdapter.formatAutoBanTooltip('vocal', [
@@ -517,7 +518,7 @@ test('Dnd5eSystemAdapter formatAutoBanTooltip builds stylized HTML tooltips with
 });
 
 test('Dnd5eSystemTabFilterManager logs current ban lists and effect causing reasons to log.debug during filtering', () => {
-    const dndAdapter = new Dnd5eSystemAdapter();
+    const dndAdapter = new Dnd5eSystemAdapter(new FoundryV12Adapter());
     const filterManager = dndAdapter.filterManager;
 
     const actor = {
@@ -591,7 +592,7 @@ test('Dnd5eSystemTabFilterManager logs current ban lists and effect causing reas
 });
 
 test('ActionDisplayApp attaches auto-ban tooltips to right-side components subtabs and parent tab', async () => {
-    const dndAdapter = new Dnd5eSystemAdapter();
+    const dndAdapter = new Dnd5eSystemAdapter(new FoundryV12Adapter());
     adapter.system = dndAdapter;
     game.system = { id: 'dnd5e' };
 

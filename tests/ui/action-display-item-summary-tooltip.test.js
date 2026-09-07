@@ -1,3 +1,4 @@
+import { FoundryV12Adapter } from "../../src/adapters/foundry/foundry-v12-adapter.js";
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import '../setup.js';
@@ -11,7 +12,7 @@ import { Pf2eSystemAdapter } from '../../src/adapters/system/pf2e-system-adapter
 import { adapter } from '../../src/adapters/index.js';
 
 test('BaseSystemAdapter.getItemSummary returns basic item summary properties and enriched description', async () => {
-    const baseAdapter = new BaseSystemAdapter('generic');
+    const baseAdapter = new BaseSystemAdapter('generic', false, new FoundryV12Adapter());
     const mockItem = {
         name: 'Torch',
         type: 'equipment',
@@ -41,7 +42,7 @@ test('BaseSystemAdapter.getItemSummary returns basic item summary properties and
 });
 
 test('Dnd5eSystemAdapter.getItemSummary formats weapons, spells, feats, and Page 2 checks with enriched description', async () => {
-    const dnd5eAdapter = new Dnd5eSystemAdapter();
+    const dnd5eAdapter = new Dnd5eSystemAdapter(new FoundryV12Adapter());
 
     // 1. Weapon
     const weaponItem = {
@@ -194,8 +195,8 @@ test('Dnd5eSystemAdapter.getItemSummary formats weapons, spells, feats, and Page
 });
 
 test('Pf1SystemAdapter and Pf2eSystemAdapter getItemSummary extraction', async () => {
-    const pf1 = new Pf1SystemAdapter();
-    const pf2e = new Pf2eSystemAdapter();
+    const pf1 = new Pf1SystemAdapter(new FoundryV12Adapter());
+    const pf2e = new Pf2eSystemAdapter(new FoundryV12Adapter());
 
     const pf1Item = {
         name: 'Dagger',
@@ -226,7 +227,7 @@ test('Pf1SystemAdapter and Pf2eSystemAdapter getItemSummary extraction', async (
 });
 
 test('ActionDisplayApp triggers rich tooltip on hover + holding ? key, and hides on key release', async () => {
-    adapter.system = new Dnd5eSystemAdapter();
+    adapter.system = new Dnd5eSystemAdapter(new FoundryV12Adapter());
 
     const mockItem = {
         name: 'Greatsword',
@@ -317,7 +318,7 @@ test('ActionDisplayApp triggers rich tooltip on hover + holding ? key, and hides
 });
 
 test('ActionDisplayApp triggers rich tooltip for activities in dropdown menus when holding ?', async () => {
-    adapter.system = new Dnd5eSystemAdapter();
+    adapter.system = new Dnd5eSystemAdapter(new FoundryV12Adapter());
 
     const parentItem = {
         name: 'Versatile Staff',
@@ -448,7 +449,7 @@ test('ActionDisplayApp triggers rich tooltip for activities in dropdown menus wh
 });
 
 test('ActionDisplayApp triggers rich tooltip on hover when showItemSummaries toggle is active without holding ?', async () => {
-    adapter.system = new Dnd5eSystemAdapter();
+    adapter.system = new Dnd5eSystemAdapter(new FoundryV12Adapter());
 
     const mockItem = {
         name: 'Dagger of Venom',
@@ -815,7 +816,7 @@ test('ActionDisplayApp _formatItemSummaryHtml renders structured property tag ro
 });
 
 test('Dnd5eSystemAdapter.getItemSummary resolves linked spell description and metadata for Archmage Spellcasting activities', async () => {
-    const dnd5eAdapter = new Dnd5eSystemAdapter();
+    const dnd5eAdapter = new Dnd5eSystemAdapter(new FoundryV12Adapter());
 
     const spellcastingFeat = {
         id: 'feat-spellcasting',
@@ -867,7 +868,7 @@ test('Dnd5eSystemAdapter.getItemSummary resolves linked spell description and me
 });
 
 test('Dnd5eSystemAdapter.getItemSummary prioritizes activity description over parent item description', async () => {
-    const dnd5eAdapter = new Dnd5eSystemAdapter();
+    const dnd5eAdapter = new Dnd5eSystemAdapter(new FoundryV12Adapter());
 
     const parentFeat = {
         id: 'feat-multi-form',
@@ -900,7 +901,7 @@ test('Dnd5eSystemAdapter.getItemSummary prioritizes activity description over pa
 });
 
 test('ActionDisplayApp renders linked spell description when hovering over activity in dropdown menu', async () => {
-    adapter.system = new Dnd5eSystemAdapter();
+    adapter.system = new Dnd5eSystemAdapter(new FoundryV12Adapter());
 
     const spellcastingFeat = {
         name: 'Spellcasting',

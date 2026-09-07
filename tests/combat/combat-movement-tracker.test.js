@@ -1,3 +1,4 @@
+import { FoundryV12Adapter } from "../../src/adapters/foundry/foundry-v12-adapter.js";
 import '../setup.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -110,7 +111,7 @@ test('CombatMovementTracker accumulates token movement distance during active co
 });
 
 test('Dnd5eSystemAdapter.getTokenInfo formats movement with moved distance when in combat', async () => {
-    const dnd5eAdapter = new Dnd5eSystemAdapter();
+    const dnd5eAdapter = new Dnd5eSystemAdapter(new FoundryV12Adapter());
     const tokenDoc = {
         id: 'tok-fighter',
         name: 'Valeros',
@@ -167,7 +168,7 @@ test('Dnd5eSystemAdapter.getTokenInfo formats movement with moved distance when 
 });
 
 test('ActionDisplayApp Page 3 renders moved distance alongside primary movement speed during combat', async () => {
-    adapter.system = new Dnd5eSystemAdapter();
+    adapter.system = new Dnd5eSystemAdapter(new FoundryV12Adapter());
 
     const tokenDoc = {
         id: 'tok-starion',
@@ -230,7 +231,7 @@ test('ActionDisplayApp Page 3 renders moved distance alongside primary movement 
 });
 
 test('BaseSystemAdapter getTurnMovement returns non-combat 0 distance', () => {
-    const baseAdapter = new BaseSystemAdapter('default', false);
+    const baseAdapter = new BaseSystemAdapter('default', false, new FoundryV12Adapter());
     const result = baseAdapter.getTurnMovement();
     assert.equal(result.inCombat, false);
     assert.equal(result.distance, 0);
@@ -238,7 +239,7 @@ test('BaseSystemAdapter getTurnMovement returns non-combat 0 distance', () => {
 });
 
 test('Pf1SystemAdapter.getTokenInfo formats movement with moved distance when in combat', async () => {
-    const pf1Adapter = new Pf1SystemAdapter();
+    const pf1Adapter = new Pf1SystemAdapter(new FoundryV12Adapter());
     const tokenDoc = { id: 'tok-pf1', name: 'Ezren', x: 50, y: 50 };
     const actor = {
         id: 'act-pf1',
@@ -278,7 +279,7 @@ test('Pf1SystemAdapter.getTokenInfo formats movement with moved distance when in
 });
 
 test('Pf2eSystemAdapter.getTokenInfo formats movement with moved distance when in combat', async () => {
-    const pf2eAdapter = new Pf2eSystemAdapter();
+    const pf2eAdapter = new Pf2eSystemAdapter(new FoundryV12Adapter());
     const tokenDoc = { id: 'tok-pf2e', name: 'Fumbus', x: 50, y: 50 };
     const actor = {
         id: 'act-pf2e',
@@ -318,7 +319,7 @@ test('Pf2eSystemAdapter.getTokenInfo formats movement with moved distance when i
 });
 
 test('Page 3 template renders alignment on a separate line from race/type and AC/movement on multiple lines', async () => {
-    adapter.system = new Dnd5eSystemAdapter();
+    adapter.system = new Dnd5eSystemAdapter(new FoundryV12Adapter());
     const tokenDoc = { id: 'tok-layout', name: 'Gimli', x: 0, y: 0 };
     const actor = {
         id: 'act-layout',

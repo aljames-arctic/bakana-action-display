@@ -19,10 +19,13 @@ export const SYSTEM_ADAPTERS = {
  * Loads and instantiates the active system adapter.
  * For unsupported systems, falls back immediately to BaseSystemAdapter with zero network requests.
  * @param {string} [systemId]
- * @param {BaseFoundryAdapter} [foundryAdapter=null]
+ * @param {FoundryV12Adapter|FoundryV13Adapter|FoundryV14Adapter} foundryAdapter
  * @returns {Promise<BaseSystemAdapter>}
  */
-export async function initializeSystemAdapter(systemId = game.system?.id, foundryAdapter = null) {
+export async function initializeSystemAdapter(systemId = game.system?.id, foundryAdapter) {
+    if (!foundryAdapter) {
+        throw new Error(`initializeSystemAdapter requires a valid Foundry adapter instance, received: ${foundryAdapter}`);
+    }
     if (!systemId) {
         return new BaseSystemAdapter('unknown', false, foundryAdapter);
     }

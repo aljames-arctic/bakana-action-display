@@ -1,4 +1,4 @@
-import { initializeFoundryAdapter, BaseFoundryAdapter, FoundryCurrentAdapter } from './foundry/index.js';
+import { initializeFoundryAdapter, FoundryV12Adapter, BaseFoundryAdapter, FoundryV13Adapter, FoundryV14Adapter } from './foundry/index.js';
 import { initializeSystemAdapter, BaseSystemAdapter } from './system/index.js';
 import { initializeModuleAdapters, BaseModuleAdapter } from './module/index.js';
 import { MODULE_ID } from '../constants.js';
@@ -12,7 +12,7 @@ import { CombatMovementTracker } from '../combat/combat-movement-tracker.js';
  */
 class Adapter {
     constructor() {
-        this.foundry = new BaseFoundryAdapter();
+        this.foundry = new FoundryV12Adapter();
         this.system = new BaseSystemAdapter('default', false, this.foundry);
         this.modules = new Map();
         this._initialized = false;
@@ -523,7 +523,7 @@ class Adapter {
      * @returns {Promise<string>}
      */
     async enrichHTML(content, options = {}) {
-        return this.foundry?.enrichHTML?.(content, options) ?? content;
+        return this.foundry.enrichHTML(content, options);
     }
 
     /**
@@ -607,4 +607,4 @@ class Adapter {
 }
 
 export const adapter = new Adapter();
-export { Adapter, BaseFoundryAdapter, FoundryCurrentAdapter, BaseSystemAdapter, BaseModuleAdapter };
+export { Adapter, FoundryV12Adapter, BaseFoundryAdapter, FoundryV13Adapter, FoundryV14Adapter, BaseSystemAdapter, BaseModuleAdapter };

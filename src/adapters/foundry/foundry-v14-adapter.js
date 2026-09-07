@@ -1,10 +1,18 @@
-import { BaseFoundryAdapter } from './base-foundry-adapter.js';
+import { FoundryV13Adapter } from './foundry-v13-adapter.js';
 
 /**
- * Modern Foundry VTT platform adapter (v14+).
- * Extends BaseFoundryAdapter and overwrites functions with newer platform methods.
+ * Foundry VTT V14 platform adapter.
+ * Extends FoundryV13Adapter and encapsulates modern namespaced constructors and API changes introduced in Foundry V14.
  */
-export class FoundryCurrentAdapter extends BaseFoundryAdapter {
+export class FoundryV14Adapter extends FoundryV13Adapter {
+    /**
+     * The major generation version of Foundry VTT.
+     * @returns {number}
+     */
+    get generation() {
+        return 14;
+    }
+
     /**
      * The active ContextMenu constructor in v14+.
      */
@@ -38,19 +46,5 @@ export class FoundryCurrentAdapter extends BaseFoundryAdapter {
      */
     get TextEditor() {
         return foundry.applications.ux.TextEditor.implementation;
-    }
-
-    /**
-     * Retrieve all combatants associated with a token in combat using v14+ Combat#getCombatantsByToken.
-     * @param {Combat} combat Target combat encounter
-     * @param {string|TokenDocument|Token} token Token ID or Document or Placeable
-     * @returns {Combatant[]}
-     */
-    getCombatantsByToken(combat, token) {
-        if (!combat) return [];
-        const tokenId = token?.id ?? token?.document?.id ?? token;
-        if (!tokenId) return [];
-
-        return combat.getCombatantsByToken(tokenId) ?? [];
     }
 }

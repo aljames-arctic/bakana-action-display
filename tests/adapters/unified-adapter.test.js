@@ -1,39 +1,46 @@
 import '../setup.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { adapter, Adapter, BaseFoundryAdapter, FoundryCurrentAdapter, BaseSystemAdapter } from '../../src/adapters/index.js';
+import { adapter, Adapter, FoundryV12Adapter, BaseFoundryAdapter, FoundryV13Adapter, FoundryV14Adapter, BaseSystemAdapter } from '../../src/adapters/index.js';
 import { initializeFoundryAdapter } from '../../src/adapters/foundry/index.js';
 import { initializeSystemAdapter } from '../../src/adapters/system/index.js';
 import { initializeModuleAdapters } from '../../src/adapters/module/index.js';
 import { MODULE_ID } from '../../src/constants.js';
 import { log } from '../../src/lib/logger.js';
 
-test('initializeFoundryAdapter returns BaseFoundryAdapter on v12 baseline and FoundryCurrentAdapter on v13+', () => {
+test('initializeFoundryAdapter returns FoundryV12Adapter on v12, FoundryV13Adapter on v13, FoundryV14Adapter on v14+, and throws for < 12', () => {
+    // Unsupported legacy generation (< 12)
+    game.release = { generation: 11 };
+    game.version = '11.315';
+    assert.throws(() => initializeFoundryAdapter(), /Unsupported Foundry VTT generation: v11/);
+
     // V12 baseline
     game.release = { generation: 12 };
     game.version = '12.331';
     const v12 = initializeFoundryAdapter();
+    assert.ok(v12 instanceof FoundryV12Adapter);
     assert.ok(v12 instanceof BaseFoundryAdapter);
     assert.equal(v12.generation, 12);
 
-    // V13 modern
+    // V13 platform
     game.release = { generation: 13 };
-    game.version = '13.300';
+    game.version = '13.351';
     const v13 = initializeFoundryAdapter();
-    assert.ok(v13 instanceof FoundryCurrentAdapter);
-    assert.ok(v13 instanceof BaseFoundryAdapter);
+    assert.ok(v13 instanceof FoundryV13Adapter);
+    assert.ok(v13 instanceof FoundryV12Adapter);
     assert.equal(v13.generation, 13);
 
     // V14 modern
     game.release = { generation: 14 };
-    game.version = '14.000';
+    game.version = '14.364';
     const v14 = initializeFoundryAdapter();
-    assert.ok(v14 instanceof FoundryCurrentAdapter);
-    assert.ok(v14 instanceof BaseFoundryAdapter);
+    assert.ok(v14 instanceof FoundryV14Adapter);
+    assert.ok(v14 instanceof FoundryV13Adapter);
+    assert.ok(v14 instanceof FoundryV12Adapter);
     assert.equal(v14.generation, 14);
 });
 
-test('BaseFoundryAdapter and FoundryCurrentAdapter getCombatantByToken and getCombatantsByToken contracts', () => {
+test('BaseFoundryAdapter, FoundryV13Adapter, and FoundryV14Adapter getCombatantByToken and getCombatantsByToken contracts', () => {
     const mockCombatant = { id: 'c1', tokenId: 't1' };
 
     // BaseFoundryAdapter (v12 baseline) uses Combat#getCombatantByToken
@@ -45,14 +52,20 @@ test('BaseFoundryAdapter and FoundryCurrentAdapter getCombatantByToken and getCo
     assert.deepEqual(v12.getCombatantsByToken(mockCombatV12, 't1'), [mockCombatant]);
     assert.equal(v12.getCombatantByToken(mockCombatV12, { id: 't1' }), mockCombatant);
 
-    // FoundryCurrentAdapter (v14 modern) uses Combat#getCombatantsByToken
-    const v14 = new FoundryCurrentAdapter();
-    const mockCombatV14 = {
+    // FoundryV13Adapter (v13 platform) uses Combat#getCombatantsByToken
+    const v13 = new FoundryV13Adapter();
+    const mockCombatV13 = {
         getCombatantsByToken: (id) => id === 't1' ? [mockCombatant] : []
     };
-    assert.equal(v14.getCombatantByToken(mockCombatV14, 't1'), mockCombatant);
-    assert.deepEqual(v14.getCombatantsByToken(mockCombatV14, 't1'), [mockCombatant]);
-    assert.equal(v14.getCombatantByToken(mockCombatV14, { id: 't1' }), mockCombatant);
+    assert.equal(v13.getCombatantByToken(mockCombatV13, 't1'), mockCombatant);
+    assert.deepEqual(v13.getCombatantsByToken(mockCombatV13, 't1'), [mockCombatant]);
+    assert.equal(v13.getCombatantByToken(mockCombatV13, { id: 't1' }), mockCombatant);
+
+    // FoundryV14Adapter (v14 modern) inherits Combat#getCombatantsByToken
+    const v14 = new FoundryV14Adapter();
+    assert.equal(v14.getCombatantByToken(mockCombatV13, 't1'), mockCombatant);
+    assert.deepEqual(v14.getCombatantsByToken(mockCombatV13, 't1'), [mockCombatant]);
+    assert.equal(v14.getCombatantByToken(mockCombatV13, { id: 't1' }), mockCombatant);
 
     // getTokenFromCombatant resolves token placeables from various combatant structures
     const mockToken = { id: 't1', center: { x: 100, y: 100 } };
@@ -62,7 +75,7 @@ test('BaseFoundryAdapter and FoundryCurrentAdapter getCombatantByToken and getCo
     assert.equal(v12.getTokenFromCombatant({ actor: { getActiveTokens: () => [mockToken] } }), mockToken);
 });
 
-test('BaseFoundryAdapter (v12) and FoundryCurrentAdapter (v14+) constructor getters contract', () => {
+test('BaseFoundryAdapter (v12), FoundryV13Adapter (v13), and FoundryV14Adapter (v14) constructor getters contract', () => {
     // 1. BaseFoundryAdapter (v12 baseline) resolves globals even when foundry.applications.ux is undefined
     const v12 = new BaseFoundryAdapter();
     assert.equal(v12.ContextMenu, globalThis.ContextMenu);
@@ -73,8 +86,8 @@ test('BaseFoundryAdapter (v12) and FoundryCurrentAdapter (v14+) constructor gett
     assert.equal(v12.FilePicker, globalThis.FilePicker);
     assert.equal(v12.TextEditor, globalThis.TextEditor);
 
-    // 2. FoundryCurrentAdapter (v14 modern) resolves modern namespaced constructors
-    const v14 = new FoundryCurrentAdapter();
+    // 2. FoundryV14Adapter (v14 modern) resolves modern namespaced constructors
+    const v14 = new FoundryV14Adapter();
     assert.equal(v14.ContextMenu, globalThis.foundry.applications.ux.ContextMenu);
     assert.equal(v14.KeyboardManager, globalThis.foundry.helpers.interaction.KeyboardManager);
     assert.equal(v14.Token, globalThis.foundry.canvas.placeables.Token);
@@ -98,45 +111,64 @@ test('isNewerVersion contract across BaseFoundryAdapter and BaseSystemAdapter', 
 
 test('fromUuid and fromUuidSync resolve cleanly across FoundryAdapter, SystemAdapter, and UnifiedAdapter', async () => {
     const mockDoc = { id: 'doc1', uuid: 'Item.123' };
-    const origFromUuidSync = globalThis.foundry.utils.fromUuidSync;
-    const origFromUuid = globalThis.foundry.utils.fromUuid;
+    const origGlobalFromUuidSync = globalThis.fromUuidSync;
+    const origGlobalFromUuid = globalThis.fromUuid;
+    const origUtilsFromUuidSync = globalThis.foundry.utils.fromUuidSync;
+    const origUtilsFromUuid = globalThis.foundry.utils.fromUuid;
 
+    globalThis.fromUuidSync = (uuid) => uuid === 'Item.123' ? mockDoc : null;
+    globalThis.fromUuid = async (uuid) => uuid === 'Item.123' ? mockDoc : null;
     globalThis.foundry.utils.fromUuidSync = (uuid) => uuid === 'Item.123' ? mockDoc : null;
     globalThis.foundry.utils.fromUuid = async (uuid) => uuid === 'Item.123' ? mockDoc : null;
 
     try {
-        const foundryAdapter = new BaseFoundryAdapter();
-        assert.equal(foundryAdapter.fromUuidSync('Item.123'), mockDoc);
-        assert.equal(foundryAdapter.fromUuidSync('Item.none'), null);
-        assert.equal(await foundryAdapter.fromUuid('Item.123'), mockDoc);
+        const v12Adapter = new FoundryV12Adapter();
+        assert.equal(v12Adapter.fromUuidSync('Item.123'), mockDoc);
+        assert.equal(v12Adapter.fromUuidSync('Item.none'), null);
+        assert.equal(await v12Adapter.fromUuid('Item.123'), mockDoc);
 
-        const systemAdapter = new BaseSystemAdapter('dnd5e', true, foundryAdapter);
+        const v13Adapter = new FoundryV13Adapter();
+        assert.equal(v13Adapter.fromUuidSync('Item.123'), mockDoc);
+        assert.equal(v13Adapter.fromUuidSync('Item.none'), null);
+        assert.equal(await v13Adapter.fromUuid('Item.123'), mockDoc);
+
+        const systemAdapter = new BaseSystemAdapter('dnd5e', true, v12Adapter);
         assert.equal(systemAdapter.fromUuidSync('Item.123'), mockDoc);
         assert.equal(await systemAdapter.fromUuid('Item.123'), mockDoc);
 
         const unified = new Adapter();
-        unified.foundry = foundryAdapter;
+        unified.foundry = v12Adapter;
         assert.equal(unified.fromUuidSync('Item.123'), mockDoc);
         assert.equal(await unified.fromUuid('Item.123'), mockDoc);
     } finally {
-        globalThis.foundry.utils.fromUuidSync = origFromUuidSync;
-        globalThis.foundry.utils.fromUuid = origFromUuid;
+        globalThis.fromUuidSync = origGlobalFromUuidSync;
+        globalThis.fromUuid = origGlobalFromUuid;
+        globalThis.foundry.utils.fromUuidSync = origUtilsFromUuidSync;
+        globalThis.foundry.utils.fromUuid = origUtilsFromUuid;
     }
 });
 
 test('initializeSystemAdapter loads matching system adapter or falls back to BaseSystemAdapter with isSupported flag', async () => {
+    const foundry = new FoundryV12Adapter();
+
+    // Throws if foundry adapter is missing
+    await assert.rejects(
+        () => initializeSystemAdapter('dnd5e'),
+        /initializeSystemAdapter requires a valid Foundry adapter instance/
+    );
+
     // Known system: dnd5e
-    const dnd5e = await initializeSystemAdapter('dnd5e');
+    const dnd5e = await initializeSystemAdapter('dnd5e', foundry);
     assert.equal(dnd5e.systemId, 'dnd5e');
     assert.equal(dnd5e.isSupported, true);
 
     // Known system: pf1
-    const pf1 = await initializeSystemAdapter('pf1');
+    const pf1 = await initializeSystemAdapter('pf1', foundry);
     assert.equal(pf1.systemId, 'pf1');
     assert.equal(pf1.isSupported, true);
 
     // Known system: pf2e
-    const pf2e = await initializeSystemAdapter('pf2e');
+    const pf2e = await initializeSystemAdapter('pf2e', foundry);
     assert.equal(pf2e.systemId, 'pf2e');
     assert.equal(pf2e.isSupported, true);
 
@@ -148,7 +180,7 @@ test('initializeSystemAdapter loads matching system adapter or falls back to Bas
     console.log = (...args) => logs.push(args.join(' '));
     console.warn = (...args) => logs.push(args.join(' '));
     try {
-        const tormenta = await initializeSystemAdapter('tormenta20');
+        const tormenta = await initializeSystemAdapter('tormenta20', foundry);
         assert.ok(tormenta instanceof BaseSystemAdapter);
         assert.equal(tormenta.systemId, 'tormenta20');
         assert.equal(tormenta.isSupported, false);
@@ -160,7 +192,7 @@ test('initializeSystemAdapter loads matching system adapter or falls back to Bas
     }
 
     // Empty system fallback
-    const fallback = await initializeSystemAdapter(null);
+    const fallback = await initializeSystemAdapter(null, foundry);
     assert.ok(fallback instanceof BaseSystemAdapter);
     assert.equal(fallback.systemId, 'unknown');
     assert.equal(fallback.isSupported, false);
@@ -215,7 +247,7 @@ test('Unified Adapter init initializes and formats system label correctly for su
 
 test('Unified Adapter getActions executes base extraction -> system -> module -> hidden pipeline', async () => {
     const testAdapter = new Adapter();
-    testAdapter.system = new BaseSystemAdapter('test');
+    testAdapter.system = new BaseSystemAdapter('test', false, new FoundryV12Adapter());
 
     const mockActor = {
         name: 'Hero',

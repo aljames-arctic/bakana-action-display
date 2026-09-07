@@ -14,16 +14,16 @@ export const USER_PERMISSION_TIERS = deepFreeze({
 });
 
 /**
- * Baseline Foundry VTT platform adapter.
- * Abstract interface for versioned Foundry Application, ContextMenu, interaction, and utility operations.
+ * Foundry VTT V12 platform baseline adapter.
+ * Encapsulates versioned Foundry Application, ContextMenu, interaction, and utility operations for Foundry V12.
  */
-export class BaseFoundryAdapter {
+export class FoundryV12Adapter {
     /**
-     * The major generation version of Foundry VTT (e.g. 12, 13, 14).
+     * The major generation version of Foundry VTT.
      * @returns {number}
      */
     get generation() {
-        return game.release.generation;
+        return 12;
     }
 
     /**
@@ -80,7 +80,7 @@ export class BaseFoundryAdapter {
     }
 
     /**
-     * Safely resolve a document from UUID synchronously.
+     * Safely resolve a document from UUID synchronously in Foundry V12.
      * @param {string} uuid Document UUID
      * @param {Object} [options={}] Resolution options
      * @returns {Document|null}
@@ -88,14 +88,14 @@ export class BaseFoundryAdapter {
     fromUuidSync(uuid, options = {}) {
         if (!uuid) return null;
         try {
-            return foundry.utils.fromUuidSync(uuid, options) ?? null;
+            return fromUuidSync(uuid, options) ?? null;
         } catch (_) {
             return null;
         }
     }
 
     /**
-     * Safely resolve a document from UUID asynchronously.
+     * Safely resolve a document from UUID asynchronously in Foundry V12.
      * @param {string} uuid Document UUID
      * @param {Object} [options={}] Resolution options
      * @returns {Promise<Document|null>}
@@ -103,7 +103,7 @@ export class BaseFoundryAdapter {
     async fromUuid(uuid, options = {}) {
         if (!uuid) return null;
         try {
-            return (await foundry.utils.fromUuid(uuid, options)) ?? null;
+            return (await fromUuid(uuid, options)) ?? null;
         } catch (_) {
             return null;
         }
@@ -406,3 +406,5 @@ export class BaseFoundryAdapter {
         }
     }
 }
+
+export const BaseFoundryAdapter = FoundryV12Adapter;

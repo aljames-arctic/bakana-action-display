@@ -1,3 +1,4 @@
+import { FoundryV12Adapter } from "../../src/adapters/foundry/foundry-v12-adapter.js";
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import '../setup.js';
@@ -65,7 +66,7 @@ test('openActivitySubContextMenu creates sub-context menu with Edit Activity opt
 test('Dnd5eSystemAdapter openEditSheet renders activity sheet when originalActivity is present', () => {
     let activityRendered = false;
     let fallbackRendered = false;
-    const adapter = new Dnd5eSystemAdapter();
+    const adapter = new Dnd5eSystemAdapter(new FoundryV12Adapter());
     const actionWithActivity = {
         originalActivity: {
             sheet: {

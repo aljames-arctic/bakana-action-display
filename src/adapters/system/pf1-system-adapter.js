@@ -1,5 +1,5 @@
 import { FantasySystemAdapter } from './genre/fantasy-system-adapter.js';
-import { BaseFoundryAdapter } from '../foundry/base-foundry-adapter.js';
+import { FoundryV12Adapter } from '../foundry/foundry-v12-adapter.js';
 import { localize } from '../../lib/utils.js';
 import { log } from '../../lib/logger.js';
 import { TabRef } from '../../ui/tab-ref.js';
@@ -52,7 +52,7 @@ const ICONS = {
  * Handles PF1e's multi-action items, prepared/spontaneous spellcasting, and toggleable buffs.
  */
 export class BasePf1SystemAdapter extends FantasySystemAdapter {
-    constructor(foundry = null) {
+    constructor(foundry) {
         super('pf1', true, foundry);
         this.contextMenuManager = new Pf1SystemContextMenuManager(this);
     }
@@ -1218,12 +1218,14 @@ export class Pf1SystemAdapter_11_0 extends BasePf1SystemAdapter {
  * Automatically delegates to Pf1SystemAdapter_11_0 on v11+ and BasePf1SystemAdapter on legacy versions.
  */
 export class Pf1SystemAdapter extends BasePf1SystemAdapter {
-    constructor(foundry = null) {
-        const foundryAdapter = foundry ?? new BaseFoundryAdapter();
-        const version = game.system?.version ?? '11.0.0';
-        if (!foundryAdapter.isNewerVersion('11.0.0', version) && new.target === Pf1SystemAdapter) {
-            return new Pf1SystemAdapter_11_0(foundryAdapter);
+    constructor(foundry) {
+        if (!foundry) {
+            throw new Error(`Pf1SystemAdapter requires a valid Foundry adapter instance, received: ${foundry}`);
         }
-        super(foundryAdapter);
+        const version = game.system?.version ?? '11.0.0';
+        if (!foundry.isNewerVersion('11.0.0', version) && new.target === Pf1SystemAdapter) {
+            return new Pf1SystemAdapter_11_0(foundry);
+        }
+        super(foundry);
     }
 }

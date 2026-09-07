@@ -1,3 +1,4 @@
+import { FoundryV12Adapter } from "../../src/adapters/foundry/foundry-v12-adapter.js";
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import '../setup.js';
@@ -126,7 +127,7 @@ test('ActionDisplayApp Page 2 right tab column initializes activeSubTypes to emp
 });
 
 test('ActionDisplayApp Page 2 populates Tools left filter tab and filters tool proficiency actions', async () => {
-    adapter.system = new Dnd5eSystemAdapter();
+    adapter.system = new Dnd5eSystemAdapter(new FoundryV12Adapter());
     const app = new ActionDisplayApp({ actor: { id: 'test-actor', getFlag: () => false, flags: {} } });
     app.activePage = 2;
     app._saveTabState = () => {};
@@ -166,7 +167,7 @@ test('ActionDisplayApp Page 2 populates Tools left filter tab and filters tool p
 });
 
 test('ActionDisplayApp Page 3 renders token information showcase with 3 pages in pagination', async () => {
-    adapter.system = new Dnd5eSystemAdapter();
+    adapter.system = new Dnd5eSystemAdapter(new FoundryV12Adapter());
     const actor = {
         id: 'test-actor-3',
         name: 'Gimli',
@@ -227,7 +228,7 @@ test('ActionDisplayApp Page 3 renders token information showcase with 3 pages in
 });
 
 test('ActionDisplayApp Page 3 renders inspiration indicator and toggles inspiration on click', async () => {
-    adapter.system = new Dnd5eSystemAdapter();
+    adapter.system = new Dnd5eSystemAdapter(new FoundryV12Adapter());
     let actorInspiration = false;
     const actor = {
         id: 'test-actor-insp',

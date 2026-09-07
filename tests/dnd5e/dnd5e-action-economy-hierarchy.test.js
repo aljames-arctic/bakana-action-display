@@ -1,3 +1,4 @@
+import { FoundryV12Adapter } from "../../src/adapters/foundry/foundry-v12-adapter.js";
 import '../setup.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -10,7 +11,7 @@ import { adapter } from '../../src/adapters/index.js';
 import { MODULE_ID } from '../../src/constants.js';
 
 test('Dnd5eSystemAdapter maps activities to nested Action Economy categories', async () => {
-    const adapter = new Dnd5eSystemAdapter();
+    const adapter = new Dnd5eSystemAdapter(new FoundryV12Adapter());
 
     const createItemWithActivities = (id, name, activations) => ({
         id,
@@ -135,7 +136,7 @@ test('Dnd5eSystemAdapter localizations for right-side action economy tabs', () =
     game.i18n.localize = key => dictionary[key] ?? key;
 
     try {
-        const adapter = new Dnd5eSystemAdapter();
+        const adapter = new Dnd5eSystemAdapter(new FoundryV12Adapter());
 
         // Top-level / Category tabs (resolves via DND5E.ACTIVATION.Category.*)
         assert.equal(adapter.getActionTypeLabel('economy'), 'Action Economy');
@@ -398,7 +399,7 @@ test('HUDTabColumn right-click multi-select toggling of nested sub-tabs and cate
 });
 
 test('ActionDisplayApp left parent tab right-click toggles show capabilities immediately', async () => {
-    adapter.system = new Dnd5eSystemAdapter();
+    adapter.system = new Dnd5eSystemAdapter(new FoundryV12Adapter());
     const flags = {};
     const mockActor = {
         isOwner: true,
@@ -496,7 +497,7 @@ test('ActionDisplayApp builds and renders Spell Components exclusion tab group w
 });
 
 test('ActionDisplayApp shift+left click on tabs and subtabs always selects/unselects without toggling equip-prepared', async () => {
-    adapter.system = new Dnd5eSystemAdapter();
+    adapter.system = new Dnd5eSystemAdapter(new FoundryV12Adapter());
     const flags = {};
     const mockActor = {
         uuid: 'Actor.shift-test-isolated',
@@ -644,7 +645,7 @@ test('ActionDisplayApp _onContextMenuCapture triggers immediate render on right-
 });
 
 test('ActionDisplayApp omits Weapons tab when untoggled and reveals Weapons tab + actions when showAll is toggled', async () => {
-    adapter.system = new Dnd5eSystemAdapter();
+    adapter.system = new Dnd5eSystemAdapter(new FoundryV12Adapter());
     const flags = {};
     const unequippedSword = {
         id: 'item-unequipped-sword',

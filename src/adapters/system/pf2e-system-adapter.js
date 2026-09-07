@@ -1,5 +1,5 @@
 import { FantasySystemAdapter } from './genre/fantasy-system-adapter.js';
-import { BaseFoundryAdapter } from '../foundry/base-foundry-adapter.js';
+import { FoundryV12Adapter } from '../foundry/foundry-v12-adapter.js';
 import { localize, toSet, deepFreeze } from '../../lib/utils.js';
 import { log } from '../../lib/logger.js';
 import { TabRef } from '../../ui/tab-ref.js';
@@ -94,7 +94,7 @@ const PF2E_SIZE_MAP = deepFreeze({
  * Modifies the base actions list by mapping feats and spells, and injecting Strikes (attacks).
  */
 export class BasePf2eSystemAdapter extends FantasySystemAdapter {
-    constructor(foundry = null) {
+    constructor(foundry) {
         super('pf2e', true, foundry);
         this.contextMenuManager = new Pf2eSystemContextMenuManager(this);
     }
@@ -1149,11 +1149,13 @@ export class BasePf2eSystemAdapter extends FantasySystemAdapter {
  * Dynamically instantiates the appropriate version subclass based on game.system.version.
  */
 export class Pf2eSystemAdapter extends BasePf2eSystemAdapter {
-    constructor(foundry = null) {
-        const foundryAdapter = foundry ?? new BaseFoundryAdapter();
-        if (new.target === Pf2eSystemAdapter) {
-            return new BasePf2eSystemAdapter(foundryAdapter);
+    constructor(foundry) {
+        if (!foundry) {
+            throw new Error(`Pf2eSystemAdapter requires a valid Foundry adapter instance, received: ${foundry}`);
         }
-        super(foundryAdapter);
+        if (new.target === Pf2eSystemAdapter) {
+            return new BasePf2eSystemAdapter(foundry);
+        }
+        super(foundry);
     }
 }

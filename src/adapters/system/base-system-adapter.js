@@ -2,7 +2,7 @@ import { MODULE_ID } from '../../constants.js';
 import { log } from '../../lib/logger.js';
 import { localize, deepFreeze } from '../../lib/utils.js';
 import { Action } from '../../ui/action.js';
-import { BaseFoundryAdapter } from '../foundry/base-foundry-adapter.js';
+import { FoundryV12Adapter } from '../foundry/foundry-v12-adapter.js';
 import { BaseSystemContextMenuManager } from './context-menu/base-system-context-menu-manager.js';
 import { BaseSystemTabFilterManager } from './filter/base-system-tab-filter-manager.js';
 import { BaseSystemContextModifier } from './context-modifier/base-system-context-modifier.js';
@@ -27,12 +27,15 @@ export class BaseSystemAdapter {
     /**
      * @param {string} systemId
      * @param {boolean} [isSupported=false]
-     * @param {BaseFoundryAdapter} [foundry]
+     * @param {FoundryV12Adapter|FoundryV13Adapter|FoundryV14Adapter} foundry
      */
-    constructor(systemId, isSupported = false, foundry = null) {
+    constructor(systemId, isSupported = false, foundry) {
+        if (!foundry) {
+            throw new Error(`BaseSystemAdapter requires a valid Foundry adapter instance, received: ${foundry}`);
+        }
         this.systemId = systemId;
         this.isSupported = Boolean(isSupported);
-        this.foundry = foundry ?? new BaseFoundryAdapter();
+        this.foundry = foundry;
         this.contextMenuManager = new BaseSystemContextMenuManager(this);
         this.filterManager = new BaseSystemTabFilterManager(this);
         this.contextModifier = new BaseSystemContextModifier(this);
@@ -55,7 +58,7 @@ export class BaseSystemAdapter {
      * @returns {Promise<string>}
      */
     async enrichHTML(content, options = {}) {
-        return this.foundry?.enrichHTML?.(content, options) ?? content;
+        return this.foundry.enrichHTML(content, options);
     }
 
     /**
@@ -65,7 +68,7 @@ export class BaseSystemAdapter {
      * @returns {Document|null}
      */
     fromUuidSync(uuid, options = {}) {
-        return this.foundry?.fromUuidSync?.(uuid, options) ?? null;
+        return this.foundry.fromUuidSync(uuid, options);
     }
 
     /**
@@ -75,7 +78,7 @@ export class BaseSystemAdapter {
      * @returns {Promise<Document|null>}
      */
     async fromUuid(uuid, options = {}) {
-        return (await this.foundry?.fromUuid?.(uuid, options)) ?? null;
+        return this.foundry.fromUuid(uuid, options);
     }
 
     /**
@@ -86,7 +89,7 @@ export class BaseSystemAdapter {
      * @returns {Object}
      */
     mergeObject(original, other = {}, options = {}) {
-        return this.foundry?.mergeObject?.(original, other, options) ?? Object.assign(original, other);
+        return this.foundry.mergeObject(original, other, options);
     }
 
     /**
@@ -95,7 +98,7 @@ export class BaseSystemAdapter {
      * @returns {Object}
      */
     duplicate(obj) {
-        return this.foundry?.duplicate?.(obj) ?? JSON.parse(JSON.stringify(obj));
+        return this.foundry.duplicate(obj);
     }
 
     /**
@@ -105,7 +108,7 @@ export class BaseSystemAdapter {
      * @returns {*}
      */
     getProperty(obj, path) {
-        return this.foundry?.getProperty?.(obj, path);
+        return this.foundry.getProperty(obj, path);
     }
 
     /**
@@ -116,7 +119,7 @@ export class BaseSystemAdapter {
      * @returns {boolean}
      */
     setProperty(obj, path, value) {
-        return this.foundry?.setProperty?.(obj, path, value);
+        return this.foundry.setProperty(obj, path, value);
     }
 
     getContextMenuItems(app) {

@@ -76,7 +76,7 @@ const DEFAULT_CATEGORIES = [
  * their corresponding icons, and numerical spell level sorting.
  */
 export class FantasySystemAdapter extends BaseSystemAdapter {
-    constructor(systemId, isSupported = false, foundry = null) {
+    constructor(systemId, isSupported = false, foundry) {
         super(systemId, isSupported, foundry);
     }
 

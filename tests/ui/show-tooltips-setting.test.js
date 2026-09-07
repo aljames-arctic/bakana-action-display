@@ -1,3 +1,4 @@
+import { FoundryV12Adapter } from "../../src/adapters/foundry/foundry-v12-adapter.js";
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -90,8 +91,8 @@ test('Dnd5eSystemContextModifier sets right-click tab tooltips only when showToo
 });
 
 test('Pf1SystemAdapter and Pf2eSystemAdapter set right-click tab tooltips when showTooltips is true', () => {
-    const pf1 = new Pf1SystemAdapter();
-    const pf2e = new Pf2eSystemAdapter();
+    const pf1 = new Pf1SystemAdapter(new FoundryV12Adapter());
+    const pf2e = new Pf2eSystemAdapter(new FoundryV12Adapter());
 
     const mockApp = {
         actor: {

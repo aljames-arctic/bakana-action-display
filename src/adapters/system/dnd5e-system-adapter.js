@@ -1,5 +1,5 @@
 import { FantasySystemAdapter } from './genre/fantasy-system-adapter.js';
-import { BaseFoundryAdapter } from '../foundry/base-foundry-adapter.js';
+import { FoundryV12Adapter } from '../foundry/foundry-v12-adapter.js';
 import { localize, toSet } from '../../lib/utils.js';
 import { log } from '../../lib/logger.js';
 import { MODULE_ID } from '../../constants.js';
@@ -33,7 +33,7 @@ export class BaseDnd5eSystemAdapter extends FantasySystemAdapter {
     #resolvedSpellCache = new Map();
     #cachedForMap = new Map();
 
-    constructor(foundry = null) {
+    constructor(foundry) {
         super('dnd5e', true, foundry);
         this.contextMenuManager = new Dnd5eSystemContextMenuManager(this);
         this.filterManager = new Dnd5eSystemTabFilterManager(this);
@@ -2487,12 +2487,14 @@ export class Dnd5eSystemAdapter_5_3 extends BaseDnd5eSystemAdapter {
  * Automatically delegates to Dnd5eSystemAdapter_5_3 on v5.3+ and BaseDnd5eSystemAdapter on earlier baseline.
  */
 export class Dnd5eSystemAdapter extends BaseDnd5eSystemAdapter {
-    constructor(foundry = null) {
-        const foundryAdapter = foundry ?? new BaseFoundryAdapter();
-        const version = game.system?.version ?? '4.0.0';
-        if (!foundryAdapter.isNewerVersion('5.3.0', version) && new.target === Dnd5eSystemAdapter) {
-            return new Dnd5eSystemAdapter_5_3(foundryAdapter);
+    constructor(foundry) {
+        if (!foundry) {
+            throw new Error(`Dnd5eSystemAdapter requires a valid Foundry adapter instance, received: ${foundry}`);
         }
-        super(foundryAdapter);
+        const version = game.system?.version ?? '4.0.0';
+        if (!foundry.isNewerVersion('5.3.0', version) && new.target === Dnd5eSystemAdapter) {
+            return new Dnd5eSystemAdapter_5_3(foundry);
+        }
+        super(foundry);
     }
 }

@@ -1,0 +1,59 @@
+import { FoundryV12Adapter } from './foundry-v12-adapter.js';
+
+/**
+ * Foundry VTT V13 platform adapter.
+ * Extends FoundryV12Adapter and encapsulates capabilities and API changes introduced in Foundry V13.
+ */
+export class FoundryV13Adapter extends FoundryV12Adapter {
+    /**
+     * The major generation version of Foundry VTT.
+     * @returns {number}
+     */
+    get generation() {
+        return 13;
+    }
+
+    /**
+     * Safely resolve a document from UUID synchronously using standard V13+ foundry.utils.fromUuidSync.
+     * @param {string} uuid Document UUID
+     * @param {Object} [options={}] Resolution options
+     * @returns {Document|null}
+     */
+    fromUuidSync(uuid, options = {}) {
+        if (!uuid) return null;
+        try {
+            return foundry.utils.fromUuidSync(uuid, options) ?? null;
+        } catch (_) {
+            return null;
+        }
+    }
+
+    /**
+     * Safely resolve a document from UUID asynchronously using standard V13+ foundry.utils.fromUuid.
+     * @param {string} uuid Document UUID
+     * @param {Object} [options={}] Resolution options
+     * @returns {Promise<Document|null>}
+     */
+    async fromUuid(uuid, options = {}) {
+        if (!uuid) return null;
+        try {
+            return (await foundry.utils.fromUuid(uuid, options)) ?? null;
+        } catch (_) {
+            return null;
+        }
+    }
+
+    /**
+     * Retrieve all combatants associated with a token in combat using native V13+ Combat#getCombatantsByToken.
+     * @param {Combat} combat Target combat encounter
+     * @param {string|TokenDocument|Token} token Token ID or Document or Placeable
+     * @returns {Combatant[]}
+     */
+    getCombatantsByToken(combat, token) {
+        if (!combat) return [];
+        const tokenId = token?.id ?? token?.document?.id ?? token;
+        if (!tokenId) return [];
+
+        return combat.getCombatantsByToken(tokenId) ?? [];
+    }
+}

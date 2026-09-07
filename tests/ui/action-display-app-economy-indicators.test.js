@@ -1,3 +1,4 @@
+import { FoundryV12Adapter } from "../../src/adapters/foundry/foundry-v12-adapter.js";
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import '../setup.js';
@@ -13,7 +14,7 @@ import { EconomyColorsConfigApp } from '../../src/ui/economy-colors-config-app.j
 import { buildSubactionMenuItem, showActivityDropdown } from '../../src/ui/app/dropdown-manager.js';
 
 test('BaseSystemAdapter provides default economy types, colors, and grey fallback for undefined', () => {
-    const baseAdapter = new BaseSystemAdapter();
+    const baseAdapter = new BaseSystemAdapter('generic', false, new FoundryV12Adapter());
     const types = baseAdapter.getEconomyTypes();
     assert.ok(Array.isArray(types));
     assert.ok(types.some(t => t.id === 'action' && t.defaultColor === '#3b82f6'));
@@ -45,7 +46,7 @@ test('BaseSystemAdapter provides default economy types, colors, and grey fallbac
 });
 
 test('Dnd5eSystemAdapter provides system-specific action economy types including lair and legendary', () => {
-    const dndAdapter = new Dnd5eSystemAdapter();
+    const dndAdapter = new Dnd5eSystemAdapter(new FoundryV12Adapter());
     const types = dndAdapter.getEconomyTypes();
 
     const action = types.find(t => t.id === 'action');
@@ -71,7 +72,7 @@ test('Dnd5eSystemAdapter provides system-specific action economy types including
 });
 
 test('extractEconomyIndicators extracts fixed slots equally dividing allocated space across enabled economy types', () => {
-    const dndAdapter = new Dnd5eSystemAdapter();
+    const dndAdapter = new Dnd5eSystemAdapter(new FoundryV12Adapter());
 
     // 1. Single action item with default settings (empty userColors) -> exactly 4 default-enabled categories (action, bonus, reaction, special)
     const singleAction = {
@@ -144,7 +145,7 @@ test('extractEconomyIndicators extracts fixed slots equally dividing allocated s
 });
 
 test('extractEconomyIndicators sorts indicators in the exact order of the action economy list top-to-bottom', () => {
-    const dndAdapter = new Dnd5eSystemAdapter();
+    const dndAdapter = new Dnd5eSystemAdapter(new FoundryV12Adapter());
     const threeEnabledColors = {
         disabled: {
             minute: true, hour: true, day: true, longRest: true, shortRest: true,
@@ -439,7 +440,7 @@ test('Dropdown context menu actions segmentation when economy colors are disable
 });
 
 test('extractEconomyIndicators generates stylized tooltips and dropdown items use data-tooltip', () => {
-    const dndAdapter = new Dnd5eSystemAdapter();
+    const dndAdapter = new Dnd5eSystemAdapter(new FoundryV12Adapter());
     const action = {
         name: 'Fireball',
         right: [TabRef.from('economy', 'action')]

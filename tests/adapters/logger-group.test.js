@@ -1,3 +1,4 @@
+import { FoundryV12Adapter } from "../../src/adapters/foundry/foundry-v12-adapter.js";
 import '../setup.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -138,7 +139,7 @@ test('Adapter._extractBaseActions and Adapter.getActions encapsulate extraction 
 
     try {
         const testAdapter = new Adapter();
-        testAdapter.system = new BaseSystemAdapter('test');
+        testAdapter.system = new BaseSystemAdapter('test', false, new FoundryV12Adapter());
 
         const mockActor = {
             name: 'Valeros',
@@ -189,7 +190,7 @@ test('BaseSystemAdapter.modifyActions encapsulates depleted action filtering in 
     log.setVerbosity('debug');
 
     try {
-        const adapter = new BaseSystemAdapter('test-system');
+        const adapter = new BaseSystemAdapter('test-system', false, new FoundryV12Adapter());
         const actions = [
             { id: '1', name: 'Cantrip', uses: null, originalItem: { type: 'spell' } },
             { id: '2', name: 'Depleted', uses: { available: 0, max: 1 }, originalItem: { type: 'spell' } }
@@ -227,7 +228,7 @@ test('Dnd5eSystemAdapter.modifyActions encapsulates action processing in log.gro
     log.setVerbosity('debug');
 
     try {
-        const adapter = new Dnd5eSystemAdapter();
+        const adapter = new Dnd5eSystemAdapter(new FoundryV12Adapter());
         const mockItem = {
             id: 'item-spell-1',
             name: 'Shield',

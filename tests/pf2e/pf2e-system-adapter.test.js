@@ -1,10 +1,11 @@
+import { FoundryV12Adapter } from "../../src/adapters/foundry/foundry-v12-adapter.js";
 import '../setup.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { BasePf2eSystemAdapter, Pf2eSystemAdapter } from '../../src/adapters/system/pf2e-system-adapter.js';
 
 test('Pf2eSystemAdapter initialization and extractable item types', () => {
-    const adapter = new Pf2eSystemAdapter();
+    const adapter = new Pf2eSystemAdapter(new FoundryV12Adapter());
     assert.ok(adapter instanceof BasePf2eSystemAdapter);
     assert.equal(adapter.systemId, 'pf2e');
     assert.equal(adapter.shouldExtractItem({ type: 'action' }), true);
@@ -26,7 +27,7 @@ test('Pf2eSystemAdapter initialization and extractable item types', () => {
 });
 
 test('Pf2eSystemAdapter label lookups', () => {
-    const adapter = new Pf2eSystemAdapter();
+    const adapter = new Pf2eSystemAdapter(new FoundryV12Adapter());
 
     assert.equal(adapter.getItemTypeLabel('feat'), 'PF2E.Item.Feat.Plural');
     assert.equal(adapter.getItemTypeLabel('spell'), 'PF2E.Item.Spell.Plural');
@@ -42,7 +43,7 @@ test('Pf2eSystemAdapter label lookups', () => {
 });
 
 test('Pf2eSystemAdapter sort order lookups', () => {
-    const adapter = new Pf2eSystemAdapter();
+    const adapter = new Pf2eSystemAdapter(new FoundryV12Adapter());
 
     assert.equal(adapter.getItemTypeSortOrder('savingThrow'), 1);
     assert.equal(adapter.getItemTypeSortOrder('abilityCheck'), 2);
@@ -58,7 +59,7 @@ test('Pf2eSystemAdapter sort order lookups', () => {
 });
 
 test('Pf2eSystemAdapter modifyActions full transformation pipeline', async () => {
-    const adapter = new Pf2eSystemAdapter();
+    const adapter = new Pf2eSystemAdapter(new FoundryV12Adapter());
 
     const spellcastingEntry = {
         id: 'entry-1',
@@ -160,7 +161,7 @@ test('Pf2eSystemAdapter modifyActions full transformation pipeline', async () =>
 });
 
 test('Pf2eSystemAdapter filters stowed and dropped items unless showUnequipped or showAll is enabled', async () => {
-    const adapter = new Pf2eSystemAdapter();
+    const adapter = new Pf2eSystemAdapter(new FoundryV12Adapter());
 
     const heldWeapon = { id: 'w-held', name: 'Dagger', type: 'weapon', system: { equipped: { carryType: 'held', handsHeld: 1 } } };
     const stowedWeapon = { id: 'w-stowed', name: 'Crossbow', type: 'weapon', system: { equipped: { carryType: 'stowed', handsHeld: 0 } } };
@@ -216,7 +217,7 @@ test('Pf2eSystemAdapter filters stowed and dropped items unless showUnequipped o
 });
 
 test('Pf2eSystemAdapter context menu manager provides carry type options and tab right-click handling', async () => {
-    const adapter = new Pf2eSystemAdapter();
+    const adapter = new Pf2eSystemAdapter(new FoundryV12Adapter());
 
     let updatedPayload = null;
     const weaponItem = {
@@ -343,7 +344,7 @@ test('Pf2eSystemAdapter context menu manager provides carry type options and tab
 });
 
 test('Pf2eSystemAdapter extractCheckActions generates abilities, saves, and skills for Page 2', async () => {
-    const adapter = new Pf2eSystemAdapter();
+    const adapter = new Pf2eSystemAdapter(new FoundryV12Adapter());
 
     let rolledSave = null;
     let rolledPerception = false;
@@ -420,7 +421,7 @@ test('Pf2eSystemAdapter extractCheckActions generates abilities, saves, and skil
 });
 
 test('Pf2eSystemAdapter getTokenInfo extracts complete token statistics and details for Page 3 showcase', async () => {
-    const adapter = new Pf2eSystemAdapter();
+    const adapter = new Pf2eSystemAdapter(new FoundryV12Adapter());
 
     const pf2eActor = {
         id: 'actor-pf2e-dragon',
@@ -526,7 +527,7 @@ test('Pf2eSystemAdapter getTokenInfo extracts complete token statistics and deta
 });
 
 test('Pf2eSystemAdapter getInspiration and toggleInspiration return legacy NOP contracts', async () => {
-    const adapter = new Pf2eSystemAdapter();
+    const adapter = new Pf2eSystemAdapter(new FoundryV12Adapter());
     assert.deepEqual(adapter.getInspiration({}), { supported: false, value: false });
     assert.equal(await adapter.toggleInspiration({}, true), false);
 });
